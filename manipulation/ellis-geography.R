@@ -41,7 +41,7 @@ path_oblast <- "./data-private/raw/oblast.csv"
 
 #Data on areas and number of settlements parsed from decenrtalization.org.ua
 #Source: https://docs.google.com/spreadsheets/d/19Xxsq9O7fuHdNB4_GDyEMVSWBx3ENu3x9gNnnPrkqyo/edit?usp=sharing, sheet "parsed"
-path_areas <- "./data-private/raw/hromada_squares.csv"
+path_areas <- "./data-private/raw/hromada_areas.csv"
 
 #Shapefile of hromada polygons
 #Source: https://drive.google.com/file/d/1X3Ym-7s1RgQgsi_p4uJ3EGEWYGTd-UMz/view?usp=sharing
@@ -131,6 +131,7 @@ ds_areas <-
   ds0_areas %>% 
   mutate(
     hromada_name = str_extract(hromada_name, ".+(?=\\sтериторіальна громада)")
+    ,hromada_name = str_replace(hromada_name, "'", "’")
     ,oblast = str_extract(oblast, "(.+(?=\\sобласть))|(м\\.\\sКиїв)")
     ,raion = str_extract(raion, "(.+(?=\\sрайон))|(м\\.\\sКиїв)")
     ,key = paste(oblast,raion,hromada_name,hromada_type)
@@ -210,6 +211,12 @@ for (i in 1:length(ds_oblast$oblast_name)) {
 #combine all geo info in one dataset
 ds_geo_full <- 
   ds_geo %>% 
+  mutate(
+    hromada = case_when(
+      hromada == "Вiйтовецька" ~ "Війтовецька"
+      ,hromada == "Жданівська" & oblast_name == "Вінницька" ~ "Війтівецька"
+      , TRUE ~ hromada)
+  ) %>% 
   left_join(
     times
     , by = "hromada_code") %>% 
@@ -222,6 +229,7 @@ ds_geo_full <-
   #   ds_polygons %>% select(cod_3,geometry)
   #   ,by = c("hromada_code"="cod_3")
   # )
+
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 readr::write_csv(ds_geo_full, "./data-public/derived/geography.csv")
