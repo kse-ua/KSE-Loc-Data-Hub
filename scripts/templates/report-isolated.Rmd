@@ -1,0 +1,106 @@
+---
+title: "Title"
+author: "First Last"  
+date: "last Updated: `r Sys.Date()`"
+output:
+  html_document:
+    keep_md: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+    theme: simplex
+    highlight: tango
+editor_options: 
+  chunk_output_type: console
+---
+
+This report ( add a brief description and the purpose of the report)
+Demonstration of the __ISOLATED__ template
+
+<!--  Set the working directory to the repository's base directory; this assumes the report is nested inside of two directories.-->
+```{r, echo=F, message=F}
+# cat("Working directory: ", getwd())
+library(knitr)
+opts_knit$set(root.dir='../../')  #Don't combine this call with any other chunk -especially one that uses file paths.
+```
+
+```{r set_options, echo=F}
+# cat("Working directory: ", getwd()) # turn on to test the location
+report_render_start_time <- Sys.time()
+# set options shared by all chunks
+opts_chunk$set(
+  results      = 'show',
+  message      = FALSE,
+  warning      = FALSE,
+  comment      = NA,
+  tidy         = FALSE,
+  # dpi        = 400, # dots per inch,
+  # out.width  = "650px", # pixels, this affects only the markdown, not the underlying png file.  The height will be scaled appropriately.
+  fig.width    = 6, # inches
+  fig.height   = 4, # inches
+  fig.path     = 'figure-png-iso/' # where figures are stored
+)
+echo_chunks    <- FALSE #Toggle for debugging.
+message_chunks <- FALSE #Toggle for debugging.
+options(width=100) # number of characters to display in the output (dflt = 80)
+ggplot2::theme_set(ggplot2::theme_bw()) # common theme for all graphs
+read_chunk("./analysis/report/report-isolated.R") #This allows knitr to call chunks tagged in the underlying *.R file.
+```
+
+# Environment
+
+<!-- Load packages, or at least verify they're available on the local machine.  Suppress the output when loading packages. -->
+```{r load-packages, message=message_chunks}
+cat("Working directory: ", getwd()) # turn on to test the location
+```
+
+<!-- Load the sources.  Suppress the output when loading sources. --> 
+```{r load-sources}
+source("./scripts/common-functions.R")
+```
+
+<!-- Load any Global functions and variables declared in the R file.  Suppress the output. --> 
+```{r declare-globals}
+```
+
+# Data
+
+```{r load-data, results='show', message=FALSE}
+```
+
+```{r tweak-data,echo = echo_chunks, results='show', message=message_chunks}
+```
+
+# Analysis 
+
+```{r table-1, echo = echo_chunks, results='show', message=message_chunks}
+```
+
+
+```{r graph-1, echo = echo_chunks, results='show', message=message_chunks}
+```
+
+```{r graph-2, echo = echo_chunks, results='show', message=message_chunks}
+```
+
+Session Information {#session-info}
+===========================================================================
+
+For the sake of documentation and reproducibility, the current report was rendered in the following environment.  Click the line below to expand.
+
+<details>
+  <summary>Environment <span class="glyphicon glyphicon-plus-sign"></span></summary>
+```{r session-info, echo=FALSE}
+if( requireNamespace("devtools", quietly = TRUE) ) {
+  devtools::session_info()
+} else {
+  sessionInfo()
+}
+```
+</details>
+
+```{r session-duration, echo=FALSE}
+report_render_duration_in_seconds <- round(as.numeric(difftime(Sys.time(), report_render_start_time, units="secs")))
+```
+
+Report rendered by `r Sys.info()["user"]` at `r strftime(Sys.time(), "%Y-%m-%d, %H:%M %z")` in `r report_render_duration_in_seconds` seconds.

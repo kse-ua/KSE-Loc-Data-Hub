@@ -1,0 +1,85 @@
+default:
+  project_name                                        : "{project_name}"
+  schema_name                                         : "{schema_name}"
+  dsn_staging                                         : "cdw_cache_staging"
+  # dsn_outpost                                         : "cdw_outpost"
+  # dsn_omop                                            : "cdw_omop_1"
+  # dsn_waystation_gecb                                 : "cdw_waystation_idx"
+  # dsn_transaction                                     : "cdw_transaction"
+  # dsn_security                                        : "BbmcSecurity"
+  # redcap_pid                                          : 1
+  # redcap_instance                                     : "bbmc"
+  
+  directory_file_server                               : "//pedsis/peds/data/BBMC/prairie-outpost/{project_name}"
+  directory_output                                    : !expr strftime(Sys.time(), "{directory_file_server}/data-private/derived/%Y-%m-%d")
+  # path_output_summary                                 : !expr strftime(Sys.time(), "{directory_file_server}/data-private/derived/%Y-%m-%d/_summary.csv")
+  # path_output_description                             : !expr strftime(Sys.time(), "{directory_file_server}/data-private/derived/%Y-%m-%d/_description.md")
+  # directory_meditech_triage                           : "//pedsis/peds/data/BBMC/ou-medicine"
+  
+  # path_log_flow                                       : !expr strftime(Sys.time(), "data-unshared/log/%Y/%Y-%m/flow-%Y-%m-%d--%H-%M-%S.log")
+  # path_log_flow                                       : !expr strftime(Sys.time(), "//pedsis/peds/data/BBMC/prairie-outpost/{project_name}/log/%Y/%Y-%m/flow-%Y-%m-%d--%H-%M-%S.log")
+  
+  # path_metadata_ss_dx                                 : "data-public/metadata/ss-dx.csv"
+  
+  # time_zone_local               :  "America/Chicago"          # Force time calculations to be local, in case remotely run.
+  
+  # ---- Validation Ranges & Patterns ----
+  # range_record_id               : !expr c(1L, 999999L)
+  # range_mrn_gecb                : !expr c(400000L, 3999999L)
+  # range_mrn_flowcast            : !expr c(100000L, 9999999L)                                             # There are a few existing trashy records outside 6 or 7 digits:  c(1L, 9999999L)
+  # range_cpt4                    : !expr c(10000L, 99999L)
+  # omop_concept_min              : 0
+  # omop_concept_local            : 2000000000
+  # omop_concept_max              : 2147483647
+  # range_dob                     : !expr c(as.Date("2010-01-01"), Sys.Date() + lubridate::days(1))
+  # range_date_entry              : !expr c(as.Date("2019-01-01"), Sys.Date())
+  # range_datetime_entry          : !expr c(as.POSIXct("2019-01-01", tz="America/Chicago"), Sys.time())
+  # range_hdid                    : !expr c(-1L, 999999908L)
+  # range_bp_systolic             : !expr c(30L, 200L)
+  # range_bp_diastolic            : !expr c(30L, 200L)
+  # range_npi                     : !expr c(1000000000L, 9999999999L) # a 10-digit integer
+  # max_age                       : 99
+  # pattern_zipcode               : "^(?<zipcode>\\d{5})(?<zipcode_extension>-\\d{4})?$<file://d%7b5%7d)(%3f%3czipcode_extension%3e-/d%7b4%7d)%3f$>"
+  # pattern_mrn_centricity        : "^\\d{16}$"                 # The 64-bit int is more easily validated as a character.
+  # pattern_mrn_flowcast          : "^\\d{6,7}$"                # There are 22 values with junky meditech mrns."^(?:\\d{6,8}|E\\d{9})$"
+  # pattern_mrn_meditech          : "^[A-Z]\\d{9}$<file://d%7b9%7d$>"             # OKC patients start with 'E'; edmond patients start with 'W'
+  # pattern_mrn_meditech_internal : "^[A-Z]\\d{1,7}$<file://d%7b1,7%7d$>"           # OKC patients start with 'E'; edmond patients start with 'W'  pattern_mrn_meditech
+  # pattern_account_meditech      : "^[A-Z]\\d{11}$<file://d%7b11%7d$>"
+  # pattern_meditech_print_number : "^\\d{3}\\.\\d{5}$"
+  # pattern_pt_name_full          : "^.{2,50}$"
+  # pattern_race                  : "^.{5,50}$"
+  # pattern_ethnicity             : "^.{7,25}$"
+  
+  # pattern_icdcm                 : "^[A-Z][0-9][0-9AB]\\.?[0-9A-Z]{0,4}|\\d{3}\\.?\\d{0,2}|E\\d{3}\\.?\\d?|V\\d{2}\\.?\\d{0,2}$<file://.%3f[0-9A-Z]%7b0,4%7d|/d%7b3%7d/.%3f/d%7b0,2%7d|E/d%7b3%7d/.%3f/d%3f|V/d%7b2%7d/.%3f/d%7b0,2%7d$>" # Set database column to `varchar(8)` From https://www.johndcook.com/blog/2019/05/05/regex_icd_codes/
+  # pattern_icd10cm               : "^[A-Z][0-9][0-9AB]\\.?[0-9A-Z]{0,4}$<file://.%3f[0-9A-Z]%7b0,4%7d$>"                        # Set database column to `varchar(8)`
+  # pattern_icd9cm                : "^\\d{3}\\.?\\d{0,2}|E\\d{3}\\.?\\d?|V\\d{2}\\.?\\d{0,2}$"    # Set database column to `varchar(6)`
+  # pattern_loinc                 : "^\\d{3,5}-\\d$"
+  # pattern_cpt                   : "^\\d{4}[0-9a-z]$"
+  # pattern_hcpcs                 : "^[0-9a-z]\\d{4}$<file://d%7b4%7d$>"
+  # pattern_hcpcs_cpt             : "^[0-9a-z]\\d{3}[0-9a-z]$<file://d%7b3%7d[0-9a-z]$>"     # Meditech has a field that accepts either cpt or hcpcs
+  
+  # tables_to_scribe:
+  #   -
+  #     name: patient
+  #     sql: "SELECT * FROM {schema_name}.patient"
+  #     columns_include: ""
+  #     path_output: !expr strftime(Sys.time(), "{directory_file_server}/data-private/derived/%Y-%m-%d/patient.csv")
+  #     #path_output: "data-private/derived/%Y-%m-%d/pt.csv"
+  #     row_unit: each row represents a distinct patient.
+  #   -
+  #     name: patient_upcoming
+  #     path_sql: "manipulation/scribe/pt-upcoming.sql"
+  #     path_output: !expr strftime(Sys.time(), "{directory_file_server}/data-private/derived/%Y-%m-%d/patient.csv")
+  #     row_unit: each row represents a distinct patient with any future appt.
+  #   -
+  #     name: obs
+  #     sql: ""
+  #     columns_include: "mrn_flowcast, obs_date, obs_term, obs_value"
+  #     path_output: !expr strftime(Sys.time(), "{directory_file_server}/data-private/derived/%Y-%m-%d/obs.csv")
+  #     row_unit: each row represents a distinct measurement
+  #   -
+  #     name: medicate
+  #     columns_include: "*"
+  #     # columns_exclude: "start_date, stop_date"
+  #     path_output: !expr strftime(Sys.time(), "{directory_file_server}/data-private/derived/%Y-%m-%d/medicate.csv")
+  #     row_unit: each row represents a distinct prescription
