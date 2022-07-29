@@ -13,7 +13,7 @@ opts_knit$set(root.dir='../')  #Don't combine this call with any
 rm(list = ls(all.names = TRUE)) # Clear the memory of variables from previous run.
 #This is not called by knitr, because it's above the first chunk.
 #+ results="hide",echo=F -------------------------------------------------------
-cat("/014") # Clear the console
+cat("\014") # Clear the console
 #+ echo=FALSE, results="asis" --------------------------------------------------
 cat("Report's native working directory: `", getwd(),"`") # Must be set to Project Directory
 #+ echo=F, results="asis" ------------------------------------------------------
@@ -44,6 +44,7 @@ requireNamespace("janitor"  )# tidy data
 requireNamespace("forcats"  )# factors
 requireNamespace("stringr"  )# strings
 requireNamespace("lubridate")# dates
+
 #+ declare-globals -------------------------------------------------------------
 # Constant values that won't change throughout the report
 
@@ -52,11 +53,18 @@ requireNamespace("lubridate")# dates
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
-ds0 <- readr::readr_csv("./data-private/raw/input-data.csv")
+ds0_lc <- readr::read_csv("./data-private/raw/local-councils.csv")
+ds0_atc <- readr::read_csv("./data-private/raw/amalgomated-territorial-communities.csv")
+names(ds0_lc) <- c("region","obl_center", "local_council","council_code","council_name","atc_code","note")
+
+
 #+ inspect-data ----------------------------------------------------------------
-ds0 %>% glimpse()
+ds0_lc %>% glimpse()
+ds0_atc %>% glimpse()
+
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
-ds1 <- ds1 %>% janitor::clean_names()
+
+
 #+ table-1 ---------------------------------------------------------------------
 #+ graph-1 ---------------------------------------------------------------------
 #+ graph-2 ---------------------------------------------------------------------
