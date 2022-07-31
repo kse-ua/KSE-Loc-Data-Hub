@@ -35,10 +35,7 @@ library(ggplot2)   # graphs
 # -- 2.Import only certain functions of a package into the search path.
 import::from("magrittr", "%>%")
 # -- 3. Verify these packages are available on the machine, but their functions need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
-requireNamespace("DBI"         ) # database
-requireNamespace("odbc"        ) # database
-requireNamespace("OuhscMunge"  ) # remotes::install_github("OuhscBbmc/OuhscMunge")
-requireNamespace("dplyr"    )# Avoid attaching dplyr, b/c its function names conflict with a lot of packages (esp base, stats, and plyr).
+library("dplyr"    )# Avoid attaching dplyr, b/c its function names conflict with a lot of packages (esp base, stats, and plyr).
 requireNamespace("readr"    )# data import/export
 requireNamespace("tidyr"    )# tidy data
 requireNamespace("janitor"  )# tidy data
@@ -48,22 +45,91 @@ requireNamespace("lubridate")# dates
 
 #+ declare-globals -------------------------------------------------------------
 # Constant values that won't change throughout the report
+path_rada <- "./data-private/raw/local-councils.csv"
+path_hromada <- "./data-private/raw/amalgomated-territorial-communities.csv"
+
+names_rada <- c(
+  "oblast"
+  ,"rai_center"
+  ,"rada_name"
+  ,"rada_code"
+  ,"hromada_name"
+  ,"hromada_code"
+  ,"note"
+)
+
+names_hromada <- c(
+  "category"
+  ,"oblast"
+  ,"raion"
+  ,"hromada_name"
+  ,"hromada_code"
+  ,"main_rada_code"
+  ,"rada_codes_v1"
+  ,"decision_date_v1"
+  ,"rada_codes_v2"
+  ,"decision_date_v2"
+  ,"rada_codes_v3"
+  ,"decision_date_v3"
+  ,"rada_codes_v4"
+  ,"decision_date_v4"
+  ,"rada_codes_v5"
+  ,"decision_date_v5"
+  ,"rada_codes_final"
+  ,"voluntary_amalgamation"
+)
+
+names_event <- c(
+   "hromada_code"
+  ,"rada_codes_v1"   
+  ,"decision_date_v1"   
+  ,"rada_codes_v2"   
+  ,"decision_date_v2"   
+  ,"rada_codes_v3"   
+  ,"decision_date_v3"   
+  ,"rada_codes_v4"   
+  ,"decision_date_v4"   
+  ,"rada_codes_v5"   
+  ,"decision_date_v5"  
+)
 
 #+ declare-functions -----------------------------------------------------------
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
-ds0_lc <- readr::read_csv("./data-private/raw/local-councils.csv")
-ds0_atc <- readr::read_csv("./data-private/raw/amalgomated-territorial-communities.csv")
-names(ds0_lc) <- c("region","obl_center", "local_council","council_code","council_name","atc_code","note")
-
+ds0_rada <- readr::read_csv(path_rada, col_names = names_rada, skip = 1)
+ds0_hromada <- readr::read_csv(path_hromada, col_names = names_hromada, skip=1)
 
 #+ inspect-data ----------------------------------------------------------------
-ds0_lc %>% glimpse()
-ds0_atc %>% glimpse()
+ds0_rada %>% glimpse()
+ds0_hromada %>% glimpse()
+
+
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
+ds1_rada <- 
+  ds0_rada 
+
+ds0_hromada %>% glimpse()
+
+ds1_hromada <-
+  ds0_hromada %>% 
+  select(!starts_with("rada_codes_v")) %>% 
+  select(!starts_with("decision_date"))
+ds1_hromada %>% glimpse()  
+
+
+ds1_event <- 
+  ds0_hromada %>% 
+  select(names_event)
+
+
+ds1_rada %>% glimpse()
+ds1_hromada %>% glimpse()
+ds1_event %>% glimpse()
+
+
 
 
 #+ table-1 ---------------------------------------------------------------------
