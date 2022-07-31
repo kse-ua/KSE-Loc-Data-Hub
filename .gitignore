@@ -111,3 +111,5 @@ Desktop.ini
 #     2. reorganized and moved above this chunk (so it won't be confused with files added unintentionally).
 quick-start.Rproj
 manipulation/0-import.html
+data-private/raw/amalgomated-territorial-communities.csv
+data-private/raw/local-councils.csv
