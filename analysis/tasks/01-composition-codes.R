@@ -193,3 +193,66 @@ ds_1 <-
 identical(ds_1, ds_out_target) # if TRUE, then QED
 
 
+#+ echo=F, results="asis" ------------------------------------------------------
+cat("\n# Andriy")
+#+ solution-4  ------------------------------------------------------
+# Step by step
+d1 <- 
+  ds_in %>% 
+  tidyr::pivot_longer(
+    cols = !starts_with("id")
+  ) %>% 
+  print()
+
+d2 <-
+  d1 %>% 
+  mutate(
+    wave  = str_extract(name, "\\d$" )
+    ,name = str_remove( name, "_\\d$")
+  ) %>% 
+  print()
+
+d3 <- 
+  d2 %>%  
+  pivot_wider(
+    names_from = "name", values_from = "value"
+  ) %>% 
+  print()
+
+d4 <-
+  d3 %>%
+  mutate(
+    code = str_split(codes, ',')
+  ) %>% 
+  unnest(cols = c("code")) %>% 
+  select(-codes, -wave) %>% 
+  arrange(id, date, code) %>% 
+  print()
+
+# as a single expression
+
+ds_out <- 
+  ds_in %>% 
+  tidyr::pivot_longer(
+    cols = !starts_with("id")
+  ) %>% 
+  mutate(
+    wave  = str_extract(name, "\\d$" )
+    ,name = str_remove( name, "_\\d$")
+  ) %>% 
+  pivot_wider(
+    names_from = "name", values_from = "value"
+  ) %>% 
+  mutate(
+    code = str_split(codes, ',')
+  ) %>% 
+  unnest(cols = c("code")) %>% 
+  select(-codes, -wave) %>% 
+  arrange(id, date, code) %>% 
+  mutate(
+    id = id %>% as.integer()
+    ,date = date %>% as.Date()
+    ,code = code %>% as.integer()
+  )
+
+identical(ds_out, ds_out_target) # if TRUE, then QED
