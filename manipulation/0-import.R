@@ -80,7 +80,7 @@ names_hromada <- c(
 )
 
 names_event <- c(
-   "hromada_code"
+  "hromada_code"
   ,"rada_codes_v1"   
   ,"decision_date_v1"   
   ,"rada_codes_v2"   
@@ -108,15 +108,33 @@ ds0_hromada %>% glimpse()
 
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
+ds0_rada %>% glimpse()
 ds1_rada <- 
-  ds0_rada 
+  ds0_rada %>% 
+  select(
+    rada_code
+    ,rada_name
+    ,hromada_code
+    ,rai_center
+    ,oblast
+    ,hromada_name
+  ) %>% 
+  arrange(
+    oblast, rada_code, rai_center
+  )
+ds1_rada %>% glimpse()
 
 ds0_hromada %>% glimpse()
-
 ds1_hromada <-
   ds0_hromada %>% 
   select(!starts_with("rada_codes_v")) %>% 
-  select(!starts_with("decision_date"))
+  select(!starts_with("decision_date")) %>% 
+  select(
+    hromada_code
+    ,hromada_name
+    ,main_rada_code
+    ,rada_codes_final
+  )
 ds1_hromada %>% glimpse()  
 
 
@@ -129,8 +147,14 @@ ds1_rada %>% glimpse()
 ds1_hromada %>% glimpse()
 ds1_event %>% glimpse()
 
+OuhscMunge::verify_value_headstart(ds1_rada)
 
-
+ds1_hromada %>% 
+  distinct(oblast) %>% 
+  mutate(
+    oblast = stringr::str_remove(oblast,"область")
+  ) %>% 
+  print(n = nrow(.))
 
 #+ table-1 ---------------------------------------------------------------------
 #+ graph-1 ---------------------------------------------------------------------
@@ -149,5 +173,4 @@ if( requireNamespace("devtools", quietly = TRUE) ) {
 report_render_duration_in_seconds <- scales::comma(as.numeric(difftime(Sys.time(), report_render_start_time, units="secs")),accuracy=1)
 report_render_duration_in_minutes <- scales::comma(as.numeric(difftime(Sys.time(), report_render_start_time, units="mins")),accuracy=1)
 #' Report rendered by `r Sys.info()["user"]` at `r strftime(Sys.time(), "%Y-%m-%d, %H:%M %z")` in `r report_render_duration_in_seconds` seconds ( or `r report_render_duration_in_minutes` minutes)
-
 
