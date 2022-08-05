@@ -1,6 +1,7 @@
 #' ---
 #' title: "01 - Compositon Codes"
-#' date: "last Updated: `r Sys.Date()`"
+#' author: "Andriy Koval"
+#' date: "Last updated: `r Sys.Date()`"
 #' ---
 #+ echo=F ----------------------------------------------------------------------
 # rmarkdown::render(input = "./analysis/tasks/01-composition-codes.R") # run to knit, don't uncomment
@@ -107,6 +108,88 @@ ds_out <- rbind(ds_1, ds_2) %>%
 
 identical(ds_out, ds_out_target) # if TRUE, then QED
 
-#+ solution-2 ------------------------------------------------------------------
+#+ echo=F, results="asis" ------------------------------------------------------
+cat("\n# Serhii")
 
+#+ echo=F, results="asis" ------------------------------------------------------
+cat("\n## Solution A")
+
+#+ solution-2 ------------------------------------------------------------------
+library(dplyr)
+#1
+ds_pre_out <- 
+  ds_in %>% 
+  tidyr::pivot_longer(cols = c("codes_1", "codes_2")) %>%
+  mutate(date = NA)
+ds_pre_out
+
+#2
+for(i in 1:length(ds_pre_out$id)) {
+  if(ds_pre_out$name[i] == "codes_1") {
+    ds_pre_out$date[i] = ds_pre_out$date_1[i]
+  } else {
+    ds_pre_out$date[i] = ds_pre_out$date_2[i]
+  }
+}
+ds_pre_out
+
+#3
+ds_pre_out <- ds_pre_out %>% 
+  select("id", "value", "date") %>%
+  tidyr::separate(value, into = c("code_1", "code_2", "code_3"))
+ds_pre_out
+
+#4
+ds_1 <- 
+  ds_pre_out %>% 
+  tidyr::pivot_longer(cols = c("code_1", "code_2", "code_3")) %>%
+  select(-name) %>%
+  filter(is.na(value) == FALSE) %>% 
+  rename(code = value) %>% 
+  mutate(
+    id = id %>% as.integer()
+    ,date = date %>% as.Date()
+    ,code = code %>% as.integer()
+  )%>% 
+  dplyr::arrange(id, date)
+ds_1
+identical(ds_1, ds_out_target) # if TRUE, then QED
+
+
+#+ echo=F, results="asis" ------------------------------------------------------
+cat("\n## Solution B")
 #+ solution-3 ------------------------------------------------------------------
+ds_pre_out <-
+  ds_in %>% 
+  tidyr::unite(col=date_codes_1, c("codes_1", "date_1"), sep = "_") %>%
+  tidyr::unite(col=date_codes_2, c("codes_2", "date_2"), sep = "_") %>% 
+  print()
+
+
+ds_pre_out <- 
+  ds_pre_out %>% 
+  tidyr::pivot_longer(cols = c("date_codes_1", "date_codes_2")) %>% 
+  print()
+
+
+ds_pre_out <- 
+  ds_pre_out %>% 
+  tidyr::separate(value, into = c("codes", "date"), sep = "_") %>%
+  tidyr::separate(codes, into = c("code_1", "code_2", "code_3")) %>% 
+  print()
+
+ds_1 <- 
+  ds_pre_out %>%
+  select(-name) %>%
+  tidyr::pivot_longer(cols = c("code_1", "code_2", "code_3")) %>% 
+  print(n=nrow(.))
+
+ds_1 <- 
+  ds_1 %>% 
+  select(-name) %>%
+  filter(is.na(value) == FALSE) %>% 
+  print()
+
+identical(ds_1, ds_out_target) # if TRUE, then QED
+
+
