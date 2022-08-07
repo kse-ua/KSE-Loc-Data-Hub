@@ -100,17 +100,83 @@ ds_hromada
 ds_settlement <-
   ds1 %>% 
   filter(object_category %in% c("X","C","T","M") ) %>% 
-  distinct(settlement_code = level_4, settlement_name = object_name)
+  distinct(settlement_code = level_4, settlement_name = object_name, 
+           settlement_type = category_label)
 ds_settlement
 
 
+ds_map_hromada <- 
+  #1
+  ds_hromada %>% 
+  left_join(
+     ds1 %>% distinct(raion_code = level_2, hromada_code = level_3)
+    ,by = "hromada_code"
+  ) %>% 
+  left_join(
+    ds_raion
+     ,by = "raion_code"
+  ) %>% 
+  # 2
+  left_join(
+    ds1 %>% distinct(oblast_code = level_1, hromada_code = level_3)
+    ,by = "hromada_code"
+  ) %>% 
+  left_join(
+    ds_oblast
+    ,by = "oblast_code"
+  )
+ds_map_hromada
 
-  
+
+ds_map_settlement <- 
+  #1
+  ds_settlement %>% 
+  left_join(
+    ds1 %>% distinct(settlement_code = level_4, hromada_code = level_3)
+    ,by = "settlement_code"
+  ) %>% 
+  left_join(
+    ds_map_hromada
+    ,by = "hromada_code"
+  )
+ds_map_settlement
+
+
+# demonstrate that ds_map_hromada can be derived from ds_map_settlement
+ds_map_hromada2 <- 
+  ds_map_settlement %>% 
+  # select(-c("settlement_code","settlement_name", "settlement_type"))
+  select(!starts_with("settlement_")) %>% 
+  # View()
+  distinct() %>% 
+  filter(!is.na(hromada_name))
+
+identical(ds_map_hromada, ds_map_hromada2)
+# Therefore we will use ds_map_settlement as the primary file
 
 #+ graph-1 ---------------------------------------------------------------------
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 
+ds_map_settlement %>% 
+  # readr::write_csv("./data-private/ua-admin-map.csv") # causes fatal error for RSTUdio, investigate later
+  readr::write_rds("./data-private/derived/ua-admin-map.rds")
+
+
+#+ sanity-check, eval=F, echo=F -------------------------------
+# rm(list = ls(all.names = TRUE))
+# cat("\014") # Clear the console
+# library(tidyverse)
+# 
+# ds_map <- readr::read_rds("./data-private/derived/ua-admin-map.rds")
+# 
+# ds_map_hromada <- 
+#   ds_map %>% 
+#   select(!starts_with("settlement")) %>% 
+#   filter(!is.na(hromada_name)) %>% 
+#   distinct()
+# 
+# ds_map_hromada
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
 #+ results="show", echo=F ------------------------------------------------------
