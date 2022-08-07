@@ -131,11 +131,11 @@ ds_map_hromada
 ds_map_settlement <- 
   #1
   ds_settlement %>% 
-  left_join(
+  inner_join(
     ds1 %>% distinct(settlement_code = level_4, hromada_code = level_3)
     ,by = "settlement_code"
   ) %>% 
-  left_join(
+  inner_join(
     ds_map_hromada
     ,by = "hromada_code"
   )
@@ -148,8 +148,8 @@ ds_map_hromada2 <-
   # select(-c("settlement_code","settlement_name", "settlement_type"))
   select(!starts_with("settlement_")) %>% 
   # View()
-  distinct() %>% 
-  filter(!is.na(hromada_name))
+  distinct()
+
 
 identical(ds_map_hromada, ds_map_hromada2)
 # Therefore we will use ds_map_settlement as the primary file
