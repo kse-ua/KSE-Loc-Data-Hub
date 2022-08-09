@@ -105,6 +105,7 @@ ds_settlement <-
 ds_settlement
 
 
+#+ combine ---------------------------------------------------------------------
 ds_map_hromada <- 
   #1
   ds_hromada %>% 
@@ -142,16 +143,13 @@ ds_map_settlement <-
 ds_map_settlement
 
 
-# demonstrate that ds_map_hromada can be derived from ds_map_settlement
-ds_map_hromada2 <- 
-  ds_map_settlement %>% 
-  # select(-c("settlement_code","settlement_name", "settlement_type"))
-  select(!starts_with("settlement_")) %>% 
-  # View()
-  distinct()
-
-
-identical(ds_map_hromada, ds_map_hromada2)
+# demonstrate that ds_map_hromada can be devided from ds_map_settlement
+identical(
+  ds_map_hromada
+  ,ds_map_settlement %>% 
+    select(!starts_with("settlement_")) %>% 
+    distinct()
+)
 # Therefore we will use ds_map_settlement as the primary file
 
 #+ graph-1 ---------------------------------------------------------------------
@@ -173,9 +171,7 @@ ds_map_settlement %>%
 # ds_map_hromada <- 
 #   ds_map %>% 
 #   select(!starts_with("settlement")) %>% 
-#   filter(!is.na(hromada_name)) %>% 
-#   distinct()
-# 
+#   filter(!is.na(hromada_name)) 
 # ds_map_hromada
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
