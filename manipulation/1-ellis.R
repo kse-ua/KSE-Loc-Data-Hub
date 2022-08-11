@@ -146,13 +146,13 @@ ds0_hromada <- readr::read_csv(
 ds_admin   <- readr::read_rds(path_admin)
 
 #+ inspect-data ----------------------------------------------------------------
-ds_admin    %>% glimpse()
 ds0_rada    %>% glimpse()
 ds0_hromada %>% glimpse()
+ds_admin    %>% glimpse()
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
 
-# Create a ds mapping radas to hromadas
+# Create a mapping of radas to hromadas
 ds1_rada <- 
   ds0_rada %>% 
   select(
@@ -160,7 +160,7 @@ ds1_rada <-
   )
 
 names(ds0_hromada) <- names_hromada
-ds0_hromada <- ds0_hromada %>% filter(!hromada_code == "#N/A")
+# ds0_hromada <- ds0_hromada %>% filter(!hromada_code == "#N/A") # Kyiv
 #  We can derive the rada-hromada mapping from "United" file:
 ds1a_rada <-
   ds0_hromada %>% # notice that it's not from ds0_rada!
