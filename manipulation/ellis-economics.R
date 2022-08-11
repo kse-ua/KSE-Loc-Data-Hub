@@ -35,6 +35,26 @@ library(tidyverse)
 path_economics <- "./data-private/raw/economics.csv"
 path_admin     <- "./data-private/derived/ua-admin-map.rds"    
 path_time      <- "./data-private/derived/time_rada.csv"
+
+
+metric_name_label <- c(
+   population           = "Кількість населення"
+  ,tax_revenue          = "Находження до бюджету"
+  ,tax_revenue_q1       = "Надходження до бюджету за 1-й квартал"
+  ,tax_revenue_share    = ""
+  ,tax_revenue_share_q1 = ""
+  ,tax_capacity_index   = ""
+  ,reverse_grant        = ""
+  ,basic_grant          = ""
+  ,duty_tax_uahpp       = ""
+  ,duty_tax_uahpp_q1    = ""
+  ,land_tax_uahpp       = ""
+  ,land_tax_uahpp_q1    = ""
+  ,flat_tax_uahpp       = ""
+  ,flat_tax_uahpp_q1    = ""
+  ,labour_cost_share    = ""
+  ,labour_cost_share_q1 = ""
+)
 #+ declare-functions -----------------------------------------------------------
 
 #+ results="asis", echo=F ------------------------------------------------------
@@ -68,16 +88,16 @@ dplyr::select(    # `dplyr::select()` drops columns not included.
   tax_revenue_2020                                      = `tax_revenue_2020`,
   tax_revenue_2021                                      = `tax_revenue_2021`,
   # tax_revenue_growth_2020_2021                          = `tax_revenue_growth_2020_2021`,
-  tax_revenue_2021q1                                    = `tax_revenue_2021q1`,
-  tax_revenue_2022q1                                    = `tax_revenue_2022q1`,
+  tax_revenue_q1_2021                                    = `tax_revenue_q1_2021`,
+  tax_revenue_q1_2022                                    = `tax_revenue_q1_2022`,
   # tax_revenue_group                                     = `tax_revenue_group`,
-  # tax_revenue_growth_2021q1_2022q1                      = `tax_revenue_growth_2021q1_2022q1`,
+  # tax_revenue_growth_q1_2021_q1_2022                      = `tax_revenue_growth_q1_2021_q1_2022`,
   tax_revenue_share_2020                                = `tax_revenue_share_2020`,
   tax_revenue_share_2021                                = `tax_revenue_share_2021`,
-  tax_revenue_share_2021q1                              = `tax_revenue_share_2021q1`,
-  tax_revenue_share_2022q1                              = `tax_revenue_share_2022q1`,
+  tax_revenue_share_q1_2021                              = `tax_revenue_share_q1_2021`,
+  tax_revenue_share_q1_2022                              = `tax_revenue_share_q1_2022`,
   # tax_revenue_share_group                               = `tax_revenue_share_group`,
-  # tax_revenue_share_growth_2021q1_2022q1                = `tax_revenue_share_growth_2021q1_2022q1`,
+  # tax_revenue_share_growth_q1_2021_q1_2022                = `tax_revenue_share_growth_q1_2021_q1_2022`,
   tax_capacity_index_2021                               = `tax_capacity_index_2021`,
   reverse_grant_2021                                    = `reverse_grant_2021`,
   basic_grant_2021                                      = `basic_grant_2021`,
@@ -90,29 +110,30 @@ dplyr::select(    # `dplyr::select()` drops columns not included.
   
   duty_tax_uahpp_2020                                   = `duty_tax_uahpp_2020`,
   duty_tax_uahpp_2021                                   = `duty_tax_uahpp_2021`,
-  duty_tax_uahpp_2021q1                                 = `duty_tax_uahpp_2021q1`,
-  duty_tax_uahpp_2022q1                                 = `duty_tax_uahpp_2022q1`,
+  duty_tax_uahpp_q1_2021                                 = `duty_tax_uahpp_q1_2021`,
+  duty_tax_uahpp_q1_2022                                 = `duty_tax_uahpp_q1_2022`,
   # duty_tax_group_uahpp                                  = `duty_tax_group_uahpp`,
-  # duty_tax_growth_2021q1_2022q1                         = `duty_tax_growth_2021q1_2022q1`,
+  # duty_tax_growth_q1_2021_q1_2022                         = `duty_tax_growth_q1_2021_q1_2022`,
   land_tax_uahpp_2020                                   = `land_tax_uahpp_2020`,
   land_tax_uahpp_2021                                   = `land_tax_uahpp_2021`,
-  land_tax_uahpp_2021q1                                 = `land_tax_uahpp_2021q1`,
-  land_tax_uahpp_2022q1                                 = `land_tax_uahpp_2022q1`,
-  # land_tax_group_2022q1                                 = `land_tax_group_2022q1`,
-  # land_tax_growth_2021q1_2022q1                         = `land_tax_growth_2021q1_2022q1`,
+  land_tax_uahpp_q1_2021                                 = `land_tax_uahpp_q1_2021`,
+  land_tax_uahpp_q1_2022                                 = `land_tax_uahpp_q1_2022`,
+  # land_tax_group_q1_2022                                 = `land_tax_group_q1_2022`,
+  # land_tax_growth_q1_2021_q1_2022                         = `land_tax_growth_q1_2021_q1_2022`,
   flat_tax_uahpp_2020                                   = `flat_tax_uahpp_2020`,
   flat_tax_uahpp_2021                                   = `flat_tax_uahpp_2021`,
-  flat_tax_uahpp_2021q1                                 = `flat_tax_uahpp_2021q1`,
-  flat_tax_uahpp_2022q1                                 = `flat_tax_uahpp_2022q1`,
+  flat_tax_uahpp_q1_2021                                 = `flat_tax_uahpp_q1_2021`,
+  flat_tax_uahpp_q1_2022                                 = `flat_tax_uahpp_q1_2022`,
   # flat_tax_group                                        = `flat_tax_group`,
-  # flat_tax_growth_2021q1_2022q2                         = `flat_tax_growth_2021q1_2022q2`,
+  # flat_tax_growth_q1_2021_2022q2                         = `flat_tax_growth_q1_2021_2022q2`,
   labour_cost_share_2020                                = `labour_cost_share_2020`,
   labour_cost_share_2021                                = `labour_cost_share_2021`,
-  labour_cost_share_2021q1                              = `labour_cost_share_2021q1`,
-  labour_cost_share_2022q1                              = `labour_cost_share_2022q1`,
+  labour_cost_share_q1_2021                              = `labour_cost_share_q1_2021`,
+  labour_cost_share_q1_2022                              = `labour_cost_share_q1_2022`,
   # labour_cost_share_group                               = `labour_cost_share_group`,
-  # labour_cost_growth_2021q1_2022q1                      = `labour_cost_growth_2021q1_2022q1`,
+  # labour_cost_growth_q1_2021_q1_2022                      = `labour_cost_growth_q1_2021_q1_2022`,
 )
+ds1 %>% names() %>% tibble() %>% print_all()
 
 
 ds1_basic <- 
@@ -129,7 +150,11 @@ ds1_basic <-
 ds1_basic %>% glimpse(70)
 ds_admin  %>% glimpse(70)
 
-ds2 <-
+
+
+
+#+ tweak-data-2 ----------------------------------------------------------------
+ds2_basic <-
   ds1_basic %>% 
   left_join(
     ds_admin %>% 
@@ -137,7 +162,70 @@ ds2 <-
       distinct()
     , by = "hromada_code"
   )
+ds2_basic %>% glimpse(70)
+
+
+ds2 <- 
+  ds1 %>% 
+  select(
+    # ,oblast                   
+    # ,raion                    
+    # ,hromada_name             
+    # ,hromada_type             
+    hromada_code
+    # ,tot                      
+    ,population_2020          
+    ,population_2021          
+    # ,area_kmsq                
+    ,tax_revenue_2020         
+    ,tax_revenue_2021         
+    ,tax_revenue_q1_2021      
+    ,tax_revenue_q1_2022      
+    ,tax_revenue_share_2020   
+    ,tax_revenue_share_2021   
+    ,tax_revenue_share_q1_2021
+    ,tax_revenue_share_q1_2022
+    ,tax_capacity_index_2021  
+    ,reverse_grant_2021       
+    ,basic_grant_2021         
+    # ,income_tax_uahpp         
+    ,tax_capacity_index_2022  
+    ,reverse_grant_2022       
+    ,basic_grant_2022         
+    ,duty_tax_uahpp_2020      
+    ,duty_tax_uahpp_2021      
+    ,duty_tax_uahpp_q1_2021   
+    ,duty_tax_uahpp_q1_2022   
+    ,land_tax_uahpp_2020      
+    ,land_tax_uahpp_2021      
+    ,land_tax_uahpp_q1_2021   
+    ,land_tax_uahpp_q1_2022   
+    ,flat_tax_uahpp_2020      
+    ,flat_tax_uahpp_2021      
+    ,flat_tax_uahpp_q1_2021   
+    ,flat_tax_uahpp_q1_2022   
+    ,labour_cost_share_2020   
+    ,labour_cost_share_2021   
+    ,labour_cost_share_q1_2021
+    ,labour_cost_share_q1_2022
+  ) %>% 
+  mutate_all(.funs = as.character) %>% 
+  pivot_longer(
+    cols = !starts_with("hromada_code")
+    ,names_to = "metric"
+  ) %>% 
+  mutate(
+    time = str_extract(name, "\\d{4}$") %>% as.integer()
+    ,name = str_remove(name, "_\\d{4}$")
+  ) %>% 
+  pivot_wider(
+     names_from = "measure"
+     ,values_from = "value"
+  )
+ds2
 ds2 %>% glimpse(70)
+
+ds2 %>% distinct(name) %>% tibble()
 
 #+ table-1 ---------------------------------------------------------------------
 #+ graph-1 ---------------------------------------------------------------------
