@@ -80,3 +80,4 @@ names_labels <- function(ds){
   return(nl)
 }
 # names_labels(ds=oneFile)
+print_all <- function(x){print(x,n=nrow(x))}
