@@ -96,11 +96,11 @@ path_admin   <- "./data-private/derived/ua-admin-map.rds"
 cat("\n# Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
-# source: local. Центр суспільних даних. Місцеві ради 2014
-# Цhttps://docs.google.com/spreadsheets/d/1iEbUsZSDGbJUzl_6wC3vgoVJ7GzOlc9f/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=trueентр суспільних даних. Місцеві ради 2014
+# source: "LOCAL" Центр суспільних даних. Місцеві ради 2014. tab 'all'
+# https://docs.google.com/spreadsheets/d/1iEbUsZSDGbJUzl_6wC3vgoVJ7GzOlc9f/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=trueентр суспільних даних. Місцеві ради 2014
 ds0_rada<- readr::read_csv(path_rada, col_names = names_rada, skip = 1)
 
-# source: united. Центр суспільних даних. Обєдання громад
+# source: "UNITED" Центр суспільних даних. Обєдання громад. tab 'all'
 # https://docs.google.com/spreadsheets/d/1xAFUDx8nf2oaIezWSBLaqitdxwEiQaOw/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true
 ds0_hromada <- readr::read_csv(
   path_hromada
