@@ -27,7 +27,7 @@ eval_chunks <- TRUE
 cache_chunks <- TRUE
 report_render_start_time <- Sys.time()
 options(width=100) # number of characters to display in the output (dflt = 80)
-Sys.setlocale("LC_CTYPE", "russian")
+Sys.setlocale("LC_CTYPE", "ukr")
 #+ load-sources ------------------------------------------------------------
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
@@ -129,18 +129,24 @@ path_admin   <- "./data-private/derived/ua-admin-map.rds"
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
-ds_admin   <- readr::read_rds(path_admin)
+# source: "LOCAL" Центр суспільних даних. Місцеві ради 2014. tab 'all'
+# https://docs.google.com/spreadsheets/d/1iEbUsZSDGbJUzl_6wC3vgoVJ7GzOlc9f/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=trueентр суспільних даних. Місцеві ради 2014
+ds0_rada<- readr::read_csv(path_rada, col_names = names_rada, skip = 1)
+
+# source: "UNITED" Центр суспільних даних. Обєдання громад. tab 'all'
+# https://docs.google.com/spreadsheets/d/1xAFUDx8nf2oaIezWSBLaqitdxwEiQaOw/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true
 ds0_hromada <- readr::read_csv(
   path_hromada
   ,col_types = col_types_hromada_raw # because had some trouble with parsing issues
   ,skip = 0
-) 
+)
 
-ds0_rada<- readr::read_csv(path_rada, col_names = names_rada, skip = 1)
-
+# Kодифікатор. tab "raw"
+# https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit#gid=1382135566
+ds_admin   <- readr::read_rds(path_admin)
 
 #+ inspect-data ----------------------------------------------------------------
-ds_admin      %>% glimpse()
+ds_admin    %>% glimpse()
 ds0_rada    %>% glimpse()
 ds0_hromada %>% glimpse()
 
