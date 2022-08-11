@@ -129,7 +129,7 @@ path_admin   <- "./data-private/derived/ua-admin-map.rds"
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
-ds_map   <- readr::read_rds(path_admin)
+ds_admin   <- readr::read_rds(path_admin)
 ds0_hromada <- readr::read_csv(
   path_hromada
   ,col_types = col_types_hromada_raw # because had some trouble with parsing issues
@@ -137,23 +137,26 @@ ds0_hromada <- readr::read_csv(
 ) 
 
 ds0_rada<- readr::read_csv(path_rada, col_names = names_rada, skip = 1)
-ds0_rada <-
-  ds0_rada %>%
-  filter(!is.na(hromada_code)) %>%
-  distinct(rada_code, hromada_code)
+
 
 #+ inspect-data ----------------------------------------------------------------
-ds_map      %>% glimpse()
+ds_admin      %>% glimpse()
 ds0_rada    %>% glimpse()
 ds0_hromada %>% glimpse()
 
-
-
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
+
+# Create a ds mapping radas to hromadas
+ds1_rada <- 
+  ds0_rada %>% 
+  select(
+    rada_code, rada_name, hromada_code, hromada_name, rai_center, oblast, note
+  )
+
 names(ds0_hromada) <- names_hromada
 ds0_hromada <- ds0_hromada %>% filter(!hromada_code == "#N/A")
-# Create a ds mapping radas to hromadas
-ds1_rada <-
+#  We can derive the rada-hromada mapping from "United" file:
+ds1a_rada <-
   ds0_hromada %>% # notice that it's not from ds0_rada!
   select(hromada_code, rada_codes_final) %>% 
   mutate(
@@ -162,8 +165,17 @@ ds1_rada <-
   select(-rada_codes_final) %>% 
   unnest(cols = c("rada_code")) %>% 
   select(rada_code, hromada_code) %>% 
+  mutate(rada_code = as.numeric(rada_code)) %>% 
   arrange( rada_code, hromada_code) 
-ds1_rada
+ds1a_rada %>% glimpse()
+# However, it will be missing the radas which did not morph into a hromada (e.g. Crimea, Kyiv)
+# Specifically:
+missing_radas <-
+  ds1_rada %>% 
+  dplyr::anti_join(ds1a_rada, by = "rada_code") %>% 
+  select(rada_code, rada_name, rai_center, oblast, note)
+  
+missing_radas %>% neat_DT()
 
 # create a ds listing the final list of hromadas along with the founding radad
 ds1_hromada <-
@@ -217,7 +229,7 @@ ds1_time <-
 ds1_time    %>% glimpse() # date when rada joins a hromada / when hromada alters its composition
 ds1_rada    %>% glimpse() # mapping of radas to hromadas at the end of amalgamation
 ds1_hromada %>% glimpse() # the final list of hromadas at the end of amalgamation proces
-
+ds_admin    %>% glimpse() # supporing meta-data file with admin level mapping
 
 
 
