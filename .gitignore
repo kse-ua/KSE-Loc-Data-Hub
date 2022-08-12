@@ -36,10 +36,9 @@ rsconnect/
 
 # ---- Protected Information -----------------------------------------------
 # see cubuspl42's answer in http://stackoverflow.com/questions/2415873/exceptions-in-gitignore
-/unshared-material/*
-/data-unshared/*
-/data/unshared/*
-
+/data-private/*
+/manipulation/*.html
+/manipulation/prints/*
 # Dataset Exceptions
 !utility/package-dependency-list.csv
 
@@ -109,4 +108,4 @@ Desktop.ini
 #   So the lines below should either be
 #     1. removed (because they were added unintentionally), or
 #     2. reorganized and moved above this chunk (so it won't be confused with files added unintentionally).
-quick-start.Rproj
+

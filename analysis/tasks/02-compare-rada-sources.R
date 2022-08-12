@@ -1,51 +1,31 @@
 #' ---
-#' title: "Ellis Lane"
-#' author: 
-#'   - "Andriy Koval"
-#'   - "other author"
-#' date: "last Updated: `r Sys.Date()`"
+#' title: "02 - Compare Rada Source"
+#' author: "Andriy Koval"
+#' date: "Last updated: `r Sys.Date()`"
 #' ---
-#+ echo=F
-# rmarkdown::render(input = "./manipulation/1-ellis.R") # run to knit, don't uncomment
-
+#+ echo=F ----------------------------------------------------------------------
+# rmarkdown::render(input = "./analysis/tasks/01-composition-codes.R") # run to knit, don't uncomment
 #+ echo=F ----------------------------------------------------------------------
 library(knitr)
 # align the root with the project working directory
-opts_knit$set(root.dir='../')  #Don't combine this call with any
+opts_knit$set(root.dir='../../')  #Don't combine this call with any
 #+ echo=F ----------------------------------------------------------------------
 rm(list = ls(all.names = TRUE)) # Clear the memory of variables from previous run.
 #This is not called by knitr, because it's above the first chunk.
 #+ results="hide",echo=F -------------------------------------------------------
 cat("\014") # Clear the console
-#+ echo=FALSE, results="asis" --------------------------------------------------
-cat("Report's native working directory: `", getwd(),"`") # Must be set to Project Directory
-#+ echo=F, results="asis" ------------------------------------------------------
-cat("\n# 1.Environment")
+#+ load-sources ------------------------------------------------------------
+base::source("./scripts/common-functions.R") # project-level
+#+ load-packages ---------------------------------------------------------------
+library(tidyverse)
+
 #+ set_options, echo=F ---------------------------------------------------------
 echo_chunks <- TRUE
 eval_chunks <- TRUE
 cache_chunks <- TRUE
 report_render_start_time <- Sys.time()
 options(width=100) # number of characters to display in the output (dflt = 80)
-Sys.setlocale("LC_CTYPE", "ukr")
-#+ load-sources ------------------------------------------------------------
-base::source("./scripts/common-functions.R") # project-level
-#+ load-packages -----------------------------------------------------------
-# Prefer to be greedy: load only what's needed
-# Three ways, from least (1) to most(3) greedy:
-# -- 1.Attach these packages so their functions don't need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
-library(ggplot2)   # graphs
-library(tidyverse)
-# -- 2.Import only certain functions of a package into the search path.
-import::from("magrittr", "%>%")
-# -- 3. Verify these packages are available on the machine, but their functions need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
-library("dplyr"    )# Avoid attaching dplyr, b/c its function names conflict with a lot of packages (esp base, stats, and plyr).
-requireNamespace("readr"    )# data import/export
-requireNamespace("tidyr"    )# tidy data
-requireNamespace("janitor"  )# tidy data
-requireNamespace("forcats"  )# factors
-requireNamespace("stringr"  )# strings
-requireNamespace("lubridate")# dates
+Sys.setlocale("LC_CTYPE", "russian")
 
 #+ declare-globals -------------------------------------------------------------
 # Constant values that won't change throughout the report
@@ -56,7 +36,7 @@ if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
 
 
 names_hromada <- c(
-   "category"
+  "category"
   ,"oblast"
   ,"raion"
   ,"hromada_name"
@@ -74,20 +54,6 @@ names_hromada <- c(
   ,"decision_date_v5"
   ,"rada_codes_final"
   ,"voluntary_amalgamation"
-)
-
-names_event <- c(
-  "hromada_code"
-  ,"rada_codes_v1"   
-  ,"decision_date_v1"   
-  ,"rada_codes_v2"   
-  ,"decision_date_v2"   
-  ,"rada_codes_v3"   
-  ,"decision_date_v3"   
-  ,"rada_codes_v4"   
-  ,"decision_date_v4"   
-  ,"rada_codes_v5"   
-  ,"decision_date_v5"  
 )
 
 names_rada <- c(
@@ -127,8 +93,9 @@ path_admin   <- "./data-private/derived/ua-admin-map.rds"
 #+ declare-functions -----------------------------------------------------------
 
 #+ results="asis", echo=F ------------------------------------------------------
-cat("\n# 2.Data ")
+cat("\n# Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
+
 # source: "LOCAL" Центр суспільних даних. Місцеві ради 2014. tab 'all'
 # https://docs.google.com/spreadsheets/d/1iEbUsZSDGbJUzl_6wC3vgoVJ7GzOlc9f/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=trueентр суспільних даних. Місцеві ради 2014
 ds0_rada<- readr::read_csv(path_rada, col_names = names_rada, skip = 1)
@@ -143,112 +110,79 @@ ds0_hromada <- readr::read_csv(
 
 # Kодифікатор. tab "raw"
 # https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit#gid=1382135566
-ds_admin   <- readr::read_rds(path_admin)
+ds_map   <- readr::read_rds(path_admin)
+
 
 #+ inspect-data ----------------------------------------------------------------
+ds_map      %>% glimpse()
 ds0_rada    %>% glimpse()
 ds0_hromada %>% glimpse()
-ds_admin    %>% glimpse()
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
+# List of radas and hromadas they belong to from the file "Місцеві ради 2014"
+rada_local <- 
+  ds0_rada %>%
+  # filter(!is.na(hromada_code)) %>%
+  distinct(rada_code, hromada_code) %>% 
+  arrange(rada_code, hromada_code)
 
-# Create a mapping of radas to hromadas
-ds1_rada <- 
-  ds0_rada %>% 
-  select(
-    rada_code, rada_name, hromada_code, hromada_name, rai_center, oblast, note
-  )
-
+# List of rads and hromadas they belong to from the file "Обь'єднання громад"
 names(ds0_hromada) <- names_hromada
-# ds0_hromada <- ds0_hromada %>% filter(!hromada_code == "#N/A") # Kyiv
-#  We can derive the rada-hromada mapping from "United" file:
-ds1a_rada <-
-  ds0_hromada %>% # notice that it's not from ds0_rada!
+rada_united <- 
+  ds0_hromada %>% 
+  filter(!hromada_code == "#N/A") %>% 
   select(hromada_code, rada_codes_final) %>% 
   mutate(
     rada_code = str_split(rada_codes_final, ',')
   ) %>% 
   select(-rada_codes_final) %>% 
   unnest(cols = c("rada_code")) %>% 
-  select(rada_code, hromada_code) %>% 
-  mutate(rada_code = as.numeric(rada_code)) %>% 
-  arrange( rada_code, hromada_code) 
-ds1a_rada %>% glimpse()
-# However, it will be missing the radas which did not morph into a hromada (e.g. Crimea, Kyiv)
-# Specifically:
-missing_radas <-
-  ds1_rada %>% 
-  dplyr::anti_join(ds1a_rada, by = "rada_code") %>% 
-  select(rada_code, rada_name, rai_center, oblast, note)
-  
-missing_radas %>% neat_DT()
+  arrange(hromada_code, rada_code) 
 
-# create a ds listing the final list of hromadas along with the founding radad
-ds1_hromada <-
-  ds0_hromada %>% 
-  select(!starts_with("rada_codes_v")) %>% 
-  select(!starts_with("decision_date")) %>% 
-  select(
-    hromada_code
-    # ,hromada_name
-    ,main_rada_code
-    ,rada_codes_final
-  ) %>% 
-  arrange(hromada_code)
-ds1_hromada 
 
-# create a ds listing the dates on which hromadas changed their composition 
-ds0_time <- 
-  ds0_hromada %>% 
-  select(names_event) %>% 
-  print()
+#+ echo=F, results="asis" ------------------------------------------------------
+cat("\n# Problem")
+# We have two data files mapping radas to hromadas
+# The first dataset we called  `rada_local` comes from the file
+# "Центр суспільних даних. Місцеві ради 2014"  https://docs.google.com/spreadsheets/d/1iEbUsZSDGbJUzl_6wC3vgoVJ7GzOlc9f/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=trueентр суспільних даних. Місцеві ради 2014
+rada_local
+#  this data set stores information on N = _______ radas
+rada_local %>% pull(rada_code) %>% unique() %>% length() %>% scales::comma()
 
-ds1_time <- 
-  ds0_time %>% 
-  tidyr::pivot_longer(
-    cols = !starts_with("hromada_code")
-  ) %>% 
-  mutate(
-    wave  = str_extract(name, "\\d$" )
-    ,name = str_remove( name, "^rada_|decision_")
-    ,name = str_remove( name, "_v\\d{1}$")
-  ) %>% 
-  pivot_wider(
-    names_from = "name", values_from = "value"
-  ) %>% 
-  mutate(
-    rada_code = str_split(codes, ',')
-  ) %>% 
-  unnest(cols = c("rada_code")) %>% 
-  select(-codes, -wave) %>% 
-  filter(!is.na(date)) %>%
-  mutate(
-    date = as.Date(date)
-    # ,rada_code = as.integer(rada_code)
-  ) %>% 
-  filter(!is.na(rada_code)) %>% 
-  arrange(hromada_code, date, rada_code) %>% 
-  select(date,rada_code, hromada_code) %>% 
-  print()
+#  the SECOND dataset we called `rada_united` comes from the file
+# Центр суспільних даних. Обєдання громад - https://docs.google.com/spreadsheets/d/1xAFUDx8nf2oaIezWSBLaqitdxwEiQaOw/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true
+rada_united
+# the list of radas in this file counts N = ________ radas
+rada_united %>% pull(rada_code) %>% unique() %>% length() %>% scales::comma()
+# this file records what radas makes up hromadas at the end of the amalgamation (2021)
+# TODO:
+# Explore the discrepancy between these two files
+# Using the labels in the dataset `ds_admin`,  describe what radas/hromadas are
+# missing from each file and speculate/expolain why. 
 
-#+ inspect-data-2 ----------------------------------------------------------------
-ds1_time    %>% glimpse() # date when rada joins a hromada / when hromada alters its composition
-ds1_rada    %>% glimpse() # mapping of radas to hromadas at the end of amalgamation
-ds1_hromada %>% glimpse() # the final list of hromadas at the end of amalgamation proces
-ds_admin    %>% glimpse() # supporing meta-data file with admin level mapping
+# Answer the following question:
+# If we disregard the "Local" source and use only rada_united, will we miss anything relevant to our project? 
+# In other words, if we need to rely on the mapping between radas and hromadas,
+# are we safe to use the mapping derived from the "United" source? ( I think yes,
+# but we need the proof)
+
+# Notes:
+# 1. Occupied territories is the most likely culprit, but there might be something else 
+# 2. The report should compile into an html document
+# 3. Please use the "main" branch, but create a separate script with your solution
+# and call it "./analysis/tasks/02-compare-rada-sources-yourname.R"
+# #
 
 
 
-#+ table-1 ---------------------------------------------------------------------
+#+ results="asis", echo=F ------------------------------------------------------
+cat("\n# Solution ")
 
+#+ 1 ---------------------------------------------------------------------------
 
-#+ graph-1 ---------------------------------------------------------------------
-#+ graph-2 ---------------------------------------------------------------------
-#+ save-to-disk, eval=eval_chunks-----------------------------------------------
+#+ 2 ---------------------------------------------------------------------------
 
-ds1_time %>% readr::write_csv("./data-private/derived/time_rada.csv")
-ds1_rada %>% readr::write_csv("./data-private/derived/rada_hromada.csv")
-ds1_hromada %>% readr::write_csv("./data-private/derived/hromada.csv")
+#+ 3 ---------------------------------------------------------------------------
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")

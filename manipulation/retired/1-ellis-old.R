@@ -27,7 +27,7 @@ eval_chunks <- TRUE
 cache_chunks <- TRUE
 report_render_start_time <- Sys.time()
 options(width=100) # number of characters to display in the output (dflt = 80)
-Sys.setlocale("LC_CTYPE", "ukr")
+Sys.setlocale("LC_CTYPE", "russian")
 #+ load-sources ------------------------------------------------------------
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
@@ -54,6 +54,16 @@ requireNamespace("lubridate")# dates
 prints_folder <- paste0("./manipulation/prints/")
 if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
 
+
+names_rada <- c(
+  "oblast"
+  ,"rai_center"
+  ,"rada_name"
+  ,"rada_code"
+  ,"hromada_name"
+  ,"hromada_code"
+  ,"note"
+)
 
 names_hromada <- c(
    "category"
@@ -90,15 +100,16 @@ names_event <- c(
   ,"decision_date_v5"  
 )
 
-names_rada <- c(
-  "oblast"
-  ,"rai_center"
-  ,"rada_name"
-  ,"rada_code"
-  ,"hromada_name"
-  ,"hromada_code"
-  ,"note"
-)
+names_admin_codes <- 
+  c(
+    "level_1"
+    ,"level_2"
+    ,"level_3"
+    ,"level_4"
+    ,"level_additional"
+    ,"object_category"
+    ,"object_name"
+  )
 
 col_types_hromada_raw <- readr::cols_only(
   `Hromada_category`          = readr::col_character(),
@@ -121,90 +132,86 @@ col_types_hromada_raw <- readr::cols_only(
   `voluntary_amalgamation`    = readr::col_character()
 )
 
-path_rada    <- "./data-private/raw/rada.csv"
+path_rada <- "./data-private/raw/rada.csv"
 path_hromada <- "./data-private/raw/hromada.csv"
-path_admin   <- "./data-private/derived/ua-admin-map.rds"    
+path_admin <- "./data-private/raw/ua-admin-codes.csv"    
 #+ declare-functions -----------------------------------------------------------
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
-# source: "LOCAL" Центр суспільних даних. Місцеві ради 2014. tab 'all'
-# https://docs.google.com/spreadsheets/d/1iEbUsZSDGbJUzl_6wC3vgoVJ7GzOlc9f/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=trueентр суспільних даних. Місцеві ради 2014
-ds0_rada<- readr::read_csv(path_rada, col_names = names_rada, skip = 1)
+ds0_admin   <- readr::read_csv(path_admin, col_names = names_admin_codes,skip=1)
 
-# source: "UNITED" Центр суспільних даних. Обєдання громад. tab 'all'
-# https://docs.google.com/spreadsheets/d/1xAFUDx8nf2oaIezWSBLaqitdxwEiQaOw/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true
+ds0_rada    <- readr::read_csv(path_rada, col_names = names_rada, skip = 1)
 ds0_hromada <- readr::read_csv(
   path_hromada
   ,col_types = col_types_hromada_raw # because had some trouble with parsing issues
   ,skip = 0
 )
 
-# Kодифікатор. tab "raw"
-# https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit#gid=1382135566
-ds_admin   <- readr::read_rds(path_admin)
 
 #+ inspect-data ----------------------------------------------------------------
+ds0_admin %>% glimpse()
 ds0_rada    %>% glimpse()
 ds0_hromada %>% glimpse()
-ds_admin    %>% glimpse()
+
+
+ds0_hromada %>% slice(1100) %>% t()
+
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
-
-# Create a mapping of radas to hromadas
+ds0_rada %>% glimpse()
 ds1_rada <- 
   ds0_rada %>% 
   select(
-    rada_code, rada_name, hromada_code, hromada_name, rai_center, oblast, note
-  )
-
-names(ds0_hromada) <- names_hromada
-# ds0_hromada <- ds0_hromada %>% filter(!hromada_code == "#N/A") # Kyiv
-#  We can derive the rada-hromada mapping from "United" file:
-ds1a_rada <-
-  ds0_hromada %>% # notice that it's not from ds0_rada!
-  select(hromada_code, rada_codes_final) %>% 
-  mutate(
-    rada_code = str_split(rada_codes_final, ',')
+    rada_code
+    ,rada_name
+    ,hromada_code
+    # ,rai_center # not sure we need this
+    # ,oblast
+    # ,hromada_name
   ) %>% 
-  select(-rada_codes_final) %>% 
-  unnest(cols = c("rada_code")) %>% 
-  select(rada_code, hromada_code) %>% 
-  mutate(rada_code = as.numeric(rada_code)) %>% 
-  arrange( rada_code, hromada_code) 
-ds1a_rada %>% glimpse()
-# However, it will be missing the radas which did not morph into a hromada (e.g. Crimea, Kyiv)
-# Specifically:
-missing_radas <-
-  ds1_rada %>% 
-  dplyr::anti_join(ds1a_rada, by = "rada_code") %>% 
-  select(rada_code, rada_name, rai_center, oblast, note)
-  
-missing_radas %>% neat_DT()
+  arrange(
+    # oblast
+    rada_code
+    # ,rai_center # not sure we need this
+  )
+ds1_rada %>% glimpse()
 
-# create a ds listing the final list of hromadas along with the founding radad
+ds0_hromada %>% glimpse()
+names(ds0_hromada) <- names_hromada
+
 ds1_hromada <-
   ds0_hromada %>% 
   select(!starts_with("rada_codes_v")) %>% 
   select(!starts_with("decision_date")) %>% 
   select(
     hromada_code
-    # ,hromada_name
+    ,hromada_name
     ,main_rada_code
     ,rada_codes_final
-  ) %>% 
-  arrange(hromada_code)
-ds1_hromada 
+  )
+ds1_hromada %>% glimpse()  
 
-# create a ds listing the dates on which hromadas changed their composition 
-ds0_time <- 
+
+ds1_event <- 
   ds0_hromada %>% 
-  select(names_event) %>% 
-  print()
+  select(names_event)
 
-ds1_time <- 
-  ds0_time %>% 
+
+ds1_rada %>% glimpse()
+ds1_hromada %>% glimpse()
+ds1_event %>% glimpse()
+
+
+#+ make-tidy-data --------------------------------------------------------------
+#+ 
+#+ 
+selected_codes <- c("UA05020010000053508","UA05020030000031457" )
+
+ds2 <- 
+  ds1_event %>% 
+  # filter(hromada_code %in% selected_codes) %>% 
   tidyr::pivot_longer(
     cols = !starts_with("hromada_code")
   ) %>% 
@@ -227,28 +234,54 @@ ds1_time <-
     # ,rada_code = as.integer(rada_code)
   ) %>% 
   filter(!is.na(rada_code)) %>% 
-  arrange(hromada_code, date, rada_code) %>% 
-  select(date,rada_code, hromada_code) %>% 
-  print()
-
-#+ inspect-data-2 ----------------------------------------------------------------
-ds1_time    %>% glimpse() # date when rada joins a hromada / when hromada alters its composition
-ds1_rada    %>% glimpse() # mapping of radas to hromadas at the end of amalgamation
-ds1_hromada %>% glimpse() # the final list of hromadas at the end of amalgamation proces
-ds_admin    %>% glimpse() # supporing meta-data file with admin level mapping
+  arrange(hromada_code, date, rada_code)
 
 
 
 #+ table-1 ---------------------------------------------------------------------
+ds2 %>% glimpse()
+d <-
+  ds2  %>% 
+  group_by(hromada_code, date) %>% 
+  summarize(
+    rada_count = n_distinct(rada_code, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  left_join(
+    ds_map
+    ,by = "hromada_code"
+  )
+d
 
+g <-
+  d %>% 
+  filter(!is.na(hromada_code)) %>% 
+  ggplot(aes(
+    x=date
+    , y = rada_count
+    , group = hromada_code
+    # ,color = oblast_name
+    )
+  )+
+  geom_point(shape=21, alpha = .4, size = 1)+
+  facet_wrap(facets = c("oblast_name"))+
+  geom_line(alpha = .3)+
+  theme(
+   legend.position = "none"
+  )+
+  labs(
+    title = "Динаміка складу територіальних громад"
+    ,subtitle = "Як змінювалась кількість місцевих рад у складі громад?"
+    ,y = "Кількість місцевих рад у громаді"
+    ,x = "Дата зміни складу громад"
+  )
+
+g %>% 
+  quick_save("hromada-growth-n-rada",w=12, h=8)
 
 #+ graph-1 ---------------------------------------------------------------------
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-
-ds1_time %>% readr::write_csv("./data-private/derived/time_rada.csv")
-ds1_rada %>% readr::write_csv("./data-private/derived/rada_hromada.csv")
-ds1_hromada %>% readr::write_csv("./data-private/derived/hromada.csv")
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
