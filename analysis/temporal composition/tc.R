@@ -16,6 +16,10 @@ rm(list = ls(all.names = TRUE)) # Clear the memory of variables from previous ru
 #This is not called by knitr, because it's above the first chunk.
 #+ results="hide",echo=F -------------------------------------------------------
 cat("\014") # Clear the console
+
+
+#+ load-sources ---------------------------------------------------------------
+source("./scripts/common-functions.R")
 #+ load-packages ---------------------------------------------------------------
 library(tidyverse)
 
@@ -28,6 +32,10 @@ path_plots <- './analysis/temporal composition/plots'
 
 
 Sys.setlocale("LC_CTYPE", "russian")
+
+prints_folder <- paste0("./analysis/temporal composition/prints/")
+if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
+
 #+ declare-functions -----------------------------------------------------------
 
 plot_hromada <- function(x, path = getwd()) {
@@ -40,6 +48,38 @@ plot_hromada <- function(x, path = getwd()) {
   ggsave(p, file=paste0(x, ".png"), path = path)
 }
 
+
+draw_random_id <- function(d, idvar="person_oid", n = 1){
+  all_unique_ids <- d %>%
+    pull(idvar) %>%
+    unique()
+  a_random_id <- sample(all_unique_ids, size = n)
+  return(a_random_id)
+}
+# ds_is %>% draw_random_id()
+# ds_ea %>% draw_random_id()
+
+# see https://www.tidyverse.org/blog/2019/06/rlang-0-4-0/
+# for details on using `.data[[]]` pronoun
+get_sample <- function(
+  d
+  ,sample_size=10
+  , idvar = "PERSON_OID"
+  , uniques = TRUE # if TRUE, only unique values are sampled
+  ,seed = 42
+){
+  # browser()
+  sampling_universe <- d %>% pull(.data[[idvar]])
+  if(uniques){
+    sampling_universe <- sampling_universe %>% unique()
+  }
+  x_out <- sample(
+    x        = sampling_universe
+    ,size    = sample_size
+    ,replace = FALSE
+  )
+  return(x_out)
+}
 #+ load-data -------------------------------------------------------------------
 ds0_time <- readr::read_csv(path_time)
 ds_admin <- readr::read_rds(path_admin)
@@ -51,6 +91,34 @@ ds0_time %>%
 
 ds_admin %>%
   explore::describe_all()
+
+#+ graph-1 ---------------------------------------------------------------------
+# Graph how each hromada changes its composition of rada over the years
+sample_hromhadas <- 
+  ds0_time %>% 
+  filter(hromada_code %in%  get_sample(.,sample_size = 100, idvar = "hromada_code"))
+
+d <- 
+  ds0_time %>% 
+  # filter(hromada_code %in%  get_sample(.,sample_size = 100, idvar = "hromada_code")) %>% 
+  group_by(date, hromada_code) %>% 
+  summarize(
+    rada_count = n_distinct(rada_code, na.rm = T)
+  ) %>% 
+  ungroup()
+
+g <- 
+  d %>% 
+  ggplot(aes(x=date, y = rada_count, group = hromada_code)) +
+  geom_point(shape = 21, alpha = .4)+
+  geom_line(alpha = .3)+
+  labs(
+    title = "How many radas comprise a hromada?"
+  )
+
+g 
+
+g %>% quick_save("hromadas-over-time", w = 8, h = 5)
 
 #+ transform-data ----------------------------------------------------------------
 
@@ -103,7 +171,7 @@ ds2 %>%
 
 
 #+ plot-data ----------------------------------------------------------------
-
+# Q. How many radas made the decision to join a hromada in any given year? 
 # Plot for number of amalgamated radas by year
 ds1 %>%
   group_by(year) %>%
