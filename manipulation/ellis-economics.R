@@ -31,6 +31,11 @@ base::source("./scripts/common-functions.R") # project-level
 library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
+# ---- declare-globals ---------------------------------------------------------
+# printed figures will go here:
+prints_folder <- paste0("./manipulation/ellis-economics-prints/")
+if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
+
 #https://docs.google.com/spreadsheets/d/1F2d9EEx46llTMEFtgotzIRmDD0fx9sia/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true
 path_economics <- "./data-private/raw/economics.csv"
 path_admin     <- "./data-private/derived/ua-admin-map.rds"    
@@ -176,7 +181,7 @@ ds2 <-
     # ,tot                      
     ,population_2020          
     ,population_2021          
-    # ,area_kmsq                
+    # ,area_kmsq
     ,tax_revenue_2020         
     ,tax_revenue_2021         
     ,tax_revenue_q1_2021      
@@ -215,20 +220,24 @@ ds2 <-
     ,names_to = "metric"
   ) %>% 
   mutate(
-    time = str_extract(name, "\\d{4}$") %>% as.integer()
-    ,name = str_remove(name, "_\\d{4}$")
+    time = str_extract(metric, "\\d{4}$") %>% as.integer()
+    ,metric = str_remove(metric, "_\\d{4}$")
   ) %>% 
   pivot_wider(
-     names_from = "measure"
+     names_from = "metric"
      ,values_from = "value"
   )
-ds2
-ds2 %>% glimpse(70)
 
-ds2 %>% distinct(name) %>% tibble()
+ds2 %>% glimpse(70)
+ds2_basic %>% glimpse(70)
+
+
+#+ tweak-data-3 ----------------------------------------------------------------
 
 #+ table-1 ---------------------------------------------------------------------
 #+ graph-1 ---------------------------------------------------------------------
+
+
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 
