@@ -52,6 +52,35 @@ ds_rada_hromada %>% glimpse() # final structure of radas within hromadas
 ds_admin %>% glimpse() # map of codes and labels settlement-hromada-raion-oblast
 # ---- tweak-data --------------------------------------------------------------
 
+ds0 <- 
+  ds_time %>% 
+  group_by(hromada_code, date) %>% 
+  summarize(
+    rada_count = n_distinct(rada_code, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  # ungroup() %>% 
+  group_by(hromada_code) %>% 
+  mutate(
+    event_count = n_distinct(date, na.rm =T)
+    ,stable_composition = n_distinct(rada_count,na.rm=T)==1L
+  ) %>% 
+  ungroup() %>% 
+  arrange(hromada_code, date) %>% 
+  mutate(
+    trajectory_type = case_when(
+      event_count == 1L ~ "Last minute"
+      ,stable_composition ~ "Stable Composition"
+      ,TRUE ~ "Dynamic Composition"
+    )
+  ) %>% 
+  # print(n = 100)
+  left_join(
+    ds_admin
+    ,by = "hromada_code"
+  )
+
+ds0 %>% glimpse()
 
 # ---- table-1 -----------------------------------------------------------------
 
@@ -104,35 +133,7 @@ g %>%
 # ---- graph-2 -----------------------------------------------------------------
 # add classification
 
-ds0 <- 
-  ds_time %>% 
-  group_by(hromada_code, date) %>% 
-  summarize(
-    rada_count = n_distinct(rada_code, na.rm = T)
-    ,.groups = "drop"
-  ) %>% 
-  # ungroup() %>% 
-  group_by(hromada_code) %>% 
-  mutate(
-    event_count = n_distinct(date, na.rm =T)
-    ,stable_composition = n_distinct(rada_count,na.rm=T)==1L
-  ) %>% 
-  ungroup() %>% 
-  arrange(hromada_code, date) %>% 
-  mutate(
-    trajectory_type = case_when(
-      event_count == 1L ~ "Last minute"
-      ,stable_composition ~ "Stable Composition"
-      ,TRUE ~ "Dynamic Composition"
-    )
-  ) %>% 
-  # print(n = 100)
-  left_join(
-    ds_admin
-    ,by = "hromada_code"
-  )
 
-ds0 %>% glimpse()
 
 g <-
   ds0 %>% 
@@ -167,6 +168,45 @@ g <-
 g %>% 
   quick_save("2-composition-type",w=12, h=8)
 
+# ---- graph-2 -----------------------------------------------------------------
+# bar graph
+ds0 %>% glimpse()
+g <-
+  ds0 %>% 
+  filter(!is.na(hromada_name)) %>% 
+  group_by(trajectory_type) %>% 
+  summarize(
+    
+  )
+  ggplot(aes(
+    x=date
+    , y = rada_count
+    , group = hromada_code
+    ,color = trajectory_type
+    ,fill = trajectory_type
+  )
+  )+
+  geom_point(shape=21, alpha = .4, size = 1)+
+  facet_wrap(facets = c("oblast_name"))+
+  geom_line(alpha = .3)+
+  theme(
+    legend.position = "bottom"
+  )+
+  labs(
+    # title = "Динаміка складу територіальних громад"
+    # ,subtitle = "Як змінювалась кількість місцевих рад у складі громад?"
+    # ,y = "Кількість місцевих рад у громаді"
+    # ,x = "Дата зміни складу громад"
+    title = "Types of composition of hromadas over time"
+    ,subtitle = "How did the quantity of radas withing hromada change over time?"
+    ,y = "Number of radas in the hromada"
+    ,x = "The date of changing the composition of hromada"
+    ,color = "Composition Type"
+    ,fill = "Composition Type"
+  )
+
+g %>% 
+  quick_save("2-composition-type",w=12, h=8)
 # ---- save-to-disk ------------------------------------------------------------
 
 # ---- publish ------------------------------------------------------------
