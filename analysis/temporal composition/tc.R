@@ -32,7 +32,7 @@ Sys.setlocale("LC_CTYPE", "russian")
 
 plot_hromada <- function(x, path = getwd()) {
   tmp <- ds2 %>%
-    filter(hromada_code == x)
+    filter(oblast_hromada == x)
   p <- ggplot(tmp, aes(x=year, y=rada_count)) +
     geom_bar(stat='identity', position = 'identity') +
     geom_text(aes(label=rada_count), vjust = -0.2) +
@@ -47,6 +47,9 @@ ds_admin <- readr::read_rds(path_admin)
 #+ inspect-data ----------------------------------------------------------------
 
 ds0_time %>%
+  explore::describe_all()
+
+ds_admin %>%
   explore::describe_all()
 
 #+ transform-data ----------------------------------------------------------------
@@ -73,21 +76,31 @@ ds1 <-
   mutate(rada_count = replace_na(rada_count, 0)) %>%
   ungroup()
 
+# adding administrative names
 hromada_names <- ds_admin %>%
-  select(hromada_code, hromada_name) %>%
+  select(hromada_code, hromada_name, raion_name, oblast_name) %>%
   distinct()
+
+# important - hromada names have 133 duplicates
+hromada_names  %>%
+  group_by(hromada_name) %>%
+  summarise(n=n()) %>%
+  filter(n > 1) %>%
+  arrange(desc(n))
 
 ds2 <- 
   ds1 %>%
   left_join(
     hromada_names
     ,by = "hromada_code"
-  )
+  ) %>%
+  mutate(oblast_hromada = paste(oblast_name, hromada_name, sep = '_'))
 
 ds2 %>%
   explore::describe_all()
 # number of distinct codes not equal to number of unique hromada names -
 # probaply some names are the same (1470 codes, 1323 names)
+
 
 #+ plot-data ----------------------------------------------------------------
 
@@ -100,13 +113,18 @@ ds1 %>%
   geom_text(aes(label=n_radas), vjust = -0.2) +
   theme_classic()
 
+## Alternative 1 - making separate plots for each hromada
+## 1470 images to save!
+
 # sample of hromadas for plotting
-l <- sample(ds2$hromada_code, 10)
-# l <- unique(ds2$hromada_code)
+l <- sample(ds2$oblast_hromada, 10)
+# l <- unique(ds2$oblast_hromada)
 # gets an error
 
 # separate plots for each hromada 
 for (k in l) {
   plot_hromada(k, path = path_plots)
 }
+
+## Alternative 2 - visualisation with interactive filtering (prob plotly)
 
