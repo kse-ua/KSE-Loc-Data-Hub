@@ -81,7 +81,7 @@ get_sample <- function(
   return(x_out)
 }
 #+ load-data -------------------------------------------------------------------
-ds0_time <- readr::read_csv(path_time)
+ds_time <- readr::read_csv(path_time)
 ds_admin <- readr::read_rds(path_admin)
 
 #+ inspect-data ----------------------------------------------------------------
@@ -93,175 +93,173 @@ ds_admin %>%
   explore::describe_all()
 
 
-#+ tweak-data-1 ----------------------------------------------------------------
+#+ tweak-data-0 ----------------------------------------------------------------
 # Let us create a classification of hromadas with respect to their temporal trajectory
-# type 1 - hromadas that were formed (in any year) and did NOT change their composition 
-# type 2 - hromadas that were formed in 2020 (2020-08-16)and have no history of changes of their composition prior to that point in time
-# type 3 - all other hromadas 
+# type 1 - "Stable" - hromadas that were formed (in any year) and did NOT change their composition 
+# type 2 - "Last Minute" hromadas that were formed in 2020 (2020-08-16)and have no history of changes of their composition prior to that point in time
+# type 3 - "Dynamic" - all other hromadas 
 
-set.seed(42)
-ds1 <- 
-  ds0_time %>%
-  inner_join(ds_admin %>% select(hromada_code, oblast_code, oblast_name)) %>% 
-  filter(oblast_name %in% c("Луганська","Черкаська")) %>% 
-  
-  group_by( date, hromada_code) %>% 
-  # filter(hromada_code %in%  get_sample(.,sample_size = 100, idvar = "hromada_code")) %>% 
-  mutate(
-    row_count = n() # number of amalgamation events
-    ,rada_count = n_distinct(rada_code, na.rm = T)
-    ,date_count = n_distinct(date, na.rm = T)
-  ) %>% 
-  ungroup() %>% 
-  mutate(
-    trajectory_type = case_when(
-      date_count == 1 ~ "Last minute"
-      ,TRUE ~ "Other"
-    )
-  ) %>% 
-    arrange(hromada_code, row_count)
-
-
-ds1 %>% filter(rada_count == 1) 
-
-
-#+ graph-1 ---------------------------------------------------------------------
-# Graph how each hromada changes its composition of rada over the years
-set.seed(42)
-sample_hromhadas <- 
-  ds1 %>% 
-  filter(hromada_code %in%  get_sample(.,sample_size = 10, idvar = "hromada_code")) %>% 
-  pull(hromada_code) %>% unique()
-
-d <- 
-  ds1 %>% 
-  filter(hromada_code %in%  sample_hromhadas) %>%
-  group_by(date, hromada_code) %>% 
+ds0 <- 
+  ds_time %>% 
+  group_by(hromada_code, date) %>% 
   summarize(
     rada_count = n_distinct(rada_code, na.rm = T)
+    ,.groups = "drop"
   ) %>% 
-  ungroup() %>% 
-  inner_join(
-    ds_admin 
-    ,by = "hromada_code"
-  )
-
-g <- 
-  d %>% 
-  inner_join(ds1 %>% select(hromada_code, trajectory_type)) %>%
-  {
-    ggplot(., aes(x=date, y = rada_count, group = hromada_code, color = trajectory_type)) +
-    geom_point(shape = 21, alpha = .1, size = 1)+
-    geom_point(shape = 1, size = 1, data = . %>% filter(trajectory_type == "Last minute"))+
-    geom_line(alpha = .3)+
-    scale_fill_manual(values = c("Last minute" = "red", "Other" = "white"))+
-    facet_wrap(facets = "oblast_name")+
-    labs(
-      title = "How many radas comprise a hromada?"
-    )
-   }
-
-g
-
-g %>% quick_save("hromadas-over-time", w = 12, h = 8)
-
-#+ types-of-trajectories --------------------------------------------
-# Let us create a classification of hromadas with respect to their temporal trajectory
-# type 1 - hromadas that were formed in 2014 and did NOT change their composition 
-# type 2 - hromadas that were formed in 2020 and have no history of changes of their composition prior to that point in time
-# type 3 - all other hromadas
-
-d2 <- 
-  ds0_time %>% 
-  # filter(hromada_code %in%  get_sample(.,sample_size = 100, idvar = "hromada_code")) %>%
+  # ungroup() %>% 
   group_by(hromada_code) %>% 
   mutate(
-    row_count = n() 
+    event_count = n_distinct(date, na.rm =T)
+    ,stable_composition = n_distinct(rada_count,na.rm=T)==1L
   ) %>% 
   ungroup() %>% 
-  # arrange(hromada_code, date, rada_code) 
-  group_by(row_count) %>% 
-  summarize(
-    hromada_count = n_distinct(hromada_code, na.rm = T)
+  arrange(hromada_code, date) %>% 
+  mutate(
+    trajectory_type = case_when(
+      event_count == 1L ~ "Last minute"
+      ,stable_composition ~ "Stable"
+      ,TRUE ~ "Dynamic"
+    )
   ) %>% 
-  print_all()
-  
-
-d2
-
-#+ transform-data ----------------------------------------------------------------
-
-# separating date in separate columns
-ds1_time  <- 
-  ds0_time %>%
-  mutate(year = lubridate::year(date)
-         , month = lubridate::month(date)
-         , day = lubridate::day(date)
-         , .after = date
+  # print(n = 100)
+  left_join(
+    ds_admin
+    ,by = "hromada_code"
   )
 
-# making NA for years when no events (from 2015 to 2020), then filling with 
-# previous number of distinct radas; when no hromada before - 0 radas
+ds0 %>% glimpse()
 
-ds1 <- 
-  ds1_time %>% 
-  group_by(hromada_code, year) %>%
-  summarise(rada_count = n_distinct(rada_code), .groups = 'drop') %>%
-  group_by(hromada_code) %>%
-  complete(year = c(2015:2020)) %>%
-  fill(rada_count, .direction = 'down') %>%
-  mutate(rada_count = replace_na(rada_count, 0)) %>%
-  ungroup()
 
-# adding administrative names
-hromada_names <- ds_admin %>%
-  select(hromada_code, hromada_name, raion_name, oblast_name) %>%
-  distinct()
 
-# important - hromada names have 133 duplicates
-hromada_names  %>%
-  group_by(hromada_name) %>%
-  summarise(n=n()) %>%
-  filter(n > 1) %>%
-  arrange(desc(n))
 
-ds2 <- 
-  ds1 %>%
+# ---- graph-1 -----------------------------------------------------------------
+d <-
+  ds_time  %>% 
+  group_by(hromada_code, date) %>% 
+  summarize(
+    rada_count = n_distinct(rada_code, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
   left_join(
-    hromada_names
+    ds_admin
     ,by = "hromada_code"
-  ) %>%
-  mutate(oblast_hromada = paste(oblast_name, hromada_name, sep = '_'))
+  )
+d
 
-ds2 %>%
-  explore::describe_all()
-# number of distinct codes not equal to number of unique hromada names -
-# probaply some names are the same (1470 codes, 1323 names)
+g <-
+  d %>% 
+  filter(!is.na(hromada_code)) %>% 
+  ggplot(aes(
+    x=date
+    , y = rada_count
+    , group = hromada_code
+    # ,color = oblast_name
+  )
+  )+
+  geom_point(shape=21, alpha = .4, size = 1)+
+  facet_wrap(facets = c("oblast_name"))+
+  geom_line(alpha = .3)+
+  theme(
+    legend.position = "none"
+  )+
+  labs(
+    # title = "Динаміка складу територіальних громад"
+    # ,subtitle = "Як змінювалась кількість місцевих рад у складі громад?"
+    # ,y = "Кількість місцевих рад у громаді"
+    # ,x = "Дата зміни складу громад"
+    title = "Change in composition of hromadas over time"
+    ,subtitle = "How did the quantity of radas withing hromada change over time?"
+    ,y = "Number of radas in the hromada"
+    ,x = "The date of changing the composition of hromada"
+  )
+
+g %>% 
+  quick_save("1-hromada-growth-n-rada",w=12, h=8)
 
 
-#+ plot-data ----------------------------------------------------------------
-# Q. How many radas made the decision to join a hromada in any given year? 
-# Plot for number of amalgamated radas by year
-ds1 %>%
-  group_by(year) %>%
-  summarise(n_radas = sum(rada_count)) %>%
-  ggplot(aes(x=year, y=n_radas)) +
-  geom_bar(stat='identity', position = 'identity') +
-  geom_text(aes(label=n_radas), vjust = -0.2) +
-  theme_classic()
+# ---- graph-2 -----------------------------------------------------------------
+# add classification
+g <-
+  ds0 %>% 
+  filter(!is.na(hromada_name)) %>% 
+  ggplot(aes(
+    x=date
+    , y = rada_count
+    , group = hromada_code
+    ,color = trajectory_type
+    ,fill = trajectory_type
+  )
+  )+
+  geom_point(shape=21, alpha = .4, size = 1)+
+  facet_wrap(facets = c("oblast_name"))+
+  geom_line(alpha = .3)+
+  theme(
+    legend.position = "bottom"
+  )+
+  labs(
+    # title = "Динаміка складу територіальних громад"
+    # ,subtitle = "Як змінювалась кількість місцевих рад у складі громад?"
+    # ,y = "Кількість місцевих рад у громаді"
+    # ,x = "Дата зміни складу громад"
+    title = "Types of composition of hromadas over time"
+    ,subtitle = "How did the quantity of radas within hromada change over time?"
+    ,y = "Number of radas in the hromada"
+    ,x = "The date of changing the composition of hromada"
+    ,color = "Composition Type"
+    ,fill = "Composition Type"
+  )
 
-## Alternative 1 - making separate plots for each hromada
-## 1470 images to save!
+g %>% 
+  quick_save("2-composition-type",w=12, h=8)
 
-# sample of hromadas for plotting
-l <- sample(ds2$oblast_hromada, 10)
-# l <- unique(ds2$oblast_hromada)
-# gets an error
+# ---- graph-3 -----------------------------------------------------------------
+# bar graph
+ds0 %>% glimpse()
+g <-
+  ds0 %>% 
+  filter(!is.na(hromada_name)) %>% 
+  group_by(oblast_name, trajectory_type) %>% 
+  summarize(
+    type_count = n_distinct(hromada_code, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(oblast_name) %>% 
+  mutate(
+    total_count = sum(type_count, na.rm = T)
+    ,type_prop = type_count/total_count
+    ,type_pct = type_prop %>% scales::percent(accuracy = 1)
+  ) %>% 
+  ggplot(
+    aes(
+      x=trajectory_type
+      , y = type_count
+      ,color = trajectory_type
+      ,fill = trajectory_type
+    )
+  )+
+  geom_col()+
+  geom_text(aes(label = type_pct),nudge_y = 6)+
+  facet_wrap(facets = c("oblast_name"))+
+  scale_y_continuous(expand = expansion(mult=c(0,.1)))+
+  # geom_line(alpha = .3)+
+  theme(
+    legend.position = "bottom"
+  )+
+  labs(
+    # title = "Динаміка складу територіальних громад"
+    # ,subtitle = "Як змінювалась кількість місцевих рад у складі громад?"
+    # ,y = "Кількість місцевих рад у громаді"
+    # ,x = "Дата зміни складу громад"
+    title = "Types of composition of hromadas over time"
+    ,subtitle = "Stable - initial and final compositions are identical/nLast "
+    ,y = "Number of radas in the hromada"
+    ,x = "Retrospective classification of hromadas' trajectory"
+    ,color = "Composition Type"
+    ,fill = "Composition Type"
+  )
 
-# separate plots for each hromada 
-for (k in l) {
-  plot_hromada(k, path = path_plots)
-}
+g %>% 
+  quick_save("3-composition-type",w=12, h=8)
 
-## Alternative 2 - visualisation with interactive filtering (prob plotly)
+#+ ------------------------------------
 

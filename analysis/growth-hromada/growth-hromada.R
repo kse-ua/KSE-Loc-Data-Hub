@@ -52,6 +52,35 @@ ds_rada_hromada %>% glimpse() # final structure of radas within hromadas
 ds_admin %>% glimpse() # map of codes and labels settlement-hromada-raion-oblast
 # ---- tweak-data --------------------------------------------------------------
 
+ds0 <- 
+  ds_time %>% 
+  group_by(hromada_code, date) %>% 
+  summarize(
+    rada_count = n_distinct(rada_code, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  # ungroup() %>% 
+  group_by(hromada_code) %>% 
+  mutate(
+    event_count = n_distinct(date, na.rm =T)
+    ,stable_composition = n_distinct(rada_count,na.rm=T)==1L
+  ) %>% 
+  ungroup() %>% 
+  arrange(hromada_code, date) %>% 
+  mutate(
+    trajectory_type = case_when(
+      event_count == 1L ~ "Last minute"
+      ,stable_composition ~ "Stable"
+      ,TRUE ~ "Dynamic"
+    )
+  ) %>% 
+  # print(n = 100)
+  left_join(
+    ds_admin
+    ,by = "hromada_code"
+  )
+
+ds0 %>% glimpse()
 
 # ---- table-1 -----------------------------------------------------------------
 
@@ -98,11 +127,95 @@ g <-
   )
 
 g %>% 
-  quick_save("hromada-growth-n-rada",w=12, h=8)
+  quick_save("1-hromada-growth-n-rada",w=12, h=8)
 
 
 # ---- graph-2 -----------------------------------------------------------------
+# add classification
 
+
+
+g <-
+  ds0 %>% 
+  filter(!is.na(hromada_name)) %>% 
+  ggplot(aes(
+    x=date
+    , y = rada_count
+    , group = hromada_code
+    ,color = trajectory_type
+    ,fill = trajectory_type
+  )
+  )+
+  geom_point(shape=21, alpha = .4, size = 1)+
+  facet_wrap(facets = c("oblast_name"))+
+  geom_line(alpha = .3)+
+  theme(
+    legend.position = "bottom"
+  )+
+  labs(
+    # title = "Динаміка складу територіальних громад"
+    # ,subtitle = "Як змінювалась кількість місцевих рад у складі громад?"
+    # ,y = "Кількість місцевих рад у громаді"
+    # ,x = "Дата зміни складу громад"
+    title = "Types of composition of hromadas over time"
+    ,subtitle = "How did the quantity of radas within hromada change over time?"
+    ,y = "Number of radas in the hromada"
+    ,x = "The date of changing the composition of hromada"
+    ,color = "Composition Type"
+    ,fill = "Composition Type"
+  )
+
+g %>% 
+  quick_save("2-composition-type",w=12, h=8)
+
+# ---- graph-3 -----------------------------------------------------------------
+# bar graph
+ds0 %>% glimpse()
+g <-
+  ds0 %>% 
+  filter(!is.na(hromada_name)) %>% 
+  group_by(oblast_name, trajectory_type) %>% 
+  summarize(
+    type_count = n_distinct(hromada_code, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(oblast_name) %>% 
+  mutate(
+    total_count = sum(type_count, na.rm = T)
+    ,type_prop = type_count/total_count
+    ,type_pct = type_prop %>% scales::percent(accuracy = 1)
+  ) %>% 
+  ggplot(
+    aes(
+      x=trajectory_type
+      , y = type_count
+      ,color = trajectory_type
+      ,fill = trajectory_type
+    )
+  )+
+  geom_col()+
+  geom_text(aes(label = type_pct),nudge_y = 6)+
+  facet_wrap(facets = c("oblast_name"))+
+  scale_y_continuous(expand = expansion(mult=c(0,.1)))+
+  # geom_line(alpha = .3)+
+  theme(
+    legend.position = "bottom"
+  )+
+  labs(
+    # title = "Динаміка складу територіальних громад"
+    # ,subtitle = "Як змінювалась кількість місцевих рад у складі громад?"
+    # ,y = "Кількість місцевих рад у громаді"
+    # ,x = "Дата зміни складу громад"
+    title = "Types of composition of hromadas over time"
+    ,subtitle = "Stable - initial and final compositions are identical/nLast "
+    ,y = "Number of radas in the hromada"
+    ,x = "Retrospective classification of hromadas' trajectory"
+    ,color = "Composition Type"
+    ,fill = "Composition Type"
+  )
+
+g %>% 
+  quick_save("3-composition-type",w=12, h=8)
 # ---- save-to-disk ------------------------------------------------------------
 
 # ---- publish ------------------------------------------------------------
