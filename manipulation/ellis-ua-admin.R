@@ -31,8 +31,6 @@ base::source("./scripts/common-functions.R") # project-level
 library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
-path_file <- "./data-private/raw/ua-admin-codes.csv"
-
 names_admin_ua <- c(
   "level_1"
   ,"level_2"
@@ -43,12 +41,23 @@ names_admin_ua <- c(
   ,"object_name"
   
 )
+
+path_raw    <- "./data-private/raw/ua-admin-codes.csv"
+path_oblasti <- "./data-private/raw/oblast.csv"
+
 #+ declare-functions -----------------------------------------------------------
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
-ds0 <- readr::read_csv(path_file, col_names = names_admin_ua, skip=1)
+# Kодифікатор. tab "raw"
+# https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit#gid=1382135566
+ds0 <- readr::read_csv(path_raw, col_names = names_admin_ua, skip=1)
+
+# Kодифікатор. tab "області"
+# https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true 
+ds0_oblast <- readr::read_csv(path_oblasti, skip=0)
+
 #+ inspect-data ----------------------------------------------------------------
 ds0 %>% glimpse()
 
@@ -139,7 +148,7 @@ ds_map_settlement <-
   inner_join(
     ds_map_hromada
     ,by = "hromada_code"
-  )
+  ) 
 ds_map_settlement
 
 
@@ -151,12 +160,17 @@ identical(
     distinct()
 )
 # Therefore we will use ds_map_settlement as the primary file
+# last touch: adding oblast-level helpers
+
+ds_admin <- 
+  ds_map_settlement %>% 
+  left_join(ds0_oblast, by = c("oblast_code", "oblast_name"))
 
 #+ graph-1 ---------------------------------------------------------------------
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 
-ds_map_settlement %>% 
+ds_admin %>% 
   # readr::write_csv("./data-private/ua-admin-map.csv") # causes fatal error for RSTUdio, investigate later
   readr::write_rds("./data-private/derived/ua-admin-map.rds")
 
