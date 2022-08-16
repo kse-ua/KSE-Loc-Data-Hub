@@ -12,7 +12,8 @@ library(ggplot2)   # graphs
 library(forcats)   # factors
 library(stringr)   # strings
 library(lubridate) # dates
-library(labelled)  # labels
+library(labelled)  # labels 
+library(dplyr)  # labels 
 # -- 2.Import only certain functions of a package into the search path.
 import::from("magrittr", "%>%")
 # -- 3. Verify these packages are available on the machine, but their functions need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
