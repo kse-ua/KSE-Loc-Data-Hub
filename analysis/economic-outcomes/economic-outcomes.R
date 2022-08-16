@@ -47,9 +47,43 @@ ds_admin      %>% glimpse() # map of codes and labels settlement-hromada-raion-o
 # ---- tweak-data --------------------------------------------------------------
 
 # ---- table-1 -----------------------------------------------------------------
+ds_economics %>% filter(hromada_code == "UA80000000000093317") %>% View()
 
 # ---- graph-1 -----------------------------------------------------------------
+ds_economics %>% distinct(metric)
+d <- 
+  ds_economics %>% 
+  filter(metric %in% c("tax_revenue","population")) %>% 
+  filter(!is.na(value)) %>% 
+  mutate(
+    metric = paste0(metric,"_",time)
+  ) %>% 
+  select(-c("time")) %>% 
+  pivot_wider(
+    names_from   = "metric"
+    ,values_from = "value"
+  ) %>% 
+  left_join(ds_admin %>% select(!starts_with("settlement")) %>% distinct() ) %>%  # add display labels
+  mutate(
+    oblast_name_display = paste0(region_ua," - ",oblast_name)
+    ,oblast_name_display = fct_reorder(oblast_name_display, map_position)
+  ) %>% 
+  filter(!is.na(hromada_name))
 
+d %>% glimpse()
+
+g <- 
+  d %>% 
+  ggplot(aes(x=tax_revenue_2020, y=tax_revenue_2021, color=region_ua, fill = region_ua))+
+  geom_point(shape = 21, fill = NA)+
+  facet_wrap(facets = "oblast_name_display", scales = "free")+
+  scale_y_continuous(labels = scales::comma_format())+
+  scale_x_continuous(labels = scales::comma_format())+
+  labs(
+    title = "Tax Revenue"
+  )
+
+g %>% quick_save("1-outcome-scatterplot", w=12, h = 9)
 # ---- graph-2 -----------------------------------------------------------------
 
 # ---- graph-3 -----------------------------------------------------------------
