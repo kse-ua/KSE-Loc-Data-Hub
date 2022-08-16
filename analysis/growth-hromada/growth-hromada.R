@@ -70,8 +70,8 @@ ds0 <-
   mutate(
     trajectory_type = case_when(
       event_count == 1L ~ "Last minute"
-      ,stable_composition ~ "Stable Composition"
-      ,TRUE ~ "Dynamic Composition"
+      ,stable_composition ~ "Stable"
+      ,TRUE ~ "Dynamic"
     )
   ) %>% 
   # print(n = 100)
@@ -137,7 +137,7 @@ g %>%
 
 g <-
   ds0 %>% 
-  filter(!is.na(hromada_code)) %>% 
+  filter(!is.na(hromada_name)) %>% 
   ggplot(aes(
     x=date
     , y = rada_count
@@ -158,7 +158,7 @@ g <-
     # ,y = "Кількість місцевих рад у громаді"
     # ,x = "Дата зміни складу громад"
     title = "Types of composition of hromadas over time"
-    ,subtitle = "How did the quantity of radas withing hromada change over time?"
+    ,subtitle = "How did the quantity of radas within hromada change over time?"
     ,y = "Number of radas in the hromada"
     ,x = "The date of changing the composition of hromada"
     ,color = "Composition Type"
@@ -168,27 +168,36 @@ g <-
 g %>% 
   quick_save("2-composition-type",w=12, h=8)
 
-# ---- graph-2 -----------------------------------------------------------------
+# ---- graph-3 -----------------------------------------------------------------
 # bar graph
 ds0 %>% glimpse()
 g <-
   ds0 %>% 
   filter(!is.na(hromada_name)) %>% 
-  group_by(trajectory_type) %>% 
+  group_by(oblast_name, trajectory_type) %>% 
   summarize(
-    
-  )
-  ggplot(aes(
-    x=date
-    , y = rada_count
-    , group = hromada_code
-    ,color = trajectory_type
-    ,fill = trajectory_type
-  )
+    type_count = n_distinct(hromada_code, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(oblast_name) %>% 
+  mutate(
+    total_count = sum(type_count, na.rm = T)
+    ,type_prop = type_count/total_count
+    ,type_pct = type_prop %>% scales::percent(accuracy = 1)
+  ) %>% 
+  ggplot(
+    aes(
+      x=trajectory_type
+      , y = type_count
+      ,color = trajectory_type
+      ,fill = trajectory_type
+    )
   )+
-  geom_point(shape=21, alpha = .4, size = 1)+
+  geom_col()+
+  geom_text(aes(label = type_pct),nudge_y = 6)+
   facet_wrap(facets = c("oblast_name"))+
-  geom_line(alpha = .3)+
+  scale_y_continuous(expand = expansion(mult=c(0,.1)))+
+  # geom_line(alpha = .3)+
   theme(
     legend.position = "bottom"
   )+
@@ -198,15 +207,15 @@ g <-
     # ,y = "Кількість місцевих рад у громаді"
     # ,x = "Дата зміни складу громад"
     title = "Types of composition of hromadas over time"
-    ,subtitle = "How did the quantity of radas withing hromada change over time?"
+    ,subtitle = "Stable - initial and final compositions are identical/nLast "
     ,y = "Number of radas in the hromada"
-    ,x = "The date of changing the composition of hromada"
+    ,x = "Retrospective classification of hromadas' trajectory"
     ,color = "Composition Type"
     ,fill = "Composition Type"
   )
 
 g %>% 
-  quick_save("2-composition-type",w=12, h=8)
+  quick_save("3-composition-type",w=12, h=8)
 # ---- save-to-disk ------------------------------------------------------------
 
 # ---- publish ------------------------------------------------------------
