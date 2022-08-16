@@ -125,13 +125,38 @@ ds0 <-
   left_join(
     ds_admin
     ,by = "hromada_code"
-  )
+  ) %>% 
+  select(-stable_composition)
 
 ds0 %>% glimpse()
 
+#+ tweak-data-1 ----------------------------------------------------------------
+# Let's add hromada-level helpers (in-group counters and indicators)
+d_event_order <- 
+  ds_time %>% 
+  distinct(hromada_code, date) %>% 
+  group_by(hromada_code) %>% 
+  arrange(hromada_code, date) %>% 
+  mutate(
+    event_order = row_number()
+    ,event_first = event_order == min(event_order)
+    ,event_last = event_order == max(event_order)
+  ) %>% 
+  ungroup() 
+
+d_event_order %>%  # to verify specific hromadas as example cases
+  filter(hromada_code %in% c("UA14160270000099007","UA18080210000038722","UA07020050000082369"))
+
+d_event_order %>% count(as_factor(event_order)) # Interesting!!
 
 
 
+ds1 <- 
+  ds0 %>% 
+  left_join(d_event_order,by = c("hromada_code", "date")) %>% 
+  relocate(c("event_order", "event_first", "event_last"), .after = "event_count")
+  
+ds1 %>% glimpse()
 # ---- graph-1 -----------------------------------------------------------------
 d <-
   ds_time  %>% 
@@ -215,7 +240,7 @@ g %>%
 # ---- graph-3 -----------------------------------------------------------------
 # bar graph
 ds0 %>% glimpse()
-g <-
+d <- 
   ds0 %>% 
   filter(!is.na(hromada_name)) %>% 
   group_by(oblast_name, trajectory_type) %>% 
@@ -228,7 +253,18 @@ g <-
     total_count = sum(type_count, na.rm = T)
     ,type_prop = type_count/total_count
     ,type_pct = type_prop %>% scales::percent(accuracy = 1)
-  ) %>% 
+  ) %>%  # add oblast-level helpers
+  left_join(
+    ds_admin %>%
+      select(c("oblast_name","region"),ends_with("en")) %>% 
+      distinct()
+    ,by = "oblast_name"
+  ) %>% # add display labels
+  mutate(
+    oblast_name_display = paste()
+  )
+g <-
+  d %>% 
   ggplot(
     aes(
       x=trajectory_type
@@ -246,20 +282,62 @@ g <-
     legend.position = "bottom"
   )+
   labs(
-    # title = "Динаміка складу територіальних громад"
-    # ,subtitle = "Як змінювалась кількість місцевих рад у складі громад?"
-    # ,y = "Кількість місцевих рад у громаді"
-    # ,x = "Дата зміни складу громад"
-    title = "Types of composition of hromadas over time"
+    title     = "Types of composition of hromadas over time"
     ,subtitle = "Stable - initial and final compositions are identical/nLast "
-    ,y = "Number of radas in the hromada"
-    ,x = "Retrospective classification of hromadas' trajectory"
-    ,color = "Composition Type"
-    ,fill = "Composition Type"
+    ,y        = "Number of radas in the hromada"
+    ,x        = "Retrospective classification of hromadas' trajectory"
+    ,color    = "Composition Type"
+    ,fill     = "Composition Type"
+  )
+g %>% 
+  quick_save("3-composition-type",w=12, h=8)
+
+# ---- graph-4 -----------------------------------------------------------------
+# bar graph
+ds0 %>% glimpse()
+d <- 
+  ds0 %>% 
+  filter(!is.na(hromada_name)) %>% 
+  group_by(oblast_name, trajectory_type) %>% 
+  summarize(
+    type_count = n_distinct(hromada_code, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(oblast_name) %>% 
+  mutate(
+    total_count = sum(type_count, na.rm = T)
+    ,type_prop = type_count/total_count
+    ,type_pct = type_prop %>% scales::percent(accuracy = 1)
+  ) 
+g <-
+  d %>% 
+  ggplot(
+    aes(
+      x=trajectory_type
+      , y = type_count
+      ,color = trajectory_type
+      ,fill = trajectory_type
+    )
+  )+
+  geom_col()+
+  geom_text(aes(label = type_pct),nudge_y = 6)+
+  facet_wrap(facets = c("oblast_name"))+
+  scale_y_continuous(expand = expansion(mult=c(0,.1)))+
+  # geom_line(alpha = .3)+
+  theme(
+    legend.position = "bottom"
+  )+
+  labs(
+    title     = "Types of composition of hromadas over time"
+    ,subtitle = "Stable - initial and final compositions are identical/nLast "
+    ,y        = "Number of radas in the hromada"
+    ,x        = "Retrospective classification of hromadas' trajectory"
+    ,color    = "Composition Type"
+    ,fill     = "Composition Type"
   )
 
 g %>% 
-  quick_save("3-composition-type",w=12, h=8)
+  quick_save("4-composition-type",w=12, h=8)
 
 #+ ------------------------------------
 
