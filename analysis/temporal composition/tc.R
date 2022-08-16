@@ -31,7 +31,7 @@ path_admin    <- "./data-private/derived/ua-admin-map.rds"
 path_plots <- './analysis/temporal composition/plots'
 
 
-Sys.setlocale("LC_CTYPE", "russian")
+Sys.setlocale("LC_CTYPE", "ukr")
 
 prints_folder <- paste0("./analysis/temporal composition/prints/")
 if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
