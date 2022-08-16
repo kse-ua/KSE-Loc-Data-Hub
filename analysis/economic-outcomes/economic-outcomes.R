@@ -47,7 +47,7 @@ ds_admin      %>% glimpse() # map of codes and labels settlement-hromada-raion-o
 # ---- tweak-data --------------------------------------------------------------
 
 # ---- table-1 -----------------------------------------------------------------
-ds_economics %>% filter(hromada_code == "UA80000000000093317") %>% View()
+# ds_economics %>% filter(hromada_code == "UA80000000000093317") %>% View()
 
 # ---- graph-1 -----------------------------------------------------------------
 ds_economics %>% distinct(metric)
@@ -63,11 +63,7 @@ d <-
     names_from   = "metric"
     ,values_from = "value"
   ) %>% 
-  left_join(ds_admin %>% select(!starts_with("settlement")) %>% distinct() ) %>%  # add display labels
-  mutate(
-    oblast_name_display = paste0(region_ua," - ",oblast_name)
-    ,oblast_name_display = fct_reorder(oblast_name_display, map_position)
-  ) %>% 
+  left_join(ds_admin %>% select(!starts_with("settlement")) %>% distinct() ) %>% 
   filter(!is.na(hromada_name))
 
 d %>% glimpse()
