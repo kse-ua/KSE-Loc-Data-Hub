@@ -101,6 +101,7 @@ ds_admin %>%
 
 ds0 <- 
   ds_time %>% 
+  filter(!hromada_code == "#N/A") %>% 
   group_by(hromada_code, date) %>% 
   summarize(
     rada_count = n_distinct(rada_code, na.rm = T)
@@ -127,6 +128,7 @@ ds0 <-
     ,by = "hromada_code"
   ) %>% 
   select(-stable_composition)
+ 
 
 ds0 %>% glimpse()
 
@@ -167,6 +169,7 @@ ds1 %>% glimpse()
 # ---- graph-1 -----------------------------------------------------------------
 d <-
   ds_time  %>% 
+  filter(!hromada_code == "#N/A") %>% 
   group_by(hromada_code, date) %>% 
   summarize(
     rada_count = n_distinct(rada_code, na.rm = T)
@@ -176,11 +179,10 @@ d <-
     ds_admin
     ,by = "hromada_code"
   )
-d
+d %>% glimpse()
 
 g <-
   d %>% 
-  filter(!is.na(hromada_code)) %>% 
   ggplot(aes(
     x=date
     , y = rada_count
@@ -189,7 +191,7 @@ g <-
   )
   )+
   geom_point(shape=21, alpha = .4, size = 1)+
-  facet_wrap(facets = c("oblast_name"))+
+  facet_wrap(facets = c("oblast_name_display"))+
   geom_line(alpha = .3)+
   theme(
     legend.position = "none"
@@ -211,8 +213,7 @@ g %>% quick_save("1-hromada-growth-n-rada",w=12, h=8)
 # ---- graph-2 -----------------------------------------------------------------
 # add classification
 g <-
-  ds0 %>% 
-  filter(!is.na(hromada_name)) %>% 
+  ds1 %>% 
   ggplot(aes(
     x       = date
     , y     = rada_count
@@ -222,7 +223,7 @@ g <-
   )
   )+
   geom_point(shape=21, alpha = .4, size = 1)+
-  facet_wrap(facets = c("oblast_name"))+
+  facet_wrap(facets = c("oblast_name_display"))+
   geom_line(alpha = .3)+
   theme(
     legend.position = "bottom"
@@ -236,11 +237,11 @@ g <-
     ,fill = "Composition Type"
   )
 
-g %>% quick_save("2-composition-type",w=12, h=8)
+g %>% quick_save("2-composition-type",w=12, h=9)
 
 # ---- graph-3 -----------------------------------------------------------------
 # bar graph
-ds0 %>% glimpse()
+ds1 %>% glimpse()
 d <- 
   ds1 %>% 
   filter(!is.na(hromada_name)) %>% 
@@ -258,14 +259,10 @@ d <-
   ungroup() %>% 
   left_join(
     ds_admin %>%
-      select(c("oblast_name","region_ua","region_ua","map_position", "oblast_code_en")) %>% 
+      select(c("oblast_name","oblast_name_display")) %>% 
       distinct()
     ,by = "oblast_name"
-  ) %>% # add display labels
-  mutate(
-    oblast_name_display = paste0(region_ua," - ",oblast_name)
-    ,oblast_name_display = fct_reorder(oblast_name_display, map_position)
-  )
+  ) 
   d %>% glimpse
   d$oblast_name_display %>% levels()
 g <-
@@ -288,14 +285,14 @@ g <-
   )+
   labs(
     title     = "Types of composition of hromadas over time"
-    ,subtitle = "Stable - initial and final compositions are identical/nLast "
+    ,subtitle = "Dynamic - changed composition over time\nLast minute - formed on 2020-08-16\nStable - initial and final compositions are identical"
     ,y        = "Number of radas in the hromada"
     ,x        = "Retrospective classification of hromadas' trajectory"
     ,color    = "Composition Type"
     ,fill     = "Composition Type"
   )
 g %>% 
-  quick_save("3-composition-type",w=12, h=8)
+  quick_save("3-composition-type",w=12, h=9)
 
 # ---- graph-4 -----------------------------------------------------------------
 

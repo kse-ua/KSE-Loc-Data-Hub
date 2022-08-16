@@ -164,8 +164,12 @@ identical(
 
 ds_admin <- 
   ds_map_settlement %>% 
-  left_join(ds0_oblast, by = c("oblast_code", "oblast_name"))
-
+  left_join(ds0_oblast, by = c("oblast_code", "oblast_name")) %>% 
+  mutate(
+    oblast_name_display = paste0(region_ua," - ",oblast_name)
+    ,oblast_name_display = fct_reorder(oblast_name_display, map_position)
+  ) 
+ds_admin %>% glimpse(90)
 #+ graph-1 ---------------------------------------------------------------------
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
