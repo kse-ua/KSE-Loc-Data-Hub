@@ -295,6 +295,59 @@ g %>%
 
 # ---- graph-4 -----------------------------------------------------------------
 
+ds1 %>% glimpse()
+d <- 
+  ds1 %>% 
+  filter(hromada_code %in% c("UA14160270000099007","UA18080210000038722","UA07020050000082369")) %>% 
+  arrange(hromada_code, date)
 
+  group_by(oblast_name) %>% 
+  summarize(
+    type_count = n_distinct(hromada_code, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(oblast_name) %>% 
+  mutate(
+    total_count = sum(type_count, na.rm = T)
+    ,type_prop = type_count/total_count
+    ,type_pct = type_prop %>% scales::percent(accuracy = 1)
+  ) %>%  # add oblast-level helpers
+  ungroup() %>% 
+  left_join(
+    ds_admin %>%
+      select(c("oblast_name","oblast_name_display")) %>% 
+      distinct()
+    ,by = "oblast_name"
+  ) 
+d %>% glimpse
+d$oblast_name_display %>% levels()
+g <-
+  d %>% 
+  ggplot(
+    aes(
+      x=trajectory_type
+      , y = type_count
+      ,color = trajectory_type
+      ,fill = trajectory_type
+    )
+  )+
+  geom_col()+
+  geom_text(aes(label = type_pct),nudge_y = 6)+
+  facet_wrap(facets = c("oblast_name_display"))+
+  scale_y_continuous(expand = expansion(mult=c(0,.1)))+
+  # geom_line(alpha = .3)+
+  theme(
+    legend.position = "bottom"
+  )+
+  labs(
+    title     = "Types of composition of hromadas over time"
+    ,subtitle = "Dynamic - changed composition over time\nLast minute - formed on 2020-08-16\nStable - initial and final compositions are identical"
+    ,y        = "Number of radas in the hromada"
+    ,x        = "Retrospective classification of hromadas' trajectory"
+    ,color    = "Composition Type"
+    ,fill     = "Composition Type"
+  )
+g %>% 
+  quick_save("3-composition-type",w=12, h=9)
 #+ ------------------------------------
 
