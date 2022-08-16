@@ -205,8 +205,7 @@ g <-
     ,x = "The date of changing the composition of hromada"
   )
 
-g %>% 
-  quick_save("1-hromada-growth-n-rada",w=12, h=8)
+g %>% quick_save("1-hromada-growth-n-rada",w=12, h=8)
 
 
 # ---- graph-2 -----------------------------------------------------------------
@@ -215,11 +214,11 @@ g <-
   ds0 %>% 
   filter(!is.na(hromada_name)) %>% 
   ggplot(aes(
-    x=date
-    , y = rada_count
+    x       = date
+    , y     = rada_count
     , group = hromada_code
-    ,color = trajectory_type
-    ,fill = trajectory_type
+    ,color  = trajectory_type
+    ,fill   = trajectory_type
   )
   )+
   geom_point(shape=21, alpha = .4, size = 1)+
@@ -229,10 +228,6 @@ g <-
     legend.position = "bottom"
   )+
   labs(
-    # title = "Динаміка складу територіальних громад"
-    # ,subtitle = "Як змінювалась кількість місцевих рад у складі громад?"
-    # ,y = "Кількість місцевих рад у громаді"
-    # ,x = "Дата зміни складу громад"
     title = "Types of composition of hromadas over time"
     ,subtitle = "How did the quantity of radas within hromada change over time?"
     ,y = "Number of radas in the hromada"
@@ -241,14 +236,13 @@ g <-
     ,fill = "Composition Type"
   )
 
-g %>% 
-  quick_save("2-composition-type",w=12, h=8)
+g %>% quick_save("2-composition-type",w=12, h=8)
 
 # ---- graph-3 -----------------------------------------------------------------
 # bar graph
 ds0 %>% glimpse()
 d <- 
-  ds0 %>% 
+  ds1 %>% 
   filter(!is.na(hromada_name)) %>% 
   group_by(oblast_name, trajectory_type) %>% 
   summarize(
@@ -261,15 +255,19 @@ d <-
     ,type_prop = type_count/total_count
     ,type_pct = type_prop %>% scales::percent(accuracy = 1)
   ) %>%  # add oblast-level helpers
+  ungroup() %>% 
   left_join(
     ds_admin %>%
-      select(c("oblast_name","region"),ends_with("en")) %>% 
+      select(c("oblast_name","region_ua","region_ua","map_position", "oblast_code_en")) %>% 
       distinct()
     ,by = "oblast_name"
   ) %>% # add display labels
   mutate(
-    oblast_name_display = paste()
+    oblast_name_display = paste0(region_ua," - ",oblast_name)
+    ,oblast_name_display = fct_reorder(oblast_name_display, map_position)
   )
+  d %>% glimpse
+  d$oblast_name_display %>% levels()
 g <-
   d %>% 
   ggplot(
@@ -282,7 +280,7 @@ g <-
   )+
   geom_col()+
   geom_text(aes(label = type_pct),nudge_y = 6)+
-  facet_wrap(facets = c("oblast_name"))+
+  facet_wrap(facets = c("oblast_name_display"))+
   scale_y_continuous(expand = expansion(mult=c(0,.1)))+
   # geom_line(alpha = .3)+
   theme(
