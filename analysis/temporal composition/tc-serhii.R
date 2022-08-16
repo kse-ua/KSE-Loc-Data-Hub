@@ -117,7 +117,7 @@ ds1 <-
   mutate(
     trajectory_type = case_when(
       date_count == 1 ~ "Last minute"
-  #simple check for hromadas without changes - number of rows divided by number of radas must be equal 2
+  #simple check for hromadas without changes after creation - number of rows divided by number of radas must be equal 2
       ,(date_count == 2 & row_count/rada_count == 2) ~ "Unchanged"
       ,TRUE ~ "Other"
     )
