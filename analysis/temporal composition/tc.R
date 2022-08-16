@@ -149,7 +149,14 @@ d_event_order %>%  # to verify specific hromadas as example cases
 
 d_event_order %>% count(as_factor(event_order)) # Interesting!!
 
-
+# verify that each hromada has event on 2020-08-16
+d <- 
+  ds0 %>% 
+  left_join(d_event_order,by = c("hromada_code", "date")) %>% 
+  filter(event_last) %>% 
+  filter(date < as.Date("2020-08-16")) %>% 
+  distinct(date, hromada_code, hromada_name,oblast_name, rada_count,event_count )
+d # should be empty
 
 ds1 <- 
   ds0 %>% 
