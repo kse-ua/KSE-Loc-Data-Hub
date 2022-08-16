@@ -124,7 +124,7 @@ ds0 <-
   ) %>% 
   # print(n = 100)
   left_join(
-    ds_admin
+    ds_admin %>% select(!starts_with("settlement")) %>% distinct()
     ,by = "hromada_code"
   ) %>% 
   select(-stable_composition)
@@ -244,7 +244,6 @@ g %>% quick_save("2-composition-type",w=12, h=9)
 ds1 %>% glimpse()
 d <- 
   ds1 %>% 
-  filter(!is.na(hromada_name)) %>% 
   group_by(oblast_name, trajectory_type) %>% 
   summarize(
     type_count = n_distinct(hromada_code, na.rm = T)
