@@ -7,3 +7,13 @@ The project is funded by ... grant (#`grant_id`)
 ![](https://www.nationsonline.org/maps/Ukraine-Administrative-Map.jpg)
 
 
+  | Name            |Role   | @   |
+  |---              |---|---|
+  |Tymofii Brik     |   |   |
+  |Andriy Darkovich |   |   |
+  |Valentyn Hatsko  |   |   |
+  |Andriy Koval     |Statistical modeling, data visualization, reproducible research   | andkov  |
+  |Maryna Rabinovych|   |   |
+  |Myroslava Savisko|   |   |
+  |Serhii Tytiuk    |   |   |
+  |Iryna Zasimovych |   |   |
