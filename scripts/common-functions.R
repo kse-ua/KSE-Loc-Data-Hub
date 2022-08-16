@@ -6,6 +6,7 @@ ggplot2::theme_set(
   )+
     theme(
       strip.background = element_rect(fill="grey95", color = NA)
+      ,axis.ticks = element_blank()
     )
 )
 quick_save <- function(g,name,...){
