@@ -1,20 +1,28 @@
-# Functions loaded by EVERY script in the project
+# Functions and settings loaded by EVERY script in the project
 
 library(ggplot2)
+baseSize <- 10
+
+print_all <- function(d){ print(d,n=nrow(d) )}
+
 ggplot2::theme_set(
   ggplot2::theme_bw(
   )+
     theme(
       strip.background = element_rect(fill="grey95", color = NA)
+      ,panel.grid = element_line(color = "grey95")
+      ,panel.border = element_rect(color = "grey80")
       ,axis.ticks = element_blank()
+      ,text=element_text(size=baseSize)
     )
 )
+
 quick_save <- function(g,name,...){
   ggplot2::ggsave(
     filename = paste0(name,".jpg"),
     plot     = g,
     device   = "jpg",
-    path     = prints_folder,
+    path     = prints_folder, # expects this definition in `define-globals` chunk
     # width    = width,
     # height   = height,
     # units = "cm",
@@ -62,9 +70,9 @@ neat_DT <- function(x, filter_="top",...){
   return(xt)
 }
 
-dt <- neat_DT
+dt <- neat_DT # an alternative alias
 
-# print names and associated lables of variables (if attr(.,"label)) is present
+# print names and associated labels of variables (if attr(.,"label)) is present
 names_labels <- function(ds){
   dd <- as.data.frame(ds)
 
@@ -81,4 +89,4 @@ names_labels <- function(ds){
   return(nl)
 }
 # names_labels(ds=oneFile)
-print_all <- function(x){print(x,n=nrow(x))}
+

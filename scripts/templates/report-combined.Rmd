@@ -55,8 +55,9 @@ ggplot2::theme_set(ggplot2::theme_bw()) # common theme for all graphs
 # -- 1.Attach these packages so their functions don't need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
 library(ggplot2)   # graphs
 library(forcats)   # factors
-library(stringr)   # strings
+library(stringr)   # strings, but consider `stringi` as more general
 library(lubridate) # dates
+library(labelled)  # labels
 # -- 2.Import only certain functions of a package into the search path.
 import::from("magrittr", "%>%")
 # -- 3. Verify these packages are available on the machine, but their functions need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
@@ -64,8 +65,8 @@ requireNamespace("readr"    )# data import/export
 requireNamespace("readxl"   )# data import/export
 requireNamespace("tidyr"    )# tidy data
 requireNamespace("janitor"  )# tidy data
-requireNamespace("dplyr"    )# Avoid attaching dplyr, b/c its function names conflict with a lot of packages (esp base, stats, and plyr).
-requireNamespace("testit"   )# For asserting conditions meet expected patterns.
+requireNamespace("testit"   )# for asserting conditions meet expected patterns.
+requireNamespace("scales"   )# formatting
 ```
 
 <!-- Load the sources.  Suppress the output when loading sources. --> 
