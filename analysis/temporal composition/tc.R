@@ -158,7 +158,7 @@ d <-
   filter(event_last) %>% 
   filter(date < as.Date("2020-08-16")) %>% 
   distinct(date, hromada_code, hromada_name,oblast_name, rada_count,event_count )
-d # should be empty
+d # should be empty, currently empty
 
 ds1 <- 
   ds0 %>% 
