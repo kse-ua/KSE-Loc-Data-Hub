@@ -72,11 +72,9 @@ ds_time    <- readr::read_csv(path_time)
 #+ inspect-data ----------------------------------------------------------------
 ds0 %>% glimpse()
 
-ds0 %>% count(object_category)
-
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
 
-ds0 %>% OuhscMunge::column_rename_headstart()
+# ds0 %>% OuhscMunge::column_rename_headstart()
 
 ds1 <- 
   ds0 %>%
