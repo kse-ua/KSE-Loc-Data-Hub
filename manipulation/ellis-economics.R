@@ -1,10 +1,10 @@
 #' ---
-#' title: "Ellis UA Admin"
+#' title: "Ellis Economics"
 #' author: "KSE"
 #' date: "last Updated: `r Sys.Date()`"
 #' ---
 #+ echo=F
-# rmarkdown::render(input = "./manipulation/ellis-ua-admin.R") # run to knit, don't uncomment
+# rmarkdown::render(input = "./manipulation/ellis-economics.R") # run to knit, don't uncomment
 #+ echo=F ----------------------------------------------------------------------
 library(knitr)
 # align the root with the project working directory
@@ -72,11 +72,9 @@ ds_time    <- readr::read_csv(path_time)
 #+ inspect-data ----------------------------------------------------------------
 ds0 %>% glimpse()
 
-ds0 %>% count(object_category)
-
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
 
-ds0 %>% OuhscMunge::column_rename_headstart()
+# ds0 %>% OuhscMunge::column_rename_headstart()
 
 ds1 <- 
   ds0 %>%
@@ -233,13 +231,25 @@ ds2_basic %>% glimpse(70)
 
 
 #+ tweak-data-3 ----------------------------------------------------------------
-
+ds3 <-
+  ds2 %>% 
+  pivot_longer(
+    cols = setdiff(names(ds2),c("hromada_code","time"))
+    ,names_to = "metric"
+    ,values_to = "value"
+  ) %>% 
+  mutate(
+    value = str_remove(value, "\\%$") %>% as.double()
+  )
+ds3 %>% filter(!is.na(value))
 #+ table-1 ---------------------------------------------------------------------
 #+ graph-1 ---------------------------------------------------------------------
 
 
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
+
+ds3 %>% readr::write_csv("./data-private/derived/economics.csv")
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")

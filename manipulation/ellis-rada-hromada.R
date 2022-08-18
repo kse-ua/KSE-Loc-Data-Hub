@@ -6,7 +6,7 @@
 #' date: "last Updated: `r Sys.Date()`"
 #' ---
 #+ echo=F
-# rmarkdown::render(input = "./manipulation/1-ellis.R") # run to knit, don't uncomment
+# rmarkdown::render(input = "./manipulation/ellis-rada-hromada.R") # run to knit, don't uncomment
 
 #+ echo=F ----------------------------------------------------------------------
 library(knitr)
@@ -142,7 +142,8 @@ ds0_hromada <- readr::read_csv(
 )
 
 # Kодифікатор. tab "raw"
-# https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit#gid=1382135566
+# Initial source: https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit#gid=1382135566
+# Here, we import he product of ./manipulation/ellis-ua-admin.R
 ds_admin   <- readr::read_rds(path_admin)
 
 #+ inspect-data ----------------------------------------------------------------
@@ -183,7 +184,7 @@ missing_radas <-
   
 missing_radas %>% neat_DT()
 
-# create a ds listing the final list of hromadas along with the founding radad
+# create a ds listing the final list of hromadas along with the founding radas
 ds1_hromada <-
   ds0_hromada %>% 
   select(!starts_with("rada_codes_v")) %>% 

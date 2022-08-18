@@ -28,14 +28,17 @@ base::source("./scripts/common-functions.R") # project-level
 
 # ---- declare-globals ---------------------------------------------------------
 # printed figures will go here when `quick_save("name",w=8,h=6)` is used:
-prints_folder <- paste0("./analysis/.../prints/")
+prints_folder <- paste0("./analysis/regions-and-distributions/regions-and-distributions/prints/")
 if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
 
-path_data_input <- "./data-private/derived/..."
+path_admin        <- "./data-private/derived/ua-admin-map.rds" # product of ./manipulation/ellis-ua-admin.R
+path_time         <- "./data-private/derived/time_rada.csv"    # product of ./manipulation/ellis-rada-hromada.R
+
 # ---- declare-functions -------------------------------------------------------
 
 # ---- load-data ---------------------------------------------------------------
-ds0 <- readr::read_rds(path_data_input)
+ds_admin <- readr::read_rds(path_admin)
+ds_time  <- readr::read_csv(path_time)
 
 # ---- inspect-data ------------------------------------------------------------
 
@@ -54,7 +57,7 @@ ds0 <- readr::read_rds(path_data_input)
 # ---- save-to-disk ------------------------------------------------------------
 
 # ---- publish ------------------------------------------------------------
-path <- "./analysis/.../report-isolated.Rmd" # connect with Rmd for publishing
+path <- "./analysis/regions-and-distributions/regions-and-distributions.Rmd" # connect with Rmd for publishing
 rmarkdown::render(
   input = path ,
   output_format=c(

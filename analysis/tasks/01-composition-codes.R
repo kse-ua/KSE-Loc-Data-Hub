@@ -256,3 +256,27 @@ ds_out <-
   )
 
 identical(ds_out, ds_out_target) # if TRUE, then QED
+
+#+ in-group-counter -----------------------------------------------------------
+ds_out_target 
+
+# add ingeter indicator of the event number (the order in which events occured)
+d <- 
+  ds_out_target %>% 
+  distinct(id, date) %>% 
+  group_by(id) %>% 
+  mutate(
+    event_order = row_number()
+  ) %>% 
+  ungroup()
+d
+
+
+
+
+
+
+
+
+
+
