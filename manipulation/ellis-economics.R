@@ -24,7 +24,7 @@ eval_chunks <- TRUE
 cache_chunks <- TRUE
 report_render_start_time <- Sys.time()
 options(width=100) # number of characters to display in the output (dflt = 80)
-Sys.setlocale("LC_CTYPE", "russian")
+Sys.setlocale("LC_CTYPE", "ukr")
 #+ load-sources ------------------------------------------------------------
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
@@ -73,7 +73,7 @@ ds_time    <- readr::read_csv(path_time)
 ds0 %>% glimpse()
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
-
+# install OuhscMunge pacakge from https://github.com/OuhscBbmc/OuhscMunge
 # ds0 %>% OuhscMunge::column_rename_headstart()
 
 ds1 <- 
@@ -145,6 +145,7 @@ ds1_basic <-
     hromada_code
     # ,hromada_name
     ,hromada_type
+    ,tot
     ,population_2020
     ,population_2021
     ,area_kmsq
@@ -167,6 +168,22 @@ ds2_basic <-
   )
 ds2_basic %>% glimpse(70)
 
+# ds1 %>% 
+#   group_by(hromada_type, tot) %>% 
+#   count() %>% 
+#   ungroup() %>% 
+#   mutate(
+#     hromada_type = str_remove(hromada_type, "громада")
+#     # ,hromada_type = str_remove(hromada_type, " територіальна громада (ТОТ)*")
+#   )
+
+# Sys.setlocale("LC_CTYPE", "russian")
+# Sys.setlocale("LC_CTYPE", "ukr")
+# d <- tibble::tribble(
+#   ~a , ~ b,
+#   "громада", "область"
+# )
+# d %>% mutate(a = str_remove(a,"гр"))
 
 ds2 <- 
   ds1 %>% 
@@ -174,9 +191,9 @@ ds2 <-
     # ,oblast                   
     # ,raion                    
     # ,hromada_name             
-    # ,hromada_type             
     hromada_code
-    # ,tot                      
+    # ,hromada_type
+    # ,tot
     ,population_2020          
     ,population_2021          
     # ,area_kmsq
@@ -224,10 +241,14 @@ ds2 <-
   pivot_wider(
      names_from = "metric"
      ,values_from = "value"
-  )
+  ) 
 
 ds2 %>% glimpse(70)
 ds2_basic %>% glimpse(70)
+
+ds2 %>% 
+  group_by(hromada_type, tot) %>% 
+  tally()
 
 
 #+ tweak-data-3 ----------------------------------------------------------------
@@ -235,21 +256,34 @@ ds3 <-
   ds2 %>% 
   pivot_longer(
     cols = setdiff(names(ds2),c("hromada_code","time"))
+    # cols = setdiff(names(ds2),c("hromada_code","hromada_type","tot","time"))
     ,names_to = "metric"
     ,values_to = "value"
   ) %>% 
   mutate(
     value = str_remove(value, "\\%$") %>% as.double()
   )
-ds3 %>% filter(!is.na(value))
+ds3 %>% glimpse()
+ds3 %>% filter(!is.na(value)) %>% arrange(hromada_code, metric, time)
 #+ table-1 ---------------------------------------------------------------------
 #+ graph-1 ---------------------------------------------------------------------
 
 
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
+# 
+ds2_out <-
+  ds2 %>% 
+  left_join(ds2_basic %>% select(hromada_code, hromada_type, tot)
+            ,by = "hromada_code") %>% 
+  select(hromada_code, hromada_type, tot, everything())
+ds2_out %>% glimpse(80)
 
-ds3 %>% readr::write_csv("./data-private/derived/economics.csv")
+ds3_out <- ds3
+
+
+ds2_out %>% readr::write_csv("./data-private/derived/economics-wide.csv")
+ds3_out %>% readr::write_csv("./data-private/derived/economics.csv")
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
