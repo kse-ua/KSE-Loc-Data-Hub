@@ -120,6 +120,10 @@ d <-
 
 d %>% glimpse()
 
+d <- 
+  ds0_wide %>% 
+  select(hromada_code, hromada_type3, tot, time, tax_revenue)
+d
 g <- 
   d %>% 
   filter(hromada_type3 !="urban") %>% 
@@ -144,6 +148,42 @@ g <-
 
 g %>% quick_save("1-outcome-scatterplot", w=12, h = 9)
 # ---- graph-2 -----------------------------------------------------------------
+# distribution of tax revenue across regions 
+
+d <- 
+  ds0_wide %>% 
+  # filter(time %in% 2020:2021) %>% #glimpse()
+  filter(time %in% 2021) %>% #glimpse()
+  select(hromada_code, hromada_type3, tot, time, tax_revenue) %>%
+  left_join(
+    ds_admin %>% select(hromada_code, region_ua)
+  ) %>% 
+  group_by(time) %>% 
+  mutate(
+    percentile = dplyr::ntile(tax_revenue, 100 )
+  ) %>% 
+  filter(percentile < 95)
+g <-
+  d %>% 
+  {
+    ggplot(
+      .
+      ,aes(
+        x = tax_revenue
+        # ,fill = as.factor(time)
+        # ,fill = region_ua
+        # ,color = time
+      )
+    )+
+    geom_density( alpha = .1)+
+    # facet_wrap(facets = "time")+
+    facet_wrap(facets = "region_ua")+
+    scale_x_continuous(label = scales::comma_format())+
+    scale_y_continuous(label = scales::percent_format())+
+    labs()
+  }
+g
+g %>% quick_save("2-regions-tax", w=12, h=6)
 
 # ---- graph-3 -----------------------------------------------------------------
 
