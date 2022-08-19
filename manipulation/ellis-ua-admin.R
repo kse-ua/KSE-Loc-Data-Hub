@@ -24,7 +24,7 @@ eval_chunks <- TRUE
 cache_chunks <- TRUE
 report_render_start_time <- Sys.time()
 options(width=100) # number of characters to display in the output (dflt = 80)
-Sys.setlocale("LC_CTYPE", "russian")
+Sys.setlocale("LC_CTYPE", "ukr")
 #+ load-sources ------------------------------------------------------------
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
