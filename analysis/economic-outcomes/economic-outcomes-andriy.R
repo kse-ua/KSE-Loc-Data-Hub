@@ -93,6 +93,47 @@ ds0_long %>% glimpse()
 
 # ---- table-1 -----------------------------------------------------------------
 # ds_economics %>% filter(hromada_code == "UA80000000000093317") %>% View()
+ds_time %>% glimpse()
+# d0 <- ds_time %>%   filter(hromada_code %in% c("UA14160270000099007","UA18080210000038722","UA07020050000082369"))
+# d0 %>% print_all()
+d0 <- ds_time
+
+d1 <- 
+  d0 %>% 
+  filter(date < as.Date("2020-01-01")) %>%
+  group_by(hromada_code) %>% 
+  mutate(
+    max_date = max(date, na.rm =T)==date
+  ) %>% 
+  ungroup() %>% 
+  filter(max_date)
+ 
+d2 <- 
+  d0 %>% 
+  group_by(hromada_code) %>% 
+  mutate(
+    max_date = max(date, na.rm =T)==date
+  ) %>% 
+  ungroup() %>% 
+  filter(max_date)
+d2
+d1
+
+d_change <-
+  d2 %>% select(date, rada_code, hromada_code) %>% 
+  left_join(
+    d1 %>% select(hromada_code_20 = hromada_code, rada_code)
+    ,by = "rada_code"
+  ) %>% 
+  group_by(hromada_code) %>% 
+  mutate(
+    changed_since_2020 = sum(is.na(hromada_code_20),na.rm=T)>0L
+  ) %>% 
+  ungroup() %>%
+  distinct(hromada_code, changed_since_2020)
+
+d_change %>% print_all()
+
 
 # ---- graph-1 -----------------------------------------------------------------
 ds0_long %>% distinct(metric)
@@ -116,17 +157,17 @@ d <-
     ,tax_revenue_2021_kuah = tax_revenue_2021/1000
   ) %>% 
   left_join(ds_admin %>% select(!starts_with("settlement")) %>% distinct() ) %>% 
-  filter(!is.na(hromada_name)) 
+  filter(!is.na(hromada_name)) %>% 
+  left_join(d_change)
 
 d %>% glimpse()
 
-d <- 
-  ds0_wide %>% 
-  select(hromada_code, hromada_type3, tot, time, tax_revenue)
-d
 g <- 
   d %>% 
   filter(hromada_type3 !="urban") %>% 
+  # filter(changed_since_2020) %>%
+  filter(!changed_since_2020) %>%
+  filter(!tax_revenue_2021_kuah==max(tax_revenue_2021_kuah)) %>% 
   ggplot(
     aes(
       x=tax_revenue_2020_kuah
@@ -139,14 +180,23 @@ g <-
   # geom_point(shape = 21, fill = NA)+
   geom_point()+
   scale_shape_manual(values = c("rural"=1, "rural+"=3))+
-  facet_wrap(facets = "oblast_name_display", scales = "free")+
-  scale_y_continuous(labels = scales::comma_format())+
-  scale_x_continuous(labels = scales::comma_format())+
+  # facet_wrap(facets = "oblast_name_display", scales = "free")+
+  facet_wrap(facets = "oblast_name_display", scales = "fixed")+
+  scale_y_continuous(
+    labels = scales::comma_format()
+    ,limits = c(0,505)
+  )+
+  scale_x_continuous(
+    labels = scales::comma_format()
+    ,limits = c(0, 505)
+    )+
   labs(
-    title = "Tax Revenue"
+    # title = "Tax Revenue among hromadas that changed composition since 2020-01-01"
+    title = "Tax Revenue among hromadas that DID NOT changed composition sicne 2020-01-01"
   )
 
-g %>% quick_save("1-outcome-scatterplot", w=12, h = 9)
+# g %>% quick_save("1-outcome-scatterplot-changed", w=12, h = 9)
+g %>% quick_save("1-outcome-scatterplot-same", w=12, h = 9)
 # ---- graph-2 -----------------------------------------------------------------
 # distribution of tax revenue across regions 
 
@@ -186,6 +236,69 @@ g
 g %>% quick_save("2-regions-tax", w=12, h=6)
 
 # ---- graph-3 -----------------------------------------------------------------
+
+d_boxplot <- 
+  ds_economics %>% 
+  filter(metric %in% c("tax_revenue")) %>% 
+  filter(!is.na(value)) %>% 
+  mutate(
+    metric = paste0(metric,"_",time)
+  ) %>% 
+  select(-c("time")) %>% 
+  pivot_wider(
+    names_from   = "metric"
+    ,values_from = "value"
+  ) %>% 
+  # left_join(
+  #   ds0_wide %>% select(hromada_code, hromada_type2, hromada_type3, tot)
+  # ) %>% 
+  mutate(
+    tax_revenue_2020_kuah = tax_revenue_2020/1000
+    ,tax_revenue_2021_kuah = tax_revenue_2021/1000
+  ) %>% 
+  # glimpse()
+  # left_join(ds_admin %>% select(!starts_with("settlement")) %>% distinct() ) %>% 
+  # filter(!is.na(hromada_name)) %>% 
+  left_join(d_change) %>% #glimpse()
+  # filter(time %in% c(2020:2021)) %>% 
+  mutate(
+    delta = tax_revenue_2021_kuah - tax_revenue_2020_kuah
+    ,delta_prop = delta/tax_revenue_2020_kuah
+    ,delta_pct = delta_prop %>% scales::percent(accuracy = .01)
+  ) %>% 
+  left_join(
+    ds0_wide %>% distinct(hromada_code, hromada_type2, hromada_type3, tot)
+  ) %>% 
+  left_join(ds_admin %>% distinct(hromada_code, region_ua))
+
+d_boxplot %>% glimpse()
+  
+g3 <- 
+  d_boxplot %>% 
+  {
+    ggplot(
+      .
+      ,aes(
+        x = changed_since_2020
+        ,y = delta_prop
+        # , color = tot
+        # , fill = tot
+      )
+    )+
+      geom_boxplot()+
+      geom_jitter(
+        shape = 21, alpha = .4
+      )+
+      # facet_wrap(facets = "hromada_type3")
+      facet_grid(hromada_type3 ~ region_ua, scales = "fixed")
+  }
+g3 
+g3 %>% quick_save("3-growth-and-change", h=7, w=14)
+# conclusion
+# we observe that those hromadas thave have changed their composition since 2020-01-01
+# appear to report higher growth when compared to 2021
+# we think this is an artifact of the metric:  the contribution rada which didn't belong to hromada
+# before 2020-08-16 might have been discounted in the final count of the tax contribution for that hromada
 
 # ---- save-to-disk ------------------------------------------------------------
 
