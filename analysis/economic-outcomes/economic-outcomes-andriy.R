@@ -350,6 +350,7 @@ g <-
       labs(
         x = "Tax Revenue (Million UAH)"
         ,fill = "Region"
+        ,title = "Contribution of tax revenue (million UAH) by hromada in 2021"
       )
   }
 g
