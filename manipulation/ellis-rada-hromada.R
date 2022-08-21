@@ -158,7 +158,11 @@ ds1_rada <-
   ds0_rada %>% 
   select(
     rada_code, rada_name, hromada_code, hromada_name, rai_center, oblast, note
-  )
+  ) %>% 
+  arrange(desc(hromada_code))
+ds1_rada %>% glimpse(80)
+# ds1_rada %>% filter(rada_code == "8000000000")
+# ds1_rada %>% filter(hromada_code == "UA80")
 
 names(ds0_hromada) <- names_hromada
 # ds0_hromada <- ds0_hromada %>% filter(!hromada_code == "#N/A") # Kyiv
@@ -184,6 +188,23 @@ missing_radas <-
   
 missing_radas %>% neat_DT()
 
+# manualy adjust for Kyiv
+# Maybe: change it in the source data? 
+
+ds0_hromada %>% glimpse()
+
+ds0_hromada %>% 
+  filter(main_rada_code %in% c("8000000000","8500000000")) %>% t()
+
+# ds0_hromada <- 
+#   ds0_hromada %>% 
+#   mutate(
+#     hromada_code = case_when(
+#       main_rada_code == "8000000000" ~ "UA8"
+#       ,TRUE ~ hromada_code
+#     )
+#   ) 
+
 # create a ds listing the final list of hromadas along with the founding radas
 ds1_hromada <-
   ds0_hromada %>% 
@@ -195,8 +216,11 @@ ds1_hromada <-
     ,main_rada_code
     ,rada_codes_final
   ) %>% 
-  arrange(hromada_code)
+  arrange(desc(hromada_code)) 
 ds1_hromada 
+
+ds0_hromada %>% glimpse(60)
+ds1_hromada %>% glimpse(60)
 
 # create a ds listing the dates on which hromadas changed their composition 
 ds0_time <- 
@@ -228,20 +252,23 @@ ds1_time <-
     # ,rada_code = as.integer(rada_code)
   ) %>% 
   filter(!is.na(rada_code)) %>% 
-  arrange(hromada_code, date, rada_code) %>% 
+  arrange(desc(hromada_code), date, rada_code) %>% 
   select(date,rada_code, hromada_code) %>% 
   print()
 
+# ds1_time  %>% filter(hromada_code=="UA8")
 #+ inspect-data-2 ----------------------------------------------------------------
-ds1_time    %>% glimpse() # date when rada joins a hromada / when hromada alters its composition
-ds1_rada    %>% glimpse() # mapping of radas to hromadas at the end of amalgamation
-ds1_hromada %>% glimpse() # the final list of hromadas at the end of amalgamation proces
-ds_admin    %>% glimpse() # supporing meta-data file with admin level mapping
+ds1_time    %>% glimpse(80) # date when rada joins a hromada / when hromada alters its composition
+ds1_rada    %>% glimpse(80) # mapping of radas to hromadas at the end of amalgamation
+ds1_hromada %>% glimpse(80) # the final list of hromadas at the end of amalgamation proces
+ds_admin    %>% glimpse(80) # supporing meta-data file with admin level mapping
 
 
 
 #+ table-1 ---------------------------------------------------------------------
-
+ds1_time %>%
+  left_join(ds_admin %>% distinct(hromada_code, hromada_name)) %>% 
+  arrange(desc(hromada_code))
 
 #+ graph-1 ---------------------------------------------------------------------
 #+ graph-2 ---------------------------------------------------------------------

@@ -165,7 +165,8 @@ ds2_basic <-
       select(!starts_with("settlement")) %>% 
       distinct()
     , by = "hromada_code"
-  )
+  ) %>% 
+  arrange(desc(hromada_code))
 ds2_basic %>% glimpse(70)
 
 # ds1 %>% 

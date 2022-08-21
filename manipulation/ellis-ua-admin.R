@@ -59,12 +59,11 @@ ds0 <- readr::read_csv(path_raw, col_names = names_admin_ua, skip=1)
 ds0_oblast <- readr::read_csv(path_oblasti, skip=0)
 
 #+ inspect-data ----------------------------------------------------------------
-ds0 %>% glimpse()
+ds0 %>% glimpse(80)
 
 ds0 %>% count(object_category)
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
-
 ds1 <- 
   ds0 %>% 
   mutate(
@@ -83,16 +82,17 @@ ds1 <-
   )
 ds1 %>% group_by(object_category, category_label) %>% tally()
 
-ds1 %>% glimpse()
+ds1 %>% glimpse(80)
+ds1 %>% filter(object_category == "K")
 
 #+ table-1 ---------------------------------------------------------------------
 
 ds_oblast <- 
   ds1 %>% 
-  filter(object_category == "O") %>% 
+  filter(object_category %in% c("O","K")) %>% 
   distinct(oblast_code = level_1, oblast_name = object_name)
 
-ds_oblast 
+ds_oblast %>% print_all()
 
 ds_raion <-
   ds1 %>% 
@@ -102,15 +102,25 @@ ds_raion
 
 ds_hromada <-
   ds1 %>% 
-  filter(object_category == "H") %>% 
-  distinct(hromada_code = level_3, hromada_name = object_name)
+  filter(object_category %in% c("H","K") ) %>% 
+  distinct(hromada_code = level_3, hromada_name = object_name) %>% 
+  # bind_rows(
+  #   tibble::tribble(
+  #     ~hromada_code, ~hromada_name,
+  #     "UA80", "м.Київ",
+  #     "UA85", "м.Севастопіль"
+  #   )
+  # ) %>% 
+  arrange(desc(hromada_code))
+  
 ds_hromada
 
 ds_settlement <-
   ds1 %>% 
-  filter(object_category %in% c("X","C","T","M") ) %>% 
+  filter(object_category %in% c("X","C","T","M","K") ) %>% 
   distinct(settlement_code = level_4, settlement_name = object_name, 
-           settlement_type = category_label)
+           settlement_type = category_label) %>% 
+  arrange(desc(settlement_code))
 ds_settlement
 
 
@@ -136,7 +146,8 @@ ds_map_hromada <-
     ,by = "oblast_code"
   )
 ds_map_hromada
-
+ds_map_hromada %>% glimpse(80)
+ds_map_hromada %>% filter(hromada_code %in% c("UA80", "UA85")) %>% t()
 
 ds_map_settlement <- 
   #1
@@ -154,10 +165,12 @@ ds_map_settlement
 
 # demonstrate that ds_map_hromada can be devided from ds_map_settlement
 identical(
-  ds_map_hromada
+  ds_map_hromada %>% 
+    arrange(hromada_code)
   ,ds_map_settlement %>% 
     select(!starts_with("settlement_")) %>% 
-    distinct()
+    distinct() %>% 
+    arrange(hromada_code)
 )
 # Therefore we will use ds_map_settlement as the primary file
 # last touch: adding oblast-level helpers
@@ -170,6 +183,13 @@ ds_admin <-
     ,oblast_name_display = fct_reorder(oblast_name_display, map_position)
   ) 
 ds_admin %>% glimpse(90)
+
+ds_admin %>% arrange(desc(hromada_code)) %>% glimpse(80)
+
+# ds_admin %>% 
+#     filter(hromada_code %in% c("UA80","UA85")) %>% 
+#   View()
+
 #+ graph-1 ---------------------------------------------------------------------
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
