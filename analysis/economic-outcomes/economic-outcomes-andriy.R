@@ -47,6 +47,12 @@ ds_economics %>% glimpse(80)  # available economic indicators
 ds_economics_wide %>% glimpse(80)
 ds_time      %>% glimpse()  # date when a rada joined a hromada
 ds_admin      %>% glimpse() # map of codes and labels settlement-hromada-raion-oblast
+
+
+ds_admin %>% filter(hromada_code %in% c("UA80", "UA85"))
+ds_time %>% filter(hromada_code %in% c("UA80", "UA85"))
+ds_economics_wide %>% filter(hromada_code %in% c("UA80", "UA85"))
+
 # ---- tweak-data --------------------------------------------------------------
 ds0_wide <- 
   ds_economics_wide %>% 
@@ -132,7 +138,7 @@ d_change <-
   ungroup() %>%
   distinct(hromada_code, changed_since_2020)
 
-d_change %>% print_all()
+# d_change %>% print_all()
 
 
 # ---- graph-1 -----------------------------------------------------------------
@@ -300,6 +306,54 @@ g3 %>% quick_save("3-growth-and-change", h=7, w=14)
 # we think this is an artifact of the metric:  the contribution rada which didn't belong to hromada
 # before 2020-08-16 might have been discounted in the final count of the tax contribution for that hromada
 
+
+# ---- graph-4 -----------------------------------------------------------------
+ds0_wide %>% glimpse()
+ds0_wide %>% filter(hromada_code %in% c("UA85", "UA80"))
+
+d <-
+  ds0_wide %>% 
+  select(hromada_code, hromada_type3, time, outcome =  tax_revenue) %>% 
+  filter(time == 2021)
+d
+
+g <- 
+  d %>% 
+  mutate(
+    percentile = dplyr::ntile(outcome, 100 )
+    ,pctl_group = case_when(
+      percentile > 99 ~ "top 1%"
+      ,percentile > 95 ~ "top 2-5%"
+      ,TRUE ~ "bottom 95%"
+    ) %>% fct_relevel(c("top 1%","top 2-5%", "bottom 95%"))
+    ,hromada = hromada_code %>% as_factor() %>% fct_reorder2( percentile,desc(outcome))
+    ,outcome = outcome/1000000
+  ) %>% 
+  left_join( ds_admin %>% distinct(hromada_code, hromada_name, region_ua)) %>%  
+  {
+    ggplot(
+      .
+      ,aes(
+        x = outcome
+        ,y = hromada
+        ,fill = region_ua
+      )
+    )+
+      geom_col()+
+      geom_text(aes(label = hromada_name, x =-Inf), hjust = -.1,  data=. %>% filter(pctl_group=="top 1%"))+
+      geom_text(aes(label = hromada_name, x =-Inf), hjust = -.1,  data=. %>% filter(pctl_group=="top 2-5%"), alpha = .3)+
+      facet_wrap(facets = "pctl_group", scales = "free")+
+      scale_x_continuous(labels = scales::comma_format())+
+      theme(
+        axis.text.y = element_blank()
+      )+
+      labs(
+        x = "Tax Revenue (Million UAH)"
+        ,fill = "Region"
+      )
+  }
+g
+g %>% quick_save("4-tax-contribution",h=8,w=10)
 # ---- save-to-disk ------------------------------------------------------------
 
 # ---- publish ------------------------------------------------------------
