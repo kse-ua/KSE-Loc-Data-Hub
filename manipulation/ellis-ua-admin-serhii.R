@@ -32,6 +32,7 @@ library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
 path_file <- "./data-private/raw/ua-admin-codes.csv"
+#Source: https://docs.google.com/spreadsheets/d/1Cu_ANPCunoQywhz2-NUkKAtT7eemR1Mt/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
 path_admin_comp <- "./data-private/raw/admin-comp.csv" 
 #Source: https://docs.google.com/spreadsheets/d/1fezJP9iJ0Yjp4REsz722czsMD5AoORmv/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
 path_admin_old <- "./data-private/raw/ua-admin-codes-old.csv"
