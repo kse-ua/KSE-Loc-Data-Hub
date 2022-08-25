@@ -110,3 +110,5 @@ Desktop.ini
 #     2. reorganized and moved above this chunk (so it won't be confused with files added unintentionally).
 
 analysis/temporal composition/tc.html
+*.html
+*.jpg
