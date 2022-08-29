@@ -40,11 +40,11 @@ path_admin_comp <- "./data-private/raw/admin-comp.csv"
 #Old (before 2020) admin codifier,
 #source: https://docs.google.com/spreadsheets/d/1fezJP9iJ0Yjp4REsz722czsMD5AoORmv/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
 path_admin_old <- "./data-private/raw/ua-admin-codes-old.csv"
-#Codifier of financial codes of radas/hromadas by the Ministry of Finance,
-#source: 
+#Current codifier of budget codes of hromadas by the Ministry of Finance,
+#source: https://docs.google.com/spreadsheets/d/1tONOFUsX0Q-0AwIabPZET8lmZ9INA1Rh/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
 path_admin_fin <- "./data-private/raw/admin-fin.xlsx" 
-#Old codifier of financial codes as of 01.01.2019 (voluntarily formed hromadas + radas/separate settlements)
-#source:
+#Old codifier of budget codes as of 01.01.2019 (voluntarily formed hromadas + radas/separate settlements)
+#source:https://docs.google.com/spreadsheets/d/13gDuQTUuCjE0TUuRHS1sLvqkLYdL7gGW/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
 path_admin_fin_old <- "./data-private/raw/admin-fin-old.xlsx" 
 # Kодифікатор. tab "області"
 # https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true 
@@ -392,6 +392,7 @@ ds_admin_full <-
     ds_fin_old %>% select(object_code_old, budget_code_old)
     ,by= c("settlement_code_old" = "object_code_old")
   )
+
 
 # ds_admin_full %>%
 #   filter(is.na(budget_code_old) == T) %>% 
