@@ -32,10 +32,23 @@ library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
 path_file <- "./data-private/raw/ua-admin-codes.csv"
-#Source: https://docs.google.com/spreadsheets/d/1Cu_ANPCunoQywhz2-NUkKAtT7eemR1Mt/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
+path_oblasti <- "./data-private/raw/oblast.csv"
+
+#Сomparison between old (before 2020) and new admin codifiers,
+#source: https://docs.google.com/spreadsheets/d/1Cu_ANPCunoQywhz2-NUkKAtT7eemR1Mt/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
 path_admin_comp <- "./data-private/raw/admin-comp.csv" 
-#Source: https://docs.google.com/spreadsheets/d/1fezJP9iJ0Yjp4REsz722czsMD5AoORmv/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
+#Old (before 2020) admin codifier,
+#source: https://docs.google.com/spreadsheets/d/1fezJP9iJ0Yjp4REsz722czsMD5AoORmv/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
 path_admin_old <- "./data-private/raw/ua-admin-codes-old.csv"
+#Codifier of financial codes of radas/hromadas by the Ministry of Finance,
+#source: 
+path_admin_fin <- "./data-private/raw/admin-fin.xlsx" 
+#Old codifier of financial codes as of 01.01.2019 (voluntarily formed hromadas + radas/separate settlements)
+#source:
+path_admin_fin_old <- "./data-private/raw/admin-fin-old.xlsx" 
+# Kодифікатор. tab "області"
+# https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true 
+ds0_oblast <- readr::read_csv(path_oblasti, skip=0)
 
 names_admin_ua <- c(
   "level_1"
@@ -63,6 +76,31 @@ names_admin_old <- c(
   ,"object_name"
 )
 
+names_admin_fin <- c(
+  "territory_code"
+  ,"Uncontrolled"
+  ,"budget_feature"
+  ,"n_budgets"
+  ,"n_budget_state_link"
+  ,"budget_code"
+  ,"budget_name"
+  ,"object_name"
+  ,"object_code"
+  ,"full_name"
+)
+
+names_admin_fin_old <- c(
+  "territory_code"
+  ,"Uncontrolled"
+  ,"budget_feature"
+  ,"n_budgets"
+  ,"budget_code_old"
+  ,"budget_name"
+  ,"object_name"
+  ,"object_code_old"
+  ,"full_name"
+)
+
 
 #+ declare-functions -----------------------------------------------------------
 
@@ -72,18 +110,22 @@ cat("\n# 2.Data ")
 ds0 <- readr::read_csv(path_file, col_names = names_admin_ua, skip=1)
 ds_comp0 <- readr::read_csv(path_admin_comp, col_names = names_admin_comp, skip=1)
 ds_old0 <- readr::read_csv(path_admin_old, col_names = names_admin_old, skip=1)
+ds_fin <- readxl::read_excel(path_admin_fin, sheet = "codes", col_names = names_admin_fin, skip=10)
+ds_fin_old <- readxl::read_excel(path_admin_fin_old, sheet = "codes", col_names = names_admin_fin_old, skip=10)
+
 
 #+ inspect-data ----------------------------------------------------------------
 ds0 %>% glimpse()
 ds_comp0 %>% glimpse()
 ds_old0 %>% glimpse()
+ds_fin %>% glimpse()
 
 ds0 %>% count(object_category)
 ds_comp0 %>% count(object_category)
 ds_old0 %>% count(object_category)
+ds_fin %>% count(object_category)
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
-
 
 ds1 <- 
   ds0 %>% 
@@ -239,6 +281,7 @@ ds_settlement_rada_old <-
   ) %>%
   select(settlement_name = object_name, settlement_code, rada_name, rada_code)
 
+ds_settlement_rada_old
 
 #+ table-3 ---------------------------------------------------------------------
 
@@ -306,40 +349,24 @@ ds_map_settlement <-
   )
 ds_map_settlement
 
+# demonstrate that ds_map_hromada can be devided from ds_map_settlement
+identical(
+  ds_map_hromada
+  ,ds_map_settlement %>% 
+    select(!starts_with("settlement_")) %>% 
+    distinct()
+)
+# Therefore we will use ds_map_settlement as the primary file
 
-#comparison admin dataset
-ds_map_hromada_comp <- 
-  #1
-  ds_hromada_comp %>% 
-  left_join(
-    ds_comp1 %>% filter(category_label == "громада") %>% select(new_code, old_code)
-    ,by = c("hromada_code" = "new_code")
-  ) %>% View()
-  left_join(
-    ds_raion
-    ,by = "raion_code"
-  ) %>% 
-  # 2
-  left_join(
-    ds1 %>% distinct(oblast_code = level_1, hromada_code = level_3)
-    ,by = "hromada_code"
-  ) %>% 
-  left_join(
-    ds_oblast
-    ,by = "oblast_code"
-  )
+ds_admin <- 
+  ds_map_settlement %>% 
+  left_join(ds0_oblast, by = c("oblast_code", "oblast_name")) %>% 
+  mutate(
+    oblast_name_display = paste0(region_ua," - ",oblast_name)
+    ,oblast_name_display = fct_reorder(oblast_name_display, map_position)
+  ) 
+ds_admin %>% glimpse(90)
 
-ds_map_settlement_comp <- 
-    #1
-    ds_settlement_comp %>% 
-    inner_join(
-      ds_comp1 %>% filter(object_category %in% c("Х","С","Т","М"))
-      ,by = c("settlement_code" = "new_code")
-    ) %>% 
-    inner_join(
-      ds_map_hromada_comp
-      ,by = "hromada_code"
-    )
 
 #combine all together with old classification (rada name and code)
 ds_admin_old_new <-
@@ -351,17 +378,29 @@ ds_admin_old_new <-
   left_join(
     ds_settlement_rada_old
     ,by = c("settlement_code_old" = "settlement_code")
-  ) %>% View()
+  )
 
+#adding information on budget codes: final after 2020 and before as of 01.01.2019 - 
+#does not include codes for settlements which formed hromadas voluntarily - SOLUTION IS NEEDED
+ds_admin_full <-
+  ds_admin_old_new %>% 
+  left_join(
+    ds_fin %>% select(object_code, budget_code, budget_name, full_name)
+    ,by = c("settlement_code" = "object_code")
+  ) %>%
+  left_join(
+    ds_fin_old %>% select(object_code_old, budget_code_old)
+    ,by= c("settlement_code_old" = "object_code_old")
+  )
 
-# demonstrate that ds_map_hromada can be devided from ds_map_settlement
-identical(
-  ds_map_hromada
-  ,ds_map_settlement %>% 
-    select(!starts_with("settlement_")) %>% 
-    distinct()
-)
-# Therefore we will use ds_map_settlement as the primary file
+# ds_admin_full %>%
+#   filter(is.na(budget_code_old) == T) %>% 
+#   distinct(hromada_code, hromada_name, settlement_name.x, settlement_code_old, rada_code) %>% 
+#   left_join(
+#     ds_fin_old %>% select(object_code_old, object_name)
+#     ,by = c("rada_code" = "object_code_old")
+#   ) 
+
 
 #+ graph-1 ---------------------------------------------------------------------
 #+ graph-2 ---------------------------------------------------------------------
