@@ -407,9 +407,12 @@ ds_admin_full <-
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 
-ds_admin_old_new %>% 
-  # readr::write_csv("./data-private/ua-admin-map.csv") # causes fatal error for RSTUdio, investigate later
-  readr::write_rds("./data-private/derived/ua-admin-map.rds")
+ds_admin_full %>% 
+  readr::write_csv("./data-private/derived/ua-admin-map.csv")
+
+ds_map_hromada %>% 
+  readr::write_csv("./data-private/derived/hromada.csv")
+
 
 #+ sanity-check, eval=F, echo=F -------------------------------
 # rm(list = ls(all.names = TRUE))
@@ -423,7 +426,7 @@ ds_admin_old_new %>%
 #   select(!starts_with("settlement")) %>% 
 #   filter(!is.na(hromada_name)) 
 # ds_map_hromada
-#+ results="asis", echo=F ------------------------------------------------------
+#+ results="asis", echo=F -------dsa-----------------------------------------------
 cat("\n# A. Session Information{#session-info}")
 #+ results="show", echo=F ------------------------------------------------------
 #' For the sake of documentation and reproducibility, the current report was rendered in the following environment.
