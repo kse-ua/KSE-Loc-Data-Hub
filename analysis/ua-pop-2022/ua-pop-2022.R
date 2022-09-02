@@ -33,16 +33,12 @@ Sys.setlocale("LC_CTYPE", "ukr")
 prints_folder <- paste0("./analysis/ua-pop-2022/prints/")
 if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
 
-path_data_input <- "./data-private/raw/ua-pop-2022.xlsx"
+path_data_input <- "./data-public/derived/ua-pop-2022.csv"
 # ---- declare-functions -------------------------------------------------------
 
 # ---- load-data ---------------------------------------------------------------
-ds0 <- readxl::read_xlsx(
-  path_data_input
-  , sheet = "12-47"
-  , skip = 5
-  , col_names = c("unit_ua","pop_count","unit_en" ) 
-)
+ds0 <- readr::read_csv(path_data_input)
+
 ds0 %>% glimpse()
 ds0
 # ---- inspect-data ------------------------------------------------------------
