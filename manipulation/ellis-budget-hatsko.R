@@ -92,20 +92,38 @@ ds2 <- ds1 %>%
 
 ds2 %>%
   group_by(inco1, inco2, inco3) %>%
-  summarise(sum = sum(x2018_1_executed, na.rm = T)) %>% view()
+  summarise(sum = sum(x2018_1_executed, na.rm = T))
   
 # to get summary for administrative unit
 ds2 %>%
   group_by(admin2) %>%
-  summarise(across(ends_with('executed'), ~ sum(.x, na.rm = TRUE))) %>% view()
+  summarise(across(ends_with('executed'), ~ sum(.x, na.rm = TRUE)))
 
 ds2 %>%
   group_by(admin3) %>%
-  summarise(across(ends_with('executed'), ~ sum(.x, na.rm = TRUE))) %>% view()
+  summarise(across(ends_with('executed'), ~ sum(.x, na.rm = TRUE)))
 
 ds2 %>%
   group_by(admin4) %>%
-  summarise(across(ends_with('executed'), ~ sum(.x, na.rm = TRUE))) %>% view()
+  summarise(across(ends_with('executed'), ~ sum(.x, na.rm = TRUE)))
+
+ds3 <- ds2 %>%
+  mutate(inc_code = str_extract(inco3, '[0-9]+')) %>%
+  select(-c(file_number, inco1, inco2, inco3)) %>%
+  pivot_longer(-c(starts_with('adm'), inc_code), names_to = 'year_quarter', values_to = 'income') %>%
+  mutate(year = str_extract(year_quarter, "(?<=x)....(?=_)"),
+         quarter = str_extract(year_quarter, "(?<=_).(?=_)")) %>%
+  select(-year_quarter) %>%
+  pivot_wider(names_from = inc_code, values_from = income) %>%
+  select(admin1, admin2, admin3, admin4, year, quarter, sort(names(.)))
+
+## to add higher level income - sum columns by code (as defined in inco_ds), 
+## i.e. to get amount of all tax incomes you need to sum all codes starting with '1';
+## to get all rent - sum all codes that start with '13'
+
+## moreover, there I left only values for admin 4 - as we can get amount of income for 
+## higher adm units by adding up 
+
 
 #+ tweak-data-1, eval=eval_chunks ------------------------------------------------
 ds0 %>% glimpse()
