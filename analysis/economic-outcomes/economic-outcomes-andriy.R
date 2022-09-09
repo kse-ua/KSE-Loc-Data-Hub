@@ -89,7 +89,7 @@ ds0_wide %>% glimpse()
 ds0_long <- 
   ds_economics %>% 
   left_join(
-    ds0_wide %>% select(hromada_code, hromada_type, tot)
+    ds0_wide %>% distinct(hromada_code, hromada_type, tot)
   ) %>% 
   relocate("hromada_type", .after = "hromada_code")
 ds0_long %>% glimpse()
@@ -355,6 +355,66 @@ g <-
   }
 g
 g %>% quick_save("4-tax-contribution",h=8,w=10)
+# ---- graph-5 -----------------------------------------------------------------
+ds0_wide %>% glimpse()
+ds0_long %>% glimpse()
+
+d <- 
+  ds0_long %>% 
+  filter(time == 2021) %>% 
+  arrange(desc(hromada_code)) %>% 
+  group_by(metric) %>% 
+  mutate(
+    percentile = dplyr::ntile(value, 100 )
+    ,pctl_group = case_when(
+      percentile > 99 ~ "top 1%"
+      ,percentile > 95 ~ "top 2-5%"
+      ,TRUE ~ "bottom 95%"
+    ) %>% fct_relevel(c("top 1%","top 2-5%", "bottom 95%"))
+  ) %>% 
+  ungroup() %>% 
+  left_join(
+    ds_admin %>% distinct(hromada_code, region_ua)
+  ) %>% 
+  # filter(pctl_group == "bottom 95%") %>% 
+  filter(!is.na(region_ua)) 
+d %>% glimpse()
+
+region_order <- 
+  d %>% 
+  filter(metric ==  "population") %>% 
+  group_by(region_ua) %>% 
+  summarize(value = sum(value,na.rm = T)) %>% 
+  arrange(desc(value)) %>% 
+  pull(region_ua)
+
+d1 <- 
+  d %>% 
+  mutate(region_ua = factor(region_ua, levels = region_order)) 
+d1$region_ua %>% levels()
+
+g <-
+  d1 %>% 
+  {
+    ggplot(
+      .
+      ,aes(
+      x = region_ua
+      ,y = percentile
+      ,color = region_ua
+      )
+    )+
+    geom_boxplot()+
+    facet_wrap(facets = "metric", scales = "free_y")+
+    scale_y_continuous(labels = scales::comma_format())+
+    labs(
+      title = "Available metrics"
+    )
+  }
+g
+g %>% quick_save("5-metric",w=12,h=8 )
+
+
 # ---- save-to-disk ------------------------------------------------------------
 
 # ---- publish ------------------------------------------------------------
