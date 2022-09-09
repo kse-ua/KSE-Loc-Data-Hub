@@ -32,7 +32,7 @@ library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
 path_file <- "./data-private/raw/ua-admin-codes.csv"
-path_oblasti <- "./data-private/raw/oblast.csv"
+
 
 #Сomparison between old (before 2020) and new admin codifiers,
 #source: https://docs.google.com/spreadsheets/d/1Cu_ANPCunoQywhz2-NUkKAtT7eemR1Mt/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
@@ -48,7 +48,7 @@ path_admin_fin <- "./data-private/raw/admin-fin.xlsx"
 path_admin_fin_old <- "./data-private/raw/admin-fin-old.xlsx" 
 # Kодифікатор. tab "області"
 # https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true 
-
+path_oblast <- "./data-private/raw/oblast.csv"
 
 names_admin_ua <- c(
   "level_1"
