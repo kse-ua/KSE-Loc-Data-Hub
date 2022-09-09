@@ -59,6 +59,10 @@ for(i in seq_along(paths_budget)){
 lapply(ls_import, glimpse)
 ds0 <- bind_rows(ls_import,.id = "file_number")
 ds0 %>% glimpse()
+
+path_admin <- "./data-private/derived/ua-admin-map.csv"
+ds_admin_full <- readr::read_csv(path_admin)
+
 #+ inspect-data ----------------------------------------------------------------
 
 import_custom <- function(i){
@@ -125,13 +129,44 @@ ds3 <- ds2 %>%
 ## higher adm units by adding up 
 
 
-#+ tweak-data-1, eval=eval_chunks ------------------------------------------------
-ds0 %>% glimpse()
-ds1 <- 
-  ds0 %>% 
-  select(1:7)
 
-ds1 %>% glimpse()  
+## split admin4 into admin-code and admin-label
+ds4 <- ds3 %>%
+  mutate(admin4_code = as.character(str_extract(admin4, '[0-9]+')),
+         admin4_label = str_remove(admin4, '[0-9]+ '),
+         admin3_code = as.character(str_extract(admin3, '[0-9]+')),
+         admin3_label = str_remove(admin3, '[0-9]+ ')) %>%
+  select(starts_with('admin4'), starts_with('admin3'), everything()) %>%
+  select(-c('admin1', 'admin2', 'admin3', 'admin4')) 
+
+ds4 %>% glimpse()
+
+d1 <- ds4 %>%
+  filter(admin4_code == 06203100000)
+
+d1 %>% t()
+
+d2 <- ds4 %>%
+  filter(admin4_code == 06563000000)
+
+d3 <- ds4 %>%
+  filter(admin4_code %in% c(06563000000, 06203100000)) %>%
+  filter(!is.na(`11010000`))
+  
+d4 <- ds4 %>%
+  filter(admin3_code == '06200000000')
+
+d5 <- ds_admin_full %>%
+  filter(budget_code == '0656300000') %>%
+  distinct(budget_code_old)
+
+d6 <- ds4 %>%
+  filter(admin4_code %in% (d5%>%pull(budget_code_old)))
+  
+
+  
+#+ tweak-data-1, eval=eval_chunks ------------------------------------------------
+
 #+ tweak-data-2 ----------------------------------------------------------------
 
 #+ tweak-data-3 ----------------------------------------------------------------

@@ -111,8 +111,8 @@ ds0 <- readr::read_csv(path_file, col_names = names_admin_ua, skip=1)
 ds_comp0 <- readr::read_csv(path_admin_comp, col_names = names_admin_comp, skip=1)
 ds_old0 <- readr::read_csv(path_admin_old, col_names = names_admin_old, skip=1)
 ds_fin0 <- readxl::read_excel(path_admin_fin, sheet = "codes", col_names = names_admin_fin, skip=10)
-ds_fin_old0 <- readxl::read_excel(path_admin_fin_old, sheet = "codes", col_names = names_admin_fin_old, skip=10)
-ds0_oblast <- readr::read_csv(path_oblasti, skip=0)
+ds_fin_old <- readxl::read_excel(path_admin_fin_old, sheet = "codes", col_names = names_admin_fin_old, skip=10)
+ds0_oblast <- readr::read_csv(path_oblast, skip=0)
 
 #+ inspect-data ----------------------------------------------------------------
 ds0 %>% glimpse()
