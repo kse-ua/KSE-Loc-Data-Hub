@@ -57,8 +57,12 @@ for(i in seq_along(paths_budget)){
 }
 
 lapply(ls_import, glimpse)
+
+#+ tweak-data ------------------------------------------------------------------
+
 ds0 <- bind_rows(ls_import,.id = "file_number")
-ds0 %>% glimpse()
+ds0 %>% glimpse(80)
+
 
 path_admin <- "./data-private/derived/ua-admin-map.csv"
 ds_admin_full <- readr::read_csv(path_admin)
@@ -79,6 +83,38 @@ d %>% count(admin2)
 d %>% count(admin3)
 d %>% count(admin4) %>% arrange(admin4)
 
+
+
+# Target case - Коростенська громада
+ds0 %>% glimpse()
+
+ds0 %>% count(admin1)
+ds0 %>% count(admin2) %>% print_all()
+ds0 %>% count(admin3) %>% print_all()
+
+
+ds0 %>% filter(admin2 == "Житомирська обл.") %>% count(admin3)
+ds0 %>% 
+  filter(admin2 == "Житомирська обл.") %>% 
+  filter(admin3 == "06200000000 Зведені бюджети міст обласного значення Житомирської області") %>% 
+  count(admin4)
+ds0 %>% filter(admin2 == "Житомирська обл.") %>% count(admin4)
+
+ds0 %>% count(inco1)
+ds0 %>% count(inco2) 
+ds0 %>% count(inco3) %>% print_all()
+
+# Brief dictinoary
+
+# file_number = 
+# admin1 - Only one value, drop it later or recode
+# admin2 - name of the Oblast, which budget is observed
+# admin3 - type of budget within Oblast (oblast, city, raion, hromada)
+# admin4 - type of budget (settlement, rada, hromada) 
+# incol1 - type of revenue (tax, non-tax, capital, transfer, target)
+# incol2 - sub-type of revenue
+# incol3 - sub-sub-type of revenue
+#+ tweak-data-1 ----------------------------------------------------------------
 ds1 <- ds0 %>%
   filter(!is.na(inco3))
 
@@ -88,12 +124,16 @@ inco_ds <- ds1 %>%
   arrange(inco1, inco2, inco3) %>%
   print_all()
 
+#+ tweak-data-2 ----------------------------------------------------------------
+
+# 
 ds2 <- ds1 %>% 
   mutate(
     across(ends_with('executed'), as.numeric)
     # , across(ends_with('executed'), round)
   )
-
+ds1 %>% glimpse()
+ds2 %>% glimpse()
 ds2 %>%
   group_by(inco1, inco2, inco3) %>%
   summarise(sum = sum(x2018_1_executed, na.rm = T))
@@ -121,6 +161,9 @@ ds3 <- ds2 %>%
   pivot_wider(names_from = inc_code, values_from = income) %>%
   select(admin1, admin2, admin3, admin4, year, quarter, sort(names(.)))
 
+ds2 %>% glimpse()
+ds3 %>% glimpse()
+
 ## to add higher level income - sum columns by code (as defined in inco_ds), 
 ## i.e. to get amount of all tax incomes you need to sum all codes starting with '1';
 ## to get all rent - sum all codes that start with '13'
@@ -140,31 +183,72 @@ ds4 <- ds3 %>%
   select(-c('admin1', 'admin2', 'admin3', 'admin4')) 
 
 ds4 %>% glimpse()
+ds4 %>% count(admin4_code, admin4_label)
+ds4 %>% count(admin3_code, admin3_label)
 
+# to select reporting periods (quarters) BEFORE this settlement joined a hromada
 d1 <- ds4 %>%
-  filter(admin4_code == 06203100000)
+  filter(admin4_code == "06203100000") #%>% View()
+# we can see that it joins hormada in 2021-1
 
-d1 %>% t()
-
-d2 <- ds4 %>%
-  filter(admin4_code == 06563000000)
-
-d3 <- ds4 %>%
-  filter(admin4_code %in% c(06563000000, 06203100000)) %>%
-  filter(!is.na(`11010000`))
+# The total revenue can be computed by summing the values in the columns right of `quarter`
+# Let's verify this assertion 
+ds4 %>% 
+  filter(admin4_code == "06203100000") %>%  # not necessary, but use to remind the hierarchy
+  filter(admin3_code == "06200000000") %>% 
+  filter(year == "2018", quarter =="1") %>% 
+  select(-c(1:6)) %>% 
+  pivot_longer(cols = everything(), values_to = "value", names_to ="code") %>% 
+  summarize(total = sum(value, na.rm = T)) %>% 
+  unlist() %>% 
+  scales::comma()
+# this number is identical to what we can derived from the original source:
+ds0 %>% 
+  filter(admin4 == "06203100000 Бюджет міста Коростеня") %>% 
+  filter(is.na(inco1), is.na(inco2), is.na(inco3)) %>% 
+  select(x2018_1_executed ) %>% 
+  print()
   
-d4 <- ds4 %>%
-  filter(admin3_code == '06200000000')
+# # Now the revenues recorded AFTER this settlement joined a hromada
+# # 06563000000 - budget code of the hromada 
+# d2 <- ds4 %>%
+#   filter(admin4_code == "06563000000") #%>% View()
+# 
+# d3 <- ds4 %>%
+#   filter(admin4_code %in% c("06563000000", "06203100000")) %>%
+#   filter(!is.na(`11010000`))
+#   
+# d4 <- ds4 %>%
+#   filter(admin3_code == '06200000000')
+# 
+# d5 <- ds_admin_full %>%
+#   filter(budget_code == '0656300000') %>%
+#   distinct(budget_code_old)
+# 
+# d6 <- ds4 %>%
+#   filter(admin4_code %in% (d5%>%pull(budget_code_old)))
 
-d5 <- ds_admin_full %>%
-  filter(budget_code == '0656300000') %>%
-  distinct(budget_code_old)
+# Korosten hromada -  06563000000
+budget_code_hromada  <- "0656300000"
+                        "0656300000"
+# ds_admin_full %>% glimpse()
 
-d6 <- ds4 %>%
-  filter(admin4_code %in% (d5%>%pull(budget_code_old)))
-  
+                        
+# let us derive the codes for a SINGLE hromada
+d_admin <- 
+  ds_admin_full %>% 
+  filter(budget_code == budget_code_hromada) #%>% View()
+# budget_code - code used for statistics after 2020-
+# budget_code_old - used prior, different by a single zero at the end
 
-  
+target_budget_codes_of_one_hromada <- 
+  d_admin %>% pull(budget_code_old) %>% unique() 
+
+ds4 %>% glimpse()
+ds4_one_hromada <- 
+  ds4 %>% 
+  filter(admin4_code %in% target_budget_codes_of_one_hromada)
+
 #+ tweak-data-1, eval=eval_chunks ------------------------------------------------
 
 #+ tweak-data-2 ----------------------------------------------------------------
