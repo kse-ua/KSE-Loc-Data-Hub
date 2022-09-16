@@ -229,8 +229,10 @@ ds0 %>%
 #   filter(admin4_code %in% (d5%>%pull(budget_code_old)))
 
 # Korosten hromada -  06563000000
-budget_code_hromada  <- "0656300000"
-                        "0656300000"
+budget_code_hromada  <- "06563000000" # used in budget_code
+budget_code_hromada  <- "0656300000"  # old budget code
+# TODO: please verify the difference between old and new budget codes
+
 # ds_admin_full %>% glimpse()
 
                         
@@ -245,10 +247,109 @@ target_budget_codes_of_one_hromada <-
   d_admin %>% pull(budget_code_old) %>% unique() 
 
 ds4 %>% glimpse()
-ds4_one_hromada <- 
+
+#  Select the individual components of hromada BEFORE unification
+# this table contains revenues for individuals RADAS/CITY before they joined the hromada
+# NOTE: this is the simplest possible case: all radas joined this hromada
+# at the same time, in 2021-1. TODO: find a more complex case to work through next
+ds4_one_hromada <-  # before unification
   ds4 %>% 
   filter(admin4_code %in% target_budget_codes_of_one_hromada)
 
+# TODO: clean up the code in this chunk and annotate the creation of the 
+# single-hromada data
+
+ds4_one_hromada %>% count(admin3_code, admin3_label)
+ds4_one_hromada %>% count(admin4_code, admin4_label)
+
+ds4_one_hromada %>% filter(admin4_code == "06203100000" ) %>% View()
+
+ds4_one_hromada %>% glimpse()
+
+
+
+stem_names <- c("admin4_code", "admin4_label", "admin3_code", "admin3_label", "year","quarter")
+col_names <- setdiff(
+  names(ds4_one_hromada)
+  , stem_names
+  )
+# col_names <- col_names[1:2]
+
+
+d_before_unification <- 
+  ds4_one_hromada %>% 
+  select(stem_names, col_names) %>% 
+  select(-admin3_code, -admin3_label) %>% 
+  mutate(
+    quarter_date = case_when(
+      quarter == "1" ~ "01"
+      ,quarter == "2" ~ "04"
+      ,quarter == "3" ~ "07"
+      ,quarter == "4" ~ "10"
+    )
+    ,date = as.Date(paste0(year,"-",quarter_date,"-","01"))
+  ) %>% 
+  mutate(
+    row_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  select(-col_names, -quarter_date) %>%
+  group_by(date) %>%
+  summarize(
+    total_revenue = sum(row_revenue, na.rm = T)
+  ) %>% 
+  ungroup()
+
+
+
+ds4_one_hromada_after <- 
+  ds4 %>% 
+  filter(admin4_code == "06563000000")
+
+# col_names <- col_names[1:2]
+d_after_unification <- 
+  ds4_one_hromada_after %>% 
+  select(stem_names, col_names) %>% 
+  select(-admin3_code, -admin3_label) %>% 
+  mutate(
+    quarter_date = case_when(
+      quarter == "1" ~ "01"
+      ,quarter == "2" ~ "04"
+      ,quarter == "3" ~ "07"
+      ,quarter == "4" ~ "10"
+    )
+    ,date = as.Date(paste0(year,"-",quarter_date,"-","01"))
+  ) %>% 
+  mutate(
+    row_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  select(-col_names, -quarter_date) %>%
+  group_by(date) %>%
+  summarize(
+    total_revenue = sum(row_revenue, na.rm = T)
+  ) %>% 
+  ungroup()
+
+d_joined <- 
+  full_join(
+    d_before_unification %>% rename(before = total_revenue)
+    ,d_after_unification %>% rename(after = total_revenue)
+  ) %>% 
+  group_by(date) %>% 
+  summarize(
+    total_revenue = sum(before+ after)
+  )
+  # alternative - explore solution via rbind to see if that's more flexible
+
+
+g <- 
+  d_joined %>% 
+  ggplot(aes(x = date, y = total_revenue)) + 
+  geom_line()+
+  geom_point()+
+  geom_vline(xintercept = as.Date("2021-01-01"))
+g
+
+# TODO: for next time: add lines of individual radas
 #+ tweak-data-1, eval=eval_chunks ------------------------------------------------
 
 #+ tweak-data-2 ----------------------------------------------------------------
