@@ -221,7 +221,7 @@ ds2_long %>% glimpse()
 ds2_wide %>% glimpse()
 
 
-# ---- tweak-data-3 ------------------------------------------------------------
+# ---- explore-single-hromada ------------------------------------------------------------
 
 ## to add higher level income - sum columns by code (as defined in inco_ds), 
 ## i.e. to get amount of all tax incomes you need to sum all codes starting with '1';
@@ -259,117 +259,127 @@ ds0 %>%
 
 
 target_hromada_ua_code
-target_hromada_budget_code
+(target_hromada_budget_code) 
 # Korosten hromada -  06563000000
-budget_code_hromada  <- "06563000000" # used in budget_code
-budget_code_hromada  <- "0656300000"  # used in ua_admin, old budget code
+# budget_code_hromada  <- "06563000000" # used in budget_code
+# budget_code_hromada  <- "0656300000"  # used in ua_admin, old budget code
 # TODO: please verify the difference between old and new budget codes
 
 # ds_admin_full %>% glimpse()
 
-
 # let us derive the codes for a SINGLE hromada
 d_admin <- 
   ds_admin_full %>% 
-  filter(budget_code == budget_code_hromada) #%>% View()
+  # filter(budget_code == budget_code_hromada) #%>% View()
+  filter(budget_code == target_hromada_budget_code) %>% View()
 # budget_code - code used for statistics after 2020-
 # budget_code_old - used prior, different by a single zero at the end
+
+# hromada's admin coordinate
+d %>% 
+  arrange(rada_code) %>% 
+  select(region_ua, oblast_name, raion_name, hromada_name, rada_name, settlement_name) %>%
+  # select(reg•ion_ua, oblast_name, hromada_code, rada_code, settlement_code, budget_code_old) %>%
+  print_all()
 
 target_budget_codes_of_one_hromada <- 
   d_admin %>% pull(budget_code_old) %>% unique() 
 
 ds4 %>% glimpse()
 
+target_hromada_budget_code # get all settlement code for this hromada
+target_budget_codes_of_one_hromada <- 
+  ds_admin_full %>% 
+  filter(budget_code == target_hromada_budget_code) %>% 
+  pull(budget_code_old) %>% 
+  unique()
+
+# ---- tweak-data-3 ----------------------------------------------------------
+
+target_hromada_budget_code # get all settlement code for this hromada
+target_budget_codes_of_one_hromada <- 
+  ds_admin_full %>% 
+  filter(budget_code == target_hromada_budget_code) %>% 
+  pull(budget_code_old) %>% 
+  unique()
+
 #  Select the individual components of hromada BEFORE unification
 # this table contains revenues for individuals RADAS/CITY before they joined the hromada
 # NOTE: this is the simplest possible case: all radas joined this hromada
 # at the same time, in 2021-1. TODO: find a more complex case to work through next
-ds4_one_hromada <-  # before unification
-  ds4 %>% 
-  filter(admin4_code %in% target_budget_codes_of_one_hromada)
+# ds2_one_hromada <-  # before unification
+#   ds2_wide %>% 
+#   filter(admin4_code %in% target_budget_codes_of_one_hromada)
 
 # TODO: clean up the code in this chunk and annotate the creation of the 
 # single-hromada data
-
-ds4_one_hromada %>% count(admin3_code, admin3_label)
-ds4_one_hromada %>% count(admin4_code, admin4_label)
-
-ds4_one_hromada %>% filter(admin4_code == "06203100000" ) %>% View()
-
-ds4_one_hromada %>% glimpse()
+# ds2_one_hromada %>% filter(admin4_code == "06203100000" ) #%>% View()
+# ds2_one_hromada %>% glimpse()
 
 
 
-stem_names <- c("admin4_code", "admin4_label", "admin3_code", "admin3_label", "year","quarter")
+stem_names <- c("admin4_code", "year","quarter","date")
 col_names <- setdiff(
-  names(ds4_one_hromada)
+  names(ds2_one_hromada)
   , stem_names
 )
-# col_names <- col_names[1:2]
-
 
 d_before_unification <- 
-  ds4_one_hromada %>% 
+  ds2_wide %>% 
+  filter(admin4_code %in% target_budget_codes_of_one_hromada) %>% # !!!
+  # the line above selects MULTIPLE units (settlement) that eventual joined into a hromada
+  # the code for hromada is absent in the table prior to this date, b/c it didn't exist
   select(stem_names, col_names) %>% 
-  select(-admin3_code, -admin3_label) %>% 
-  mutate(
-    quarter_date = case_when(
-      quarter == "1" ~ "01"
-      ,quarter == "2" ~ "04"
-      ,quarter == "3" ~ "07"
-      ,quarter == "4" ~ "10"
-    )
-    ,date = as.Date(paste0(year,"-",quarter_date,"-","01"))
-  ) %>% 
   mutate(
     row_revenue = rowSums(across(col_names),na.rm =T)
   ) %>% 
-  select(-col_names, -quarter_date) %>%
+  # select(-col_names, -quarter_date) %>%
   group_by(date) %>%
   summarize(
     total_revenue = sum(row_revenue, na.rm = T)
   ) %>% 
   ungroup()
 
-
-
-ds4_one_hromada_after <- 
-  ds4 %>% 
-  filter(admin4_code == "06563000000")
+# 
+# ds2_one_hromada_after <- 
+#   ds2_wide %>% 
+#   filter(admin4_code == paste0(target_hromada_budget_code, "0"))
+#   # filter(admin4_code == "06563000000")
 
 # col_names <- col_names[1:2]
 d_after_unification <- 
-  ds4_one_hromada_after %>% 
+  ds2_wide %>% 
+  filter(admin4_code == paste0(target_hromada_budget_code, "0")) %>% # !!!!
+  # the line above selects a SINGLE unit (hromada) starting on the date it formed
   select(stem_names, col_names) %>% 
-  select(-admin3_code, -admin3_label) %>% 
-  mutate(
-    quarter_date = case_when(
-      quarter == "1" ~ "01"
-      ,quarter == "2" ~ "04"
-      ,quarter == "3" ~ "07"
-      ,quarter == "4" ~ "10"
-    )
-    ,date = as.Date(paste0(year,"-",quarter_date,"-","01"))
-  ) %>% 
   mutate(
     row_revenue = rowSums(across(col_names),na.rm =T)
   ) %>% 
-  select(-col_names, -quarter_date) %>%
+  # select(-col_names, -quarter_date) %>%
   group_by(date) %>%
   summarize(
     total_revenue = sum(row_revenue, na.rm = T)
   ) %>% 
   ungroup()
 
+  
 d_joined <- 
-  full_join(
-    d_before_unification %>% rename(before = total_revenue)
-    ,d_after_unification %>% rename(after = total_revenue)
+  bind_rows(
+    d_before_unification %>% filter(!total_revenue==0)
+    ,d_after_unification %>% filter(!total_revenue==0)
   ) %>% 
-  group_by(date) %>% 
-  summarize(
-    total_revenue = sum(before+ after)
-  )
+  arrange(date)
+  
+# the below version is alternative (may work differently in other pipelines)  
+# d_joined <- 
+#   full_join(
+#     d_before_unification %>% rename(before = total_revenue)
+#     ,d_after_unification %>% rename(after = total_revenue)
+#   ) %>% 
+#   group_by(date) %>% 
+#   summarize(
+#     total_revenue = sum(before+ after)
+#   )
 # alternative - explore solution via rbind to see if that's more flexible
 
 
