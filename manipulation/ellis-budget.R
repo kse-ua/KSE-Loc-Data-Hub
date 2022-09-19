@@ -294,7 +294,16 @@ target_budget_codes_of_one_hromada <-
   pull(budget_code_old) %>% 
   unique()
 
-# ---- tweak-data-3 ----------------------------------------------------------
+
+# ----- tranformation-stages -------------------------------
+
+
+# 1 Process a simiple hromada (done) - Korosten
+# 2 Process a more complex hromada 
+# 3 Filter main dataframe to these two hromadas and practice general tranformation
+# 4 Apply general tranformation (to all hromadas) and demostrate absence of errors
+
+# ---- single-hromada-1 ----------------------------------------------------------
 
 target_hromada_budget_code # get all settlement code for this hromada
 target_budget_codes_of_one_hromada <- 
@@ -320,7 +329,7 @@ target_budget_codes_of_one_hromada <-
 
 stem_names <- c("admin4_code", "year","quarter","date")
 col_names <- setdiff(
-  names(ds2_one_hromada)
+  names(ds2_wide)
   , stem_names
 )
 
@@ -382,7 +391,6 @@ d_joined <-
 #   )
 # alternative - explore solution via rbind to see if that's more flexible
 
-
 g <- 
   d_joined %>% 
   ggplot(aes(x = date, y = total_revenue)) + 
@@ -392,6 +400,85 @@ g <-
 g
 
 # TODO: for next time: add lines of individual radas
+
+# ---- single-hromada-2 ----------------------
+
+# ds_admin_full %>% glimpse()
+#   filter(hromada_name == "")
+
+target_hromada_budget_code <- "1954800000"
+(target_hromada_ua_code <- d %>% distinct(hromada_code) %>% pull(hromada_code))
+  
+(
+  target_budget_codes_of_one_hromada <- 
+  ds_admin_full %>% 
+  filter(
+    budget_code == target_hromada_budget_code
+  ) %>% 
+  drop_na() %>% 
+  pull(budget_code_old) %>% 
+  unique()
+)
+
+
+
+stem_names <- c("admin4_code", "year","quarter","date")
+col_names <- setdiff(
+  names(ds2_wide)
+  , stem_names
+)
+
+d_before_unification <- 
+  ds2_wide %>% 
+  filter(admin4_code %in% target_budget_codes_of_one_hromada) %>% # !!!
+  # the line above selects MULTIPLE units (settlement) that eventual joined into a hromada
+  # the code for hromada is absent in the table prior to this date, b/c it didn't exist
+  select(stem_names, col_names) %>% 
+  mutate(
+    row_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  # group_by(admin4_code, date) %>%
+  group_by( date) %>%
+  summarize(
+    total_revenue = sum(row_revenue, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  ungroup()
+
+d_after_unification <- 
+  ds2_wide %>% 
+  filter(admin4_code == paste0(target_hromada_budget_code, "0")) %>% # !!!!
+  # the line above selects a SINGLE unit (hromada) starting on the date it formed
+  select(stem_names, col_names) %>% 
+  mutate(
+    row_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  group_by(admin4_code, date) %>%
+  summarize(
+    total_revenue = sum(row_revenue, na.rm = T)
+  ) %>% 
+  ungroup()
+
+# d_joined <- 
+#   bind_rows(
+#     d_before_unification %>% filter(!total_revenue==0)
+#     ,d_after_unification %>% filter(!total_revenue==0)
+#   ) %>% 
+#   arrange(date)  
+
+# the below version is alternative (may work differently in other pipelines)  
+d_joined <-
+  full_join(
+    d_after_unification %>% rename(after = total_revenue)
+    ,d_before_unification %>% rename(before = total_revenue)
+  ) %>%
+  group_by(date) %>%
+  summarize(
+    total_revenue = sum(before+ after)
+  )
+# alternative - explore solution via rbind to see if that's more flexible
+
+
 #+ tweak-data-1, eval=eval_chunks ------------------------------------------------
 
 #+ tweak-data-2 ----------------------------------------------------------------
