@@ -480,6 +480,26 @@ d_joined <-
 
 
 #+ tweak-data-1, eval=eval_chunks ------------------------------------------------
+d_rada1 <- 
+  ds2_wide %>% 
+  filter(admin4_code %in% target_budget_codes_of_one_hromada) %>% 
+  select(stem_names, col_names) %>% 
+  mutate(
+    total_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  select(-col_names, -year, -quarter) %>%
+  # mutate(
+  #   total_revenue2 = case_when(
+  #   total_revenue == 0 ~ NA
+  #   ,total_revenue != 0 ~ total_revenue
+  #   )
+  mutate(
+    total_revenue = ifelse(total_revenue == 0, NA, total_revenue)
+  ) %>% 
+  arrange(admin4_code, date)
+  # filter(date < "2021-01-01")
+
+d_rada_hromada <- rbind(d_hromada, d_rada1)
 
 #+ tweak-data-2 ----------------------------------------------------------------
 
@@ -488,6 +508,13 @@ d_joined <-
 #+ table-1 ---------------------------------------------------------------------
 
 #+ graph-1 ---------------------------------------------------------------------
+g1 <- 
+  d_rada1 %>% 
+  ggplot(aes(x = date, y = total_revenue, color = admin4_code)) + 
+  geom_line()+
+  geom_point()+
+  geom_vline(xintercept = as.Date("2021-01-01"))
+g1
 
 
 #+ graph-2 ---------------------------------------------------------------------
