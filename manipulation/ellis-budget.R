@@ -62,12 +62,12 @@ lapply(ls_import, glimpse)
 # to join multiple files (slices) downloaded from the source
 ds0 <- 
   bind_rows(ls_import,.id = "file_number") %>% 
-  select(1:10)
+  select(1:10) # to help focusing during development
 ds0 %>% glimpse(60)
 
 path_admin <- "./data-private/derived/ua-admin-map.csv"
 ds_admin_full <- readr::read_csv(path_admin)
-ds_admin_full %>% glimpse()
+ds_admin_full %>% glimpse(70)
 
 
 #+ inspect-data ----------------------------------------------------------------
@@ -75,8 +75,8 @@ ds_admin_full %>% glimpse()
 # target_hromada_budget_code  <- "06563000000" # used in budget_code 
 target_hromada_budget_code    <- "0656300000"  # used in ds_ua_admin
 
-ds_admin_full
-
+# ds_admin_full
+# to establish connection with ds_admin
 d <- 
   ds_admin_full %>% 
   filter(budget_code == target_hromada_budget_code)
@@ -89,7 +89,7 @@ length(target_hromada_ua_code)==1L# should be a single value to assert one-to-on
 d %>% 
   arrange(rada_code) %>% 
   select(region_ua, oblast_name, raion_name, hromada_name, rada_name, settlement_name) %>%
-  # select(region_ua, oblast_name, hromada_code, rada_code, settlement_code, budget_code_old) %>% 
+  # select(reg•ion_ua, oblast_name, hromada_code, rada_code, settlement_code, budget_code_old) %>%
   print_all()
 # goal: we need to link budget data to this frame
 
@@ -123,7 +123,7 @@ ds0 %>% count(admin3) %>% print_all()
 # tidying up admin codes
 ds1 <- 
   ds0 %>% 
-  # because other rows contain summaries of most granuar units
+  # because other rows contain summaries of most granular units
   # to see, view
   mutate(
     admin3_code = as.character(str_extract(admin3, '[0-9]+'))
@@ -133,7 +133,7 @@ ds1 <-
     ,admin4_label = str_remove(admin4, '[0-9]+ ')
     ,across(ends_with('executed'), as.numeric)
   ) %>% 
-  rename(oblast = admin2) %>% 
+  rename(oblast = admin2) %>% # becase no need to use codes
   relocate(c("admin3_code"), .after = "admin3") %>%
   relocate(c("admin4_code"), .after = "admin4") %>%
   select(-c("file_number", "admin1", "admin3","admin4")) %>% 
@@ -185,12 +185,43 @@ ds1 %>%
 
 
 # ---- tweak-data-2 ------------------------------------------------------------
+ds1 %>% glimpse()
+
+
+ds2_long <- 
+  ds1 %>%
+  mutate(inc_code = str_extract(inco3, '[0-9]+')) %>%
+  select(-c(inco1, inco2, inco3, oblast, admin3_label, admin4_label, admin3_code)) %>%
+  pivot_longer(
+    -c(starts_with('adm'), inc_code)
+    , names_to = 'year_quarter'
+    , values_to = 'income'
+  ) %>%
+  mutate(
+    year = str_extract(year_quarter, "(?<=x)....(?=_)")
+    ,quarter = str_extract(year_quarter, "(?<=_).(?=_)")
+    ,quarter_date = case_when(
+      quarter == "1" ~ "01"
+      ,quarter == "2" ~ "04"
+      ,quarter == "3" ~ "07"
+      ,quarter == "4" ~ "10"
+     )
+    ,date = as.Date(paste0(year,"-",quarter_date,"-","01"))
+  ) %>%
+  select(-c(year_quarter, quarter_date)) 
+
+ds2_wide <- 
+  ds2_long %>% 
+  pivot_wider(names_from = inc_code, values_from = income) %>%
+  # select(adin4_code, year, quarter, date, sort(everything(.)))
+  select(admin4_code, year, quarter, date, sort( names(.)))
+
+ds1 %>% glimpse()
+ds2_long %>% glimpse()
+ds2_wide %>% glimpse()
+
 ds2 <- 
-  ds1
-
-
-ds3 <- 
-  ds2 %>%
+  ds1 %>%
   mutate(inc_code = str_extract(inco3, '[0-9]+')) %>%
   select(-c(file_number, inco1, inco2, inco3)) %>%
   pivot_longer(-c(starts_with('adm'), inc_code), names_to = 'year_quarter', values_to = 'income') %>%
@@ -200,8 +231,8 @@ ds3 <-
   pivot_wider(names_from = inc_code, values_from = income) %>%
   select(admin1, admin2, admin3, admin4, year, quarter, sort(names(.)))
 
+ds1 %>% glimpse()
 ds2 %>% glimpse()
-ds3 %>% glimpse()
 
 ## to add higher level income - sum columns by code (as defined in inco_ds), 
 ## i.e. to get amount of all tax incomes you need to sum all codes starting with '1';
