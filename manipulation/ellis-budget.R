@@ -61,8 +61,9 @@ lapply(ls_import, glimpse)
 #+ tweak-data ------------------------------------------------------------------
 # to join multiple files (slices) downloaded from the source
 ds0 <- 
-  bind_rows(ls_import,.id = "file_number") %>% 
-  select(1:10) # to help focusing during development
+  bind_rows(ls_import,.id = "file_number") 
+# %>% 
+  # select(1:10) # to help focusing during development
 ds0 %>% glimpse(60)
 
 path_admin <- "./data-private/derived/ua-admin-map.csv"
@@ -180,8 +181,7 @@ ds_admin4_lkp <-
 # each admin unit will/may have these rows for each period of reporting
 
 ds1 %>% 
-  filter(admin4_code == paste0(target_hromada_budget_code,"0")) %>% 
-  View()
+  filter(admin4_code == paste0(target_hromada_budget_code,"0")) #%>% View()
 
 
 # ---- tweak-data-2 ------------------------------------------------------------
@@ -220,19 +220,8 @@ ds1 %>% glimpse()
 ds2_long %>% glimpse()
 ds2_wide %>% glimpse()
 
-ds2 <- 
-  ds1 %>%
-  mutate(inc_code = str_extract(inco3, '[0-9]+')) %>%
-  select(-c(file_number, inco1, inco2, inco3)) %>%
-  pivot_longer(-c(starts_with('adm'), inc_code), names_to = 'year_quarter', values_to = 'income') %>%
-  mutate(year = str_extract(year_quarter, "(?<=x)....(?=_)"),
-         quarter = str_extract(year_quarter, "(?<=_).(?=_)")) %>%
-  select(-year_quarter) %>%
-  pivot_wider(names_from = inc_code, values_from = income) %>%
-  select(admin1, admin2, admin3, admin4, year, quarter, sort(names(.)))
 
-ds1 %>% glimpse()
-ds2 %>% glimpse()
+# ---- tweak-data-3 ------------------------------------------------------------
 
 ## to add higher level income - sum columns by code (as defined in inco_ds), 
 ## i.e. to get amount of all tax incomes you need to sum all codes starting with '1';
@@ -241,33 +230,22 @@ ds2 %>% glimpse()
 ## moreover, there I left only values for admin 4 - as we can get amount of income for 
 ## higher adm units by adding up 
 
-
-
-## split admin4 into admin-code and admin-label
-ds4 <- ds3 %>%
-  mutate(admin4_code = as.character(str_extract(admin4, '[0-9]+')),
-         admin4_label = str_remove(admin4, '[0-9]+ '),
-         admin3_code = as.character(str_extract(admin3, '[0-9]+')),
-         admin3_label = str_remove(admin3, '[0-9]+ ')) %>%
-  select(starts_with('admin4'), starts_with('admin3'), everything()) %>%
-  select(-c('admin1', 'admin2', 'admin3', 'admin4')) 
-
-ds4 %>% glimpse()
-ds4 %>% count(admin4_code, admin4_label)
-ds4 %>% count(admin3_code, admin3_label)
-
+target_hromada_budget_code
 # to select reporting periods (quarters) BEFORE this settlement joined a hromada
-d1 <- ds4 %>%
-  filter(admin4_code == "06203100000") #%>% View()
+d1 <- ds2_wide %>%
+  # filter(admin4_code == "06203100000") %>% View() # misto Korosten
+  filter(admin4_code == paste0(target_hromada_budget_code,"0")) %>% View()
 # we can see that it joins hormada in 2021-1
 
+# Sanity check - VERIFICATION OF ASSUMPTIONS ABOUT DATA
 # The total revenue can be computed by summing the values in the columns right of `quarter`
 # Let's verify this assertion 
-ds4 %>% 
+ds2_wide %>% 
   filter(admin4_code == "06203100000") %>%  # not necessary, but use to remind the hierarchy
-  filter(admin3_code == "06200000000") %>% 
+  # filter(admin3_code == "06200000000") %>%
   filter(year == "2018", quarter =="1") %>% 
-  select(-c(1:6)) %>% 
+  # select(-c(1:4)) %>% # less reproducible
+  select(-c(admin4_code, year, quarter, date)) %>% # stronger code (resiliant to changes in the order/quantity of columns) 
   pivot_longer(cols = everything(), values_to = "value", names_to ="code") %>% 
   summarize(total = sum(value, na.rm = T)) %>% 
   unlist() %>% 
@@ -279,28 +257,12 @@ ds0 %>%
   select(x2018_1_executed ) %>% 
   print()
 
-# # Now the revenues recorded AFTER this settlement joined a hromada
-# # 06563000000 - budget code of the hromada 
-# d2 <- ds4 %>%
-#   filter(admin4_code == "06563000000") #%>% View()
-# 
-# d3 <- ds4 %>%
-#   filter(admin4_code %in% c("06563000000", "06203100000")) %>%
-#   filter(!is.na(`11010000`))
-#   
-# d4 <- ds4 %>%
-#   filter(admin3_code == '06200000000')
-# 
-# d5 <- ds_admin_full %>%
-#   filter(budget_code == '0656300000') %>%
-#   distinct(budget_code_old)
-# 
-# d6 <- ds4 %>%
-#   filter(admin4_code %in% (d5%>%pull(budget_code_old)))
 
+target_hromada_ua_code
+target_hromada_budget_code
 # Korosten hromada -  06563000000
 budget_code_hromada  <- "06563000000" # used in budget_code
-budget_code_hromada  <- "0656300000"  # old budget code
+budget_code_hromada  <- "0656300000"  # used in ua_admin, old budget code
 # TODO: please verify the difference between old and new budget codes
 
 # ds_admin_full %>% glimpse()
