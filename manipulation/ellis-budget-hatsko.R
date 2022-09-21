@@ -1,5 +1,5 @@
 #' ---
-#' title: "Ellis Economics"
+#' title: "Ellis Budget"
 #' author: "KSE"
 #' date: "last Updated: `r Sys.Date()`"
 #' ---
@@ -474,6 +474,232 @@ d_rada1 <-
   arrange(admin4_code, date) %>%
   pivot_wider(names_from = admin4_code, values_from = total_revenue)
 
+# ---- single-hromada-3 ----------------------
+
+# Trostyanetska hromada - there are only data after amalgamation for it,
+# no old_budget_codes
+
+target_hromada_budget_code <- "1351400000"
+
+d <- 
+  ds_admin_full %>% 
+  filter(budget_code == target_hromada_budget_code)
+
+(target_hromada_ua_code <- d %>% distinct(hromada_code) %>% pull(hromada_code))
+
+(
+  target_budget_codes_of_one_hromada <- 
+    ds_admin_full %>% 
+    filter(
+      budget_code == target_hromada_budget_code
+    ) %>%
+    drop_na() %>% 
+    pull(budget_code_old) %>% 
+    unique()
+)
+# NO budget_old_codes
+
+stem_names <- c("admin4_code", "year","quarter","date")
+col_names <- setdiff(
+  names(ds2_wide)
+  , stem_names
+)
+
+# there is only data after unification for this hromada
+d_after_unification <- 
+  ds2_wide %>% 
+  filter(admin4_code == paste0(target_hromada_budget_code, "0")) %>% # !!!!
+  # the line above selects a SINGLE unit (hromada) starting on the date it formed
+  select(stem_names, col_names) %>% 
+  mutate(
+    row_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  # group_by(admin4_code, date) %>% uncomment for individual radas
+  group_by(date) %>%
+  summarize(
+    total_revenue = sum(row_revenue, na.rm = T)
+  ) %>% 
+  ungroup()
+
+g1 <- 
+  d_after_unification %>%
+  ggplot(aes(x = date, y = total_revenue)) + 
+  # d_joined_ind %>% uncomment for individual radas
+  # ggplot(aes(x = date, y = total_revenue, color = admin4_code)) + 
+  geom_line()+
+  geom_point()+
+  geom_vline(xintercept = as.Date("2021-01-01"))
+g1
+
+# ---- single-hromada-4 ----------------------
+
+# Shiretska hromada - there are only data after amalgamation for it,
+# budget_code is the same as old_budget_codes
+
+target_hromada_budget_code <- "1352900000"
+
+d <- 
+  ds_admin_full %>% 
+  filter(budget_code == target_hromada_budget_code)
+
+(target_hromada_ua_code <- d %>% distinct(hromada_code) %>% pull(hromada_code))
+
+(
+  target_budget_codes_of_one_hromada <- 
+    ds_admin_full %>% 
+    filter(
+      budget_code == target_hromada_budget_code
+    ) %>%
+    drop_na() %>% 
+    pull(budget_code_old) %>% 
+    unique()
+)
+
+stem_names <- c("admin4_code", "year","quarter","date")
+col_names <- setdiff(
+  names(ds2_wide)
+  , stem_names
+)
+
+identical(paste0(target_hromada_budget_code, "0"), target_budget_codes_of_one_hromada)
+# budget_code is the same as budget_old_codes
+
+d_after_unification <- 
+  ds2_wide %>% 
+  filter(admin4_code == paste0(target_hromada_budget_code, "0")) %>% # !!!!
+  # the line above selects a SINGLE unit (hromada) starting on the date it formed
+  select(stem_names, col_names) %>% 
+  mutate(
+    row_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  # group_by(admin4_code, date) %>% uncomment for individual radas
+  group_by(date) %>%
+  summarize(
+    total_revenue = sum(row_revenue, na.rm = T)
+  ) %>% 
+  ungroup()
+
+g1 <- 
+  d_after_unification %>%
+  ggplot(aes(x = date, y = total_revenue)) + 
+  # d_joined_ind %>% uncomment for individual radas
+  # ggplot(aes(x = date, y = total_revenue, color = admin4_code)) + 
+  geom_line()+
+  geom_point()+
+  geom_vline(xintercept = as.Date("2021-01-01"))
+g1
+
+# ---- single-hromada-5 ----------------------
+
+# Ralivska hromada - there are only part of old budget codes present,
+target_hromada_budget_code <- "1357500000"
+
+d <- 
+  ds_admin_full %>% 
+  filter(budget_code == target_hromada_budget_code)
+
+(target_hromada_ua_code <- d %>% distinct(hromada_code) %>% pull(hromada_code))
+
+(
+  target_budget_codes_of_one_hromada <- 
+    ds_admin_full %>% 
+    filter(
+      budget_code == target_hromada_budget_code
+    ) %>%
+    drop_na() %>% 
+    pull(budget_code_old) %>% 
+    unique()
+)
+
+stem_names <- c("admin4_code", "year","quarter","date")
+col_names <- setdiff(
+  names(ds2_wide)
+  , stem_names
+)
+
+d_before_unification <- 
+  ds2_wide %>% 
+  filter(admin4_code %in% target_budget_codes_of_one_hromada) %>% # !!!
+  # the line above selects MULTIPLE units (settlement) that eventual joined into a hromada
+  # the code for hromada is absent in the table prior to this date, b/c it didn't exist
+  select(stem_names, col_names) %>% 
+  mutate(
+    row_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  # group_by(admin4_code, date) %>% #uncomment for individual radas
+  group_by(date) %>%
+  summarize(
+    total_revenue = sum(row_revenue, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  ungroup()
+
+d_after_unification <- 
+  ds2_wide %>% 
+  filter(admin4_code == paste0(target_hromada_budget_code, "0")) %>% # !!!!
+  # the line above selects a SINGLE unit (hromada) starting on the date it formed
+  select(stem_names, col_names) %>% 
+  mutate(
+    row_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  # group_by(admin4_code, date) %>% #uncomment for individual radas
+  group_by(date) %>%
+  summarize(
+    total_revenue = sum(row_revenue, na.rm = T)
+  ) %>% 
+  ungroup()
+
+# join for aggregated dataset  
+d_joined <-
+  full_join(
+    d_after_unification %>% rename(after = total_revenue)
+    ,d_before_unification %>% rename(before = total_revenue)
+  ) %>%
+  group_by(date) %>%
+  summarize(
+    total_revenue = sum(before+ after)
+  )
+
+# join for individual radas and hromada dataset  
+d_joined_ind <-
+  bind_rows(
+    d_before_unification
+    ,d_after_unification
+  ) %>% 
+  arrange(date) %>%
+  mutate(
+    total_revenue = case_when(
+      total_revenue == 0 ~ NA_real_
+      ,TRUE ~ total_revenue
+    ))
+
+d_rada1 <- 
+  ds2_wide %>% 
+  filter(admin4_code %in% c(target_budget_codes_of_one_hromada, 
+                            paste0(target_hromada_budget_code, "0"))) %>% 
+  select(stem_names, col_names) %>% 
+  mutate(
+    total_revenue = rowSums(across(col_names),na.rm =T)
+  ) %>% 
+  select(-col_names, -year, -quarter) %>%
+  mutate(
+    total_revenue = case_when(
+      total_revenue == 0 ~ NA_real_
+      ,TRUE ~ total_revenue
+    )) %>%
+  arrange(admin4_code, date) %>%
+  pivot_wider(names_from = admin4_code, values_from = total_revenue)
+
+g1 <- 
+  d_joined %>%
+  ggplot(aes(x = date, y = total_revenue)) +
+  # d_joined_ind %>% #uncomment for individual radas
+  # ggplot(aes(x = date, y = total_revenue, color = admin4_code)) +
+  geom_line()+
+  geom_point()+
+  geom_vline(xintercept = as.Date("2021-01-01"))
+g1
+
 #+ tweak-data-4 ----------------------------------------------------------------
 
 #+ tweak-data-5 ----------------------------------------------------------------
@@ -482,10 +708,10 @@ d_rada1 <-
 
 #+ graph-1 ---------------------------------------------------------------------
 g1 <- 
-  d_joined %>%
-  ggplot(aes(x = date, y = total_revenue)) + 
-  # d_joined_ind %>% uncomment for individual radas
-  # ggplot(aes(x = date, y = total_revenue, color = admin4_code)) + 
+  # d_joined %>%
+  # ggplot(aes(x = date, y = total_revenue)) + 
+  d_joined_ind %>% #uncomment for individual radas
+  ggplot(aes(x = date, y = total_revenue, color = admin4_code)) +
   geom_line()+
   geom_point()+
   geom_vline(xintercept = as.Date("2021-01-01"))
