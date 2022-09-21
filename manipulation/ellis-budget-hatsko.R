@@ -407,8 +407,8 @@ d_before_unification <-
   mutate(
     row_revenue = rowSums(across(col_names),na.rm =T)
   ) %>% 
-  # group_by(admin4_code, date) %>% uncomment for individual radas
-  group_by(date) %>%
+  group_by(admin4_code, date) %>% #uncomment for individual radas
+  # group_by(date) %>%
   summarize(
     total_revenue = sum(row_revenue, na.rm = T)
     ,.groups = "drop"
@@ -423,8 +423,8 @@ d_after_unification <-
   mutate(
     row_revenue = rowSums(across(col_names),na.rm =T)
   ) %>% 
-  # group_by(admin4_code, date) %>% uncomment for individual radas
-  group_by(date) %>%
+  group_by(admin4_code, date) %>% #uncomment for individual radas
+  # group_by(date) %>%
   summarize(
     total_revenue = sum(row_revenue, na.rm = T)
   ) %>% 
@@ -473,6 +473,16 @@ d_rada1 <-
     )) %>%
   arrange(admin4_code, date) %>%
   pivot_wider(names_from = admin4_code, values_from = total_revenue)
+
+g1 <- 
+  # d_after_unification %>%
+  # ggplot(aes(x = date, y = total_revenue)) + 
+  d_joined_ind %>% #uncomment for individual radas
+  ggplot(aes(x = date, y = total_revenue, color = admin4_code)) +
+  geom_line()+
+  geom_point()+
+  geom_vline(xintercept = as.Date("2021-01-01"))
+g1
 
 # ---- single-hromada-3 ----------------------
 
