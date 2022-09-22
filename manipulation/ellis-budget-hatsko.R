@@ -36,6 +36,19 @@ prints_folder <- paste0("./manipulation/ellis-budget-prints/")
 if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
 
 #+ declare-functions -----------------------------------------------------------
+extract_hromada_label <- function(d, target_budget_code){
+  
+  d %>% 
+    filter(budget_code == target_budget_code) %>%  #glimpse()
+    distinct(hromada_name, raion_name, oblast_name) %>% 
+    mutate(
+      unit_label = paste0("Громада: ", hromada_name, " | Район:",raion_name, " | Область: ", oblast_name)
+    ) %>% 
+    pull(unit_label)
+  
+}
+# how to use:
+# ds_admin_full %>% extract_hromada_label("1954800000")
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# 2.Data ")
@@ -359,6 +372,20 @@ d_joined <-
   ) %>% 
   arrange(date)
 
+d %>% glimpse()
+# Let's find its UA hromada code
+(target_hromada_ua_code <- d %>% distinct(hromada_code) %>% pull(hromada_code))
+length(target_hromada_ua_code)==1L# should be a single value to assert one-to-one match
+
+# hromada's admin coordinate
+d %>% 
+  arrange(rada_code) %>% 
+  select(region_ua, oblast_name, raion_name, hromada_name, rada_name, settlement_name) %>%
+  # select(reg•ion_ua, oblast_name, hromada_code, rada_code, settlement_code, budget_code_old) %>%
+  print_all()
+# GOAL: we need to link budget data to this frame
+
+
 # graph for aggregate revenue dynamic
 g <- 
   d_joined %>% 
@@ -366,8 +393,13 @@ g <-
   geom_line()+
   # geom_line(aes(color = admin4_code))+ uncomment to graph for individual radas
   geom_point()+
-  geom_vline(xintercept = as.Date("2021-01-01"))
+  geom_vline(xintercept = as.Date("2021-01-01"))+
+  labs(
+    title = ds_admin_full %>% extract_hromada_label(target_hromada_budget_code)
+  )
 g
+
+
 
 # TODO: for next time: add lines of individual radas
 # Result: most revenue before amalgamation gathered city hromada
@@ -431,16 +463,16 @@ d_after_unification <-
   ) %>% 
   ungroup()
 
-# join for aggregated dataset  
-d_joined <-
-  full_join(
-    d_after_unification %>% rename(after = total_revenue)
-    ,d_before_unification %>% rename(before = total_revenue)
-  ) %>%
-  group_by(date) %>%
-  summarize(
-    total_revenue = sum(before+ after)
-  )
+# # join for aggregated dataset  
+# d_joined <-
+#   full_join(
+#     d_after_unification %>% rename(after = total_revenue)
+#     ,d_before_unification %>% rename(before = total_revenue)
+#   ) %>%
+#   group_by(date) %>%
+#   summarize(
+#     total_revenue = sum(before+ after)
+#   )
 
 # join for individual radas and hromada dataset  
 d_joined_ind <-
@@ -486,13 +518,16 @@ g1 <-
       ,TRUE ~ founding_rada
     )
   ) %>% 
-  filter(date = as.Date("2022-07-01/")) %>% 
+  filter(date < as.Date("2022-07-01")) %>% 
   ggplot(aes(x = date, y = total_revenue, color = admin4_code)) +
   geom_line()+
   geom_point()+
   facet_wrap(facets = "founding_rada", scale = "free_y", ncol=1)+
   scale_y_continuous(labels = scales::comma_format())+
-  geom_vline(xintercept = as.Date("2021-01-01"))
+  geom_vline(xintercept = as.Date("2021-01-01"))+
+  labs(
+    title = ds_admin_full %>% extract_hromada_label(target_hromada_budget_code)
+  )
 g1
 
 # ---- single-hromada-3 ----------------------
@@ -501,6 +536,8 @@ g1
 # no old_budget_codes
 
 target_hromada_budget_code <- "1351400000"
+ds_admin_full %>% extract_hromada_label(target_hromada_budget_code)
+
 
 d <- 
   ds_admin_full %>% 
@@ -513,18 +550,19 @@ d <-
     ds_admin_full %>% 
     filter(
       budget_code == target_hromada_budget_code
+      # budget_code == paste0(target_hromada_budget_code,"0")
     ) %>%
-    drop_na() %>% 
+    drop_na() %>%
     pull(budget_code_old) %>% 
     unique()
-)
-# NO budget_old_codes
+) # should be zero meaning that
+# NO budget_old_codes !!!  - we think that's 
 
 stem_names <- c("admin4_code", "year","quarter","date")
 col_names <- setdiff(
   names(ds2_wide)
   , stem_names
-)
+) %>% print_all()
 
 # there is only data after unification for this hromada
 d_after_unification <- 
@@ -544,13 +582,25 @@ d_after_unification <-
 
 g1 <- 
   d_after_unification %>%
+  filter(date < as.Date("2022-07-01")) %>% 
   ggplot(aes(x = date, y = total_revenue)) + 
   # d_joined_ind %>% uncomment for individual radas
   # ggplot(aes(x = date, y = total_revenue, color = admin4_code)) + 
   geom_line()+
   geom_point()+
-  geom_vline(xintercept = as.Date("2021-01-01"))
+  geom_vline(xintercept = as.Date("2021-01-01"))+
+  labs(
+    title = ds_admin_full %>% extract_hromada_label(target_hromada_budget_code)
+  )
 g1
+
+# TODO: Valentyn, please identify EACH hromada which was fully formed by 2018-01-01
+# more specifically, we want to identify hromadas that do not have rada split up
+# in the Open Budget table 
+
+ds2_wide %>% #glimpse()
+  filter(admin4_code == paste0(target_hromada_budget_code,"0")) %>% View()
+
 
 # ---- single-hromada-4 ----------------------
 
@@ -607,8 +657,17 @@ g1 <-
   # ggplot(aes(x = date, y = total_revenue, color = admin4_code)) + 
   geom_line()+
   geom_point()+
-  geom_vline(xintercept = as.Date("2021-01-01"))
+  geom_vline(xintercept = as.Date("2021-01-01"))+
+  labs(
+    title = ds_admin_full %>% extract_hromada_label(target_hromada_budget_code)
+  )
 g1
+
+# TODO (2022-09-22)
+# How do we interpret (for a given hromada, in the context of ds_admin_full)
+# a) the old_budget_code is NA
+# a) the old_budget_code is the same as the new budget_code
+
 
 # ---- single-hromada-5 ----------------------
 
@@ -718,8 +777,18 @@ g1 <-
   # ggplot(aes(x = date, y = total_revenue, color = admin4_code)) +
   geom_line()+
   geom_point()+
-  geom_vline(xintercept = as.Date("2021-01-01"))
+  geom_vline(xintercept = as.Date("2021-01-01"))+
+  labs(
+    title = ds_admin_full %>% extract_hromada_label(target_hromada_budget_code)
+  )
 g1
+
+# TODO (2022-09-22)
+# d %>% View()
+# Serhii, why do some radas do not have budget_code_old? for example:
+# 	ЧУКВЯНСЬКА/С.ЧУКВА  - rada_code == 4624289200 (see its 4 settlements)
+# is it possible that we missed it during the formation of `ds_admin_full`? 
+# Please verify that the absence of `budget_code_old` for these radas
 
 #+ tweak-data-4 ----------------------------------------------------------------
 
