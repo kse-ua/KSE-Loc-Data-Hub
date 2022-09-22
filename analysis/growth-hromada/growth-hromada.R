@@ -29,21 +29,34 @@ base::source("./scripts/common-functions.R") # project-level
 
 # ---- declare-globals ---------------------------------------------------------
 # printed figures will go here:
-# prints_folder <- paste0("./analysis/.../prints/")
-# if(!file.exists(prints_folder)){dir.create(file.path(prints_folder))}
+prints_folder <- paste0("./analysis/growth-hromada/prints/")
+if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
 
-path_admin    <- "./data-private/derived/ua-admin-map.rds"
+# path_admin    <- "./data-private/derived/ua-admin-map.rds"
+path_admin    <- "./data-private/derived/ua-admin-map.csv"
 path_time         <- "./data-private/derived/time_rada.csv"
 path_rada_hromada <- "./data-private/derived/rada_hromada.csv"
 
 
 # ---- declare-functions -------------------------------------------------------
-# printed figures will go here:
-prints_folder <- paste0("./analysis/growth-hromada/prints/")
-if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
+extract_hromada_label <- function(d, target_budget_code){
+  
+  d %>% 
+    filter(budget_code == target_budget_code) %>%  #glimpse()
+    distinct(hromada_name, raion_name, oblast_name) %>% 
+    mutate(
+      unit_label = paste0("Громада: ", hromada_name, " | Район:",raion_name, " | Область: ", oblast_name)
+    ) %>% 
+    pull(unit_label)
+  
+}
+# how to use:
+# ds_admin_full %>% extract_hromada_label("1954800000")
 
 # ---- load-data ---------------------------------------------------------------
-ds_admin <- readr::read_rds(path_admin)
+# ds_admin <- readr::read_rds(path_admin)
+# ds_admin <- readr::read_rds(path_admin)
+ds_admin <- readr::read_csv(path_admin)
 ds_rada_hromada <- readr::read_csv(path_rada_hromada)
 ds_time <- readr::read_csv(path_time)
 # ---- inspect-data ------------------------------------------------------------
@@ -83,8 +96,36 @@ ds0 <-
 
 ds0 %>% glimpse()
 
-# ---- table-1 -----------------------------------------------------------------
+# ---- single-hromada-graph -----------------------------------------------------------------
+target_hromada_budget_code <- "1954800000"
+(target_hromada_ua_code <- 
+    ds_admin %>% 
+    filter(budget_code == target_hromada_budget_code)%>% 
+    distinct(hromada_code) %>% pull(hromada_code))
+length(target_hromada_ua_code)==1L# should be a single value to assert one-to-one match
 
+d <- 
+  ds_time %>% 
+  filter(hromada_code == target_hromada_ua_code) %>% 
+  group_by(hromada_code, date) %>% 
+  summarize(
+    rada_count = n_distinct(rada_code, na.rm = T)
+  )
+d
+g <- 
+  d %>% 
+  ggplot(aes(x = date, y = rada_count))+
+  geom_line()+
+  geom_point()+
+  # scale_y_continuous(breaks = seq(0,max(d$rada_count),1))+
+  scale_y_continuous(labels = scales::comma)+
+  labs(
+    title = ds_admin %>% extract_hromada_label(target_hromada_budget_code)
+  )
+g
+
+# TODO: Valentyn, please compose a function that intakes hromada code
+# and outputs a graph of events in the history of this hromada (see issue #20)
 
 # ---- graph-1 -----------------------------------------------------------------
 d <-
