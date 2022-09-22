@@ -22,8 +22,8 @@ The project is funded by ... grant (#`grant_id`)
 
   | Data Source     |Description   | Current State / Left To Do   | Script |
   |---              |---|---|---|
-  |Admininstrative Units | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region) | Needs to be placed in ./data-public/derived/ to be accessible publicly   |`./manipulation/ellis-ua-admin.R`|
-  | Admin History | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020| ready to analysis| `./manipulation/ellis-rada-hromada.R`|
+  |Admininstrative Units | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region) | Needs to be placed in `./data-public/derived/`   |`./manipulation/ellis-ua-admin.R`|
+  | Admin History | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020| ready for analysis| `./manipulation/ellis-rada-hromada.R`|
   |Population | Population counts at the level of hromada   | Add more years (currently only 2021), push to ./data-public/derived/   |`./manipulation/ellis-demography.R`|
   |Open Budget  | Tax revenues of admin units   | No clarity yet. Classify hromadas based on complexity of their admin history   |`./manipulation/ellis-budget.R`|
   |Geographic     |Spatial poligons of hromadas| Demonstate graphing maps (at hromada-raion-oblast level) using a replacable quantifier (e.g. population)  |`./manipulation/ellis-geography.R`|
