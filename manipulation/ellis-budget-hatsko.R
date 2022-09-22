@@ -323,7 +323,8 @@ d_before_unification <-
   filter(admin4_code %in% target_budget_codes_of_one_hromada) %>% # !!!
   # the line above selects MULTIPLE units (settlement) that eventual joined into a hromada
   # the code for hromada is absent in the table prior to this date, b/c it didn't exist
-  select(stem_names, col_names) %>% 
+  select(stem_names, col_names) %>%
+  # select(any_of(c(stem_names, col_names))) %>% 
   mutate(
     row_revenue = rowSums(across(col_names),na.rm =T)
   ) %>% 
@@ -478,9 +479,19 @@ g1 <-
   # d_after_unification %>%
   # ggplot(aes(x = date, y = total_revenue)) + 
   d_joined_ind %>% #uncomment for individual radas
+  mutate(
+    founding_rada = admin4_code==paste0(target_hromada_budget_code,"0")
+    ,founding_rada = case_when(
+      admin4_code == "19203100000" ~ TRUE
+      ,TRUE ~ founding_rada
+    )
+  ) %>% 
+  filter(date = as.Date("2022-07-01/")) %>% 
   ggplot(aes(x = date, y = total_revenue, color = admin4_code)) +
   geom_line()+
   geom_point()+
+  facet_wrap(facets = "founding_rada", scale = "free_y", ncol=1)+
+  scale_y_continuous(labels = scales::comma_format())+
   geom_vline(xintercept = as.Date("2021-01-01"))
 g1
 
