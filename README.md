@@ -6,7 +6,7 @@ The project is funded by ... grant (#`grant_id`)
 
 ![](https://www.nationsonline.org/maps/Ukraine-Administrative-Map.jpg)
 
-# Contributord
+# Contributors
 
 | Name            |Role   | @   |
 |---              |---|---|
