@@ -92,11 +92,17 @@ ds1 <-
 ds1 %>% glimpse()
 ds1
 
+# 
+# ds_admin_full %>% 
+#   filter(region_en != "Crimea") %>% 
+#   distinct(hromada_code, hromada_name, budget_code) 
 # Keep only valid hromadas (that existed after the end of the amalgamation process)
 ds2 <- 
   ds1 %>% 
   inner_join(
-    ds_admin_full %>%  distinct(hromada_code, hromada_name, budget_code) %>% 
+    ds_admin_full %>%  
+      filter(region_en != "Crimea") %>% 
+      distinct(hromada_code, hromada_name, budget_code) %>% 
       mutate(budget_code = paste0(budget_code, "0"))
     ,by = c("admin4_code" = "budget_code")
   )
@@ -177,7 +183,7 @@ ds2_long <-
   select(-c(year_month)) 
 
 ds2_long %>% glimpse()
-ds2_long %>% filter(admin4_code == "19548000000") %>% distinct() %>% View()
+ds2_long %>% filter(admin4_code == "19548000000") %>% distinct() #%>% View()
 
 ds2_long %>% count(inc_code) 
 # ds3_long <- 
@@ -213,6 +219,11 @@ ds2_long %>% count(inc_code)
 
 # ---- compute-target-small -------------------------------------
 target_hromadas <- c("19548000000","08576000000")
+# target_hromadas <- c("01211405000" ,"01303515000" ,"05556000000" )
+
+# ds_admin_full %>% filter(budget_code_old %in% target_hromadas ) %>% View()
+# ds_admin_full %>% filter(budget_code %in% target_hromadas )
+# ds_admin_full %>% filter(budget_code %in% paste0(target_hromadas,"0"))
 
 d_few0 <- 
   ds2_long %>% 
@@ -250,13 +261,46 @@ d_few1 <-
   )
 
 # ----- compute-many --------------------------------
-
-
+# target_hromadas <- c("01211405000" ,"01303515000" ,"05556000000" )
+tor_before_22 <- c(
+   "05561000000"
+  ,"05556000000"
+  ,"12538000000"
+  ,"05555000000"
+  ,"12534000000"
+  ,"05549000000"
+  ,"05557000000"
+  ,"05551000000"
+  ,"12539000000"
+  ,"05547000000"
+  ,"05548000000"
+  ,"05563000000"
+  ,"12537000000"
+  ,"12540000000"
+  ,"05560000000"
+  ,"12533000000"
+  ,"05552000000"
+  ,"05554000000"
+  ,"05564000000"
+  ,"12532000000"
+  ,"12541000000"
+  ,"05562000000"
+  ,"12535000000"
+  ,"05566000000"
+  ,"12531000000"
+  ,"05565000000"
+  ,"05559000000"
+  ,"05558000000"
+  ,"05550000000"
+  ,"12536000000"
+  ,"05553000000"
+) 
 ds3 <- 
   ds2_long %>% 
   # filter(admin4_code == "19548000000") %>% 
   # filter(admin4_code %in% c("19548000000","08576000000")) %>%
   select(-admin4_label, -inco3) %>% 
+  filter(!admin4_code %in% tor_before_22) %>% 
   mutate(
     date = paste0(year,"-",ifelse(
       nchar(month)==1L, paste0("0",month), month),  "-01"
@@ -267,8 +311,9 @@ ds3 <-
   ) #%>% 
 # select(-year, -month)
 ds3
+ds3 %>% summarize(hromada_count = n_distinct(admin4_code))
 
-d4 <- 
+ds4 <- 
   ds3 %>% 
   filter(target_segment) %>%  # we will compare Mar-Jul in 2021 and 2022
   group_by(admin4_code, year) %>% 
@@ -286,12 +331,95 @@ d4 <-
   group_by(admin4_code) %>% 
   mutate(
     own_income_change = (income_own / lag(income_own)) - 1
-  )
+    # ,own_income_change = case_when(own_income_change==Inf ~ NA, TRUE~own_income_change)
+  ) %>% 
+  ungroup() 
 
+ds4 %>% summarize(hromada_count = n_distinct(admin4_code))
+ds4 %>% arrange(desc(own_income_change))
 
 d_few1
-d4 %>% filter(admin4_code %in% target_hromadas)
+ds4 %>% filter(admin4_code %in% target_hromadas)
 
+
+
+# ---- ---------------
+
+
+# mark oblast that were temp occupied since Feb 24
+
+ds_tor <- 
+  ds_admin_full %>% 
+  distinct(oblast_code, oblast_name) %>% 
+  mutate(
+    oblast_tor = oblast_code %in% c(
+      "UA65000000000030969"
+      ,"UA63000000000041885"
+      ,"UA59000000000057109"
+      ,"UA14000000000091971"
+      ,"UA23000000000064947"
+      ,"UA48000000000039575"
+      ,"UA32000000000030281"
+      ,"UA12000000000090473"
+      ,"UA44000000000018893"
+      ,"UA74000000000025378"
+      ,"UA18000000000041385"
+    ) 
+  ) %>% 
+  arrange(oblast_tor)
+
+v_tor <- ds_tor %>% filter(oblast_tor) %>% pull(oblast_code)
+
+ds5 <- 
+  ds4 %>% 
+  # drop_na(own_income_change) %>% 
+  mutate(
+    outlier = own_income_change >= .5
+    ,ntile = ntile(own_income_change,100)
+    
+  ) %>% 
+  # filter(ntile < 95) %>%
+  left_join(
+    ds_admin_full %>% 
+      mutate(budget_code = paste0(budget_code,"0")) %>% 
+      distinct(budget_code, hromada_name, oblast_name_display, map_position
+               , region_ua, oblast_code)
+    ,by = c("admin4_code"  = "budget_code")
+  ) %>% 
+  mutate(
+    oblast_tor = oblast_code %in% v_tor
+  ) 
+
+ds5 %>% 
+  filter(admin4_code %in% target_hromadas) %>% 
+  select(hromada_name, oblast_code, oblast_name_display, oblast_tor) 
+# ----- -----------------------------------------------------------------------
+
+g1 <- 
+  ds5 %>% 
+  drop_na(own_income_change) %>% 
+  filter(ntile < 95) %>%
+  ggplot(aes(x = own_income_change, fill = oblast_tor ))+
+  geom_histogram(alpha = .3)+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  facet_wrap(facets = "oblast_name_display")+
+  scale_fill_manual(
+    values = c("TRUE" = "red", "FALSE" = "blue")
+  )+
+  labs(
+    title = "Year over year change in hromada's own revenue (total - transfert)"
+    ,subtitle = "In percertage points, for the period March-July of each year"
+    ,x = "Change in percent point"
+    ,y = "Number of hromadas"
+    ,caption = ""
+    ,fill = "Contains at least\none occupied\nhromada"
+  )
+
+g1
+g1 %>% quick_save("1-change-over-year", w= 12, h = 7)
+
+
+hist(ds4$own_income_change,breaks="FD")
 
 # ---- explore-single-hromada ------------------------------------------------------------
 
