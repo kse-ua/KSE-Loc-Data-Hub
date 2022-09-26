@@ -91,9 +91,10 @@ names_admin_fin <- c(
 
 names_admin_fin_old <- c(
   "territory_code"
-  ,"Uncontrolled"
+  ,"uncontrolled"
   ,"budget_feature"
   ,"n_budgets"
+  ,"n_budget_state_link"
   ,"budget_code_old"
   ,"budget_name"
   ,"object_name"
@@ -111,7 +112,7 @@ ds0 <- readr::read_csv(path_file, col_names = names_admin_ua, skip=1)
 ds_comp0 <- readr::read_csv(path_admin_comp, col_names = names_admin_comp, skip=1)
 ds_old0 <- readr::read_csv(path_admin_old, col_names = names_admin_old, skip=1)
 ds_fin0 <- readxl::read_excel(path_admin_fin, sheet = "codes", col_names = names_admin_fin, skip=10)
-ds_fin_old <- readxl::read_excel(path_admin_fin_old, sheet = "codes", col_names = names_admin_fin_old, skip=10)
+ds_fin_old <- readxl::read_excel(path_admin_fin_old, sheet = "codes", col_names = names_admin_fin_old, skip=11)
 ds0_oblast <- readr::read_csv(path_oblast, skip=0)
 
 #+ inspect-data ----------------------------------------------------------------
@@ -426,12 +427,35 @@ ds_admin_full <-
   left_join(
     ds_fin_old %>% select(object_code_old, budget_code_old)
     ,by= c("settlement_code_old" = "object_code_old")
+  ) %>% 
+  select(-c(settlement_name.y, settlement_name)) %>% 
+  rename(settlement_name = settlement_name.x) %>% 
+  mutate(settlement_name = case_when(
+    settlement_code_old == "5120280501" ~ "Ананьїв Другий"
+    ,TRUE ~ settlement_name)
   )
 
+ds_admin_full %>% filter(is.na(budget_code_old)) %>% View()
 
-#+ graph-1 ---------------------------------------------------------------------
-#+ graph-2 ---------------------------------------------------------------------
+#identification of relevant settlement name among three variables
+# ds_admin_full %>% 
+#   select(oblast_name, settlement_name.x, settlement_name.y, settlement_name) %>% 
+#   mutate_all(.funs = ~str_replace(.,"'","’")) %>% 
+#   mutate(settlement_name.x = tolower(settlement_name.x)
+#          ,settlement_name.y = tolower(settlement_name.y)
+#          ,settlement_name = tolower(settlement_name)
+#   ) %>% 
+#   filter(!(settlement_name.x == settlement_name.y) | 
+#            !(settlement_name.x == settlement_name) | 
+#            !(settlement_name.y == settlement_name)) %>% View()
+#the most of renames are Crimean Tatar names instead of Soviet ones in Crimea
+
+
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
+
+ds_admin_full %>% 
+  select(-budget_code_old) %>% 
+  readr::write_csv("./data-private/derived/ua-admin-map-2020.csv")
 
 ds_admin_full %>% 
   readr::write_csv("./data-private/derived/ua-admin-map.csv")
