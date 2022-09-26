@@ -143,21 +143,24 @@ ds_admin4_lkp <-
   distinct(admin4_code, admin4_label)
 
 # ---- tweak-data-2 ------------------------------------------------------------
-
-ds2 <- 
-  ds1 %>% 
-  # compute the target index in this form before pivoting 
-  # difference between codes:
-  mutate(
-    
-  )
+# 
+# ds2 <- 
+#   ds1 %>% 
+#   # compute the target index in this form before pivoting 
+#   # difference between codes:
+#   mutate(
+#     target_measure = 
+#   )
 
 
 
 ds2 %>% glimpse()
 ds2_long <- 
   ds2 %>% #select(inco3) %>% 
-  mutate(inc_code = str_extract(inco3, '[0-9]+')) %>% #glimpse()
+  mutate(
+    inc_code = str_extract(inco3, '[0-9]+')
+    # ,inc_label = str
+  ) %>% #glimpse()
   # select(-c(admin4_label)) %>%
   pivot_longer(
     # -c(starts_with('adm'), inco3, inc_code)
@@ -176,26 +179,83 @@ ds2_long <-
 ds2_long %>% glimpse()
 ds2_long %>% filter(admin4_code == "19548000000") %>% distinct() %>% View()
 
-ds3_long <- 
+ds2_long %>% count(inc_code) 
+# ds3_long <- 
+#   ds2_long %>% 
+#   filter(
+#     inc_code == "11010000"
+#   ) %>% 
+#   distinct()
+
+# ds3_long %>% filter(admin4_code == "19548000000") %>% distinct() %>% View()
+# 
+# ds2_long %>% glimpse()
+# 
+# ds2_long %>% 
+#   filter(admin4_code == "01201100000") %>% 
+#   filter(inc_code == "18010000") %>% 
+#   View()
+# 
+# 
+# code <- "01201100000"
+# budget <- "18010000"
+# 
+# ds2_wide <- 
+#   ds2_long %>% 
+#   pivot_wider(names_from = inc_code, values_from = income, values_fn = length) %>%
+#   select(admin4_code, year, month, sort( names(.)))
+# 
+# ds1 %>% glimpse()
+# ds2_long %>% glimpse()
+# ds2_wide %>% glimpse()
+
+
+
+d <- 
   ds2_long %>% 
-  filter(
-    inc_code == "11010000"
+  # filter(admin4_code == "19548000000") %>% 
+  filter(admin4_code %in% c("19548000000","08576000000")) %>%
+  select(-admin4_label, -inco3) %>% 
+  mutate(
+    date = paste0(year,"-",ifelse(
+      nchar(month)==1L, paste0("0",month), month),  "-01"
+    ) %>% as.Date()
+    ,transfert = str_detect(inc_code, "^41.+")
+    # ,war_indicator = date >= as.Date("2022-03-01")
+    ,target_segment = month %in% c(3:7)
+  ) #%>% 
+  # select(-year, -month)
+d
+
+d %>% 
+  filter(target_segment) %>%  # we will compare Mar-Jul in 2021 and 2022
+  group_by(admin4_code, year) %>% 
+  summarize(
+    income_total = sum(income, na.rm = T)
+    ,income_transfert = sum(income*transfert, na.rm = T)
   ) %>% 
-  distinct()
+  ungroup() %>% 
+  mutate(
+    income_own = income_total - income_transfert
+    ,own_prop = income_own /income_total
+    ,won_pct = scales::percent(own_prop)
+  )
 
-ds3_long %>% filter(admin4_code == "19548000000") %>% distinct() %>% View()
 
-ds2_long %>% glimpse()
+ds2_long %>% 
+  distinct(inc_code) %>% 
+  left_join(
+    ds_inco %>% mutate(inco3_code = as.character(inco3_code))
+    ,by = c("inc_code"="inco3_code")
+  ) %>% 
+  mutate(
+    transfert = str_detect(inc_code, "^41.+")
+  ) %>% 
+  relocate(transfert) %>% 
+  print_all()
 
-ds3_wide <- 
-  ds3_long %>% 
-  pivot_wider(names_from = inc_code, values_from = income) %>%
-  select(admin4_code, year, month, sort( names(.)))
-
-ds1 %>% glimpse()
-ds2_long %>% glimpse()
-ds2_wide %>% glimpse()
-
+d2 <- 
+  
 # ---- explore-single-hromada ------------------------------------------------------------
 
 ## to add higher level income - sum columns by code (as defined in inco_ds), 
