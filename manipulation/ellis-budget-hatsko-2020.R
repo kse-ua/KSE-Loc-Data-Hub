@@ -42,22 +42,6 @@ cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
-paths_budget <-  list.files("./data-private/raw/", pattern = "revenues-\\d.xlsx$",full.names = T)
-# names_budget <-  paths_budget %>% str_replace("^.+revenues-(\\d{1}).csv","\\1")
-
-ls_import <- list()
-for(i in seq_along(paths_budget)){
-  
-  ls_import[[i]] <- 
-    readxl::read_xlsx(
-      path = paths_budget[[i]]
-    ) %>% 
-    janitor::clean_names() %>%
-    mutate_all(.funs = as.character)
-}
-
-lapply(ls_import, glimpse)
-
 #+ tweak-data ------------------------------------------------------------------
 # to join multiple files (slices) downloaded from the source
 # ds0 <-
@@ -68,69 +52,39 @@ lapply(ls_import, glimpse)
 path_admin <- "./data-private/derived/ua-admin-map.csv"
 ds_admin_full <- readr::read_csv(path_admin)
 ds_admin_full %>% glimpse(70)
-path_budget <- "./data-private/raw/boost_incomes_12.08.2022.xlsx"
-ds0 <- readxl::read_excel(path_budget, sheet = 1) %>% janitor::clean_names()
-ds0 %>% glimpse(60)
+# path_budget <- "./data-private/raw/boost_incomes_12.08.2022.xlsx"
+path_budget <- "./data-private/raw/boost_incomes_26.09.2022.csv"
+# ds0 <- readxl::read_excel(path_budget, sheet = 1) %>% janitor::clean_names()
+# ds0 <- readxl::read_xl(path_budget, sheet = 1) %>% janitor::clean_names()
+# ds0 <- readr::read_csv(path_budget) %>% janitor::clean_names()
+# ds0 %>% glimpse(60)
 
+
+
+ds0 <- read_delim(
+  file = "data-private/raw/boost_incomes_26.09.2022.csv"
+  ,locale = locale(encoding = "WINDOWS-1251")
+  ,delim = ";"
+)  %>% janitor::clean_names()
+ds0 %>% glimpse()
 
 #+ inspect-data ----------------------------------------------------------------
-# Target case - Коростенська громада
-# target_hromada_budget_code  <- "06563000000" # used in budget_code 
-target_hromada_budget_code    <- "0656300000"  # used in ds_ua_admin
-
-# ds_admin_full
-# to establish connection with ds_admin
-d <- 
+d_hromada_code <- 
   ds_admin_full %>% 
-  filter(budget_code == target_hromada_budget_code)
-
-d %>% glimpse()
-# Let's find its UA hromada code
-(target_hromada_ua_code <- d %>% distinct(hromada_code) %>% pull(hromada_code))
-length(target_hromada_ua_code)==1L# should be a single value to assert one-to-one match
-
-# hromada's admin coordinate
-d %>% 
-  arrange(rada_code) %>% 
-  select(region_ua, oblast_name, raion_name, hromada_name, rada_name, settlement_name) %>%
-  # select(reg•ion_ua, oblast_name, hromada_code, rada_code, settlement_code, budget_code_old) %>%
-  print_all()
-# GOAL: we need to link budget data to this frame
-
+  distinct(hromada_code, hromada_name, budget_code, budget_code_old)
 
 #+ tweak-data-1 ----------------------------------------------------------------
-
-
-# let's understand how Open Budget organizes its data for download
-ds0 %>% glimpse()
-# file_number - download had multiple csv slices, this is the number of the slice
-# admin1 - Only one value, drop it later or recode
-# admin2 - name of the Oblast, which budget is observed
-# admin3 - type of budget within Oblast (oblast, city, raion, hromada)
-# admin4 - type of budget (settlement, rada, hromada) 
-# inco1 - type of revenue (tax, non-tax, capital, transfer, target)
-# inco2 - sub-type of revenue
-# inco3 - sub-sub-type of revenue
-
-ds0 %>% count(admin3) %>% print_all()
-ds0 %>% count(admin4) %>% print_all()
 
 # tidying up admin codes
 ds1 <- 
   ds0 %>% 
-  # because other rows contain summaries of most granular units
-  # to see, view
-  # IMPORTANT: copying admin3 code into admin4 when its oblast type budget
-  # so it won't be dropped when dropping na's
   mutate(
     admin4_code = as.character(str_extract(admin4, '[0-9]+'))
     ,admin4_label = str_remove(admin4, '[0-9]+ ')
     ,across(ends_with('executed'), as.numeric)
-  ) %>%
-  rename(is_hromada = x21) %>%
-  relocate(c("admin4_code", 'admin4_label', 'is_hromada'), .after = "admin4") %>%
-  select(-c("admin4")) %>% 
-  arrange(admin4_code) %>% 
+  ) %>% #glimpse()
+  select(starts_with("admin4_"), inco3, starts_with("x")) %>% 
+  arrange(admin4_code) %>% #glimpse()
   ### VERY BIG DEAL !!! make sure you see this!
   filter(!is.na(inco3)) %>%  # because inco3 is most granular, other rows are summaries
   filter(!is.na(admin4_code)) %>%  # because it's summary for oblast 
@@ -138,12 +92,38 @@ ds1 <-
 ds1 %>% glimpse()
 ds1
 
-ds2 <-ds1 %>% filter(is_hromada)
-
+# 
+# ds_admin_full %>% 
+#   filter(region_en != "Crimea") %>% 
+#   distinct(hromada_code, hromada_name, budget_code) 
+# Keep only valid hromadas (that existed after the end of the amalgamation process)
+ds2 <- 
+  ds1 %>% 
+  inner_join(
+    ds_admin_full %>%  
+      filter(region_en != "Crimea") %>% 
+      distinct(hromada_code, hromada_name, budget_code) %>% 
+      mutate(budget_code = paste0(budget_code, "0"))
+    ,by = c("admin4_code" = "budget_code")
+  )
+ds2 %>% glimpse()
 # frame explaining hierarchy of incomes
 
+ds1 %>% summarize(hromada_count = n_distinct(admin4_code, na.rm = T))
+ds2 %>% summarize(hromada_count = n_distinct(admin4_code, na.rm = T))
+
+# we dropped codes for regions and city regions, but crimea stayed b/c in ds_admin
+d <- 
+  ds1 %>% 
+  filter(
+    !admin4_code %in% unique(ds2$admin4_code)
+  )
+
+
+
+
 ds_inco <- 
-  ds1 %>% # because already dropped is.na(inco3)
+  ds2 %>% # because already dropped is.na(inco3)
   distinct(inco3) %>% 
   arrange(inco3) %>%
   mutate(
@@ -169,30 +149,315 @@ ds_admin4_lkp <-
   distinct(admin4_code, admin4_label)
 
 # ---- tweak-data-2 ------------------------------------------------------------
+# 
+# ds2 <- 
+#   ds1 %>% 
+#   # compute the target index in this form before pivoting 
+#   # difference between codes:
+#   mutate(
+#     target_measure = 
+#   )
 
+
+
+ds2 %>% glimpse()
 ds2_long <- 
-  ds2 %>%
-  mutate(inc_code = str_extract(inco3, '[0-9]+')) %>%
-  select(-c(admin4_label, is_hromada)) %>%
+  ds2 %>% #select(inco3) %>% 
+  mutate(
+    inc_code = str_extract(inco3, '[0-9]+')
+    # ,inc_label = str
+  ) %>% #glimpse()
+  # select(-c(admin4_label)) %>%
   pivot_longer(
-    -c(starts_with('adm'), inco3, inc_code)
+    # -c(starts_with('adm'), inco3, inc_code)
+    cols = -c("admin4_code","admin4_label", "inco3","hromada_code","hromada_name", "inc_code")
     , names_to = 'year_month'
     , values_to = 'income'
-  ) %>%
+  ) %>% #glimpse()
   mutate(
+     # year = str_extract(year_month, "x(\\d{4})_.+")
+    # ,month = str_extract(year_month, "x\\d{4}_(d+).+")
     year = str_extract(year_month, "(?<=x)....(?=_)")
     ,month = str_extract(year_month, "(?<=_)[0-9]+(?=_)")
     ) %>%
   select(-c(year_month)) 
 
-ds2_wide <- 
-  ds2_long %>% 
-  pivot_wider(names_from = inc_code, values_from = income) %>%
-  select(admin4_code, year, month, sort( names(.)))
-
-ds1 %>% glimpse()
 ds2_long %>% glimpse()
-ds2_wide %>% glimpse()
+ds2_long %>% filter(admin4_code == "19548000000") %>% distinct() #%>% View()
+
+ds2_long %>% count(inc_code) 
+# ds3_long <- 
+#   ds2_long %>% 
+#   filter(
+#     inc_code == "11010000"
+#   ) %>% 
+#   distinct()
+
+# ds3_long %>% filter(admin4_code == "19548000000") %>% distinct() %>% View()
+# 
+# ds2_long %>% glimpse()
+# 
+# ds2_long %>% 
+#   filter(admin4_code == "01201100000") %>% 
+#   filter(inc_code == "18010000") %>% 
+#   View()
+# 
+# 
+# code <- "01201100000"
+# budget <- "18010000"
+# 
+# ds2_wide <- 
+#   ds2_long %>% 
+#   pivot_wider(names_from = inc_code, values_from = income, values_fn = length) %>%
+#   select(admin4_code, year, month, sort( names(.)))
+# 
+# ds1 %>% glimpse()
+# ds2_long %>% glimpse()
+# ds2_wide %>% glimpse()
+
+
+
+# ---- compute-target-small -------------------------------------
+target_hromadas <- c("19548000000","08576000000")
+# target_hromadas <- c("01211405000" ,"01303515000" ,"05556000000" )
+
+# ds_admin_full %>% filter(budget_code_old %in% target_hromadas ) %>% View()
+# ds_admin_full %>% filter(budget_code %in% target_hromadas )
+# ds_admin_full %>% filter(budget_code %in% paste0(target_hromadas,"0"))
+
+d_few0 <- 
+  ds2_long %>% 
+  # filter(admin4_code == "19548000000") %>% 
+  filter(admin4_code %in% target_hromadas) %>%
+  select(-admin4_label, -inco3) %>% 
+  mutate(
+    date = paste0(year,"-",ifelse(
+      nchar(month)==1L, paste0("0",month), month),  "-01"
+    ) %>% as.Date()
+    ,transfert = str_detect(inc_code, "^41.+")
+    # ,war_indicator = date >= as.Date("2022-03-01")
+    ,target_segment = month %in% c(3:7)
+  ) #%>% 
+  # select(-year, -month)
+d_few0
+
+d_few1 <- 
+  d_few0 %>% 
+  filter(target_segment) %>%  # we will compare Mar-Jul in 2021 and 2022
+  group_by(admin4_code, year) %>% 
+  summarize(
+    income_total = sum(income, na.rm = T)
+    ,income_transfert = sum(income*transfert, na.rm = T)
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    income_own = income_total - income_transfert
+    ,own_prop = income_own /income_total
+    ,won_pct = scales::percent(own_prop)
+  ) %>% 
+  group_by(admin4_code) %>% 
+  mutate(
+    own_income_change = (income_own / lag(income_own)) - 1
+  )
+
+# ----- compute-many --------------------------------
+# target_hromadas <- c("01211405000" ,"01303515000" ,"05556000000" )
+tor_before_22 <- c(
+   "05561000000"
+  ,"05556000000"
+  ,"12538000000"
+  ,"05555000000"
+  ,"12534000000"
+  ,"05549000000"
+  ,"05557000000"
+  ,"05551000000"
+  ,"12539000000"
+  ,"05547000000"
+  ,"05548000000"
+  ,"05563000000"
+  ,"12537000000"
+  ,"12540000000"
+  ,"05560000000"
+  ,"12533000000"
+  ,"05552000000"
+  ,"05554000000"
+  ,"05564000000"
+  ,"12532000000"
+  ,"12541000000"
+  ,"05562000000"
+  ,"12535000000"
+  ,"05566000000"
+  ,"12531000000"
+  ,"05565000000"
+  ,"05559000000"
+  ,"05558000000"
+  ,"05550000000"
+  ,"12536000000"
+  ,"05553000000"
+) 
+ds3 <- 
+  ds2_long %>% 
+  # filter(admin4_code == "19548000000") %>% 
+  # filter(admin4_code %in% c("19548000000","08576000000")) %>%
+  select(-admin4_label, -inco3) %>% 
+  filter(!admin4_code %in% tor_before_22) %>% 
+  mutate(
+    date = paste0(year,"-",ifelse(
+      nchar(month)==1L, paste0("0",month), month),  "-01"
+    ) %>% as.Date()
+    ,transfert = str_detect(inc_code, "^41.+")
+    # ,war_indicator = date >= as.Date("2022-03-01")
+    ,target_segment = month %in% c(3:7)
+  ) #%>% 
+# select(-year, -month)
+ds3
+ds3 %>% summarize(hromada_count = n_distinct(admin4_code))
+
+ds4 <- 
+  ds3 %>% 
+  filter(target_segment) %>%  # we will compare Mar-Jul in 2021 and 2022
+  group_by(admin4_code, year) %>% 
+  summarize(
+    income_total = sum(income, na.rm = T)
+    ,income_transfert = sum(income*transfert, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    income_own = income_total - income_transfert
+    ,own_prop = income_own /income_total
+    ,won_pct = scales::percent(own_prop)
+  ) %>% 
+  group_by(admin4_code) %>% 
+  mutate(
+    own_income_change = (income_own / lag(income_own)) - 1
+    # ,own_income_change = case_when(own_income_change==Inf ~ NA, TRUE~own_income_change)
+  ) %>% 
+  ungroup() 
+
+ds4 %>% summarize(hromada_count = n_distinct(admin4_code))
+ds4 %>% arrange(desc(own_income_change))
+
+d_few1
+ds4 %>% filter(admin4_code %in% target_hromadas)
+
+
+
+# ---- ---------------
+
+
+# mark oblast that were temp occupied since Feb 24
+
+ds_tor <- 
+  ds_admin_full %>% 
+  distinct(oblast_code, oblast_name) %>% 
+  mutate(
+    oblast_tor = oblast_code %in% c(
+      "UA65000000000030969"
+      ,"UA63000000000041885"
+      ,"UA59000000000057109"
+      ,"UA14000000000091971"
+      ,"UA23000000000064947"
+      ,"UA48000000000039575"
+      ,"UA32000000000030281"
+      ,"UA12000000000090473"
+      ,"UA44000000000018893"
+      ,"UA74000000000025378"
+      ,"UA18000000000041385"
+    ) 
+  ) %>% 
+  arrange(oblast_tor)
+
+v_tor <- ds_tor %>% filter(oblast_tor) %>% pull(oblast_code)
+
+ds5 <- 
+  ds4 %>% 
+  # drop_na(own_income_change) %>% 
+  mutate(
+    outlier = own_income_change >= .5
+    ,ntile = ntile(own_income_change,100)
+    
+  ) %>% 
+  # filter(ntile < 95) %>%
+  left_join(
+    ds_admin_full %>% 
+      mutate(budget_code = paste0(budget_code,"0")) %>% 
+      distinct(budget_code, hromada_name, oblast_name_display, map_position
+               , region_ua, oblast_code)
+    ,by = c("admin4_code"  = "budget_code")
+  ) %>% 
+  mutate(
+    oblast_tor = oblast_code %in% v_tor
+  ) %>% 
+  group_by(oblast_name_display) %>% 
+  mutate(
+    median = median(own_income_change, na.rm =T )
+    ,mean = mean(own_income_change, na.rm =T )
+    ,median_display = median %>%  scales::comma(accuracy = .01)
+    ,mean_display = mean(own_income_change, na.rm =T )%>%  scales::comma(accuracy = .01)
+  )
+
+# RemoveLeadingZero <- function( x ) {
+#   #   g <- grep("\\A\\b(?<=0)(\\.\\d{1,})$", x, perl=TRUE, value=TRUE);
+#   g <- gsub("\\b(0)(\\.\\d{1,})$", "\\2", x, perl=TRUE);
+#   return( g )
+# } 
+
+ds5 %>% 
+  filter(admin4_code %in% target_hromadas) %>% 
+  select(hromada_name, oblast_code, oblast_name_display, oblast_tor,
+         median, median_display) 
+# ----- -----------------------------------------------------------------------
+
+g1 <- 
+  ds5 %>% 
+  drop_na(own_income_change) %>% 
+  filter(ntile < 95) %>%
+  {
+   ggplot(., aes(x = own_income_change, fill = oblast_tor ))+
+   geom_histogram(alpha = .3)+
+   geom_vline(xintercept = 0, linetype = "dashed")+
+   facet_wrap(facets = "oblast_name_display")+
+   scale_fill_manual(
+     values = c("TRUE" = "red", "FALSE" = "blue")
+   )+
+   geom_text(
+     aes(
+       x= -.2
+       , y = Inf
+       , label = median_display
+      )
+     # ,alpha = .7
+     ,color = "grey30"
+     , data = . %>% distinct()
+     ,vjust = 1.1
+   )+
+   geom_text(
+     aes(
+       x=.4
+       , y = Inf
+       , label = mean_display
+      )
+     # ,alpha = .2
+     ,color = "grey80"
+     , data = . %>% distinct()
+     ,vjust = 1.1
+    )+
+   labs(
+     title = "Year over year change in hromada's own revenue (total - transfert)"
+     ,subtitle = "In percertage points, for the period March-July of each year"
+     ,x = "Change in percent point"
+     ,y = "Number of hromadas"
+     ,caption = "Median value shown in bold to the left of the dashed line\nMean values shown in faint to the right of the dashed line\nHistograms show bottom 95% cases"
+     ,fill = "Contains at least\none occupied\nhromada"
+   )
+  }
+
+g1
+g1 %>% quick_save("1-change-over-year", w= 12, h = 7)
+
+
+hist(ds4$own_income_change,breaks="FD")
 
 # ---- explore-single-hromada ------------------------------------------------------------
 
