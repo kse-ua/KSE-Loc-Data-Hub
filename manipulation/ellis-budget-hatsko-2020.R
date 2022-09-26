@@ -42,22 +42,6 @@ cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
-paths_budget <-  list.files("./data-private/raw/", pattern = "revenues-\\d.xlsx$",full.names = T)
-# names_budget <-  paths_budget %>% str_replace("^.+revenues-(\\d{1}).csv","\\1")
-
-ls_import <- list()
-for(i in seq_along(paths_budget)){
-  
-  ls_import[[i]] <- 
-    readxl::read_xlsx(
-      path = paths_budget[[i]]
-    ) %>% 
-    janitor::clean_names() %>%
-    mutate_all(.funs = as.character)
-}
-
-lapply(ls_import, glimpse)
-
 #+ tweak-data ------------------------------------------------------------------
 # to join multiple files (slices) downloaded from the source
 # ds0 <-
@@ -68,69 +52,39 @@ lapply(ls_import, glimpse)
 path_admin <- "./data-private/derived/ua-admin-map.csv"
 ds_admin_full <- readr::read_csv(path_admin)
 ds_admin_full %>% glimpse(70)
-path_budget <- "./data-private/raw/boost_incomes_12.08.2022.xlsx"
-ds0 <- readxl::read_excel(path_budget, sheet = 1) %>% janitor::clean_names()
-ds0 %>% glimpse(60)
+# path_budget <- "./data-private/raw/boost_incomes_12.08.2022.xlsx"
+path_budget <- "./data-private/raw/boost_incomes_26.09.2022.csv"
+# ds0 <- readxl::read_excel(path_budget, sheet = 1) %>% janitor::clean_names()
+# ds0 <- readxl::read_xl(path_budget, sheet = 1) %>% janitor::clean_names()
+# ds0 <- readr::read_csv(path_budget) %>% janitor::clean_names()
+# ds0 %>% glimpse(60)
 
+
+
+ds0 <- read_delim(
+  file = "data-private/raw/boost_incomes_26.09.2022.csv"
+  ,locale = locale(encoding = "WINDOWS-1251")
+  ,delim = ";"
+)  %>% janitor::clean_names()
+ds0 %>% glimpse()
 
 #+ inspect-data ----------------------------------------------------------------
-# Target case - Коростенська громада
-# target_hromada_budget_code  <- "06563000000" # used in budget_code 
-target_hromada_budget_code    <- "0656300000"  # used in ds_ua_admin
-
-# ds_admin_full
-# to establish connection with ds_admin
-d <- 
+d_hromada_code <- 
   ds_admin_full %>% 
-  filter(budget_code == target_hromada_budget_code)
-
-d %>% glimpse()
-# Let's find its UA hromada code
-(target_hromada_ua_code <- d %>% distinct(hromada_code) %>% pull(hromada_code))
-length(target_hromada_ua_code)==1L# should be a single value to assert one-to-one match
-
-# hromada's admin coordinate
-d %>% 
-  arrange(rada_code) %>% 
-  select(region_ua, oblast_name, raion_name, hromada_name, rada_name, settlement_name) %>%
-  # select(reg•ion_ua, oblast_name, hromada_code, rada_code, settlement_code, budget_code_old) %>%
-  print_all()
-# GOAL: we need to link budget data to this frame
-
+  distinct(hromada_code, hromada_name, budget_code, budget_code_old)
 
 #+ tweak-data-1 ----------------------------------------------------------------
-
-
-# let's understand how Open Budget organizes its data for download
-ds0 %>% glimpse()
-# file_number - download had multiple csv slices, this is the number of the slice
-# admin1 - Only one value, drop it later or recode
-# admin2 - name of the Oblast, which budget is observed
-# admin3 - type of budget within Oblast (oblast, city, raion, hromada)
-# admin4 - type of budget (settlement, rada, hromada) 
-# inco1 - type of revenue (tax, non-tax, capital, transfer, target)
-# inco2 - sub-type of revenue
-# inco3 - sub-sub-type of revenue
-
-ds0 %>% count(admin3) %>% print_all()
-ds0 %>% count(admin4) %>% print_all()
 
 # tidying up admin codes
 ds1 <- 
   ds0 %>% 
-  # because other rows contain summaries of most granular units
-  # to see, view
-  # IMPORTANT: copying admin3 code into admin4 when its oblast type budget
-  # so it won't be dropped when dropping na's
   mutate(
     admin4_code = as.character(str_extract(admin4, '[0-9]+'))
     ,admin4_label = str_remove(admin4, '[0-9]+ ')
     ,across(ends_with('executed'), as.numeric)
-  ) %>%
-  rename(is_hromada = x21) %>%
-  relocate(c("admin4_code", 'admin4_label', 'is_hromada'), .after = "admin4") %>%
-  select(-c("admin4")) %>% 
-  arrange(admin4_code) %>% 
+  ) %>% #glimpse()
+  select(starts_with("admin4_"), inco3, starts_with("x")) %>% 
+  arrange(admin4_code) %>% #glimpse()
   ### VERY BIG DEAL !!! make sure you see this!
   filter(!is.na(inco3)) %>%  # because inco3 is most granular, other rows are summaries
   filter(!is.na(admin4_code)) %>%  # because it's summary for oblast 
@@ -138,12 +92,32 @@ ds1 <-
 ds1 %>% glimpse()
 ds1
 
-ds2 <-ds1 %>% filter(is_hromada)
-
+# Keep only valid hromadas (that existed after the end of the amalgamation process)
+ds2 <- 
+  ds1 %>% 
+  inner_join(
+    ds_admin_full %>%  distinct(hromada_code, hromada_name, budget_code) %>% 
+      mutate(budget_code = paste0(budget_code, "0"))
+    ,by = c("admin4_code" = "budget_code")
+  )
+ds2 %>% glimpse()
 # frame explaining hierarchy of incomes
 
+ds1 %>% summarize(hromada_count = n_distinct(admin4_code, na.rm = T))
+ds2 %>% summarize(hromada_count = n_distinct(admin4_code, na.rm = T))
+
+# we dropped codes for regions and city regions, but crimea stayed b/c in ds_admin
+d <- 
+  ds1 %>% 
+  filter(
+    !admin4_code %in% unique(ds2$admin4_code)
+  )
+
+
+
+
 ds_inco <- 
-  ds1 %>% # because already dropped is.na(inco3)
+  ds2 %>% # because already dropped is.na(inco3)
   distinct(inco3) %>% 
   arrange(inco3) %>%
   mutate(
@@ -170,23 +144,51 @@ ds_admin4_lkp <-
 
 # ---- tweak-data-2 ------------------------------------------------------------
 
+ds2 <- 
+  ds1 %>% 
+  # compute the target index in this form before pivoting 
+  # difference between codes:
+  mutate(
+    
+  )
+
+
+
+ds2 %>% glimpse()
 ds2_long <- 
-  ds2 %>%
-  mutate(inc_code = str_extract(inco3, '[0-9]+')) %>%
-  select(-c(admin4_label, is_hromada)) %>%
+  ds2 %>% #select(inco3) %>% 
+  mutate(inc_code = str_extract(inco3, '[0-9]+')) %>% #glimpse()
+  # select(-c(admin4_label)) %>%
   pivot_longer(
-    -c(starts_with('adm'), inco3, inc_code)
+    # -c(starts_with('adm'), inco3, inc_code)
+    cols = -c("admin4_code","admin4_label", "inco3","hromada_code","hromada_name", "inc_code")
     , names_to = 'year_month'
     , values_to = 'income'
-  ) %>%
+  ) %>% #glimpse()
   mutate(
+     # year = str_extract(year_month, "x(\\d{4})_.+")
+    # ,month = str_extract(year_month, "x\\d{4}_(d+).+")
     year = str_extract(year_month, "(?<=x)....(?=_)")
     ,month = str_extract(year_month, "(?<=_)[0-9]+(?=_)")
     ) %>%
   select(-c(year_month)) 
 
-ds2_wide <- 
+ds2_long %>% glimpse()
+ds2_long %>% filter(admin4_code == "19548000000") %>% distinct() %>% View()
+
+ds3_long <- 
   ds2_long %>% 
+  filter(
+    inc_code == "11010000"
+  ) %>% 
+  distinct()
+
+ds3_long %>% filter(admin4_code == "19548000000") %>% distinct() %>% View()
+
+ds2_long %>% glimpse()
+
+ds3_wide <- 
+  ds3_long %>% 
   pivot_wider(names_from = inc_code, values_from = income) %>%
   select(admin4_code, year, month, sort( names(.)))
 
