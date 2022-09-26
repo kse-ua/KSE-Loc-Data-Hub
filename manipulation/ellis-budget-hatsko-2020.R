@@ -388,32 +388,70 @@ ds5 <-
   ) %>% 
   mutate(
     oblast_tor = oblast_code %in% v_tor
-  ) 
+  ) %>% 
+  group_by(oblast_name_display) %>% 
+  mutate(
+    median = median(own_income_change, na.rm =T )
+    ,mean = mean(own_income_change, na.rm =T )
+    ,median_display = median %>%  scales::comma(accuracy = .01)
+    ,mean_display = mean(own_income_change, na.rm =T )%>%  scales::comma(accuracy = .01)
+  )
+
+# RemoveLeadingZero <- function( x ) {
+#   #   g <- grep("\\A\\b(?<=0)(\\.\\d{1,})$", x, perl=TRUE, value=TRUE);
+#   g <- gsub("\\b(0)(\\.\\d{1,})$", "\\2", x, perl=TRUE);
+#   return( g )
+# } 
 
 ds5 %>% 
   filter(admin4_code %in% target_hromadas) %>% 
-  select(hromada_name, oblast_code, oblast_name_display, oblast_tor) 
+  select(hromada_name, oblast_code, oblast_name_display, oblast_tor,
+         median, median_display) 
 # ----- -----------------------------------------------------------------------
 
 g1 <- 
   ds5 %>% 
   drop_na(own_income_change) %>% 
   filter(ntile < 95) %>%
-  ggplot(aes(x = own_income_change, fill = oblast_tor ))+
-  geom_histogram(alpha = .3)+
-  geom_vline(xintercept = 0, linetype = "dashed")+
-  facet_wrap(facets = "oblast_name_display")+
-  scale_fill_manual(
-    values = c("TRUE" = "red", "FALSE" = "blue")
-  )+
-  labs(
-    title = "Year over year change in hromada's own revenue (total - transfert)"
-    ,subtitle = "In percertage points, for the period March-July of each year"
-    ,x = "Change in percent point"
-    ,y = "Number of hromadas"
-    ,caption = ""
-    ,fill = "Contains at least\none occupied\nhromada"
-  )
+  {
+   ggplot(., aes(x = own_income_change, fill = oblast_tor ))+
+   geom_histogram(alpha = .3)+
+   geom_vline(xintercept = 0, linetype = "dashed")+
+   facet_wrap(facets = "oblast_name_display")+
+   scale_fill_manual(
+     values = c("TRUE" = "red", "FALSE" = "blue")
+   )+
+   geom_text(
+     aes(
+       x= -.2
+       , y = Inf
+       , label = median_display
+      )
+     # ,alpha = .7
+     ,color = "grey30"
+     , data = . %>% distinct()
+     ,vjust = 1.1
+   )+
+   geom_text(
+     aes(
+       x=.4
+       , y = Inf
+       , label = mean_display
+      )
+     # ,alpha = .2
+     ,color = "grey80"
+     , data = . %>% distinct()
+     ,vjust = 1.1
+    )+
+   labs(
+     title = "Year over year change in hromada's own revenue (total - transfert)"
+     ,subtitle = "In percertage points, for the period March-July of each year"
+     ,x = "Change in percent point"
+     ,y = "Number of hromadas"
+     ,caption = "Median value shown in bold to the left of the dashed line\nMean values shown in faint to the right of the dashed line\nHistograms show bottom 95% cases"
+     ,fill = "Contains at least\none occupied\nhromada"
+   )
+  }
 
 g1
 g1 %>% quick_save("1-change-over-year", w= 12, h = 7)
