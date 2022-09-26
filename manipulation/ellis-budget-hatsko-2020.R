@@ -211,10 +211,13 @@ ds2_long %>% count(inc_code)
 
 
 
-d <- 
+# ---- compute-target-small -------------------------------------
+target_hromadas <- c("19548000000","08576000000")
+
+d_few0 <- 
   ds2_long %>% 
   # filter(admin4_code == "19548000000") %>% 
-  filter(admin4_code %in% c("19548000000","08576000000")) %>%
+  filter(admin4_code %in% target_hromadas) %>%
   select(-admin4_label, -inco3) %>% 
   mutate(
     date = paste0(year,"-",ifelse(
@@ -225,9 +228,10 @@ d <-
     ,target_segment = month %in% c(3:7)
   ) #%>% 
   # select(-year, -month)
-d
+d_few0
 
-d %>% 
+d_few1 <- 
+  d_few0 %>% 
   filter(target_segment) %>%  # we will compare Mar-Jul in 2021 and 2022
   group_by(admin4_code, year) %>% 
   summarize(
@@ -239,23 +243,56 @@ d %>%
     income_own = income_total - income_transfert
     ,own_prop = income_own /income_total
     ,won_pct = scales::percent(own_prop)
+  ) %>% 
+  group_by(admin4_code) %>% 
+  mutate(
+    own_income_change = (income_own / lag(income_own)) - 1
+  )
+
+# ----- compute-many --------------------------------
+
+
+ds3 <- 
+  ds2_long %>% 
+  # filter(admin4_code == "19548000000") %>% 
+  # filter(admin4_code %in% c("19548000000","08576000000")) %>%
+  select(-admin4_label, -inco3) %>% 
+  mutate(
+    date = paste0(year,"-",ifelse(
+      nchar(month)==1L, paste0("0",month), month),  "-01"
+    ) %>% as.Date()
+    ,transfert = str_detect(inc_code, "^41.+")
+    # ,war_indicator = date >= as.Date("2022-03-01")
+    ,target_segment = month %in% c(3:7)
+  ) #%>% 
+# select(-year, -month)
+ds3
+
+d4 <- 
+  ds3 %>% 
+  filter(target_segment) %>%  # we will compare Mar-Jul in 2021 and 2022
+  group_by(admin4_code, year) %>% 
+  summarize(
+    income_total = sum(income, na.rm = T)
+    ,income_transfert = sum(income*transfert, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    income_own = income_total - income_transfert
+    ,own_prop = income_own /income_total
+    ,won_pct = scales::percent(own_prop)
+  ) %>% 
+  group_by(admin4_code) %>% 
+  mutate(
+    own_income_change = (income_own / lag(income_own)) - 1
   )
 
 
-ds2_long %>% 
-  distinct(inc_code) %>% 
-  left_join(
-    ds_inco %>% mutate(inco3_code = as.character(inco3_code))
-    ,by = c("inc_code"="inco3_code")
-  ) %>% 
-  mutate(
-    transfert = str_detect(inc_code, "^41.+")
-  ) %>% 
-  relocate(transfert) %>% 
-  print_all()
+d_few1
+d4 %>% filter(admin4_code %in% target_hromadas)
 
-d2 <- 
-  
+
 # ---- explore-single-hromada ------------------------------------------------------------
 
 ## to add higher level income - sum columns by code (as defined in inco_ds), 
