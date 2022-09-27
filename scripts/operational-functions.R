@@ -23,7 +23,7 @@ trim_sheet_input <- function(
 
 draw_random_id <- function(d, idvar="person_oid", n = 1){
   all_unique_ids <- d %>%
-    pull(idvar) %>%
+    pull(!!rlang::sym(idvar) ) %>%
     unique()
   a_random_id <- sample(all_unique_ids, size = n)
   return(a_random_id)

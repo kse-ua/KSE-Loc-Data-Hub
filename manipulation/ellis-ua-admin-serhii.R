@@ -124,7 +124,7 @@ ds_fin0 %>% glimpse()
 ds0 %>% count(object_category)
 ds_comp0 %>% count(object_category)
 ds_old0 %>% count(object_category)
-ds_fin0 %>% count(object_category)
+ds_fin0 %>% count(object_category) # no `object_cateogry`
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
 
@@ -251,24 +251,26 @@ ds_settlement
 
 
 #+ table-2 ---------------------------------------------------------------------
-
+ds_old1 %>% count(category_label) # no oblast or raion
 ds_oblast_old <- 
   ds_old1 %>% 
   filter(category_label == "область") %>% 
   distinct(oblast_code = level_1, oblast_name = object_name)
-ds_oblast_old 
+ds_oblast_old # empty, should it be empty? 
 
 ds_raion_old <-
   ds_old1 %>% 
   filter(category_label == "район") %>% 
   distinct(raion_code = level_2, raion_name = object_name)
-ds_raion_old
+ds_raion_old # empty, should it be empty? 
 
 ds_rada_old <-
   ds_old1 %>% 
-  filter(category_label == "рада" 
-         | category_label == "місто" 
-         | (category_label == "селище міського типу" & is.na(level_4) == T)) %>%
+  filter(
+    category_label  == "рада" |
+    category_label  == "місто" |
+    (category_label == "селище міського типу" & is.na(level_4) == T)
+  ) %>%
   mutate(
     rada_code = case_when(
       category_label %in% c("село", "селище", "селище міського типу") ~ level_3
@@ -278,6 +280,7 @@ ds_rada_old <-
     )
     , rada_name = object_name
   ) %>% 
+  # count(category_label) # to verify the grouping - only 2, should there be only 2?
   select(rada_code, rada_name)
 ds_rada_old
 
@@ -300,7 +303,8 @@ ds_settlement_rada_old <-
       ,category_label == "місто" & is.na(level_3) == F  ~ level_3
       ,category_label == "місто" & is.na(level_3) == T  ~ level_2
       )
-  ) %>% 
+  ) %>%
+  # count(category_label) # 4 categories
   left_join(
     ds_rada_old
     ,by = "rada_code"
@@ -425,6 +429,7 @@ ds_admin_full <-
     ,!(settlement_code_old == "5120280501" & str_detect(full_name, "Ананьїв Перший"))
   ) %>% 
   left_join(
+    # `ds_fin_old` does not exit
     ds_fin_old %>% select(object_code_old, budget_code_old)
     ,by= c("settlement_code_old" = "object_code_old")
   ) %>% 
@@ -452,17 +457,22 @@ ds_admin_full %>% filter(is.na(budget_code_old)) %>% View()
 
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-
+# let us save only ONE of these three. 
 ds_admin_full %>% 
   select(-budget_code_old) %>% 
   readr::write_csv("./data-private/derived/ua-admin-map-2020.csv")
 
 ds_admin_full %>% 
   readr::write_csv("./data-private/derived/ua-admin-map.csv")
-
+  # readr::write_rds("./data-public/derived/ua-admin-map.rds", compress = "xz") # --- this ellis should
+  # I like CSVs, but I think we are better off with RDS in this case.
+  # WHy: the file is close to 30K rows (~20Mb), if replaced multiple time - will weight down the repo
+  # When xz-compressed into rds the file weighs only 700Kb
+  
 ds_map_hromada %>% 
   readr::write_csv("./data-private/derived/hromada.csv")
-
+# it appears, `ds_map_hromada` can be derived from `ds_admin_full`
+# Is there a good reason to store it idependently? 
 
 #+ sanity-check, eval=F, echo=F -------------------------------
 # rm(list = ls(all.names = TRUE))

@@ -1,5 +1,5 @@
 #' ---
-#' title: "Ellis Lane"
+#' title: "Ellis Rada-Hromada"
 #' author: 
 #'   - "Andriy Koval"
 #'   - "other author"
@@ -225,8 +225,9 @@ ds1_hromada %>% glimpse(60)
 # create a ds listing the dates on which hromadas changed their composition 
 ds0_time <- 
   ds0_hromada %>% 
-  select(names_event) %>% 
-  print()
+  select(names_event)
+
+ds0_time %>% glimpse()
 
 ds1_time <- 
   ds0_time %>% 
