@@ -60,11 +60,9 @@ ds_admin <-
   ds_admin0 %>% 
   mutate(
     budget_code = paste0(budget_code, "0")
-  ) %>% 
-  mutate(
-    
-  )
-
+  ) 
+rm(ds_admin0)
+ds_admin %>% glimpse()
 
 #+ inspect-data ----------------------------------------------------------------
 target_hromadas <- c("19548000000","08576000000")
