@@ -4,7 +4,7 @@
 #' date: "last Updated: `r Sys.Date()`"
 #' ---
 #+ echo=F
-# rmarkdown::render(input = "./manipulation/ellis-ua-admin.R") # run to knit, don't uncomment
+# rmarkdown::render(input = "./manipulation/ellis-ua-admin-serhii.R") # run to knit, don't uncomment
 #+ echo=F ----------------------------------------------------------------------
 library(knitr)
 # align the root with the project working directory
@@ -124,7 +124,7 @@ ds_fin0 %>% glimpse()
 ds0 %>% count(object_category)
 ds_comp0 %>% count(object_category)
 ds_old0 %>% count(object_category)
-ds_fin0 %>% count(object_category) # no `object_cateogry`
+# ds_fin0 %>% count(territory_code) # no `object_cateogry`
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
 
@@ -415,7 +415,7 @@ ds_admin_old_new <-
     ds_settlement_rada_old
     ,by = c("settlement_code_old" = "settlement_code")
   )
-
+ds_admin_old_new %>% glimpse()
 #adding information on budget codes: final after 2020 and before as of 01.01.2019 - 
 #does not include codes for settlements which formed hromadas voluntarily - SOLUTION IS NEEDED
 ds_admin_full <-
@@ -440,7 +440,7 @@ ds_admin_full <-
     ,TRUE ~ settlement_name)
   )
 
-ds_admin_full %>% filter(is.na(budget_code_old)) %>% View()
+ds_admin_full %>% filter(is.na(budget_code_old)) %>% glimpse()
 
 #identification of relevant settlement name among three variables
 # ds_admin_full %>% 
@@ -457,28 +457,30 @@ ds_admin_full %>% filter(is.na(budget_code_old)) %>% View()
 
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-# let us save only ONE of these three. 
 ds_admin_full %>% 
-  select(-budget_code_old) %>% 
-  readr::write_csv("./data-private/derived/ua-admin-map-2020.csv")
-
-ds_admin_full %>% 
-  readr::write_csv("./data-private/derived/ua-admin-map.csv")
-  # readr::write_rds("./data-public/derived/ua-admin-map.rds", compress = "xz") # --- this ellis should
-  # I like CSVs, but I think we are better off with RDS in this case.
-  # WHy: the file is close to 30K rows (~20Mb), if replaced multiple time - will weight down the repo
-  # When xz-compressed into rds the file weighs only 700Kb
-  
-ds_map_hromada %>% 
-  readr::write_csv("./data-private/derived/hromada.csv")
-# it appears, `ds_map_hromada` can be derived from `ds_admin_full`
-# Is there a good reason to store it idependently? 
+ readr::write_rds("./data-private/derived/ua-admin-map.rds", compress = "xz")
+# # let us save only ONE of these three. 
+# ds_admin_full %>% 
+#   select(-budget_code_old) %>% 
+#   readr::write_csv("./data-private/derived/ua-admin-map-2020.csv")
+# 
+# ds_admin_full %>% 
+#   readr::write_csv("./data-private/derived/ua-admin-map.csv")
+#   # readr::write_rds("./data-public/derived/ua-admin-map.rds", compress = "xz") # --- this ellis should
+#   # I like CSVs, but I think we are better off with RDS in this case.
+#   # WHy: the file is close to 30K rows (~20Mb), if replaced multiple time - will weight down the repo
+#   # When xz-compressed into rds the file weighs only 700Kb
+#   
+# ds_map_hromada %>% 
+#   readr::write_csv("./data-private/derived/hromada.csv")
+# # it appears, `ds_map_hromada` can be derived from `ds_admin_full`
+# # Is there a good reason to store it idependently? 
 
 #+ sanity-check, eval=F, echo=F -------------------------------
 # rm(list = ls(all.names = TRUE))
 # cat("\014") # Clear the console
 
-#+ results="asis", echo=F -------dsa-----------------------------------------------
+#+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
 #+ results="show", echo=F ------------------------------------------------------
 #' For the sake of documentation and reproducibility, the current report was rendered in the following environment.
