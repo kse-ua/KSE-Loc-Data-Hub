@@ -67,18 +67,23 @@ ds_1 <- st_sf(
 
 #+ graph, eval=eval_chunks ------------------------------------------------
 
+tmap_mode("view")
 g1 <- 
   ds_1 %>%
   tm_shape() + 
   tm_fill("own_prop_change",
           palette = "RdBu",
           id="hromada_code",
-          popup.vars=c("hromada_name")
+          popup.vars=c("hromada_name", "own_prop_change")
   ) + 
   tm_legend(outside=TRUE) +
   tm_layout(frame = FALSE) +
-  tmap_options(check.and.fix = TRUE)
+  tmap_options(check.and.fix = TRUE) 
 g1
+
+tmap_save(g1, "./analysis/prints/interactive.html")
+
+
 
 g2 <- 
   ds_1 %>%
