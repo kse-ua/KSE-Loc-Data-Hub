@@ -76,7 +76,8 @@ ds1
 # Keep only valid hromadas (that existed after the end of the amalgamation process)
 ds2 <- 
   ds1 %>% 
-  inner_join(
+  left_join(
+  # inner_join(
     ds_admin_full %>%  
       filter(region_en != "Crimea") %>% 
       distinct(hromada_code, hromada_name, budget_code) %>% 
