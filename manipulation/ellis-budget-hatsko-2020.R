@@ -192,7 +192,7 @@ tor_before_22 <- c("05561000000","05556000000","12538000000","05555000000","1253
 ds3 <- 
   ds2_long %>% 
   select(-admin4_label, -inco3) %>% 
-  filter(!admin4_code %in% tor_before_22) %>% 
+  # filter(!admin4_code %in% tor_before_22) %>% 
   mutate(
     date = paste0(year,"-",ifelse(
       nchar(month)==1L, paste0("0",month), month),  "-01"
@@ -265,12 +265,13 @@ v_tor <- ds_tor %>% filter(oblast_tor) %>% pull(oblast_code)
 
 ds5 <- 
   ds4 %>% 
-  filter(year == 2022) %>% 
+  filter(year == 2022) %>%
   mutate(
-    outlier = own_income_change > quantile(own_income_change)[4] +
-                      1.5*IQR(own_income_change) | own_income_change < 
-                      quantile(own_income_change)[2] - 1.5*IQR(own_income_change)
+    outlier = own_income_change > quantile(own_income_change, na.rm = TRUE)[4] +
+                      1.5*IQR(own_income_change, na.rm = TRUE) | own_income_change < 
+                      quantile(own_income_change, na.rm = TRUE)[2] - 1.5*IQR(own_income_change, na.rm = TRUE)
     ,ntile = ntile(own_income_change,100)
+    ,tor_before_22 = admin4_code %in% tor_before_22
   ) %>% 
   left_join(
     ds_admin_full %>% 
@@ -282,8 +283,11 @@ ds5 <-
   mutate(
     oblast_tor = oblast_code %in% v_tor
   ) %>%
+  # group_by(admin4_code, year) %>%
   # 2 rows duplicated cause budget code refers to 2 hromadas at once
   filter(!duplicated(admin4_code))
+
+
 
 # 126 hromadas outliers
 table(ds5$outlier)
