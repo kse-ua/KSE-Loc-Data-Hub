@@ -32,6 +32,8 @@ library(tidyverse)
 library(tmap)
 library(tmaptools)
 library(sf)
+library(RColorBrewer)
+library(viridis)
 
 
 #+ declare-globals -------------------------------------------------------------
@@ -42,6 +44,7 @@ path_budget_data <- "./data-private/derived/budget-change-for-map.csv"
 #Source: https://drive.google.com/file/d/1X3Ym-7s1RgQgsi_p4uJ3EGEWYGTd-UMz/view?usp=sharing
 path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
 
+path_admin <- "./data-private/derived/ua-admin-map.csv"
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# 2.Data ")
@@ -50,20 +53,68 @@ cat("\n# 2.Data ")
 
 ds_budget_data <- readr::read_csv(path_budget_data)
 ds_polygons <- st_read(path_polygons) %>% janitor::clean_names()
+ds_admin_full <- readr::read_csv(path_admin)
 
 #+ inspect-data ----------------------------------------------------------------
 ds_budget_data %>% glimpse()
 ds_polygons %>% glimpse()
 
 
-#+ tweek-data, eval=eval_chunks ------------------------------------------------
-ds_1 <- st_sf(
+tor_before_22 <- c("05561000000","05556000000","12538000000","05555000000","12534000000"
+                   ,"05549000000","05557000000","05551000000","12539000000","05547000000","05548000000"
+                   ,"05563000000","12537000000","12540000000","05560000000","12533000000","05552000000"
+                   ,"05554000000","05564000000","12532000000","12541000000","05562000000","12535000000"
+                   ,"05566000000","12531000000","05565000000","05559000000","05558000000","05550000000"
+                   ,"12536000000","05553000000") 
+
+
+ds_1 <- ds_budget_data %>% 
+  # filter(year == 2022) %>%
+  mutate(
+    # outlier_own_income_change = own_income_change > quantile(own_income_change, na.rm = TRUE)[4] +
+    #   1.5*IQR(own_income_change, na.rm = TRUE) | own_income_change < 
+    #   quantile(own_income_change, na.rm = TRUE)[2] - 1.5*IQR(own_income_change, na.rm = TRUE)
+    # ,outlier_own_prop_change = own_prop_change > quantile(own_prop_change, na.rm = TRUE)[4] +
+    #   1.5*IQR(own_prop_change, na.rm = TRUE) | own_prop_change < 
+    #   quantile(own_prop_change, na.rm = TRUE)[2] - 1.5*IQR(own_prop_change, na.rm = TRUE)
+    ntile = ntile(own_income_change,100)
+    ,outlier_own_prop_change = ntile(own_prop_change, 100) > 99
+    ,tor_before_22 = admin4_code %in% tor_before_22
+  ) %>% 
   left_join(
-    ds_budget_data %>% select(hromada_code, hromada_name, own_income_change, own_prop_change)
+    ds_admin_full %>% 
+      mutate(budget_code = paste0(budget_code,"0")) %>% 
+      distinct(budget_code, hromada_name, hromada_code, oblast_name_display, map_position
+               , region_ua, oblast_code)
+    ,by = c("admin4_code"  = "budget_code")
+  )
+
+
+
+hist(ds_1$own_prop_change)
+
+unique(ds_polygons$cod_3) %>% length()
+unique(ds_budget_data$hromada_code) %>% length()
+
+
+#+ tweek-data, eval=eval_chunks ------------------------------------------------
+d1 <- st_sf(
+  right_join(
+    ds_1 %>%
+      filter(year == 2022) %>%
+      select(hromada_code, hromada_name, own_income_change, own_prop_change, tor_before_22,
+             outlier_own_prop_change, own_prop, own_prop_change_pct)
     ,ds_polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
   )
 )
+
+d2 <- d1 %>%
+  left_join(ds_1 %>% filter(year == 2021) %>% select(hromada_code, own_prop)
+            , suffix = c('2022', '2021'), by = 'hromada_code') %>%
+  mutate(own_prop_pct2021 = scales::percent(own_prop2021),
+         own_prop_pct2022 = scales::percent(own_prop2022))
+
 
 #+ graph, eval=eval_chunks ------------------------------------------------
 
@@ -80,8 +131,47 @@ g1 <-
   tmap_options(check.and.fix = TRUE)
 g1
 
+tmap_mode('view')
+g1 <- 
+  d2 %>%
+  mutate(own_prop_change = if_else(!tor_before_22, own_prop_change, NA_real_)) %>%
+  tm_shape() + 
+  tm_fill("own_prop_change",
+          # title = 'Change in share of \n hromada own revenue',
+          title = 'Зміна частки власних доходів',
+          palette = "RdBu",
+          id="hromada_name",
+          popup.vars=c('Зміна частки власних доходів' = "own_prop_change_pct",
+                       'Частка власних доходів у 2021' = 'own_prop_pct2021',
+                       'Частка власних доходів у 2022' = 'own_prop_pct2022'
+                       ),
+          style = 'pretty'
+          # labels = c('-40%', '-20%', '0%', '+20%', '+40')
+  ) + 
+  tm_borders('gray', lwd = 0.2) +
+  # tm_shape(d1 %>% filter(tor_before_22)) + 
+  # tm_borders('black', lwd = 1) +
+  tm_legend(outside=TRUE) +
+  tm_layout(frame = FALSE) +
+  tmap_options(check.and.fix = TRUE)
+g1
+
+top5_v <- d1 %>% arrange(desc(own_prop_change)) %>% slice(1:5) %>% pull(hromada_code)
+bot5_v <- d1 %>% arrange(own_prop_change) %>% slice(1:5) %>% pull(hromada_code)
+
+
+
+#barplot for top and bot performers
+d1 %>%
+  filter(hromada_code %in% c(top5_v, bot5_v)) %>%
+  left_join(ds_admin_full %>% distinct(hromada_code, oblast_name)) %>%
+  mutate(hromada_name_display = paste0(oblast_name, ' - ', hromada_name)) %>%
+  ggplot(aes(x = own_prop_change, y = fct_reorder(hromada_name_display, own_prop_change))) +
+  geom_col()
+
+
 g2 <- 
-  ds_1 %>%
+  d1 %>%
   tm_shape() + 
   tm_fill("own_income_change",
           palette = "RdBu",
@@ -93,4 +183,27 @@ g2 <-
   tmap_options(check.and.fix = TRUE)
 g2
 
+g2 <- 
+  d1 %>%
+  mutate(own_income_change = if_else(!tor_before_22, own_income_change, NA_real_)) %>%
+  tm_shape() + 
+  tm_fill("own_income_change",
+          # title = 'Change in share of \n hromada own revenue',
+          title = 'Зміна власних доходів громади 21-22',
+          palette = "RdBu",
+          id="hromada_name",
+          popup.vars=c('Зміна власних доходів' = "own_income_change_pct"),
+          style = 'pretty',
+          # labels = c('-40%', '-20%', '0%', '+20%', '+40')
+  ) + 
+  tm_borders('gray', lwd = 0.2) +
+  # tm_shape(d1 %>% filter(tor_before_22)) + 
+  # tm_borders('black', lwd = 1) +
+  tm_legend(outside=TRUE) +
+  tm_layout(frame = FALSE) +
+  tmap_options(check.and.fix = TRUE)
+g2
 
+
+
+tmap_save(g1, 'map.html')
