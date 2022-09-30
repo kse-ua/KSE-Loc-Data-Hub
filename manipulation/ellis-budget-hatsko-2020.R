@@ -4,7 +4,7 @@
 #' date: "last Updated: `r Sys.Date()`"
 #' ---
 #+ echo=F
-# rmarkdown::render(input = "./manipulation/ellis-budget-hatsko.R") # run to knit, don't uncomment
+# rmarkdown::render(input = "./manipulation/ellis-budget-hatsko-2020.R") # run to knit, don't uncomment
 #+ echo=F ----------------------------------------------------------------------
 library(knitr)
 # align the root with the project working directory
@@ -76,8 +76,8 @@ ds1
 # Keep only valid hromadas (that existed after the end of the amalgamation process)
 ds2 <- 
   ds1 %>% 
-  left_join(
-  # inner_join(
+  # left_join(
+  inner_join(
     ds_admin_full %>%  
       filter(region_en != "Crimea") %>% 
       distinct(hromada_code, hromada_name, budget_code) %>% 
@@ -114,7 +114,7 @@ ds_admin4_lkp <-
   ds1 %>% 
   distinct(admin4_code, admin4_label)
 
-# ---- tweak-data-2 ------------------------------------------------------------
+#+ tweak-data-2 ------------------------------------------------------------
 
 ds2_long <- 
   ds2 %>%
@@ -133,10 +133,10 @@ ds2_long <-
   select(-c(year_month)) 
 
 ds2_long %>% glimpse()
-ds2_long %>% filter(admin4_code == "19548000000") %>% distinct() %>% View()
+ds2_long %>% filter(admin4_code == "19548000000") %>% distinct()
 ds2_long %>% count(inc_code) 
 
-# ---- compute-target-small -------------------------------------
+#+ compute-target-small -------------------------------------
 target_hromadas <- c("19548000000","08576000000")
 # target_hromadas <- c("01211405000" ,"01303515000" ,"05556000000" )
 
@@ -180,7 +180,7 @@ d_few1 <-
     ,own_prop_change_pct = scales::percent(own_prop - lag(own_prop))
     )
 
-# ----- compute-many --------------------------------
+#+ compute-many --------------------------------
 # target_hromadas <- c("01211405000" ,"01303515000" ,"05556000000" )
 
 tor_before_22 <- c("05561000000","05556000000","12538000000","05555000000","12534000000"
@@ -236,8 +236,7 @@ d_few1
 ds4 %>% filter(admin4_code %in% target_hromadas)
 
 
-
-# ---- ---------------
+#+ tweak-data-5 -------------------
 
 
 # mark oblast that were temp occupied since Feb 24
@@ -268,9 +267,12 @@ ds5 <-
   ds4 %>% 
   filter(year == 2022) %>%
   mutate(
-    outlier = own_income_change > quantile(own_income_change, na.rm = TRUE)[4] +
+    outlier_own_income_change = own_income_change > quantile(own_income_change, na.rm = TRUE)[4] +
                       1.5*IQR(own_income_change, na.rm = TRUE) | own_income_change < 
                       quantile(own_income_change, na.rm = TRUE)[2] - 1.5*IQR(own_income_change, na.rm = TRUE)
+    ,outlier_own_prop_change = own_prop_change > quantile(own_prop_change, na.rm = TRUE)[4] +
+      1.5*IQR(own_prop_change, na.rm = TRUE) | own_prop_change < 
+      quantile(own_prop_change, na.rm = TRUE)[2] - 1.5*IQR(own_prop_change, na.rm = TRUE)
     ,ntile = ntile(own_income_change,100)
     ,tor_before_22 = admin4_code %in% tor_before_22
   ) %>% 
@@ -288,7 +290,11 @@ ds5 <-
   # 2 rows duplicated cause budget code refers to 2 hromadas at once
   filter(!duplicated(admin4_code))
 
+ds5 %>%
+  group_by(outlier_own_prop_change, outlier_own_income_change) %>%
+  summarize(n(), mean_prop = mean(own_prop_change), mean_income = mean(own_income_change))
 
+d1 <- ds2 %>% filter(admin4_code %in% tor_before_22)
 
 # 126 hromadas outliers
 table(ds5$outlier)
@@ -299,11 +305,7 @@ table(ds5$outlier)
 #   return( g )
 # } 
 
-ds5 %>% 
-  filter(admin4_code %in% target_hromadas) %>% 
-  select(hromada_name, oblast_code, oblast_name_display, oblast_tor,
-         median, median_display) 
-# ----- -----------------------------------------------------------------------
+#+ g1 plot, eval=F -----------------------------------------------------------------------
 
 g1 <- 
   ds5 %>%
@@ -363,7 +365,7 @@ g1 %>% quick_save("1-change-over-year", w= 12, h = 7)
 hist(ds4$own_income_change,breaks="FD")
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-ds5 %>% readr::write_csv("./data-private/derived/budget-change-for-map.csv")
+ds4 %>% readr::write_csv("./data-private/derived/budget-change-for-map.csv")
 
 
 
