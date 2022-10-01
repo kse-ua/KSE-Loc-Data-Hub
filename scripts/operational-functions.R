@@ -55,3 +55,44 @@ get_sample <- function(
 # How to use
 # a_sample <- ds2 %>% get_sample_uniques(sample_size =10, "person_oid")
 # a_sample <- ds2 %>% get_sample_uniques(10)
+
+# Graph a history of composition of hromada
+# IMPORTANT: need to have admin and time file in data-private
+graph_hromada_history <- function(target_hromada_ua_code){
+  
+  path_admin    <- "./data-private/derived/ua-admin-map.csv"
+  path_time <- "./data-private/derived/time_rada.csv"
+  ds_admin <- readr::read_csv(path_admin)
+  ds_time <- readr::read_csv(path_time)
+  
+  d <- 
+    ds_time %>% 
+    filter(hromada_code == target_hromada_ua_code) %>% 
+    group_by(hromada_code, date) %>% 
+    summarize(
+      rada_count = n_distinct(rada_code, na.rm = T)
+    )
+  
+  hromada_label <-
+    ds_admin %>% 
+    filter(hromada_code == target_hromada_ua_code) %>%
+    distinct(hromada_name, raion_name, oblast_name) %>% 
+    mutate(
+      unit_label = paste0("Громада: ", hromada_name, " | Район: ",raion_name, " | Область: ", oblast_name)
+    ) %>% 
+    pull(unit_label)
+  
+  g <- 
+    d %>% 
+    ggplot(aes(x = date, y = rada_count))+
+    geom_line() +
+    geom_point() +
+    geom_text(aes(label = date), size = 3.2, vjust = 2) +
+    scale_y_continuous(breaks = seq(from = 0, to = max(d$rada_count), by = 1),
+                       limits = c(0, max(d$rada_count)+1))+
+    labs(title = hromada_label, x = 'Дата зміни складу громади', y = 'Кількість рад')
+  g
+  
+}
+# How to use
+# graph_hromada_history('UA56040270000014394')
