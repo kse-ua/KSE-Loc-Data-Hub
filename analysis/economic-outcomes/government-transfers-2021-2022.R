@@ -94,23 +94,23 @@ ds_1 <- ds_budget_data %>%
 hist(ds_1$own_prop_change)
 
 unique(ds_polygons$cod_3) %>% length()
-unique(ds_budget_data$hromada_code) %>% length()
+unique(ds_1$hromada_code) %>% length()
 
 
-#+ tweek-data, eval=eval_chunks ------------------------------------------------
+#+ tweak-data-1, eval=eval_chunks ------------------------------------------------
 d1 <- st_sf(
   right_join(
     ds_1 %>%
       filter(year == 2022) %>%
-      select(hromada_code, hromada_name, own_income_change, own_prop_change, tor_before_22,
-             outlier_own_prop_change, own_prop, own_prop_change_pct)
+      select(oblast_code, hromada_code, hromada_name, own_income_change_pct, own_prop_change, tor_before_22,
+             outlier_own_prop_change, own_prop, own_prop_change_pct, income_own)
     ,ds_polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
   )
 )
 
 d2 <- d1 %>%
-  left_join(ds_1 %>% filter(year == 2021) %>% select(hromada_code, own_prop)
+  left_join(ds_1 %>% filter(year == 2021) %>% select(hromada_code, own_prop, income_own)
             , suffix = c('2022', '2021'), by = 'hromada_code') %>%
   mutate(own_prop_pct2021 = scales::percent(own_prop2021),
          own_prop_pct2022 = scales::percent(own_prop2022))
@@ -143,14 +143,17 @@ g1 <-
           id="hromada_name",
           popup.vars=c('Зміна частки власних доходів' = "own_prop_change_pct",
                        'Частка власних доходів у 2021' = 'own_prop_pct2021',
-                       'Частка власних доходів у 2022' = 'own_prop_pct2022'
+                       'Частка власних доходів у 2022' = 'own_prop_pct2022',
+                       'Зміна обсягу власних доходів' = 'own_income_change_pct',
+                       'Обсяг власних доходів у 2021' = 'income_own2021',
+                       'Обсяг власних доходів у 2022' = 'income_own2022'
                        ),
-          style = 'pretty'
-          # labels = c('-40%', '-20%', '0%', '+20%', '+40')
-  ) + 
+          style = 'pretty',
+          labels = c('-60 to -40%', '-40% to -20%', '-20% to 0%', '0% to +20%', 
+                    '+20% to +40%', '+40% to +60%', 'Немає даних')) + 
   tm_borders('gray', lwd = 0.2) +
-  # tm_shape(d1 %>% filter(tor_before_22)) + 
-  # tm_borders('black', lwd = 1) +
+  # tm_shape(d2 %>% distinct(oblast_code)) + 
+  # tm_borders('oblast_code', 'black', lwd = 1) +
   tm_legend(outside=TRUE) +
   tm_layout(frame = FALSE) +
   tmap_options(check.and.fix = TRUE)
@@ -194,7 +197,8 @@ g2 <-
           id="hromada_name",
           popup.vars=c('Зміна власних доходів' = "own_income_change_pct"),
           style = 'pretty',
-          # labels = c('-40%', '-20%', '0%', '+20%', '+40')
+          # labels = c('-60 to -40%', '-40% to -20%', '-20% to 0%', '0% to +20%', 
+                     # '+20% to 40%', '40% to 60%', 'Немає даних')
   ) + 
   tm_borders('gray', lwd = 0.2) +
   # tm_shape(d1 %>% filter(tor_before_22)) + 
