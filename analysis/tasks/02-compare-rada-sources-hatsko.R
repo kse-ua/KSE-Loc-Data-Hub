@@ -89,7 +89,7 @@ col_types_hromada_raw <- readr::cols_only(
 
 path_rada    <- "./data-private/raw/rada.csv"
 path_hromada <- "./data-private/raw/hromada.csv"
-path_admin   <- "./data-private/derived/ua-admin-map.rds"    
+path_admin   <- "./data-private/derived/ua-admin-map.csv"    
 #+ declare-functions -----------------------------------------------------------
 
 #+ results="asis", echo=F ------------------------------------------------------
@@ -110,7 +110,7 @@ ds0_hromada <- readr::read_csv(
 
 # Kодифікатор. tab "raw"
 # https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit#gid=1382135566
-ds_map   <- readr::read_rds(path_admin)
+ds_map   <- readr::read_csv(path_admin)
 
 
 #+ inspect-data ----------------------------------------------------------------
