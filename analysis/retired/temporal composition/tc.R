@@ -27,7 +27,7 @@ library(tidyverse)
 path_rada    <- "./data-private/derived/rada_hromada.csv"
 path_hromada <- "./data-private/derived/hromada.csv"
 path_time   <- "./data-private/derived/time_rada.csv"  
-path_admin    <- "./data-private/derived/ua-admin-map.rds"
+path_admin <- "./data-private/derived/ua-admin-map.csv"
 path_plots <- './analysis/temporal composition/plots'
 
 
@@ -82,11 +82,11 @@ get_sample <- function(
 }
 #+ load-data -------------------------------------------------------------------
 ds_time <- readr::read_csv(path_time)
-ds_admin <- readr::read_rds(path_admin)
+ds_admin <- readr::read_csv(path_admin)
 
 #+ inspect-data ----------------------------------------------------------------
 
-ds0_time %>%
+ds_time %>%
   explore::describe_all()
 
 ds_admin %>%
