@@ -51,11 +51,9 @@ extract_hromada_label <- function(d, target_budget_code){
   
 }
 # how to use:
-# ds_admin_full %>% extract_hromada_label("1954800000")
+ds_admin %>% extract_hromada_label("1954800000")
 
 # ---- load-data ---------------------------------------------------------------
-# ds_admin <- readr::read_rds(path_admin)
-# ds_admin <- readr::read_rds(path_admin)
 ds_admin <- readr::read_csv(path_admin)
 ds_rada_hromada <- readr::read_csv(path_rada_hromada)
 ds_time <- readr::read_csv(path_time)
@@ -73,7 +71,6 @@ ds0 <-
     rada_count = n_distinct(rada_code, na.rm = T)
     ,.groups = "drop"
   ) %>% 
-  # ungroup() %>% 
   group_by(hromada_code) %>% 
   mutate(
     event_count = n_distinct(date, na.rm =T)
@@ -96,7 +93,52 @@ ds0 <-
 
 ds0 %>% glimpse()
 
-# ---- single-hromada-graph -----------------------------------------------------------------
+#+ ---- graph-composition-function ----------------------------------------------------
+# TODO: Valentyn, please compose a function that intakes hromada code
+# and outputs a graph of events in the history of this hromada (see issue #20)
+
+graph_hromada_history <- function(target_hromada_ua_code){
+  
+  path_admin    <- "./data-private/derived/ua-admin-map.csv"
+  path_time <- "./data-private/derived/time_rada.csv"
+  ds_admin <- readr::read_csv(path_admin)
+  ds_time <- readr::read_csv(path_time)
+  
+  d <- 
+  ds_time %>% 
+    filter(hromada_code == target_hromada_ua_code) %>% 
+    group_by(hromada_code, date) %>% 
+    summarize(
+      rada_count = n_distinct(rada_code, na.rm = T)
+    )
+  
+  hromada_label <-
+  ds_admin %>% 
+    filter(hromada_code == target_hromada_ua_code) %>%
+    distinct(hromada_name, raion_name, oblast_name) %>% 
+    mutate(
+      unit_label = paste0("Громада: ", hromada_name, " | Район: ",raion_name, " | Область: ", oblast_name)
+    ) %>% 
+    pull(unit_label)
+  
+  g <- 
+  d %>% 
+    ggplot(aes(x = date, y = rada_count))+
+    geom_line() +
+    geom_point() +
+    geom_text(aes(label = date), size = 3.2, vjust = 2) +
+    scale_y_continuous(breaks = seq(from = 0, to = max(d$rada_count), by = 1),
+                       limits = c(0, max(d$rada_count)+1))+
+    labs(title = hromada_label, x = 'Дата зміни складу громади', y = 'Кількість рад')
+  g
+
+}
+
+graph_hromada_history('UA56040270000014394')
+
+
+#+ ---- single-hromada-graph -----------------------------------------------------------------
+
 target_hromada_budget_code <- "1954800000"
 (target_hromada_ua_code <- 
     ds_admin %>% 
@@ -112,6 +154,7 @@ d <-
     rada_count = n_distinct(rada_code, na.rm = T)
   )
 d
+
 g <- 
   d %>% 
   ggplot(aes(x = date, y = rada_count))+
@@ -123,9 +166,6 @@ g <-
     title = ds_admin %>% extract_hromada_label(target_hromada_budget_code)
   )
 g
-
-# TODO: Valentyn, please compose a function that intakes hromada code
-# and outputs a graph of events in the history of this hromada (see issue #20)
 
 # ---- graph-1 -----------------------------------------------------------------
 d <-
