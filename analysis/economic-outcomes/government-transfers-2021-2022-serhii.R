@@ -52,7 +52,11 @@ cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
 ds_budget_data <- readr::read_csv(path_budget_data)
-ds_polygons <- st_read(path_polygons) %>% janitor::clean_names()
+ds_polygons <- st_read(path_polygons) %>% janitor::clean_names() %>% 
+  mutate(
+    admin_3 = str_replace_all(admin_3,c("a" = "а", "o" = "о", "p"="р", "e"="е", "'" = "’"))
+  )
+
 ds_admin_full <- readr::read_csv(path_admin)
 
 #+ inspect-data ----------------------------------------------------------------
@@ -60,6 +64,7 @@ ds_budget_data %>% glimpse()
 ds_polygons %>% glimpse()
 
 
+#+ tweak-data-1, eval=eval_chunks ------------------------------------------------
 tor_before_22 <- c("05561000000","05556000000","12538000000","05555000000","12534000000"
                    ,"05549000000","05557000000","05551000000","12539000000","05547000000","05548000000"
                    ,"05563000000","12537000000","12540000000","05560000000","12533000000","05552000000"
@@ -80,24 +85,51 @@ ds_1 <- ds_budget_data %>%
     ntile = ntile(own_income_change,100)
     ,outlier_own_prop_change = ntile(own_prop_change, 100) > 99
     ,tor_before_22 = admin4_code %in% tor_before_22
-  ) %>% 
+  ) %>%
   left_join(
-    ds_admin_full %>% 
-      mutate(budget_code = paste0(budget_code,"0")) %>% 
+    ds_admin_full %>%
+      mutate(budget_code = paste0(budget_code,"0")) %>%
       distinct(budget_code, hromada_name, hromada_code, oblast_name_display, map_position
                , region_ua, oblast_code)
     ,by = c("admin4_code"  = "budget_code")
   )
-
-
 
 hist(ds_1$own_prop_change)
 
 unique(ds_polygons$cod_3) %>% length()
 unique(ds_1$hromada_code) %>% length()
 
+#+ tweak-data-2, eval=eval_chunks ------------------------------------------------
+#difference between admin and polygon datasets
+# as_tibble(ds_polygons) %>% 
+#   select(cod_3, admin_3) %>% 
+#   left_join(
+#     ds_admin_full %>% 
+#       select(hromada_code, hromada_name) %>% 
+#       distinct()
+#     ,by = c("cod_3"="hromada_code")
+#   ) %>% 
+#   filter(is.na(hromada_name))
 
-#+ tweak-data-1, eval=eval_chunks ------------------------------------------------
+#adding polygones for oblasts
+sf_use_s2(FALSE)
+ds_polygons_oblasts <- 
+  ds_polygons %>% 
+  group_by(admin_1) %>%
+  summarise(geometry = sf::st_union(geometry)) %>%
+  ungroup()
+sf_use_s2(TRUE)
+
+#adding polygones for raions
+sf_use_s2(FALSE)
+ds_polygons_raions <- 
+  ds_polygons %>% 
+  group_by(admin_2) %>%
+  summarise(geometry = sf::st_union(geometry)) %>%
+  ungroup()
+sf_use_s2(TRUE)
+
+#combine with main dataset
 d1 <- st_sf(
   right_join(
     ds_1 %>%
@@ -112,35 +144,17 @@ d1 <- st_sf(
 d2 <- d1 %>%
   left_join(ds_1 %>% filter(year == 2021) %>% select(hromada_code, own_prop, income_own)
             , suffix = c('2022', '2021'), by = 'hromada_code') %>%
-  mutate(own_prop_pct2021 = scales::percent(own_prop2021),
-         own_prop_pct2022 = scales::percent(own_prop2022))
+  mutate(
+    own_prop_pct2021 = scales::percent(own_prop2021)
+    ,own_prop_pct2022 = scales::percent(own_prop2022)
+    ,own_prop_change = if_else(!tor_before_22, own_prop_change, NA_real_)
+  )
+
 
 
 #+ graph, eval=eval_chunks ------------------------------------------------
-
-tmap_mode("view")
 g1 <- 
-  ds_1 %>%
-  tm_shape() + 
-  tm_fill("own_prop_change",
-          palette = "RdBu",
-          id="hromada_code",
-          popup.vars=c("hromada_name", "own_prop_change")
-  ) + 
-  tm_legend(outside=TRUE) +
-  tm_layout(frame = FALSE) +
-  tmap_options(check.and.fix = TRUE) 
-g1
-
-tmap_save(g1, "./analysis/prints/interactive.html")
-
-
-
-tmap_mode('view')
-g1 <- 
-  d2 %>%
-  mutate(own_prop_change = if_else(!tor_before_22, own_prop_change, NA_real_)) %>%
-  tm_shape() + 
+  tm_shape(d2) + 
   tm_fill("own_prop_change",
           # title = 'Change in share of \n hromada own revenue',
           title = 'Зміна частки власних доходів',
@@ -152,24 +166,27 @@ g1 <-
                        'Зміна обсягу власних доходів' = 'own_income_change_pct',
                        'Обсяг власних доходів у 2021' = 'income_own2021',
                        'Обсяг власних доходів у 2022' = 'income_own2022'
-                       ),
+          ),
           style = 'pretty',
-          labels = c('-60 to -40%', '-40% to -20%', '-20% to 0%', '0% to +20%', 
-                    '+20% to +40%', '+40% to +60%', 'Немає даних')) + 
+          labels = c('-60% до -40%', '-40% до -20%', '-20% до 0%', '0% до +20%', 
+                     '+20% до +40%', '+40% до +60%', 'Немає даних')) + 
   tm_borders('gray', lwd = 0.2) +
   # tm_shape(d2 %>% distinct(oblast_code)) + 
   # tm_borders('oblast_code', 'black', lwd = 1) +
   tm_legend(outside=TRUE) +
   tm_layout(frame = FALSE) +
-  tmap_options(check.and.fix = TRUE)
-g1
+  tmap_options(check.and.fix = TRUE) +
+  tm_shape(ds_polygons_oblasts) + 
+  tm_borders('gray', lwd = 0.5)
+g1 
 
-top5_v <- d1 %>% arrange(desc(own_prop_change)) %>% slice(1:5) %>% pull(hromada_code)
-bot5_v <- d1 %>% arrange(own_prop_change) %>% slice(1:5) %>% pull(hromada_code)
-
+tmap_save(g1, "./analysis/prints/interactive.html")
 
 
 #barplot for top and bot performers
+top5_v <- d1 %>% arrange(desc(own_prop_change)) %>% slice(1:5) %>% pull(hromada_code)
+bot5_v <- d1 %>% arrange(own_prop_change) %>% slice(1:5) %>% pull(hromada_code)
+
 d1 %>%
   filter(hromada_code %in% c(top5_v, bot5_v)) %>%
   left_join(ds_admin_full %>% distinct(hromada_code, oblast_name)) %>%
@@ -203,7 +220,7 @@ g2 <-
           popup.vars=c('Зміна власних доходів' = "own_income_change_pct"),
           style = 'pretty',
           # labels = c('-60 to -40%', '-40% to -20%', '-20% to 0%', '0% to +20%', 
-                     # '+20% to 40%', '40% to 60%', 'Немає даних')
+          # '+20% to 40%', '40% to 60%', 'Немає даних')
   ) + 
   tm_borders('gray', lwd = 0.2) +
   # tm_shape(d1 %>% filter(tor_before_22)) + 
