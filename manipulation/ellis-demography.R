@@ -51,7 +51,7 @@ ds_pop22_set <- readxl::read_excel(path_pop22, sheet = "12-47", col_names = name
 ds_pop22_hrom <- readxl::read_excel(path_pop22, sheet = "48-81", col_names = names_pop22, skip=10)
 
 #main admin dataset
-ds_admin <- readr::read_csv("./data-private/derived/ua-admin-map.csv")
+ds_admin <- readr::read_csv("./data-public/derived/ua-admin-map-2020.csv")
 
 #hromada dataset
 ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv")
@@ -65,7 +65,7 @@ ds_pop22_hrom %>% glimpse()
 ds_admin_merge <-
   ds_admin %>% 
   mutate(
-    key = paste(oblast_name, raion_name, settlement_type, settlement_name.x)
+    key = paste(oblast_name, raion_name, settlement_type, settlement_name)
   ) %>%
   select(key, hromada_name,hromada_code)
 
@@ -94,11 +94,11 @@ ds_pop0 <-
     ds_admin_merge
     ,by = "key"
   ) %>%
-  filter(is.na(hromada_name) == F)
-
-
-ds_pop0 %>% filter(settlement_name == "Олександрівка") %>% View()
-
+  filter(
+    is.na(hromada_name) == F
+    ,!(Persons == 416 & hromada_code == "UA14120170000011133")
+    ,!(Persons == 3338 & hromada_code == "UA14120090000098500")
+  )
 
 ds_pop1 <- 
   ds_pop22_hrom %>% 
@@ -115,32 +115,51 @@ ds_pop1 <-
   fill(oblast, raion) %>%
   filter(
     !str_detect(object_name_ua, "(.+\\sрайон)|(.+\\sобласть)|(.+\\sнаселення)|Севастополь")
+  ) %>% 
+  mutate(
+    hromada_name = str_replace_all(hromada_name, c("'"="’", " "=""))
+    ,raion = str_replace(raion, "'", "’")
+    ,hromada_type = case_when(
+      hromada_name == "Добросинсько-Магерівська" ~ "сільська"
+      ,hromada_name == "Мереф’янська" ~ "міська"
+      ,TRUE ~ hromada_type
+    )
+    ,key = paste(oblast, raion, hromada_type, hromada_name)
+  ) %>% 
+  left_join(
+    ds_hromada %>% 
+      mutate(
+        hromada_name = str_replace(hromada_name, "i", "і")
+        ,key = paste(oblast_name, raion_name, type, hromada_name)
+        ) %>% 
+      select(hromada_code,key)
+    ,by = "key"
   )
-
 
 #combination of oblast, raion, hromada_type, hromada_name variables give as a unique ID of hromada
 nrow(ds_pop1) == nrow(ds_pop1 %>% distinct(oblast, raion, hromada_type, hromada_name))
 
-
-
-ds_pop0 %>%
-  group_by(hromada_name, hromada_code) %>%
-  summarise(Population_2022 = sum(as.numeric(Persons))) %>% View()
-
-
-
-
-
-
-#+ table-1 ---------------------------------------------------------------------
-
-
-
 #+ combine ---------------------------------------------------------------------
+#combine total and urban population in one dataset
+ds_pop2 <- 
+  ds_pop1 %>%
+  group_by(hromada_code, hromada_name) %>%
+  summarise(total_popultaion_2022 = sum(as.numeric(Persons))) %>% 
+  left_join(
+    ds_pop0 %>% 
+      group_by(hromada_code) %>% 
+      summarise(urban_popultaion_2022 = sum(as.numeric(Persons)))
+    ,by = "hromada_code"
+  ) %>% 
+  mutate(
+    urban_popultaion_2022 = replace_na(urban_popultaion_2022, 0)
+    ,urban_pct = urban_popultaion_2022/total_popultaion_2022
+  )
+  
 
-#+ graph-1 ---------------------------------------------------------------------
-#+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
+ds_pop2 %>% readr::write_csv("./data-private/derived/ua-pop-2022.csv")
+
 
 
 #+ results="asis", echo=F ------------------------------------------------------

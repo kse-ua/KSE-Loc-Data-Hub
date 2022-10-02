@@ -49,6 +49,8 @@ path_admin_fin_old <- "./data-private/raw/admin-fin-old.xlsx"
 # Kодифікатор. tab "області"
 # https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true 
 path_oblast <- "./data-private/raw/oblast.csv"
+path_geography <- "./data-private/raw/terhromad_fin.geojson"
+
 
 names_admin_ua <- c(
   "level_1"
@@ -114,6 +116,9 @@ ds_old0 <- readr::read_csv(path_admin_old, col_names = names_admin_old, skip=1)
 ds_fin0 <- readxl::read_excel(path_admin_fin, sheet = "codes", col_names = names_admin_fin, skip=10)
 ds_fin_old <- readxl::read_excel(path_admin_fin_old, sheet = "codes", col_names = names_admin_fin_old, skip=11)
 ds0_oblast <- readr::read_csv(path_oblast, skip=0)
+ds_geography <- sf::st_read(path_geography) %>% janitor::clean_names() %>% 
+  mutate_at(vars(admin_1:type), ~str_replace_all(.,c("a" = "а", "o" = "о", "p"="р", "e"="е", "i"="і", "'" = "’")))
+  
 
 #+ inspect-data ----------------------------------------------------------------
 ds0 %>% glimpse()
@@ -359,6 +364,12 @@ ds_map_hromada <-
   left_join(
     ds_oblast
     ,by = "oblast_code"
+  ) %>% 
+  left_join(
+    as_tibble(ds_geography) %>% 
+      select(cod_3,type) %>% 
+      mutate(type = str_extract(type, "сільська|селищна|міська"))
+    ,by = c('hromada_code' = "cod_3")
   )
 ds_map_hromada
 
