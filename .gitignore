@@ -114,3 +114,6 @@ analysis/temporal composition/tc.html
 *.jpg
 *.html
 *.html
+*.js
+*.png
+*.css
