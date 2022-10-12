@@ -444,9 +444,37 @@ ds_admin_full <-
   mutate(settlement_name = case_when(
     settlement_code_old == "5120280501" ~ "Ананьїв Другий"
     ,TRUE ~ settlement_name)
+  ) %>% 
+  mutate(
+   budget_code = case_when(
+     settlement_code == "UA01160030020068769" ~ "0120140100"
+     ,settlement_code == "UA01160030030037634" ~ "0120140100"
+     ,settlement_code == "UA01160330020049936" ~ "0120110000"
+     ,settlement_code == "UA01180770020090437" ~ "0121040400"
+     ,settlement_code == "UA01200070020040385" ~ "0121140200"
+     ,settlement_code == "UA01200130020054332" ~ "0121140400"
+     ,settlement_code == "UA01200130030013528" ~ "0121140400"
+     ,settlement_code == "UA01200130040083175" ~ "0121140400"
+     ,settlement_code == "UA01200210020027504" ~ "0121140500"
+     ,settlement_code == "UA01200210030026825" ~ "0121140500"
+     ,settlement_code == "UA01200210040055601" ~ "0121140500"
+     ,settlement_code == "UA01200210050032694" ~ "0121140500"
+     ,settlement_code == "UA01200270020097082" ~ "0121140600"
+     ,settlement_code == "UA01200270030090294" ~ "0121140600"
+     ,settlement_code == "UA01200270040095864" ~ "0121140600"
+     ,settlement_code == "UA01200270050040024" ~ "0121140600"
+     ,settlement_code == "UA01200270060060495" ~ "0121140600"
+     ,settlement_code == "UA01200290020021637" ~ "0121140700"
+     ,settlement_code == "UA05040250260015923" ~ "0253500000"
+     ,settlement_code == "UA65060110020037465" ~ "2154100000"
+     ,TRUE ~ budget_code
+   )
   )
 
-ds_admin_full %>% filter(is.na(budget_code_old)) %>% View()
+
+
+
+ds_admin_full %>% filter(is.na(budget_code_old) ) %>% View()
 
 #identification of relevant settlement name among three variables
 # ds_admin_full %>% 
