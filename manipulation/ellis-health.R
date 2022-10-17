@@ -183,7 +183,7 @@ ds3 <-
   )
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
-readr::write_csv(ds2, "./data-public/derived/declarations-all.csv") #long format
+readr::write_csv(ds2, "./data-private/derived/declarations-all.csv") #long format
 readr::write_csv(ds3, "./data-public/derived/declarations-hromada.csv") #aggregated on hromada level
 
 
