@@ -4,7 +4,7 @@
 #' date: "last Updated: `r Sys.Date()`"
 #' ---
 #+ echo=F
-rmarkdown::render(input = "./manipulation/ellis-budget-2020-2022.R") # run to knit, don't uncomment
+# rmarkdown::render(input = "./manipulation/ellis-budget-2020-2022.R") # run to knit, don't uncomment
 #+ echo=F ----------------------------------------------------------------------
 library(knitr)
 # align the root with the project working directory
@@ -29,6 +29,7 @@ Sys.setlocale("LC_CTYPE", "ukr")
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
 library(tidyverse)
+library(openxlsx)
 
 #+ declare-globals -------------------------------------------------------------
 # printed figures will go here:
@@ -144,15 +145,37 @@ ds3 <- ds2_wide %>%
   left_join(
     ds_admin_full %>% 
       mutate(budget_code = paste0(budget_code,"0")) %>% 
-      distinct(budget_code, hromada_name, hromada_code, oblast_name_display, map_position
-               , region_ua, oblast_code)
+      distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
+               , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
     ,by = c("admin4_code"  = "budget_code")
   ) %>%
-  relocate(admin4_code, admin4_label, hromada_name, hromada_code, oblast_name_display, map_position
-           , region_ua, oblast_code)
+  relocate(admin4_code, admin4_label, hromada_name, hromada_code, raion_name, 
+           raion_code, oblast_name, oblast_name_en, oblast_code, region_en, region_code_en)
+
+ds3_long <- ds3 %>% pivot_longer(
+  -c(1:13)
+  , names_to = 'tax_code'
+  , values_to = 'amount'
+)
+  
+#+ ---- adding metadata ---------------------------------------------------------
+
+variables <- c(colnames(ds3)[1:13], '11010100-50110000')
+description <- c('Hromada budget code', 'Hromada budget name', 'Hromada name',
+                 'Hromada code from Codifier of administrative-territorial units (CATUTTC)',
+                 'Raion name', 'Raion code from Codifier of administrative-territorial units (CATUTTC)',
+                 'Oblast name', 'Oblast name Eng', 'Oblast code from Codifier of administrative-territorial units (CATUTTC)',
+                 'Region name Eng', 'Region short code', 'Year', 'Month', 'Budget revenue classification code')
+
+metadata <- data.frame(variables, description)
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-readr::write_csv(ds3, "./data-public/derived/hromada_budget_2020_2022.csv")
+
+dataset_names <- list('Data' = ds3, 'Metadata' = metadata, 
+                      'Budget revenue classification' = ds_inco)
+
+openxlsx::write.xlsx(dataset_names, './data-public/derived/hromada_budget_2020_2022.xlsx')
+readr::write_csv(ds3_long, "./data-public/derived/hromada_budget_2020_2022.csv")
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
