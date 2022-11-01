@@ -83,6 +83,17 @@ ds1_long <-
 ds1_long %>% glimpse()
 ds1_long %>% count(income_code) 
 
+ds1_long <- ds1_long %>%
+  mutate(income_2021const = case_when(year == "2022" & month == "1" ~ (income / 1.1),
+                                 year == "2022" & month == "2" ~ (income / 1.107),
+                                 year == "2022" & month == "3" ~ (income / 1.137),
+                                 year == "2022" & month == "4" ~ (income / 1.164),
+                                 year == "2022" & month == "5" ~ (income / 1.18),
+                                 year == "2022" & month == "6" ~ (income / 1.215),
+                                 year == "2022" & month == "7" ~ (income / 1.225),
+                                 TRUE ~ income)
+         )
+
 #+ ----- compute share of personal income tax for military --------------------------------
 tor_before_22 <- c("05561000000","05556000000","12538000000","05555000000","12534000000"
                    ,"05549000000","05557000000","05551000000","12539000000","05547000000","05548000000"
@@ -109,10 +120,12 @@ d2 <-
   filter(!transfert) %>%
   group_by(year, military_tax) %>% 
   summarize(
-    income = sum(income, na.rm = T)) %>%
+    income = sum(income, na.rm = T),
+    income_2021const = sum(income_2021const, na.rm = T)) %>%
   group_by(year) %>%
   arrange(desc(military_tax)) %>%
-  mutate(label_y = cumsum(income))
+  mutate(label_y = cumsum(income),
+         label_y_altern = cumsum(income_2021const))
 
 g2 <- 
   d2 %>%
@@ -132,6 +145,25 @@ g2 <-
 g2
 
 g2 %>% quick_save("2-military-tax", w= 12, h = 7)
+
+g2_alternative <- 
+  d2 %>%
+  ggplot(aes(x = year, y = income_2021const, fill = military_tax))+
+  geom_col(alpha = .3)+
+  geom_text(aes(y = label_y_altern, label = scales::unit_format(unit = "BN", scale = 1e-9)(income_2021const)), vjust = -0.5)+
+  labs(
+    title = "Year over year change in hromada's own revenue (for the period March-July), adjusted for inflation"
+    ,subtitle = "Hromada's own revenue increased to a great extent due to income tax for military"
+    ,x = NULL
+    ,y = "Amount of tax revenue"
+    ,caption = "Shown only own revenue, excluding transfert"
+    ,fill = "Tax type"
+  ) +
+  scale_y_continuous(labels = scales::unit_format(unit = "BN", scale = 1e-9))+
+  scale_fill_discrete(labels = c("Other taxes", "Income tax \nfor military personnel"))
+g2_alternative
+
+g2_alternative %>% quick_save("2-military-tax_alternative", w= 12, h = 7)
 
 #+ ----- compute change of own income --------------------------------
 
@@ -158,6 +190,9 @@ ds3 <-
   summarize(
     income_total = sum(income, na.rm = T)
     ,income_transfert = sum(income*transfert, na.rm = T)
+    ,income_total_2021const = sum(income_2021const, na.rm = T)
+    ,income_transfert_2021const = sum(income_2021const*transfert, na.rm = T)
+    
     ,.groups = "drop"
   ) %>% 
   ungroup() %>% 
@@ -165,6 +200,9 @@ ds3 <-
     income_own = income_total - income_transfert
     ,own_prop = round(income_own/income_total,2)
     ,own_pct = scales::percent(own_prop)
+    ,income_own_2021const = income_total_2021const - income_transfert_2021const
+    ,own_prop_2021const = round(income_own_2021const/income_total_2021const,2)
+    ,own_pct_2021const = scales::percent(own_prop_2021const)
   ) %>% 
   group_by(admin4_code) %>% 
   mutate(
@@ -172,6 +210,10 @@ ds3 <-
     ,own_income_change_pct = scales::percent((income_own / lag(income_own)) - 1)
     ,own_prop_change = own_prop - lag(own_prop)
     ,own_prop_change_pct = scales::percent(own_prop - lag(own_prop))
+    ,own_income_change_2021const = round((income_own_2021const / lag(income_own_2021const)) - 1,2)
+    ,own_income_change_pct_2021const = scales::percent((income_own_2021const / lag(income_own_2021const)) - 1)
+    ,own_prop_change_2021const = own_prop_2021const - lag(own_prop_2021const)
+    ,own_prop_change_pct_2021const = scales::percent(own_prop_2021const - lag(own_prop_2021const))
   ) %>% 
   ungroup()
 
@@ -207,6 +249,10 @@ ds4 <-
       1.5*IQR(own_income_change, na.rm = TRUE) | own_income_change < 
       quantile(own_income_change, na.rm = TRUE)[2] - 1.5*IQR(own_income_change, na.rm = TRUE)
     ,ntile = ntile(own_income_change,100)
+    ,outlier_alternative = own_income_change_2021const > quantile(own_income_change_2021const, na.rm = TRUE)[4] +
+      1.5*IQR(own_income_change_2021const, na.rm = TRUE) | own_income_change_2021const < 
+      quantile(own_income_change_2021const, na.rm = TRUE)[2] - 1.5*IQR(own_income_change_2021const, na.rm = TRUE)
+    ,ntile_alternative = ntile(own_income_change_2021const,100)
   ) %>% 
   left_join(
     ds_admin_full %>% 
@@ -226,6 +272,7 @@ ds4 <-
 table(ds4$outlier)
 
 ds4 %>% filter(outlier) %>% select(own_income_change) %>% view()
+ds4 %>% filter(outlier_alternative) %>% select(own_income_change_pct_2021const) %>% view()
 
 # ----- -----------------------------------------------------------------------
 
@@ -260,6 +307,38 @@ labs(
 
 g1
 g1 %>% quick_save("1-change-over-year", w= 12, h = 7)
+
+g1_alternative <- 
+  ds4 %>%
+  filter(!outlier_alternative) %>%
+  ggplot(aes(x = own_income_change_2021const, fill = oblast_tor))+
+  geom_histogram(alpha = .3)+
+  geom_vline(xintercept = 0, linetype = "solid", alpha = 0.1)+
+  facet_wrap(facets = "oblast_name_display")+
+  geom_vline(data = . %>% 
+               group_by(oblast_name_display) %>% 
+               summarise(line = mean(own_income_change_2021const, na.rm = T)), 
+             mapping = aes(xintercept = line), linetype = "dotdash")+
+  geom_vline(data = . %>% 
+               group_by(oblast_name_display) %>% 
+               summarise(line = median(own_income_change_2021const, na.rm = T)), 
+             mapping = aes(xintercept = line), linetype = "dotted")+
+  scale_fill_manual(
+    values = c("TRUE" = "red", "FALSE" = "blue")
+  )+
+  labs(
+    title = "Year over year change in hromada's own revenue (total - transfert), adjusted for inflation"
+    ,subtitle = "Excluding Personal income tax on the financial support of military personnel\nIn percentage points, for the period March-July of each year"
+    ,x = "Change in percent point"
+    ,y = "Number of hromadas"
+    ,caption = "Median value shown by dotted line\nMean values shown by dashed line\nHistograms show bottom 95% cases"
+    ,fill = "Contains at least\none occupied\nhromada"
+  ) +
+  scale_x_continuous(labels = scales::percent) +
+  scale_y_continuous(limits = c(0, 15))
+
+g1_alternative
+g1_alternative %>% quick_save("1-change-over-year_alternative", w= 12, h = 7)
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 ds4 %>% readr::write_csv("./data-private/derived/budget-change-for-map.csv")
