@@ -77,17 +77,17 @@ ds_1 <- ds_budget_data %>%
     # ,outlier_own_prop_change = own_prop_change > quantile(own_prop_change, na.rm = TRUE)[4] +
     #   1.5*IQR(own_prop_change, na.rm = TRUE) | own_prop_change < 
     #   quantile(own_prop_change, na.rm = TRUE)[2] - 1.5*IQR(own_prop_change, na.rm = TRUE)
-    ntile = ntile(own_income_change,100)
-    ,outlier_own_prop_change = ntile(own_prop_change, 100) > 99
-    ,tor_before_22 = admin4_code %in% tor_before_22
-  ) %>% 
-  left_join(
-    ds_admin_full %>% 
-      mutate(budget_code = paste0(budget_code,"0")) %>% 
-      distinct(budget_code, hromada_name, hromada_code, oblast_name_display, map_position
-               , region_ua, oblast_code)
-    ,by = c("admin4_code"  = "budget_code")
-  )
+    # ntile = ntile(own_income_change,100)
+    # ,outlier_own_prop_change = ntile(own_prop_change, 100) > 99
+    tor_before_22 = admin4_code %in% tor_before_22
+  ) #%>% 
+  # left_join(
+  #   ds_admin_full %>% 
+  #     mutate(budget_code = paste0(budget_code,"0")) %>% 
+  #     distinct(budget_code, hromada_name, hromada_code, oblast_name_display, map_position
+  #              , region_ua, oblast_code)
+  #   ,by = c("admin4_code"  = "budget_code")
+  # )
 
 
 
@@ -103,7 +103,7 @@ d1 <- st_sf(
     ds_1 %>%
       filter(year == 2022) %>%
       select(oblast_code, hromada_code, hromada_name, own_income_change_pct, own_prop_change, tor_before_22,
-             outlier_own_prop_change, own_prop, own_prop_change_pct, income_own)
+             own_prop, own_prop_change_pct, income_own)
     ,ds_polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
   )
@@ -155,7 +155,8 @@ g1 <-
                        ),
           style = 'pretty',
           labels = c('-60 to -40%', '-40% to -20%', '-20% to 0%', '0% to +20%', 
-                    '+20% to +40%', '+40% to +60%', 'Немає даних')) + 
+                    '+20% to +40%', '+40% to +60%', 'Немає даних')
+          ) + 
   tm_borders('gray', lwd = 0.2) +
   # tm_shape(d2 %>% distinct(oblast_code)) + 
   # tm_borders('oblast_code', 'black', lwd = 1) +
