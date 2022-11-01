@@ -42,23 +42,102 @@ cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
-paths_budget <-  list.files("./data-private/raw/", pattern = "revenues-\\d.xlsx$",full.names = T)
+path_local_elections_2020_chesno <- "./data-private/raw/local_elections_2020_Chesno.xlsx"
+path_local_elections_2020_opora <- './data-private/raw/all_results_2020_OPORA.xlsx'
+
+names_local_elections_mayors <- c(
+  "oblast"
+  ,"raion"
+  ,"rada"
+  ,"rada_type"
+  ,"fio"
+  ,"party"
+  ,"result"
+  ,'info')
+
+names_local_elections_candidates <- c(
+  "id"
+  ,"fio"
+  ,'birthdate'
+  ,"birthplace"
+  ,"party"
+  ,'oblast'
+  ,"rada"
+  ,'info'
+  ,"registration_date")
+
+types_local_elections_results_opora <- c('text', 'text', 'text', 'text', 'numeric', 
+                                         'text', 'numeric', 'numeric', 'text',
+                                         'text', 'text', 'text', 'text', 'date',
+                                         'numeric', 'text', 'text')
+
+types_local_elections_candidates <- c('numeric', 'text', 'date', 'text', 'text',
+                                      'text', 'text', 'text', 'date')
+                                         
+
+ds_local_elections_mayors <- readxl::read_xlsx(path_local_elections_2020_chesno, 
+                                               sheet = 'Обрані мерами', 
+                                               col_names =  names_local_elections_mayors, skip = 1)
+
+ds_local_elections_candidates <- readxl::read_xlsx(path_local_elections_2020_chesno, 
+                                                   sheet = 'Кандидати в мери',
+                                                   col_names = names_local_elections_candidates, 
+                                                   col_types = types_local_elections_candidates, 
+                                                   skip = 1)
+
+ds_local_elections_results_opora <- readxl::read_xlsx(path_local_elections_2020_opora,
+                                                      col_types = types_local_elections_results_opora)
 
 #+ tweak-data ------------------------------------------------------------------
 
-path_local_elections_2020_chesno <- "./data-private/raw/local_elections_2020_Chesno.xlsx"
-ds_local_elections_mayors <- readxl::read_xlsx(path_local_elections_2020_chesno, sheet = 'Обрані мерами')
-ds_local_elections_candidates <- readxl::read_xlsx(path_local_elections_2020_chesno, sheet = 'Кандидати в мери')
-ds_local_elections_mayors %>% glimpse(70)
-ds_local_elections_candidates %>% glimpse(70)
 
 
 #+ inspect-data ----------------------------------------------------------------
 
+ds_local_elections_mayors %>% glimpse(20)
+ds_local_elections_candidates %>% glimpse(20)
+ds_local_elections_results_opora %>% glimpse(20)
+
 #+ tweak-data-1 ----------------------------------------------------------------
 
+d_1 <- ds_local_elections_mayors %>%
+  mutate(fio = gsub("'",'', fio),
+         rada = gsub("'",'', rada))
 
-#+ tweak-data-2 ----------------------------------------------------------------````````````
+d_2 <- ds_local_elections_candidates %>%
+  mutate(fio = gsub("'",'', fio),
+         rada = gsub("'",'', rada))
+
+ds_1 <- d_1 %>%
+  left_join(d_2 %>%
+              select(fio, birthdate, birthplace, rada), 
+            by = c('fio', 'rada'))
+
+# in ds_local_elections_candidates only candidates from city hromadas 
+ds_1 %>% summarise(across(everything(), ~ sum(is.na(.))))
+ds_1 %>% skimr::skim()
+
+
+ds_2 <- ds_1 %>% left_join(ds_local_elections_results_opora %>%
+                             select(elect_type, fio, rada_title, hromada, sex) %>%
+                             filter(elect_type == 'міські голови') %>%
+                             mutate(fio = gsub("'",'', fio),
+                                    rada_title = gsub("'",'', rada_title)),
+                           by = c('fio' = 'fio', 'rada' = 'rada_title')) %>%
+  select(-c(result, elect_type)) %>%
+  relocate(fio, hromada, rada, rada_type, raion, oblast, party, sex, birthdate, 
+           birthplace, info)
+
+# 54 rows with hromada name not matching
+ds_2 %>% summarise(across(everything(), ~ sum(is.na(.))))
+ds_2 %>% skimr::skim()
+ds_2 %>% filter(is.na(hromada)) %>% view()
+
+hromada_na_fill <- c('Ізмаїльська міська громада', '')
+
+#+ tweak-data-2 ----------------------------------------------------------------
+
+
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 
