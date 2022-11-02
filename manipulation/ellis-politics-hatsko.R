@@ -29,6 +29,7 @@ Sys.setlocale("LC_CTYPE", "ukr")
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
 library(tidyverse)
+library(lubridate)
 
 #+ declare-globals -------------------------------------------------------------
 # printed figures will go here:
@@ -133,7 +134,14 @@ ds_2 %>% summarise(across(everything(), ~ sum(is.na(.))))
 ds_2 %>% skimr::skim()
 ds_2 %>% filter(is.na(hromada)) %>% view()
 
-hromada_na_fill <- c('Ізмаїльська міська громада', '')
+ds_3 <- ds_2 %>%
+  mutate(info = str_remove(info, 'Громадян(ин|ка) України, '),
+         education = str_extract(info, 'освіта [^,]*'),
+         birthdate = as.Date(str_extract(info, '\\d{2}.\\d{2}.\\d{4}'), '%d.%m.%Y'),
+         age = trunc((birthdate %--% Sys.Date()) / years(1)),
+         workplace = )
+
+
 
 #+ tweak-data-2 ----------------------------------------------------------------
 
