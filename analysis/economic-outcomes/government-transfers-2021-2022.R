@@ -40,6 +40,8 @@ library(viridis)
 #Data of changes in governmental transfers as a share of hromada income in 2021-2022
 path_budget_data <- "./data-private/derived/budget-change-for-map.csv"
 
+prints_folder <- paste0("./manipulation/ellis-budget-prints/")
+
 #Shapefile of hromada polygons
 #Source: https://drive.google.com/file/d/1X3Ym-7s1RgQgsi_p4uJ3EGEWYGTd-UMz/view?usp=sharing
 path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
@@ -71,33 +73,17 @@ tor_before_22 <- c("05561000000","05556000000","12538000000","05555000000","1253
 ds_1 <- ds_budget_data %>% 
   # filter(year == 2022) %>%
   mutate(
-    # outlier_own_income_change = own_income_change > quantile(own_income_change, na.rm = TRUE)[4] +
-    #   1.5*IQR(own_income_change, na.rm = TRUE) | own_income_change < 
-    #   quantile(own_income_change, na.rm = TRUE)[2] - 1.5*IQR(own_income_change, na.rm = TRUE)
-    # ,outlier_own_prop_change = own_prop_change > quantile(own_prop_change, na.rm = TRUE)[4] +
-    #   1.5*IQR(own_prop_change, na.rm = TRUE) | own_prop_change < 
-    #   quantile(own_prop_change, na.rm = TRUE)[2] - 1.5*IQR(own_prop_change, na.rm = TRUE)
-    # ntile = ntile(own_income_change,100)
-    # ,outlier_own_prop_change = ntile(own_prop_change, 100) > 99
     tor_before_22 = admin4_code %in% tor_before_22
-  ) #%>% 
-  # left_join(
-  #   ds_admin_full %>% 
-  #     mutate(budget_code = paste0(budget_code,"0")) %>% 
-  #     distinct(budget_code, hromada_name, hromada_code, oblast_name_display, map_position
-  #              , region_ua, oblast_code)
-  #   ,by = c("admin4_code"  = "budget_code")
-  # )
-
-
+  ) 
 
 hist(ds_1$own_prop_change)
+hist(ds_1$own_prop_change_2021const)
 
 unique(ds_polygons$cod_3) %>% length()
 unique(ds_1$hromada_code) %>% length()
 
 
-#+ tweak-data-1, eval=eval_chunks ------------------------------------------------
+#+ data-for-map-wo-infl, eval=eval_chunks ------------------------------------------------
 d1 <- st_sf(
   right_join(
     ds_1 %>%
@@ -115,26 +101,28 @@ d2 <- d1 %>%
   mutate(own_prop_pct2021 = scales::percent(own_prop2021),
          own_prop_pct2022 = scales::percent(own_prop2022))
 
+#+ data-for-map-with-infl, eval=eval_chunks ------------------------------------------------
+d3 <- st_sf(
+  right_join(
+    ds_1 %>%
+      filter(year == 2022) %>%
+      select(oblast_code, hromada_code, hromada_name, own_income_change_pct_2021const, 
+             own_prop_change_2021const, tor_before_22, own_prop_2021const, 
+             own_prop_change_pct_2021const, income_own_2021const)
+    ,ds_polygons %>% select(cod_3, geometry)
+    ,by = c("hromada_code"="cod_3")
+  )
+)
 
-#+ graph, eval=eval_chunks ------------------------------------------------
+d4 <- d3 %>%
+  left_join(ds_1 %>% 
+              filter(year == 2021) %>% 
+              select(hromada_code, own_prop_2021const, income_own_2021const)
+            , suffix = c('2022', '2021'), by = 'hromada_code') %>%
+  mutate(own_prop_pct2021 = scales::percent(own_prop_2021const2021),
+         own_prop_pct2022 = scales::percent(own_prop_2021const2022))
 
-tmap_mode("view")
-g1 <- 
-  ds_1 %>%
-  tm_shape() + 
-  tm_fill("own_prop_change",
-          palette = "RdBu",
-          id="hromada_code",
-          popup.vars=c("hromada_name", "own_prop_change")
-  ) + 
-  tm_legend(outside=TRUE) +
-  tm_layout(frame = FALSE) +
-  tmap_options(check.and.fix = TRUE) 
-g1
-
-tmap_save(g1, "./analysis/prints/interactive.html")
-
-
+#+ map-wo-infl, eval=eval_chunks ------------------------------------------------
 
 tmap_mode('view')
 g1 <- 
@@ -165,55 +153,76 @@ g1 <-
   tmap_options(check.and.fix = TRUE)
 g1
 
+#+ map-with-infl, eval=eval_chunks ------------------------------------------------
+
+tmap_mode('view')
+g2 <- 
+  d4 %>%
+  mutate(own_prop_change_2021const = if_else(!tor_before_22, own_prop_change_2021const, NA_real_)) %>%
+  tm_shape() + 
+  tm_fill("own_prop_change_2021const",
+          # title = 'Change in share of \n hromada own revenue',
+          title = 'Зміна частки власних доходів',
+          palette = "RdBu",
+          id="hromada_name",
+          popup.vars=c('Зміна частки власних доходів' = "own_prop_change_pct_2021const",
+                       'Частка власних доходів у 2021' = 'own_prop_pct2021',
+                       'Частка власних доходів у 2022' = 'own_prop_pct2022',
+                       'Зміна обсягу власних доходів' = 'own_income_change_pct_2021const',
+                       'Обсяг власних доходів у 2021' = 'income_own_2021const2021',
+                       'Обсяг власних доходів у 2022' = 'income_own_2021const2022'
+          ),
+          style = 'pretty',
+          labels = c('-60 to -40%', '-40% to -20%', '-20% to 0%', '0% to +20%', 
+                     '+20% to +40%', '+40% to +60%', 'Немає даних')
+  ) + 
+  tm_borders('gray', lwd = 0.2) +
+  # tm_shape(d2 %>% distinct(oblast_code)) + 
+  # tm_borders('oblast_code', 'black', lwd = 1) +
+  tm_legend(outside=TRUE) +
+  tm_layout(frame = FALSE) +
+  tmap_options(check.and.fix = TRUE)
+g2
+
+#+ barplot for top and bot performers ------------------------------------------
 top5_v <- d1 %>% arrange(desc(own_prop_change)) %>% slice(1:5) %>% pull(hromada_code)
 bot5_v <- d1 %>% arrange(own_prop_change) %>% slice(1:5) %>% pull(hromada_code)
 
+top5_v_infl <- d3 %>% arrange(desc(own_prop_change_2021const)) %>% slice(1:5) %>% pull(hromada_code)
+bot5_v_infl <- d3 %>% arrange(own_prop_change_2021const) %>% slice(1:5) %>% pull(hromada_code)
 
 
-#barplot for top and bot performers
-d1 %>%
+g3 <- d1 %>%
   filter(hromada_code %in% c(top5_v, bot5_v)) %>%
   left_join(ds_admin_full %>% distinct(hromada_code, oblast_name)) %>%
   mutate(hromada_name_display = paste0(oblast_name, ' - ', hromada_name)) %>%
   ggplot(aes(x = own_prop_change, y = fct_reorder(hromada_name_display, own_prop_change))) +
-  geom_col()
-
-
-g2 <- 
-  d1 %>%
-  tm_shape() + 
-  tm_fill("own_income_change",
-          palette = "RdBu",
-          id="hromada_code",
-          popup.vars=c("hromada_name")
-  ) + 
-  tm_legend(outside=TRUE) +
-  tm_layout(frame = FALSE) +
-  tmap_options(check.and.fix = TRUE)
-g2
-
-g2 <- 
-  d1 %>%
-  mutate(own_income_change = if_else(!tor_before_22, own_income_change, NA_real_)) %>%
-  tm_shape() + 
-  tm_fill("own_income_change",
-          # title = 'Change in share of \n hromada own revenue',
-          title = 'Зміна власних доходів громади 21-22',
-          palette = "RdBu",
-          id="hromada_name",
-          popup.vars=c('Зміна власних доходів' = "own_income_change_pct"),
-          style = 'pretty',
-          # labels = c('-60 to -40%', '-40% to -20%', '-20% to 0%', '0% to +20%', 
-                     # '+20% to 40%', '40% to 60%', 'Немає даних')
-  ) + 
-  tm_borders('gray', lwd = 0.2) +
-  # tm_shape(d1 %>% filter(tor_before_22)) + 
-  # tm_borders('black', lwd = 1) +
-  tm_legend(outside=TRUE) +
-  tm_layout(frame = FALSE) +
-  tmap_options(check.and.fix = TRUE)
-g2
+  geom_col(aes(fill = ifelse(own_prop_change > 0, 'green', 'red'))) +
+  scale_fill_manual(values = c("palegreen3", "lightsalmon3"))+
+  scale_x_continuous(labels = scales::percent, limits = c(-0.55,0.4)) +
+  geom_text(aes(x=ifelse(own_prop_change > 0, own_prop_change+0.06, own_prop_change-0.01), label = own_prop_change_pct, hjust = 1))+
+  labs(
+    title = "Hromadas that had the most change in proportion of own income"
+    ,subtitle = 'Excluding Personal income tax on the financial support of military personnel'
+    ,x = 'Change in proportion of own income'
+    ,y = NULL
+  ) +
+  theme(legend.position = "none")
+g3
+g3 %>% quick_save("1-most-change-own-income", w = 9, h = 6)
 
 
 
-tmap_save(g1, 'map.html')
+d3 %>%
+  filter(hromada_code %in% c(top5_v, bot5_v)) %>%
+  left_join(ds_admin_full %>% distinct(hromada_code, oblast_name)) %>%
+  mutate(hromada_name_display = paste0(oblast_name, ' - ', hromada_name)) %>%
+  ggplot(aes(x = own_prop_change, y = fct_reorder(hromada_name_display, own_prop_change))) +
+  geom_col() +
+  scale_x_continuous(labels = scales::percent)
+
+
+#+ save-to-disk ------------------------------------------------
+tmap_save(g1, 'map_wo_infl.html')
+tmap_save(g2, 'map_with_infl.html')
+
