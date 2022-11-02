@@ -153,7 +153,7 @@ g2_alternative <-
   geom_text(aes(y = label_y_altern, label = scales::unit_format(unit = "BN", scale = 1e-9)(income_2021const)), vjust = -0.5)+
   labs(
     title = "Year over year change in hromada's own revenue (for the period March-July), adjusted for inflation"
-    ,subtitle = "Hromada's own revenue increased to a great extent due to income tax for military"
+    ,subtitle = "Hromada's own revenue fell sharply in real terms but the decrease was softened by the greatly increased personal income tax from the military"
     ,x = NULL
     ,y = "Amount of tax revenue"
     ,caption = "Shown only own revenue, excluding transfert"
