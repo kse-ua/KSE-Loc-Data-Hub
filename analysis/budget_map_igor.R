@@ -61,7 +61,7 @@ ds1 <-
   filter(region_en != "Crimea") %>%
   filter(year %in% c(2021, 2022))
 
-ds1 %>% glimpse()
+ds1 %>% glimpse(20)
 ds1 %>% summarize(hromada_count = n_distinct(admin4_code, na.rm = T))
 
 ds_admin4_lkp <- 
@@ -80,10 +80,10 @@ ds1_long <-
     , values_to = 'income'
   )
 
-ds1_long %>% glimpse()
+ds1_long %>% glimpse(50)
 ds1_long %>% count(income_code) 
 
-ds1_long <- ds1_long %>%
+ds2_long <- ds1_long %>%
   mutate(income_2021const = case_when(year == "2022" & month == "1" ~ (income / 1.1),
                                       year == "2022" & month == "2" ~ (income / 1.107),
                                       year == "2022" & month == "3" ~ (income / 1.137),
@@ -103,7 +103,7 @@ tor_before_22 <- c("05561000000","05556000000","12538000000","05555000000","1253
                    ,"12536000000","05553000000") 
 
 d1 <- 
-  ds1_long %>% 
+  ds2_long %>% 
   filter(!admin4_code %in% tor_before_22) %>% 
   mutate(
     date = paste0(year,"-",ifelse(
@@ -168,7 +168,7 @@ g2_alternative %>% quick_save("2-military-tax_alternative", w= 12, h = 7)
 #+ ----- compute change of own income --------------------------------
 
 ds2 <- 
-  ds1_long %>% 
+  ds2_long %>% 
   filter(!admin4_code %in% tor_before_22) %>% 
   filter(income_code != 'x11010200') %>%
   mutate(
@@ -192,7 +192,6 @@ ds3 <-
     ,income_transfert = sum(income*transfert, na.rm = T)
     ,income_total_2021const = sum(income_2021const, na.rm = T)
     ,income_transfert_2021const = sum(income_2021const*transfert, na.rm = T)
-    
     ,.groups = "drop"
   ) %>% 
   ungroup() %>% 
@@ -216,6 +215,8 @@ ds3 <-
     ,own_prop_change_pct_2021const = scales::percent(own_prop_2021const - lag(own_prop_2021const))
   ) %>% 
   ungroup()
+
+ds3 %>% filter(admin4_code == '07558000000') %>% view()
 
 # mark oblast that were temp occupied since Feb 24
 
@@ -278,6 +279,7 @@ ds4 %>% filter(outlier_alternative) %>% select(own_income_change_pct_2021const) 
 
 g1 <- 
   ds4 %>%
+  mutate(oblast_name_display = fct_reorder(oblast_name_display, map_position)) %>%
   filter(!outlier) %>%
   ggplot(aes(x = own_income_change, fill = oblast_tor))+
   geom_histogram(alpha = .3)+
@@ -310,6 +312,7 @@ g1 %>% quick_save("1-change-over-year", w= 12, h = 7)
 
 g1_alternative <- 
   ds4 %>%
+  mutate(oblast_name_display = fct_reorder(oblast_name_display, map_position)) %>%
   filter(!outlier_alternative) %>%
   ggplot(aes(x = own_income_change_2021const, fill = oblast_tor))+
   geom_histogram(alpha = .3)+
