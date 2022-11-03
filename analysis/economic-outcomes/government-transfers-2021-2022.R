@@ -106,8 +106,8 @@ d3 <- st_sf(
   right_join(
     ds_1 %>%
       filter(year == 2022) %>%
-      select(oblast_code, hromada_code, hromada_name, own_income_change_pct_2021const, 
-             own_prop_change_2021const, tor_before_22, own_prop_2021const, 
+      select(oblast_code, hromada_code, hromada_name, own_income_change_pct_2021const,
+             own_income_change_2021const, own_prop_change_2021const, tor_before_22, own_prop_2021const, 
              own_prop_change_pct_2021const, income_own_2021const)
     ,ds_polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
@@ -183,6 +183,39 @@ g2 <-
   tm_layout(frame = FALSE) +
   tmap_options(check.and.fix = TRUE)
 g2
+
+#+ map-with-infl-own-income, eval=eval_chunks ------------------------------------------------
+
+tmap_mode('view')
+g3 <- 
+  d4 %>%
+  mutate(own_income_change_2021const = if_else(!tor_before_22, own_income_change_2021const*100, NA_real_)) %>%
+  tm_shape() + 
+  tm_fill("own_income_change_2021const",
+          # title = 'Change in share of \n hromada own revenue',
+          title = 'Зміна власних доходів, %',
+          palette = "RdBu",
+          id="hromada_name",
+          popup.vars=c('Зміна обсягу власних доходів' = 'own_income_change_pct_2021const',
+                       'Обсяг власних доходів у 2021' = 'income_own_2021const2021',
+                       'Обсяг власних доходів у 2022' = 'income_own_2021const2022',
+                       'Зміна частки власних доходів' = "own_prop_change_pct_2021const",
+                       'Частка власних доходів у 2021' = 'own_prop_pct2021',
+                       'Частка власних доходів у 2022' = 'own_prop_pct2022'
+          ),
+          style = 'cont',
+          n = 6,
+          textNA = 'Missing data'
+          # labels = c('-50', '0', '+50', '+100', 
+                     # '+100%', '+150%', '+200%', '+250%', 'Немає даних')
+  ) + 
+  tm_borders('gray', lwd = 0.2) +
+  # tm_shape(d2 %>% distinct(oblast_code)) + 
+  # tm_borders('oblast_code', 'black', lwd = 1) +
+  tm_legend(outside=TRUE) +
+  tm_layout(frame = FALSE, legend.text.size = 2) +
+  tmap_options(check.and.fix = TRUE)
+g3
 
 #+ barplot for top and bot performers ------------------------------------------
 top5_v <- d1 %>% arrange(desc(own_prop_change)) %>% slice(1:5) %>% pull(hromada_code)
