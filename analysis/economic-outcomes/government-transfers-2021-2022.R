@@ -122,6 +122,11 @@ d4 <- d3 %>%
   mutate(own_prop_pct2021 = scales::percent(own_prop_2021const2021),
          own_prop_pct2022 = scales::percent(own_prop_2021const2022))
 
+
+hist(d4$own_income_change_2021const)
+
+d4 %>% slice_max(own_income_change_2021const, n = 10) %>% neat_DT()
+
 #+ map-wo-infl, eval=eval_chunks ------------------------------------------------
 
 tmap_mode('view')
@@ -190,6 +195,7 @@ tmap_mode('view')
 g3 <- 
   d4 %>%
   mutate(own_income_change_2021const = if_else(!tor_before_22, own_income_change_2021const*100, NA_real_)) %>%
+  mutate(own_income_change_2021const = if_else(hromada_code == 'UA51120150000080138', NA_real_, own_income_change_2021const)) %>%
   tm_shape() + 
   tm_fill("own_income_change_2021const",
           # title = 'Change in share of \n hromada own revenue',
@@ -203,17 +209,18 @@ g3 <-
                        'Частка власних доходів у 2021' = 'own_prop_pct2021',
                        'Частка власних доходів у 2022' = 'own_prop_pct2022'
           ),
-          style = 'cont',
+          # style = 'fixed',
           n = 6,
           textNA = 'Missing data'
-          # labels = c('-50', '0', '+50', '+100', 
-                     # '+100%', '+150%', '+200%', '+250%', 'Немає даних')
+          # breaks = c(-100, -50, 0, 50, 100, 150, 200, 250, 300),
+          # labels = c(' -100% - -50%', '-50% - 0%', '0% - +50%', '+50% - +100%', 
+                      # '+100% - +150%', '+150% - +200%', '+200% - +250%', '+250% - +300%')
   ) + 
   tm_borders('gray', lwd = 0.2) +
   # tm_shape(d2 %>% distinct(oblast_code)) + 
   # tm_borders('oblast_code', 'black', lwd = 1) +
   tm_legend(outside=TRUE) +
-  tm_layout(frame = FALSE, legend.text.size = 2) +
+  tm_layout(frame = FALSE) +
   tmap_options(check.and.fix = TRUE)
 g3
 
@@ -258,4 +265,5 @@ d3 %>%
 #+ save-to-disk ------------------------------------------------
 tmap_save(g1, 'map_wo_infl.html')
 tmap_save(g2, 'map_with_infl.html')
+tmap_save(g3, 'map_own_income.html')
 
