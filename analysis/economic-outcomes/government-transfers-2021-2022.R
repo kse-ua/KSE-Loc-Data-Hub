@@ -163,23 +163,31 @@ g1
 tmap_mode('view')
 g2 <- 
   d4 %>%
-  mutate(own_prop_change_2021const = if_else(!tor_before_22, own_prop_change_2021const, NA_real_)) %>%
+  mutate(own_prop_change_2021const = if_else(!tor_before_22, own_prop_change_2021const, NA_real_),
+         own_prop_change_2021const = if_else(hromada_code == 'UA51120150000080138', NA_real_, own_prop_change_2021const),
+         own_income_change_pct_2021const = if_else(hromada_code == 'UA51120150000080138', NA_character_, own_income_change_pct_2021const),
+         income_own_2021const2021 = if_else(hromada_code == 'UA51120150000080138', NA_real_, income_own_2021const2021),
+         income_own_2021const2022 = if_else(hromada_code == 'UA51120150000080138', NA_real_, income_own_2021const2022),
+         own_prop_change_pct_2021const = if_else(hromada_code == 'UA51120150000080138', NA_character_, own_prop_change_pct_2021const),
+         own_prop_pct2021 = if_else(hromada_code == 'UA51120150000080138', NA_character_, own_prop_pct2021),
+         own_prop_pct2022 = if_else(hromada_code == 'UA51120150000080138', NA_character_, own_prop_pct2022)) %>%
   tm_shape() + 
   tm_fill("own_prop_change_2021const",
           # title = 'Change in share of \n hromada own revenue',
           title = 'Зміна частки власних доходів',
           palette = "RdBu",
           id="hromada_name",
-          popup.vars=c('Зміна частки власних доходів' = "own_prop_change_pct_2021const",
+          popup.vars=c('Зміна частки власних доходів, в.п.' = "own_prop_change_pct_2021const",
                        'Частка власних доходів у 2021' = 'own_prop_pct2021',
                        'Частка власних доходів у 2022' = 'own_prop_pct2022',
-                       'Зміна обсягу власних доходів' = 'own_income_change_pct_2021const',
+                       'Зміна обсягу власних доходів, %' = 'own_income_change_pct_2021const',
                        'Обсяг власних доходів у 2021' = 'income_own_2021const2021',
                        'Обсяг власних доходів у 2022' = 'income_own_2021const2022'
           ),
           style = 'pretty',
-          labels = c('-60 to -40%', '-40% to -20%', '-20% to 0%', '0% to +20%', 
-                     '+20% to +40%', '+40% to +60%', 'Немає даних')
+          textNA = 'Немає даних',
+          labels = c('-60 to -40 в.п.', '-40 to -20 в.п.', '-20 to 0 в.п.', '0 to +20 в.п.',
+                     '+20 to +40 в.п.')
   ) + 
   tm_borders('gray', lwd = 0.2) +
   # tm_shape(d2 %>% distinct(oblast_code)) + 
@@ -195,17 +203,24 @@ tmap_mode('view')
 g3 <- 
   d4 %>%
   mutate(own_income_change_2021const = if_else(!tor_before_22, own_income_change_2021const*100, NA_real_)) %>%
-  mutate(own_income_change_2021const = if_else(hromada_code == 'UA51120150000080138', NA_real_, own_income_change_2021const)) %>%
+  mutate(own_income_change_2021const = if_else(hromada_code == 'UA51120150000080138', NA_real_, own_income_change_2021const),
+         own_income_change_pct_2021const = if_else(hromada_code == 'UA51120150000080138', NA_character_, own_income_change_pct_2021const),
+         income_own_2021const2021 = if_else(hromada_code == 'UA51120150000080138', NA_real_, income_own_2021const2021),
+         income_own_2021const2022 = if_else(hromada_code == 'UA51120150000080138', NA_real_, income_own_2021const2022),
+         own_prop_change_pct_2021const = if_else(hromada_code == 'UA51120150000080138', NA_character_, own_prop_change_pct_2021const),
+         own_prop_pct2021 = if_else(hromada_code == 'UA51120150000080138', NA_character_, own_prop_pct2021),
+         own_prop_pct2022 = if_else(hromada_code == 'UA51120150000080138', NA_character_, own_prop_pct2022)
+  ) %>%
   tm_shape() + 
   tm_fill("own_income_change_2021const",
           # title = 'Change in share of \n hromada own revenue',
-          title = 'Зміна власних доходів, %',
+          title = 'Зміна обсягу власних доходів, %',
           palette = "RdBu",
           id="hromada_name",
-          popup.vars=c('Зміна обсягу власних доходів' = 'own_income_change_pct_2021const',
+          popup.vars=c('Зміна обсягу власних доходів, %' = 'own_income_change_pct_2021const',
                        'Обсяг власних доходів у 2021' = 'income_own_2021const2021',
                        'Обсяг власних доходів у 2022' = 'income_own_2021const2022',
-                       'Зміна частки власних доходів' = "own_prop_change_pct_2021const",
+                       'Зміна частки власних доходів, в.п.' = "own_prop_change_pct_2021const",
                        'Частка власних доходів у 2021' = 'own_prop_pct2021',
                        'Частка власних доходів у 2022' = 'own_prop_pct2022'
           ),
