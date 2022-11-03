@@ -68,6 +68,8 @@ ds_admin4_lkp <-
   ds1 %>% 
   distinct(admin4_code, admin4_label)
 
+
+
 # ---- tweak-data-2 ------------------------------------------------------------
 
 ds1_long <- 
@@ -182,6 +184,16 @@ ds2 <-
 ds2 %>% summarize(hromada_count = n_distinct(admin4_code))
 ds2 %>% filter(income_code == 'x11010200')
 
+ds2 %>% filter(hromada_code == 'UA51120150000080138' & income_code == 'x25020000') %>% view()
+
+# the mystery of oknyanska hromada
+ds2 %>% 
+  filter(hromada_code == 'UA51120150000080138') %>% 
+  filter(target_segment) %>%
+  group_by(admin4_code, year, income_code) %>%
+  summarise(sum = sum(income, na.rm = T)) %>%
+  pivot_wider(names_from = year, names_prefix = 'year', values_from = sum) %>% 
+  mutate(change = year2022/year2021 - 1) %>% neat_DT()
 
 ds3 <- 
   ds2 %>% 
