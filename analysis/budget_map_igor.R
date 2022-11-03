@@ -61,6 +61,9 @@ ds1 <-
   filter(region_en != "Crimea") %>%
   filter(year %in% c(2021, 2022))
 
+ds0 %>% filter(hromada_code == 'UA51120150000080138') %>% select(x25020000) %>% view()
+
+
 ds1 %>% glimpse(20)
 ds1 %>% summarize(hromada_count = n_distinct(admin4_code, na.rm = T))
 
@@ -184,16 +187,17 @@ ds2 <-
 ds2 %>% summarize(hromada_count = n_distinct(admin4_code))
 ds2 %>% filter(income_code == 'x11010200')
 
-ds2 %>% filter(hromada_code == 'UA51120150000080138' & income_code == 'x25020000') %>% view()
+ds2 %>% filter(hromada_code == 'UA51120150000080138' & income_code == 'x25020000' &
+                 year == 2022 & month == 7) %>% view()
 
 # the mystery of oknyanska hromada
-ds2 %>% 
-  filter(hromada_code == 'UA51120150000080138') %>% 
-  filter(target_segment) %>%
-  group_by(admin4_code, year, income_code) %>%
-  summarise(sum = sum(income, na.rm = T)) %>%
-  pivot_wider(names_from = year, names_prefix = 'year', values_from = sum) %>% 
-  mutate(change = year2022/year2021 - 1) %>% neat_DT()
+# ds2 %>% 
+#   filter(hromada_code == 'UA51120150000080138') %>% 
+#   filter(target_segment) %>%
+#   group_by(admin4_code, year, income_code) %>%
+#   summarise(sum = sum(income, na.rm = T)) %>%
+#   pivot_wider(names_from = year, names_prefix = 'year', values_from = sum) %>% 
+#   mutate(change = year2022/year2021 - 1) %>% neat_DT()
 
 ds3 <- 
   ds2 %>% 
