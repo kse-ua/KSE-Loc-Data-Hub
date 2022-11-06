@@ -140,13 +140,13 @@ ds2 <- ds2 %>% left_join(ds2 %>%
 #+ getting new variables from info ----------------------------------------------------------------
 
 ds3 <- ds2 %>%
-  mutate(info = str_remove(info, 'Громадян(ин|ка) України, '),
-         education = str_extract(info, 'освіта [^,]*'),
-         birthdate = as.Date(str_extract(info, '\\d{2}.\\d{2}.\\d{4}'), '%d.%m.%Y'),
-         age = trunc((birthdate %--% Sys.Date()) / years(1)),
-         workplace = str_match(info, '(?<= член |безпартійна|безпартійний)[^,]*, ([^,]*)')[,2],
-         birthplace = ifelse(is.na(birthplace), str_match(info, '(?<=, місце проживання: )(.*)')[,2], birthplace),
-         position = str_match(info, paste0('(?<=', workplace, '), ([^,]*)'))[,2])
+  mutate(info = str_remove(info, 'Громадян(ин|ка) України, ')
+         ,education = str_extract(info, 'освіта [^,]*')
+         ,birthdate = as.Date(str_extract(info, '\\d{2}.\\d{2}.\\d{4}'), '%d.%m.%Y')
+         ,age = trunc((birthdate %--% Sys.Date()) / years(1))
+         ,workplace = str_match(info, '(?<= член |безпартійна|безпартійний)[^,]*, ([^,]*)')[,2]
+         ,birthplace = ifelse(is.na(birthplace), str_match(info, '(?<=, місце проживання: )(.*)')[,2], birthplace)
+         ,position = str_match(info, paste0('(?<=', workplace, '), ([^,]*)'))[,2])
 
 ds3 %>% filter(is.na(position)) %>% select(info, workplace, position) %>% neat_DT()
 ds3 %>% skimr::skim()
@@ -157,6 +157,8 @@ ds3 %>% skimr::skim()
 
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
+ds3 %>% readr::write_csv("./data-private/derived/hromada_heads.csv")
+
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
