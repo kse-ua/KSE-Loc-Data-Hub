@@ -99,27 +99,19 @@ ds_local_elections_mayors %>% glimpse(20)
 ds_local_elections_candidates %>% glimpse(20)
 ds_local_elections_results_opora %>% glimpse(20)
 
-#+ tweak-data-1 ----------------------------------------------------------------
+#+ merging datasets ----------------------------------------------------------------
 
-d_1 <- ds_local_elections_mayors %>%
-  mutate(fio = gsub("'",'', fio),
-         rada = gsub("'",'', rada))
-
-d_2 <- ds_local_elections_candidates %>%
-  mutate(fio = gsub("'",'', fio),
-         rada = gsub("'",'', rada))
-
-ds_1 <- d_1 %>%
-  left_join(d_2 %>%
+ds1 <- ds_local_elections_mayors %>%
+  left_join(ds_local_elections_candidates %>%
               select(fio, birthdate, birthplace, rada), 
             by = c('fio', 'rada'))
 
 # in ds_local_elections_candidates only candidates from city hromadas 
-ds_1 %>% summarise(across(everything(), ~ sum(is.na(.))))
-ds_1 %>% skimr::skim()
+ds1 %>% summarise(across(everything(), ~ sum(is.na(.))))
+ds1 %>% skimr::skim()
 
-
-ds_2 <- ds_1 %>% left_join(ds_local_elections_results_opora %>%
+# getting hromada and sex data from opora dataset
+ds2 <- ds1 %>% left_join(ds_local_elections_results_opora %>%
                              select(elect_type, fio, rada_title, hromada, sex) %>%
                              filter(elect_type == 'міські голови') %>%
                              mutate(fio = gsub("'",'', fio),
@@ -129,18 +121,33 @@ ds_2 <- ds_1 %>% left_join(ds_local_elections_results_opora %>%
   relocate(fio, hromada, rada, rada_type, raion, oblast, party, sex, birthdate, 
            birthplace, info)
 
-# 54 rows with hromada name not matching
-ds_2 %>% summarise(across(everything(), ~ sum(is.na(.))))
-ds_2 %>% skimr::skim()
-ds_2 %>% filter(is.na(hromada)) %>% view()
 
-ds_3 <- ds_2 %>%
+# 54 rows with hromada name not matching
+ds2 %>% summarise(across(everything(), ~ sum(is.na(.))))
+ds2 %>% skimr::skim()
+
+# filling NA in hromada
+ds2 <- ds2 %>% left_join(ds2 %>% 
+  filter(is.na(hromada)) %>% 
+  select(rada, hromada) %>% 
+  left_join(ds_local_elections_results_opora, by = c('rada' = 'rada_title')) %>% 
+  distinct(rada, hromada.y),
+  by = c('rada')) %>%
+  mutate(hromada = coalesce(hromada.y, hromada)) %>%
+  select(-c(hromada.y)) %>%
+  mutate(hromada = ifelse(is.na(hromada), paste0(str_extract(rada, '[^\\s]+\\s+[^\\s]+'), ' громада'), hromada))
+
+#+ getting new variables from info ----------------------------------------------------------------
+
+ds3 <- ds2 %>%
   mutate(info = str_remove(info, 'Громадян(ин|ка) України, '),
          education = str_extract(info, 'освіта [^,]*'),
          birthdate = as.Date(str_extract(info, '\\d{2}.\\d{2}.\\d{4}'), '%d.%m.%Y'),
          age = trunc((birthdate %--% Sys.Date()) / years(1)),
-         workplace = )
+         workplace = str_match(info, '(?<= член |безпартійна|безпартійний)[^,]*, ([^,]*)')[,2],
+         birthplace = ifelse(is.na(birthplace), str_match(info, '(?<=, місце проживання: )(.*)')[,2], birthplace))
 
+ds3 %>% skimr::skim()
 
 
 #+ tweak-data-2 ----------------------------------------------------------------
