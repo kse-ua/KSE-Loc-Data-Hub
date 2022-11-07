@@ -241,17 +241,142 @@ d1 %>% filter(is.na(raion_name) ) %>% filter(locality!="місто Київ") %>
 d1 %>% filter(,duplicated(edrpou)) %>% 
   View()
 
+d1 %>% filter(,duplicated(edrpou)) %>% 
+  distinct(locality,.keep_all= TRUE) %>% View()
+
+d1 %>% filter(,duplicated(edrpou)) %>% 
+  filter(,district == raion_name_full) %>%
+  View()
+  
+
+d1 %>% 
+  filter(,district == raion_name_full) %>%
+  View()
+
+
+
+
+#### Managing duplicated cases ones again usig raions additionally
+
+dups <- d1 %>%
+  group_by(edrpou) %>%
+  filter(dplyr::n_distinct(settlement_code) > 1) %>%
+  select(,1:21) %>%
+  distinct(edrpou,.keep_all = TRUE)
+
+dups <- dups %>% mutate(district = case_when(
+  locality == "селище Мирне" & district == "Слов'янський район"~ "Краматорський район",
+  locality == "село Кам’янка" & district == "Більмацький район"~ "Запорізький район",
+  locality == "селище міського типу Калинівка" & district == "Васильківський район"~ "Фастівський район",
+  locality == "селище міського типу Слобожанське" & district == "Зміївський район"~ "Чугуївський район",
+  locality == "село Костянтинівка" & district == "Краснокутський район"~ "Богодухівський район",
+  locality == "селище міського типу Олександрівка" & district == "Олександрівський район"~ "Краматорський район",
+  locality == "селище міського типу Оленівка" & district == "Волноваський район"~ "Кальміуський район",
+  locality == "селище міського типу Оленівка" & district == "Бахмутський район"~ "Горлівський район",
+  locality == "селище міського типу Слобожанське" & district == "Зміївський район"~ "Чугуївський район",
+  locality == "селище Опитне" & district == "Ясинуватський район"~ "Покровський район",
+  locality == "селище Слобідське" & district == "Первомайський район"~ "Лозівський район",
+  locality == "село Березівка" & district == "Маловисківський район"~ "Новоукраїнський район",
+  locality == "село Берестове" & district == "Дворічанський район"~ "Куп’янський район",
+  locality == "село Бобриця" & district == "Києво-Святошинський район"~ "Бучанський район",
+  locality == "село Варварівка" & district == "Олевський район"~ "Новоград-Волинський район",
+  locality == "село Вербка" & district == "Кам'янець-Подільський район"~ "Кам’янець-Подільський район",
+  locality == "село Володимирівка" & district == "Знам'янський район"~ "Кропивницький район",
+  locality == "село Городище" & district == "Березнівський район"~ "Рівненський район",
+  locality == "село Уютне" & district == "Сакський район"~ "Євпаторійський район",
+  locality == "село Тарасівка" & district == "Києво-Святошинський район"~ "Фастівський район",
+  locality == "село Старовірівка" & district == "Шевченківський район"~ "Куп’янський район",
+  locality == "село Протопопівка" & district == "Дергачівський район"~ "Харківський район",
+  locality == "село Крижанівка" & district == "Лиманський район"~ "Одеський район",
+  locality == "село Зоря" & district == "Нікольський район"~ "Маріупольський район",
+  locality == "село Гусарівка" & district == "Балаклійський район"~ "Ізюмський район",
+  locality == "село Гряда" & district == "Жовківський район"~ "Львівський район",
+  locality == "село Довжик" & district == "Золочівський район"~ "Богодухівський район",
+  locality == "село Іванів" & district == "Калинівський район"~ "Хмільницький район",
+  locality == "село Іванівка" & district == "Барвінківський район"~ "Ізюмський район",
+  locality == "село Калинівка" & district == "Макарівський район"~ "Бучанський район",
+  locality == "село Кам’янка" & district == "Новопсковський район"~ "Старобільський район",
+  locality == "село Козачі Лагері" & district == "Олешківський район"~ "Херсонський район",
+  locality == "село Крижанівка" & district == "Комінтернівський район"~ "Одеський район",
+  locality == "село Кульчин" & district == "Ківерцівський район"~ "Луцький район",
+  locality == "село Олександрівка" & district == "Комінтернівський район"~ "Одеський район",
+  locality == "село Олександрівка" & district == "Лиманський район"~ "Одеський район",
+  locality == "село Лиман" & district == "Зміївський район"~ "Чугуївський район",
+  locality == "село Микільське" & district == "Білозерський район"~ "Херсонський район",
+  locality == "село Микільське" & district == "Світловодський район"~ "Олександрійський район",
+  locality == "село Миколаївка" & district == "Великолепетиський район"~ "Каховський район",
+  locality == "село Мирне" & district == "Біляївський район"~ "Одеський район",
+  locality == "село Мирне" & district == "Оріхівський район"~ "Пологівський район",
+  locality == "село Млинівці" & district == "Зборівський район"~ "Тернопільський район",
+  locality == "село Моквин" & district == "Березнівський район"~ "Рівненський район",
+  locality == "село Муроване" & district == "Пустомитівський район"~ "Львівський район",
+  locality == "село Нетреба" & district == "Рокитнівський район"~ "Сарненський район",
+  locality == "село Нововасилівка" & district == "Снігурівський район"~ "Баштанський район",
+  locality == "село Новодмитрівка" & district == "Великоолександрівський район"~ "Бериславський район",
+  locality == "село Новоєгорівка" & district == "Дворічанський район"~ "Куп’янський район",
+  locality == "село Новосілки" & district == "Києво-Святошинський район"~ "Фастівський район",
+  locality == "село Пеньківка" & district == "Шаргородський район"~ "Жмеринський район",
+  locality == "село Петрівка" & district == "Шевченківський район"~ "Куп’янський район",
+  locality == "село Петрівське" & district == "Балаклійський район"~ "Ізюмський район",
+  locality == "село Підлісся" & district == "Тисменицький район"~ "Івано-Франківський район",
+  locality == "село Поляна" & district == "Свалявський район"~ "Мукачівський район",
+  locality == "село Привілля" & district == "Слов'янський район"~ "Краматорський район",
+  locality == "село Першотравневе" & district == "Зміївський район"~ "Чугуївський район",
+  locality == "село Приморське" & district == "Голопристанський район"~ "Скадовський район",
+  locality == "село Протопопівка" & district == "Балаклійський район"~ "Ізюмський район",
+  locality == "село Рівне" & district == "Красногвардійський район"~ "Курманський район",
+  locality == "село Скаржинці" & district == "Ярмолинецький район"~ "Хмельницький район",
+  locality == "село Спас" & district == "Рожнятівський район"~ "Калуський район",
+  locality == "село Старява" & district == "Мостиський район"~ "Яворівський район",
+  locality == "село Суховоля" & district == "Городоцький район"~ "Львівський район",
+  locality == "село Травневе" & district == "Міловський район"~ "Старобільський район",
+  locality == "село Трудове" & district == "Більмацький район"~ "Пологівський район",
+  locality == "село Устимівка" & district == "Глобинський район"~ "Кременчуцький район",
+  locality == "село Чайки" & district == "Києво-Святошинський район"~ "Бучанський район",
+  locality == "село Червоне" & district == "Сакський район"~ "Євпаторійський район",
+  locality == "село Червоне" & district == "Первомайський район"~ "Лозівський район",
+  locality == "село Шевченкове" & district == "Васильківський район"~ "Синельниківський район",
+  locality == "село Шевченкове" & district == "Києво-Святошинський район"~ "Бучанський район",
+  locality == "село Юрівка" & district == "Березнівський район"~ "Фастівський район",
+  locality == "село Яринівка" & district == "Березнівський район"~ "Рівненський район",
+  locality == "село Ясногородка" & district == "Макарівський район"~ "Фастівський район",
+  locality == "село Юрівка" & district == "Києво-Святошинський район"~ "Фастівський район",
+  
+  
+  
+  TRUE ~district))
+
+
+dups_merge <- dups %>% 
+  left_join(
+    ds_admin
+    ,by = c("locality" = "settlement_name_full",
+            "region" = "oblast_name_full",
+            "district" = "raion_name_full")
+  )
+
+dups_merge %>% filter(is.na(settlement_code) )  %>% View()
+dups_merge %>% filter(duplicated(edrpou))  %>% View()
+
+dups_merge$raion_name_full <- dups_merge$district
+
+no_dups <- d1 %>%
+  group_by(edrpou) %>%
+  filter(dplyr::n_distinct(settlement_code) == 1)
+
+full_merge <- rbind(no_dups, dups_merge)
+
 #+ Year when OSBB was created and terminated------------------------------------
-d1 <- d1 %>% 
+full_merge <- full_merge %>% 
   mutate(registration_year = substr(registration, 1, 4),
          termination_year = substr(termination, 1, 4))
 
 #+ Counting number of OSBB since 2015 within ATC--------------------------------
-d1 <- d1 %>% 
+d2 <- full_merge %>% 
   group_by(hromada_code) %>% 
   mutate(sum_osbb_2020 = n() - sum(!is.na(termination_year)))
 
-d1 <- d1 %>% 
+d2 <- d2 %>% 
   group_by(hromada_code) %>% 
   mutate(sum_osbb_2019 = sum(registration_year!="2020", na.rm = TRUE) - sum(!is.na(termination_year)&termination_year!="2020", na.rm = TRUE),
          sum_osbb_2018 = sum(registration_year!=c("2020","2019"), na.rm = TRUE) - sum(!is.na(termination_year)&termination_year!=c("2020","2019"), na.rm = TRUE),
@@ -259,7 +384,7 @@ d1 <- d1 %>%
          sum_osbb_2016 = sum(registration_year!=c("2020","2019","2018","2017"), na.rm = TRUE) - sum(!is.na(termination_year)&termination_year!=c("2020","2019","2018","2017"), na.rm = TRUE),
          sum_osbb_2015 = sum(registration_year!=c("2020","2019","2018","2017","2016"), na.rm = TRUE) - sum(!is.na(termination_year)&termination_year!=c("2020","2019","2018","2017","2016"), na.rm = TRUE))
 
-ds1 <- d1 %>%
+ds2 <- d2 %>%
   distinct(hromada_code,.keep_all= TRUE) %>%
   select(hromada_code,
          hromada_name,
@@ -270,3 +395,6 @@ ds1 <- d1 %>%
          sum_osbb_2016,
          sum_osbb_2015)
 
+#+ save-data, eval=eval_chunks -------------------------------------------------
+readr::write_csv(full_merge, "./data-private/derived/osbb-all.csv") #long format
+readr::write_csv(ds2, "./data-private/derived/osbb-hromada.csv") #aggregated on hromada level
