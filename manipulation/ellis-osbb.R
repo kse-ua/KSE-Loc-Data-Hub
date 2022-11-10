@@ -395,6 +395,26 @@ ds2 <- d2 %>%
          sum_osbb_2016,
          sum_osbb_2015)
 
+oblast_distr <- d2 %>%
+  distinct(hromada_code,.keep_all= TRUE) %>%
+  group_by(region_ua, region) %>%
+  summarise(osbb_2020 = sum(sum_osbb_2020),
+            osbb_2019 = sum(sum_osbb_2019),
+            osbb_2018 = sum(sum_osbb_2018),
+            osbb_2017 = sum(sum_osbb_2017),
+            osbb_2016 = sum(sum_osbb_2016),
+            osbb_2015 = sum(sum_osbb_2015)) 
+
+region_distr <- d2 %>%
+  distinct(hromada_code,.keep_all= TRUE) %>%
+  group_by(region_ua) %>%
+  summarise(osbb_2020 = sum(sum_osbb_2020),
+            osbb_2019 = sum(sum_osbb_2019),
+            osbb_2018 = sum(sum_osbb_2018),
+            osbb_2017 = sum(sum_osbb_2017),
+            osbb_2016 = sum(sum_osbb_2016),
+            osbb_2015 = sum(sum_osbb_2015)) 
+
 #+ save-data, eval=eval_chunks -------------------------------------------------
 readr::write_csv(full_merge, "./data-private/derived/osbb-all.csv") #long format
 readr::write_csv(ds2, "./data-private/derived/osbb-hromada.csv") #aggregated on hromada level
