@@ -99,13 +99,15 @@ ds2_long <- ds1_long %>%
                                       TRUE ~ income)
   )
 
-#+ ----- compute share of personal income tax for military --------------------------------
 tor_before_22 <- c("05561000000","05556000000","12538000000","05555000000","12534000000"
                    ,"05549000000","05557000000","05551000000","12539000000","05547000000","05548000000"
                    ,"05563000000","12537000000","12540000000","05560000000","12533000000","05552000000"
                    ,"05554000000","05564000000","12532000000","12541000000","05562000000","12535000000"
                    ,"05566000000","12531000000","05565000000","05559000000","05558000000","05550000000"
                    ,"12536000000","05553000000") 
+
+#+ ----- compute share of personal income tax for military --------------------------------
+
 
 d1 <- 
   ds2_long %>% 
@@ -291,7 +293,79 @@ table(ds4$outlier)
 ds4 %>% filter(outlier) %>% select(own_income_change) %>% view()
 ds4 %>% filter(outlier_alternative) %>% select(own_income_change_pct_2021const) %>% view()
 
-# ----- -----------------------------------------------------------------------
+#+ ----- distributions for financial variables ---------------------------------
+
+# income total
+d5 <- ds4 %>%
+  select(oblast_name_display, hromada_code, year, starts_with('income_total')) %>%
+  pivot_longer(-c(oblast_name_display, hromada_code, year), names_to = 'inflation', 
+               values_to = 'income') %>%
+  mutate(inflation = case_when(inflation == 'income_total' ~ 'nominal',
+                               TRUE ~ 'real'))
+
+d5 %>% 
+  filter(inflation == 'real') %>%
+  ggplot(aes(x=income, fill=year)) +
+  geom_histogram(alpha=.5, position="identity") +
+  scale_x_continuous(labels = scales:::unit_format(unit = "ML", scale = 1e-6),
+                     limits = c(0, 2e+08))
+d5 %>% 
+  filter(inflation == 'real') %>%
+  ggplot(aes(x=log10(income), fill=year)) +
+  geom_histogram(alpha=.5, position="identity")
+
+d5 %>% 
+  filter(year == 2022) %>%
+  ggplot(aes(x=income, fill=inflation)) +
+  geom_histogram(alpha=.5, position="identity") +
+  scale_x_continuous(labels = scales::unit_format(unit = "ML", scale = 1e-6),
+                     limits = c(0, 1e+08))
+
+d5 %>% 
+  filter(year == 2022) %>%
+  ggplot(aes(x=log10(income), fill=inflation)) +
+  geom_histogram(alpha=.5, position="identity")
+
+# income own
+
+d6 <- ds4 %>%
+  select(oblast_name_display, hromada_code, year, starts_with('income_own')) %>%
+  pivot_longer(-c(oblast_name_display, hromada_code, year), names_to = 'inflation', 
+               values_to = 'income') %>%
+  mutate(inflation = case_when(inflation == 'income_own' ~ 'nominal',
+                               TRUE ~ 'real'))
+
+d6 %>% 
+  filter(inflation == 'real') %>%
+  ggplot(aes(x=income, fill=year)) +
+  geom_histogram(alpha=.5, position="identity") +
+  scale_x_continuous(labels = scales:::unit_format(unit = "ML", scale = 1e-6),
+                     limits = c(0, 2e+08))
+
+d6 %>% 
+  filter(inflation == 'real') %>%
+  ggplot(aes(x=log10(income), fill=year)) +
+  geom_histogram(alpha=.5, position="identity")
+
+# proportion of own income
+d7 <- ds4 %>%
+  select(oblast_name_display, hromada_code, year, own_prop, own_prop_2021const) %>%
+  pivot_longer(-c(oblast_name_display, hromada_code, year), names_to = 'inflation', 
+               values_to = 'proportion') %>%
+  mutate(inflation = case_when(inflation == 'own_prop' ~ 'nominal',
+                               TRUE ~ 'real'))
+
+d7 %>% 
+  filter(inflation == 'real') %>%
+  ggplot(aes(x=proportion, fill=year)) +
+  geom_histogram(alpha=.5, position="identity")
+
+d7 %>% 
+  filter(inflation == 'real') %>%
+  ggplot(aes(x=proportion, fill=year)) + 
+  geom_density(alpha=.3)
+
+#+ ----- plot for change in revenue -----------------------------------------------------------------------
 
 g1 <- 
   ds4 %>%
