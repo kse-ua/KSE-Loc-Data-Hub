@@ -113,9 +113,7 @@ ds1 %>% skimr::skim()
 # getting hromada and sex data from opora dataset
 ds2 <- ds1 %>% left_join(ds_local_elections_results_opora %>%
                              select(elect_type, fio, rada_title, hromada, sex) %>%
-                             filter(elect_type == 'міські голови') %>%
-                             mutate(fio = gsub("'",'', fio),
-                                    rada_title = gsub("'",'', rada_title)),
+                             filter(elect_type == 'міські голови'),
                            by = c('fio' = 'fio', 'rada' = 'rada_title')) %>%
   select(-c(result, elect_type)) %>%
   relocate(fio, hromada, rada, rada_type, raion, oblast, party, sex, birthdate, 
@@ -145,10 +143,10 @@ ds3 <- ds2 %>%
          ,birthdate = as.Date(str_extract(info, '\\d{2}.\\d{2}.\\d{4}'), '%d.%m.%Y')
          ,age = trunc((birthdate %--% Sys.Date()) / years(1))
          ,workplace = str_match(info, '(?<= член |безпартійна|безпартійний)[^,]*, ([^,]*)')[,2]
-         ,birthplace = ifelse(is.na(birthplace), str_match(info, '(?<=, місце проживання: )(.*)')[,2], birthplace)
+         ,residence = str_match(info, '(?<=, місце проживання: )(.*)')[,2]
          ,position = str_match(info, paste0('(?<=', workplace, '), ([^,]*)'))[,2])
 
-ds3 %>% filter(is.na(position)) %>% select(info, workplace, position) %>% neat_DT()
+ds3 %>% filter(is.na(birthplace)) %>% select(fio, info) %>% neat_DT()
 ds3 %>% skimr::skim()
 
 
@@ -157,7 +155,7 @@ ds3 %>% skimr::skim()
 
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-ds3 %>% readr::write_csv("./data-private/derived/hromada_heads.csv")
+ds3 %>% openxlsx::write.xlsx("./data-private/derived/hromada_heads.xlsx")
 
 
 #+ results="asis", echo=F ------------------------------------------------------
