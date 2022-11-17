@@ -44,6 +44,10 @@ ds_admin <- readr::read_csv(path_admin)
 
 ## Correcting mistakes
 youth_centers$hromada_name_short <- gsub("ої","а", youth_centers$hromada_name_short)
+youth_centers$hromada_name_short <- gsub("'","’", youth_centers$hromada_name_short)
+youth_councils$hromada_name_short <- gsub("'","’", business_support$hromada_name_short)
+youth_councils$hromada_name_short <- gsub("'","’", business_support$hromada_name_short)
+
 
 ## Correcting mistakes
 business_support$town <- gsub("'","’", business_support$town)
@@ -97,6 +101,48 @@ table(business_support$oblast) # regional distribution
 table(business_support$town) # settlement distribution - really a lot of in Vertokyivka - Why?
 n_distinct(business_support$town) # number of settlements
 table(business_support$category) # distribution by type
+
+
+## Merging admin data to youth centers and councils data set
+admin_short <- ds_admin %>% distinct(hromada_code, .keep_all = TRUE) %>%
+  select(hromada_code,
+         hromada_name,
+         raion_name,
+         oblast_name)
+
+
+youth_count_admin <- youth_count %>% 
+  left_join(
+    admin_short
+    ,by = c("oblast_name_short" = "oblast_name",
+            "rayon_name_short" = "raion_name",
+            "hromada_name_short" = "hromada_name")
+  )
+
+youth_centers %>% filter(oblast_name_short=="Волинська"&
+                       rayon_name_short=="Луцький"&
+                       hromada_name_short =="Луцька") %>% View()
+
+youth_count %>% filter(oblast_name_short=="Волинська"&
+                       rayon_name_short=="Луцький"&
+                       hromada_name_short=="Луцька") %>% View()
+
+youth_count_admin %>% filter(oblast_name_short=="Волинська"&
+                               rayon_name_short=="Луцький"&
+                               hromada_name_short=="Луцька") %>% View()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Merging admin data to entrepreneurship support centers
 business_support_merge <- business_support %>% 
