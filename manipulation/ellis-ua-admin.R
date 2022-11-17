@@ -286,7 +286,7 @@ ds_rada_old <-
   select(rada_code, rada_name)
 ds_rada_old
 
-ds_settlement_rada_old <-
+pre_ds_settlement_rada_old <-
   ds_old1 %>% 
   filter(category_label %in% c("місто","село","селище","селище міського типу") ) %>%
   mutate(
@@ -309,10 +309,65 @@ ds_settlement_rada_old <-
   left_join(
     ds_rada_old
     ,by = "rada_code"
-  ) %>%
+  ) 
+
+ds_settlement_rada_old <- 
+  pre_ds_settlement_rada_old %>%
   select(settlement_name = object_name, settlement_code, rada_name, rada_code)
 
-ds_settlement_rada_old
+
+#old admin dataset
+ds_admin_old <- 
+  pre_ds_settlement_rada_old %>% 
+  select(-level_3, -level_4,-object_category) %>% 
+  rename(settlement_name = object_name, raion_code = level_2, oblast_code = level_1) %>% 
+  left_join(
+    ds_raion_old
+    ,by = "raion_code"
+  ) %>% 
+  left_join(
+    ds_oblast_old
+    ,by = "oblast_code"
+  ) %>% 
+  mutate_at(
+    vars(settlement_name, rada_name, raion_name, oblast_name)
+    ,~str_to_title(.)
+  ) %>% 
+  mutate(
+    raion_name = str_remove(raion_name, " Район.+")
+    ,oblast_name = str_remove(oblast_name, " Область.+")
+  ) %>% 
+  mutate_at(
+    vars(settlement_name, rada_name, raion_name, oblast_name)
+    ,~str_replace_all(., c("'"="’", "\\s\\s"=" ","Короcтишів"="Коростишів", "\\s+\\(.+\\)"=""))
+  )
+
+ds_admin_old %>% count(raion_name) %>% View()
+ds_admin_old %>% count(oblast_name) %>% View()
+
+readr::write_csv(ds_admin_old, "./data-public/derived/ua-admin-old.csv")
+
+
+# ds_admin_old <- 
+#   ds_settlement_rada_old %>% 
+#   left_join(
+#     ds_old1 %>% distinct(raion_code = level_2, rada_code = level_3)
+#     ,by = "rada_code"
+#   ) %>% 
+#   left_join(
+#     ds_raion_old
+#     ,by = "raion_code"
+#   ) %>% 
+#   left_join(
+#     ds_old1 %>% distinct(oblast_code = level_1, rada_code = level_3)
+#     ,by = "rada_code"
+#   ) %>% 
+#   left_join(
+#     ds_oblast_old
+#     ,by = "oblast_code"
+#   ) 
+
+
 
 #+ table-3 ---------------------------------------------------------------------
 
@@ -403,6 +458,7 @@ ds_admin <-
     ,oblast_name_display = fct_reorder(oblast_name_display, map_position)
   ) 
 ds_admin %>% glimpse(90)
+
 
 
 #combine all together with old classification (rada name and code)

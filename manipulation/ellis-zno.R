@@ -34,39 +34,39 @@ library(archive)
 
 #+ declare-globals -------------------------------------------------------------
 path_zno21 <- "./data-private/raw/OpenDataZNO2021.7z"
-path_zno20 <- "./data-private/raw/OpenDataZNO2020.7z"
+# path_zno20 <- "./data-private/raw/OpenDataZNO2020.7z"
 # path_zno19
 # path_zno18
 # path_zno17
 
 path_admin <- "./data-private/derived/ua-admin-map.csv"
+path_admin_old <- "./data-public/derived/ua-admin-old.csv"
 
-path_schools20 <- "./data-private/raw/schools-2020.xlsx"
+path_schools <- "./data-private/raw/schools-register.xlsx"
 
-names_school20 <- c(
-  "oblast_n"
-  ,"oblast"
-  ,"school_type"
-  ,"ID"
-  ,"hromada_name"
-  ,"school_name"
-  ,"level"
-  ,"squere"
-  ,"n_ped"
-  ,"n_non_ped"
-  ,"n_ped_old"
-  ,"n_students"
-  ,"n_classes"
-  ,"expenditures1"
-  ,"expenditures2"
-  ,"oporna"
-  ,"budget_code"
-  ,"ownership"
-  ,"diso_code"
-  ,"edrpou"
-  ,"note"
-)
-
+# names_school_fin <- c(
+#   "oblast_n"
+#   ,"oblast"
+#   ,"school_type"
+#   ,"ID"
+#   ,"hromada_name"
+#   ,"school_name"
+#   ,"level"
+#   ,"squere"
+#   ,"n_ped"
+#   ,"n_non_ped"
+#   ,"n_ped_old"
+#   ,"n_students"
+#   ,"n_classes"
+#   ,"expenditures1"
+#   ,"expenditures2"
+#   ,"oporna"
+#   ,"budget_code"
+#   ,"ownership"
+#   ,"diso_code"
+#   ,"edrpou"
+#   ,"note"
+# )
 
 
 #+ declare-functions -----------------------------------------------------------
@@ -94,15 +94,26 @@ zno21 <- readr::read_delim(
 #   ,locale = locale(decimal_mark = ",")
 # )
 
-schools20 <- readxl::read_excel(path_schools20, col_names = names_school20, skip =2)
+schools <- readxl::read_excel(path_schools)
 
 ds_admin <- readr::read_csv(path_admin)
+
+ds_admin_old <- readr::read_csv(path_admin_old) %>% 
+  left_join(
+    ds_admin %>% 
+      select(settlement_code_old, hromada_code, hromada_name)
+    ,by = c("settlement_code"="settlement_code_old")
+  ) %>% 
+  select(oblast_name, raion_name, category_label, settlement_name, hromada_code, hromada_name) %>% 
+  mutate(
+    key = paste(oblast_name, raion_name, category_label, settlement_name)
+  )
 
 #+ inspect-data ----------------------------------------------------------------
 zno21 %>% glimpse()
 
 
-#+ tweak-data, eval=eval_chunks ------------------------------------------------
+#+ tweak-data-1, eval=eval_chunks ------------------------------------------------
 ds_1 <- 
   zno21 %>% 
   mutate(
@@ -130,6 +141,10 @@ ds_1 <-
     ,oblast_school = str_extract(EORegName, "(.+(?=\\sобласть))|(м\\.Київ)")
     ,raion_school = str_extract(EOAreaName, ".+район(?! міста)")
     ,year = "2021"
+    ,raion_school = str_replace(raion_school, "'", "’")
+    ,settlement_school = str_replace(settlement_school, "'", "’")
+    ,raion_student = str_replace(raion_student, "'", "’")
+    ,settlement_student = str_replace(settlement_student, "'", "’")
   ) %>%
   filter(RegTypeName == "Випускник загальноосвітнього навчального закладу 2021 року") %>% 
   rename(school_name = EONAME) %>% 
@@ -141,54 +156,79 @@ ds_1 <-
          ,EngTestStatus, EngBall100 #English
   )
 
-
-ds_2 <- 
-  ds_1 %>% 
-  mutate(
-    key_school  = paste(oblast_school, raion_school, settlement_type_school, settlement_school)
-    ,key_student = paste(oblast_student, raion_student, settlement_type_student, settlement_student)
-  ) %>% 
-  distinct(key_student)
-
+#add hromada code and name for cities
 cities <- 
   ds_1 %>% 
   filter(is.na(raion_school) == T) %>% 
   # select(oblast_school, settlement_school) %>% distinct() #no need to specify oblast/raion - 
   #all city names are unique
   select(settlement_school) %>% 
-  mutate(settlement_school = str_replace_all(
-    settlement_school, c("'"="’", "Володимир-Волинський"="Володимир"))
-    ) %>% 
+  mutate(settlement_school = str_replace(settlement_school, "Володимир-Волинський", "Володимир")) %>% 
   distinct() %>% 
   left_join(
     ds_admin %>% 
-      filter(settlement_type == "місто" & settlement_name.x %in% cities$settlement_school)
-    ,by = c("settlement_school" = "settlement_name.x")
+      filter(settlement_type == "місто")
+    ,by = c("settlement_school" = "settlement_name")
   ) %>% 
   filter(!(settlement_school == "Миколаїв" & oblast_name == "Львівська") #remove duplicated set
-          ,!(settlement_school == "Первомайськ" & oblast_name == "Луганська")) #remove duplicated set
+          ,!(settlement_school == "Первомайськ" & oblast_name == "Луганська") #remove duplicated set 
+  ) %>% 
+  mutate(
+    key = paste(oblast_name, settlement_school)
+    ,hromada_code = ifelse(key == "NA Київ", "UA80000000000093317", hromada_code)
+    ,hromada_name = ifelse(key == "NA Київ", "Київ", hromada_name)
+    ,key = ifelse(key == "NA Київ", "м.Київ Київ", key)
+  ) %>% 
+  select(key, hromada_code, hromada_name)
 
 
+#add hromada code and name for small cities, settlements and villages
+settlements_villages <- 
+  ds_1 %>% 
+  filter(is.na(raion_school) == F) %>% 
+  select(oblast_school, raion_school, settlement_school,settlement_type_school) %>% 
+  mutate(
+    raion_school = str_remove(raion_school, " район")
+    ,key = paste(oblast_school, raion_school,settlement_type_school,settlement_school)
+    ,key = str_replace(key,  "NA с-ще", "селище")
+  ) %>% 
+  #key as a combination of oblast-raion-settlement type-settlement name - not ideal, because can
+  #merge different settlements with the same name in one raion as one settlements - FIND SOLUTION
+  distinct(key) %>% 
+  left_join(
+    ds_admin_old %>% 
+      select(key, hromada_code, hromada_name) %>% 
+      filter(!(key == "Дніпропетровська Дніпровський село Миколаївка" & is.na(hromada_code) == T))
+    ,by = "key"
+  ) 
+
+#combine all settlement types for joining
+to_merge <- rbind(cities, settlements_villages)
+
+ds_2 <- 
+  ds_1 %>% 
+  mutate(
+    raion_school = str_remove(raion_school, " район")
+    ,settlement_school = str_replace(settlement_school, "Володимир-Волинський", "Володимир")
+    ,key = case_when(
+      is.na(raion_school) == T ~ paste(oblast_school, settlement_school)
+      ,is.na(raion_school) == F ~ paste(oblast_school, raion_school, settlement_type_school, settlement_school)
+    )
+    ,key = str_replace(key,  "NA с-ще", "селище")
+  ) %>% 
+  left_join(
+    to_merge
+    ,by = "key"
+  )
+
+#TO-DO - identify and remove duplicates
+dublicates <- ds_2 %>% count(OUTID) %>% filter(n > 1) %>% pull(OUTID)
+ds_2 %>% filter(OUTID %in% dublicates) %>% arrange(OUTID) %>% View()
 
 
-# ds_zno21 %>% 
-#   distinct(school_name) %>%
-#   mutate(
-#     school_name = tolower(school_name)
-#     ,school_name = str_remove(school_name, "[:punct:]")
-#   ) %>% 
-#   left_join(
-#     schools20 %>% select(school_name, level) %>% 
-#       mutate(
-#         school_name = tolower(school_name)
-#         ,school_name = str_remove(school_name, "[[:punct:]]")
-#       )
-#     ,by = "school_name"
-#   ) %>% count(level)
-
-
+#+ tweak-data-2, eval=eval_chunks ------------------------------------------------
 ds_zno21_hromada <- 
-  ds_zno21 %>% 
+  ds_2 %>% 
   mutate_at(vars(contains("Ball100")), ~as.character(.)) %>% 
   pivot_longer(
     cols = UMLTestStatus:EngBall100
@@ -199,19 +239,62 @@ ds_zno21_hromada <-
   ) %>% 
   pivot_wider(
     names_from = "name", values_from = "value"
-  )
+  ) %>% 
+  mutate(Ball = as.numeric(Ball))
+#TO-DO - identify and remove duplicates
 
-
-colnames(ds_zno21)
-
-#+ combine ---------------------------------------------------------------------
-
-
+ds_zno21_hromada_means <- 
+  ds_zno21_hromada %>% 
+  filter(!str_detect(Ball, "c")) %>% 
+  mutate(
+    Ball = as.numeric(Ball)
+    ,didnt_pass = ifelse(TestStatus == "Не подолав поріг", 1, 0)
+    ,Ball = ifelse(Ball == 0, NA, Ball)
+  ) %>% 
+  group_by(hromada_code, hromada_name, subject) %>% 
+  summarise(mean_score = mean(Ball, na.rm = T), n_didnt_pass = sum(didnt_pass), n = n()) %>% 
+  mutate(pct_didnt_pass = n_didnt_pass/n)
+#TO-DO - Check mean scores for hromadas AND add Kyiv
+#TO-DO - Check mean scores and numbers of test takers based on the official analysis: https://zno.testportal.com.ua/stat/2021
 
 #+ graph-1 ---------------------------------------------------------------------
-#+ graph-2 ---------------------------------------------------------------------
-#+ save-to-disk, eval=eval_chunks-----------------------------------------------
+library(sf)
+library(tmap)
 
+path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
+
+ds_polygons <- st_read(path_polygons) %>% janitor::clean_names() %>% 
+  mutate(
+    admin_3 = str_replace_all(admin_3,c("a" = "а", "o" = "о", "p"="р", "e"="е", "'" = "’"))
+  )
+
+ds_map <- st_sf(
+  ds_zno21_hromada_means %>% 
+    left_join(
+      ds_polygons %>% select(cod_3, geometry)
+      ,by = c("hromada_code"="cod_3")
+    )
+)
+
+tmap_mode("view")
+g1 <- 
+  ds_map %>%
+  filter(subject == "UML") %>% 
+  tm_shape() + 
+  tm_fill("pct_didnt_pass",
+          palette = "Reds",
+          id="hromada_code",
+          popup.vars=c("hromada_name")
+  ) + 
+  tm_legend(outside=TRUE) +
+  tm_layout(frame = FALSE) +
+  tmap_options(check.and.fix = TRUE)
+g1
+
+
+
+#+ save-to-disk, eval=eval_chunks-----------------------------------------------
+readr::write_csv(ds_zno21_hromada_means, "./data-private/derived/zno-2022-aggragated.csv")
 
 
 
