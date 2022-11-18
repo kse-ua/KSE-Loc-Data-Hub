@@ -31,7 +31,12 @@ base::source("./scripts/common-functions.R") # project-level
 library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
+#source: https://drive.google.com/file/d/1JLICa97syJPyGOvt-8zx8PuALzPzZzR1/view?usp=sharing
 path_declarations<- "./data-private/raw/active_declarations_by_age_gender.csv"
+
+#source: https://drive.google.com/file/d/1sJz53HVMEZlD3gSurkU0kd0-dwMDacGG/view?usp=sharing
+path_doctors <- "./data-private/raw/hospitals-doctors.csv"
+
 path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
 
 #+ results="asis", echo=F ------------------------------------------------------
@@ -40,7 +45,7 @@ cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
 ds0 <- readr::read_csv(path_declarations)
 ds_admin <- readr::read_csv(path_admin)
-
+ds_doctors0 <- readr::read_csv(path_doctors)
 
 #+ inspect-data ----------------------------------------------------------------
 ds0 %>% glimpse()
@@ -134,7 +139,36 @@ v_hromadas <- ds2 %>% distinct(area, hromada_code, hromada_name) %>% pull(hromad
 
 ds_admin %>% 
   filter(oblast_name != "Автономна Республіка Крим", !(hromada_code %in% v_hromadas)) %>% 
-  distinct(oblast_name, hromada_name) %>% View()
+  distinct(oblast_name, hromada_name)
+
+
+#+ tweak-data-doctors-hospitals, eval=eval_chunks ------------------------------------------------
+# 
+# ds_doctors <- 
+#   ds_doctors0 %>% 
+#   group_by(legal_entity_id) %>% 
+#   summarise(n_doctors = n())
+# 
+# #several hromadas for some hospitals
+# ds2 %>% 
+#   distinct(hromada_code,hromada_name,legal_entity_id) %>% 
+#   group_by(legal_entity_id) %>% 
+#   summarise(n = n()) %>% 
+#   arrange(desc(n))
+# 
+# 
+# ds2 %>% 
+#   group_by(hromada_code,hromada_name,legal_entity_id) %>% 
+#   summarise(n_declarations = sum(count_declarations)) %>% View()
+#   
+# ds2 %>% 
+#   group_by(legal_entity_id) %>% 
+#   summarise(n_declarations = sum(count_declarations)) %>% 
+#   left_join(
+#     ds_doctors
+#     ,by = "legal_entity_id"
+#   ) %>% View()
+
 
 
 #+ aggregate-hromada-level, eval=eval_chunks -------------------------------------------------
@@ -220,5 +254,72 @@ g1 <-
   tmap_options(check.and.fix = TRUE)
 g1
 
+#+ comparison-with-state-statistics, eval=eval_chunks -------------------------------------------------
+path_stat <-  "./data-private/raw/pop-permanent-2022.xlsx"
+
+stat_colnames <- c(
+  "age"
+  ,"both"
+  ,"male"
+  ,"female"
+)
+
+sheets <- readxl::excel_sheets(path_stat)[-c(1:11, 37:67)]
+
+ds_stat <- tibble()
+for (i in sheets){
+  ds_stat0 <- readxl::read_excel(path_stat, sheet = i, col_names = stat_colnames)
+  obl <- 
+  if(ds_stat0$age[2] != "Kyiv city"){
+  ds_stat1 <- 
+    ds_stat0 %>% 
+    select(-both) %>% 
+    mutate(
+      oblast = str_extract(age, ".+oblast|Kyiv")
+      ,type = str_extract(age, ".+population")
+    ) %>% 
+    fill(oblast, type) %>% 
+    filter(
+        !is.na(as.numeric(male))
+        ,!(age %in% c("Усього / Total", "60 years and older", "65 years and older"))
+        ,!str_detect(age, "–")
+        ,!str_detect(type, "Тotal population")
+      ) %>% 
+      pivot_longer(c(male, female), names_to = "gender", values_to = "n")
+  } else {
+    ds_stat1 <- 
+      ds_stat0 %>% 
+      select(-both) %>% 
+      mutate(
+        oblast = str_extract(age, ".+oblast|Kyiv")
+        ,type = str_extract(age, ".+population")
+      ) %>% 
+      fill(oblast, type) %>%    
+      filter(
+        !is.na(as.numeric(male))
+        ,!(age %in% c("Усього / Total", "60 years and older", "65 years and older"))
+        ,!str_detect(age, "–")
+      ) %>% 
+      mutate(type = "Mіське населення / Urban population") %>% 
+      pivot_longer(c(male, female), names_to = "gender", values_to = "n")
+    }
+
+  ds_stat <- rbind(ds_stat, ds_stat1)
+}
+
+ds_stat <- 
+  mutate(
+    
+  )
+
+
+ds_stat %>% summarise(n = sum(n))
+
+  
+
+
+ds_comp <- 
+  ds2 %>% 
+  select(area, settlement_type, person_gender, person_age)
 
 
