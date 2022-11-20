@@ -167,8 +167,11 @@ toh_before_22 <- c("05561000000","05556000000","12538000000","05555000000","1253
                    ,"05566000000","12531000000","05565000000","05559000000","05558000000","05550000000"
                    ,"12536000000","05553000000") 
 
+`%notin%` <- Negate(`%in%`)
+
 ds4_long <- 
   ds3_long %>% 
+  filter(admin4_code %notin% toh_before_22) %>%
   mutate(
     date = paste0(year,"-",ifelse(
       nchar(month)==1L, paste0("0",month), month),  "-01"
@@ -184,7 +187,7 @@ ds4_long <-
   )
 
 ds5_long <- ds4_long %>%
-  group_by(admin4_code, admin4_label, year, month) %>% 
+  group_by(admin4_code, admin4_label, year, month, date) %>% 
   summarize(
     income_total = sum(amount, na.rm = T)
     ,income_transfert = sum(amount*transfert, na.rm = T)
@@ -206,6 +209,7 @@ ds5_long <- ds4_long %>%
     ,property_tax_prop = round(income_property_tax/income_total,2)
     ,excise_duty_prop = round(income_excise_duty/income_total,2)
   ) %>%
+  relocate(date, .after = month) %>%
   left_join(
     ds_admin_full %>% 
       mutate(budget_code = paste0(budget_code,"0")) %>% 
@@ -215,10 +219,46 @@ ds5_long <- ds4_long %>%
   ) %>%
   relocate(admin4_code, admin4_label, hromada_name, hromada_code, raion_name, 
            raion_code, oblast_name, oblast_name_en, oblast_code, region_en, region_code_en) %>%
-  filter(!is.na(region_en))
+  filter(!is.na(region_en)) %>%
+  arrange(oblast_name_en, raion_name, hromada_name, date)
+
+#+ ---- check distribution -----------------------------------------------------
+hromada_sample <- sample(unique(ds5_long$admin4_code), 10)
+
+ds5_sample <- ds5_long %>% filter(admin4_code %in% hromada_sample) %>% 
+  filter(year %in% c(2021, 2022) & month %in% c(3:7))
+
+d1 <- ds5_long %>%
+  filter(year %in% c(2021, 2022) & month %in% c(3:7)) %>% view()
+  group_by(admin4_code, year) %>%
+  summarize(sum_income_own = sum(income_own, na.rm = TRUE), 
+            mean_own_income_prop = mean(own_income_prop, na.rm = TRUE)) %>%
+  mutate(
+    own_income_change = round((sum_income_own / lag(sum_income_own)) - 1,2)
+    ,own_prop_change = mean_own_income_prop - lag(mean_own_income_prop)
+  ) #%>%
+  filter(year == 2022)
+
+# distribution of own income (in log scale)
+d1 %>% 
+  ggplot(aes(x=log10(sum_income_own))) +
+  geom_histogram(alpha=.5, position="identity")
+
+d1 %>% 
+  ggplot(aes(x=log10(sum_income_own))) +
+  geom_density(alpha=.3)
+
+# distribution of proportion of own income
+d1 %>% 
+  ggplot(aes(x=mean_own_income_prop)) +
+  geom_histogram(alpha=.5, position="identity")
 
 
-#+ ---- adding metadata ---------------------------------------------------------
+
+d1 %>%
+  ungroup() %>%
+  slice_max(mean_own_income_prop, n = 10)
+#+ ---- adding metadata --------------------------------------------------------
 
 # variables <- c(colnames(ds3)[1:13], '11010100-50110000')
 variables <- c(colnames(ds5_long))
