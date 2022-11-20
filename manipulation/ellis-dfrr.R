@@ -27,8 +27,14 @@ options(width=100) # number of characters to display in the output (dflt = 80)
 Sys.setlocale("LC_CTYPE", "ukr")
 #+ load-sources ------------------------------------------------------------
 base::source("./scripts/common-functions.R") # project-level
+
+# Define utils
+'%ni%' <- Negate(`%in%`)
+na_strings <- c("NA", "N A", "N / A", "N/A", "N/ A", "n/a", "NOt available", '<NA>')
+
 #+ load-packages -----------------------------------------------------------
 library(tidyverse)
+
 
 #+ declare-globals -------------------------------------------------------------
 names_dfrr2021 <- c(
@@ -267,42 +273,130 @@ openxlsx::write.xlsx(ds_1, "./data-private/raw/dfrr-2015-2022-coding.xlsx")
 #+ tweak-coded-data, eval=eval_chunks ------------------------------------------------
 ds_2 <- readxl::read_excel("./data-private/raw/dfrr-2015-2022-coding-coded.xlsx", na = "NA")
   
-ds_3 <- 
-  ds_2 %>% 
-  filter(!(is.na(settlement) & is.na(hromada))) %>% 
+#select cities codes for merge - all combinations oblast-settlement for cities are unique
+cities_for_merge <- 
+  ds_admin_old %>% 
+    filter(category_label == "місто") %>% 
+    mutate(
+      key = paste(oblast_name, category_label, settlement_name)
+    ) %>% 
+    select(key, settlement_code)
+
+#select unique settlements for merge
+settlement_duplicated <- 
+  ds_admin_old %>% 
+    filter(category_label == "селище міського типу") %>% 
+    mutate(
+      key = paste(oblast_name, category_label, settlement_name)
+    ) %>% 
+    count(key) %>% 
+    filter(n > 1) %>% 
+    pull(key)
+
+settlements_for_merge <- 
+  ds_admin_old %>% 
+  mutate(
+    key = paste(oblast_name, category_label, settlement_name)
+  ) %>% 
+  filter(key %ni% settlement_duplicated) %>% 
+  select(key, settlement_code)
+
+#select unique villages for merge
+villages_duplicated <- 
+  ds_admin_old %>% 
+  mutate(
+    category_label = ifelse(category_label == "селище", "село", category_label)
+  ) %>%
+  filter(category_label == "село") %>% 
+  mutate(
+    key = paste(oblast_name, raion_name, category_label, settlement_name)
+  ) %>% 
+  count(key) %>% 
+  filter(n > 1) %>% 
+  pull(key)
+
+villages_for_merge <- 
+  ds_admin_old %>% 
+  mutate(
+    key = paste(oblast_name, raion_name, category_label, settlement_name)
+  ) %>% 
+  filter(key %ni% villages_duplicated) %>% 
+  select(key, settlement_code)
+
+#combine in one df
+for_merge <- rbind(cities_for_merge, settlements_for_merge, villages_for_merge)
+
+
+ds_3 <-
+  ds_2 %>%
+  filter(!(is.na(settlement) & is.na(hromada))) %>%
   mutate(
     settlement_type = case_when(
-      str_detect(settlement, "м.") ~ "місто"
-      ,str_detect(settlement, "с.") ~ "село"
-      ,str_detect(settlement, "смт ") ~ "селище міського типу"
+      str_detect(settlement, "м\\.") ~ "місто"
+      ,str_detect(settlement, "с\\.") ~ "село"
+      ,str_detect(settlement, "смт |cмт ") ~ "селище міського типу"
+      ,str_detect(settlement, "Київ") ~ "місто"
     )
     ,settlement = str_remove(settlement, "м\\.\\s|с\\.\\s|c\\.\\s|смт\\s|м\\.\\s")
     ,settlement = str_replace(settlement, "'", "’")
     ,raion = str_replace(raion, "'", "’")
     ,key = case_when(
-      is.na(raion) == T & is.na(hromada) == T ~ paste(oblast, settlement_type, settlement)
-      ,is.na(raion) == F & is.na(hromada) == T ~ paste(oblast, raion, settlement_type, settlement)
+      is.na(hromada) == T & settlement_type %in% c("місто", "селище міського типу") ~ paste(oblast, settlement_type, settlement)
+      ,is.na(hromada) == T & settlement_type == "село" ~ paste(oblast, raion, settlement_type, settlement)
       ,TRUE ~ NA_character_
     )
-  ) %>% 
+  ) %>%
   left_join(
-    ds_admin_old %>% 
-      mutate(
-        category_label = ifelse(category_label == "селище", "село",category_label)
-        ,key = 
-      )
+    for_merge
+    ,by = "key"
   )
 
-ds_admin_old %>% 
-  filter(category_label == "місто") %>% 
-  count(oblast_name, settlement_name) %>% 
-  arrange(desc(n)) %>% View()
+#final coding of settlements which haven't merged
+# openxlsx::write.xlsx(ds_3 %>% filter(is.na(settlement_code) & !is.na(key))
+#                      , "./data-private/raw/dfrr-2015-2022-coding.xlsx")
 
+ds_coded <- readxl::read_excel("./data-private/raw/dfrr-2015-2022-coding_v2_coded.xlsx", na = "NA")
 
-ds_admin_old %>% 
-  filter(category_label == "селище міського типу") %>% 
-  count(oblast_name, settlement_name) %>% 
-  arrange(desc(n)) 
+ds_4 <- 
+  ds_3 %>% 
+  filter(!(is.na(settlement_code) & !is.na(key))) %>% 
+  rbind(ds_coded) %>%
+  left_join(
+    ds_admin %>% select(settlement_code_old, hromada_code, hromada_name)
+    ,by = c("settlement_code"="settlement_code_old")
+  ) %>% 
+  mutate(
+    key = paste(oblast, hromada)
+  ) %>% 
+  left_join(
+    ds_hromada %>% select(hromada_code, oblast_name, hromada_name, type) %>% 
+      mutate(
+        key = paste(oblast_name, hromada_name, type, "громада"), oblast_name = NULL, type = NULL
+      )
+    ,by = "key"
+  ) %>% 
+  mutate(
+    hromada_name = case_when(
+      settlement_code == "8000000000" ~ "Київ"
+      ,is.na(hromada_name.x) == T ~ hromada_name.y
+      ,TRUE ~ hromada_name.x
+    )
+    ,hromada_code = case_when(
+      settlement_code == "8000000000" ~ "UA80000000000093317"
+      ,is.na(hromada_code.x) == T ~ hromada_code.y
+      ,TRUE ~ hromada_code.x
+    )
+  ) %>% 
+  select(-c(hromada_name.x, hromada_name.y, hromada_code.x, hromada_code.y))
+
+#+ aggregate-data, eval=eval_chunks ------------------------------------------------
+ds_5 <- 
+  ds_4 %>% 
+  group_by(hromada_code, hromada_name, year) %>% 
+  summarise(budget_planned = sum(budget_plan), budget_executed = sum(budget_executed))
+
+#+ save-data, eval=eval_chunks ------------------------------------------------
+readr::write_csv(ds_5, "./data-private/derived/dfrr_hromadas.csv")
 
 
 #+ results="asis", echo=F ------------------------------------------------------
