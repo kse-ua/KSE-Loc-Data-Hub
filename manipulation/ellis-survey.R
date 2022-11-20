@@ -11,20 +11,6 @@ rm(list = ls())
 
 ##--- Input variables ---
 
-# user <-  Sys.info()['user']
-# sysname <- Sys.info()['sysname']
-
-# Project specific
-# ADAPT (survey-specific)
-# project_name = 'CAR_Q3_22'
-# 
-# form_path = 'GFFO-Cash Barometer - General/Countries/CAR/3. Data Analysis Visualisation/Round 3 (Q2 2022)/Stats/02_data/'
-# xls_form = str_c(form_path,"kobo.xlsx")
-# 
-# data_path = form_path
-# survey_data = str_c(data_path,"raw_data_0208_2.xlsx")
-
-# Custom variables
 # Define utils
 '%ni%' <- Negate(`%in%`)
 na_strings <- c("NA", "N A", "N / A", "N/A", "N/ A", "n/a", "NOt available", '<NA>')
@@ -42,16 +28,51 @@ choices_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "choic
 # Survey data
 d0 <- readxl::read_excel("./data-private/raw/Resilience_survey_2022_11_05_eng.xlsx")
 
-#mcq questions from kobofile
+ds_population <- readr::read_csv("./data-private/derived/ua-pop-2022.csv")
+
+ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv") %>% 
+  mutate(
+    key = paste(hromada_name, type, "громада")
+  )
+
+
+ds_budget <- readxl::read_xlsx("./data-public/derived/hromada_budget_2020_2022.xlsx") 
+
+
+ds_1 <- ds_budget %>% 
+  group_by(hromada_name, hromada_code, year) %>% 
+  summarise(total = sum(income_total)) %>% 
+  ungroup() %>% 
+  filter(year == "2021") %>% 
+  left_join(
+    ds_population %>% select(hromada_code, total_population_2022)
+    ,by = "hromada_code"
+  ) %>% 
+  mutate(
+    income_per_capita = total/total_population_2022
+  )
+
+
+
+
+# #mcq questions from kobofile
+#TO-DO: evacuation actions
 mcq<-survey_xls%>%
   dplyr::select(type,name)%>%
-  dplyr::filter(grepl("select_multiple",type))%>%
+  dplyr::filter(str_detect(type, "select_multiple"))%>%
   dplyr::select(name)%>%
   pull()
 
-
-#text response from kobofile
-
+oblasts <- readr::read_csv("./data-private/raw/oblast.csv") %>% 
+  mutate(
+    oblast_name_en = case_when(
+      oblast_name_en == "Driproptrovska" ~ "Dnipropetrovska"
+      ,oblast_name_en == "Ivano-Frankivsk" ~ "Ivano_Frankivsk"
+      ,oblast_name_en == "Kyiv-oblast" ~ "Kyivska"
+      ,oblast_name_en == "Vonyn" ~ "Volyn"
+      ,TRUE ~ oblast_name_en
+    )
+  )
 
 
 #select and store contact data
@@ -61,17 +82,24 @@ contact_data <- d0 %>%
 
 openxlsx::write.xlsx(contact_data, "./data-private/derived/survey-contact-data.xlsx")
 
-#clean data -------------------------------------------------------------------
+
+
+#---- clean data -------------------------------------------------------------------
 
 ##GENERAL CLEANING
 d1 <- 
   d0 %>% 
   select(!c(start, end, deviceid, contains("note"), contains("group_"), 
             prep_labels, commun_labels, contains("evacuation_actions"), heat_season_labels,
-            contact_text:`_tags`)
+            # contact_text:`_tags`
+            )
         ) %>% 
   filter(hromada_text %ni% c("Тест", "тест")) %>% 
-  rename(index = `_index`)
+  rename(index = `_index`) %>% 
+  left_join(
+    oblasts %>% select(oblast_name_en, region_en)
+    ,by = c("oblast"="oblast_name_en")
+  )
   
 
 #save text variables for coding
@@ -88,26 +116,104 @@ openxlsx::write.xlsx(text_data, "./data-private/derived/survey-text-data.xlsx")
 
 
 
-#create indexes for mcq
-d1$preparation <- 0
+#create counters for mcq
 preparation <- d1 %>% select(starts_with("prep_")) %>% colnames()
+comm_channels <- d1 %>% select(telegram:hotline) %>% colnames()
 
-for(l in preparation){
-  d1 <- d1 %>% 
-    mutate(
-      prep_count = case_when(
-        l == "before_24" ~ 2
-        ,l == "after_24" ~ 1
-        ,l == "not_executed" ~ 0
-        ,l == "doesnt_apply" ~ NA_real_
-      )
-      ,preparation = preparation + prep_count
+
+d2 <- d1 %>% 
+  mutate_at(
+    vars(all_of(preparation)), ~case_when(
+      . == "before_24" ~ 2
+      ,. == "after_24" ~ 1
+      ,. == "not_executed" ~ 0
+      ,. == "doesnt_apply" ~ NA_real_
+    ) 
+  ) %>% 
+  mutate_at(   
+    vars(all_of(comm_channels)), ~case_when(
+      . == "before_24" ~ 2
+      ,. == "after_24" ~ 1
+      ,. == "none" ~ 0
     )
+  ) %>% 
+  mutate(
+    prep_count= rowSums(across(preparation), na.rm = T)
+    ,comm_channels_count = rowSums(across(comm_channels), na.rm = T)
+    ,hepl_military_count = rowSums(across("help_for_military/rooms":"help_for_military/other"), na.rm = T)
+    ,idp_help_count = rowSums(across("idp_help/communal_placement":"idp_help/transit_center"), na.rm = T)
+    ,dftg_creation_time = difftime(dftg_creation_date, "2022-02-24", unit = "day") #negarive values - choose another date
+  ) 
+
+
+#SPEARMEN RANK CORRELATION FOR Q on preparations (between 14 items + total score + financial metrics)
+# ?financial metrics which represent preparation - income per capita, level of own income
+
+coded_hromada_names <- readxl::read_excel("./data-private/derived/survey-contact-data-coded.xlsx")
+
+d3 <- 
+  d2 %>% 
+  left_join(
+    coded_hromada_names %>% select("_id", hromada_name_right, key )
+    , by = "_id"
+  ) %>% 
+  left_join(
+    ds_hromada %>% select(key, hromada_code)
+    ,by = c("hromada_name_right"="key")
+  ) %>% 
+  left_join(
+    ds_1 %>% select(hromada_code, income_per_capita)
+    ,by = "hromada_code"
+  )
+
+cor_mat <- 
+  cor(d3 %>% select(all_of(preparation), prep_count)
+      ,use = "complete.obs"
+      ,method = "spearman")
+
+png(height=1800, width=1800, file="./analysis/prints/cor_preparation.png", type = "quartz")
+
+corrplot::corrplot(cor_mat, tl.col = "black",tl.cex = 1.5, addCoef.col = "black", number.cex=1.5, order = "FPC")
+
+dev.off()
+
+
+d3 %>% 
+  filter(income_per_capita < 15000) %>% 
+  ggplot(aes(income_per_capita, prep_count)) +
+    geom_point(aes(color = region_en)) +
+    geom_smooth(se=T, method = "lm")
+
+lm(d3 %>% 
+     filter(income_per_capita < 15000),
+   income_per_capita ~ prep_count
+   )
+
+hist(d3$income_per_capita)
+
+#function for tables 
+
+for (i in preparation) {
+  b <- knitr::kable(d2 %>% count(.data[[i]]) %>% mutate(pct = round(n/sum(n)*100, 1)))
+  print(b)
 }
 
 
-d1$communication_index <- 0
+hist(d2$prep_count)
 
+
+
+
+#COMPARISON OF SURVEYED HROMADAS WITH GENERAL POPULATION OF HROMADAS
+
+
+#---- transformations-for-analysis-------------------------------------------------------------------
+
+d3 <- 
+  d2 %>% 
+  mutate(
+    shelter_capacity_changes <- shelter_capacity_before_text/shelter_capacity_now_text 
+  )
 
 
 # columns <- d1 %>%   
@@ -267,13 +373,3 @@ write_xlsx(data, "Data_clean_test.xlsx")
 # write_list(list_of_datasets,wb_name)
 
 
-#--- Summarise data ---
-
-
-d <- data %>% 
-  select(bars, scq, mcq) %>%
-  replace_with_na_all(condition = ~.x == 98) %>%
-  replace_with_na_all(condition = ~.x == 99) %>%
-  Hmisc::describe()
-
-cat(capture.output(d), file = str_c(cloud_path, output_path, project_name,'_preliminary_results.txt'), sep = '\n')
