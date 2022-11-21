@@ -45,6 +45,7 @@ cat("\n# 2.Data ")
 
 path_local_elections_2020_chesno <- "./data-private/raw/local_elections_2020_Chesno.xlsx"
 path_local_elections_2020_opora <- './data-private/raw/all_results_2020_OPORA.xlsx'
+path_admin <- "./data-private/derived/ua-admin-map.csv"
 
 names_local_elections_mayors <- c(
   "oblast"
@@ -89,9 +90,15 @@ ds_local_elections_candidates <- readxl::read_xlsx(path_local_elections_2020_che
 ds_local_elections_results_opora <- readxl::read_xlsx(path_local_elections_2020_opora,
                                                       col_types = types_local_elections_results_opora)
 
-#+ tweak-data ------------------------------------------------------------------
+ds_admin_full <- readr::read_csv(path_admin)
 
-
+ds_admin_hromadas <- ds_admin_full %>%
+  distinct(hromada_code, hromada_name, raion_code, raion_name, oblast_code, 
+           oblast_name, type, region_en, region_ua, oblast_name_en, oblast_code_en, 
+           region_code_en, map_position, map_position2, oblast_center, oblast_center_code,
+           oblast_name_display) %>%
+  mutate(hromada_name = case_when(hromada_name == 'Вiйтовецька' ~ 'Війтовецька',
+                                  TRUE ~ hromada_name))
 
 #+ inspect-data ----------------------------------------------------------------
 
@@ -149,14 +156,33 @@ ds3 <- ds2 %>%
 ds3 %>% filter(is.na(birthplace)) %>% select(fio, info) %>% neat_DT()
 ds3 %>% skimr::skim()
 
-
-#+ tweak-data-2 ----------------------------------------------------------------
-
-
-
-#+ save-to-disk, eval=eval_chunks-----------------------------------------------
+#+ save-to-disk intermediate dataset, eval=eval_chunks-----------------------------------------------
 ds3 %>% openxlsx::write.xlsx("./data-private/derived/hromada_heads.xlsx")
 
+
+#+ import cleaned data ----------------------------------------------------------------
+path_hromada_heads <- "./data-private/derived/hromada_heads_clean.xlsx"
+
+ds_hromada_heads <- readxl::read_xlsx(path_hromada_heads, 
+                                               sheet = 'data')
+
+#+ join hromada codes ----------------------------------------------------------------
+
+ds_hromada_heads_clean <- ds_hromada_heads %>%
+  mutate(hromada = str_replace(str_extract(hromada, '^([\\S]+)'),"'","’"),
+         raion = str_extract(raion, '^([\\S]+)'),
+         oblast = str_extract(oblast, '^([\\S]+)')
+         ) %>%
+  mutate(hromada = case_when(hromada == 'Війтівецька' ~ 'Жданівська',
+                             TRUE ~ hromada))
+
+ds_hromadas_heads_fin <- ds_hromada_heads_clean %>% 
+  left_join(ds_admin_hromadas,
+            by = c('hromada' = 'hromada_name', 'raion' = 'raion_name', 
+                   'oblast' = 'oblast_name', 'rada_type' = 'type'))
+
+#+ save-to-disk final dataset, eval=eval_chunks-----------------------------------------------
+ds_hromadas_heads_fin %>% openxlsx::write.xlsx("./data-public/derived/hromada_heads.xlsx")
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
