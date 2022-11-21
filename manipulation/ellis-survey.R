@@ -36,17 +36,20 @@ ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv") %>%
   )
 
 
-ds_budget <- readxl::read_xlsx("./data-public/derived/hromada_budget_2020_2022.xlsx") %>% 
+ds_budget <- readxl::read_xlsx("./data-public/derived/hromada_budget_2020_2022.xlsx") 
+
+
+ds_1 <- ds_budget %>% 
   group_by(hromada_name, hromada_code, year) %>% 
   summarise(total = sum(income_total)) %>% 
   ungroup() %>% 
   filter(year == "2021") %>% 
   left_join(
-    ds_population %>% select(hromada_code, total_popultaion_2022)
+    ds_population %>% select(hromada_code, total_population_2022)
     ,by = "hromada_code"
   ) %>% 
   mutate(
-    income_per_capita = total/total_popultaion_2022
+    income_per_capita = total/total_population_2022
   )
 
 
@@ -89,15 +92,15 @@ d1 <-
   select(!c(start, end, deviceid, contains("note"), contains("group_"), 
             prep_labels, commun_labels, contains("evacuation_actions"), heat_season_labels,
             # contact_text:`_tags`
-            )
-        ) %>% 
+  )
+  ) %>% 
   filter(hromada_text %ni% c("Тест", "тест")) %>% 
   rename(index = `_index`) %>% 
   left_join(
     oblasts %>% select(oblast_name_en, region_en)
     ,by = c("oblast"="oblast_name_en")
   )
-  
+
 
 #save text variables for coding
 text <- survey_xls%>%
@@ -146,6 +149,7 @@ d2 <- d1 %>%
 #SPEARMEN RANK CORRELATION FOR Q on preparations (between 14 items + total score + financial metrics)
 # ?financial metrics which represent preparation - income per capita, level of own income
 
+coded_hromada_names <- readxl::read_excel("./data-private/derived/survey-contact-data-coded.xlsx")
 
 d3 <- 
   d2 %>% 
@@ -158,7 +162,7 @@ d3 <-
     ,by = c("hromada_name_right"="key")
   ) %>% 
   left_join(
-    ds_budget %>% select(hromada_code, income_per_capita)
+    ds_1 %>% select(hromada_code, income_per_capita)
     ,by = "hromada_code"
   )
 
@@ -173,18 +177,17 @@ corrplot::corrplot(cor_mat, tl.col = "black",tl.cex = 1.5, addCoef.col = "black"
 
 dev.off()
 
-coded_hromada_names <- readxl::read_excel("./data-private/derived/survey-contact-data-coded.xlsx")
 
 d3 %>% 
   filter(income_per_capita < 15000) %>% 
   ggplot(aes(income_per_capita, prep_count)) +
-    geom_point(aes(color = region_en)) +
-    geom_smooth(se=T, method = "lm")
+  geom_point(aes(color = region_en)) +
+  geom_smooth(se=T, method = "lm")
 
 lm(d3 %>% 
      filter(income_per_capita < 15000),
    income_per_capita ~ prep_count
-   )
+)
 
 hist(d3$income_per_capita)
 
@@ -290,7 +293,7 @@ for(i in scq[order(-nchar(scq), scq)]){
     str_detect(temp$question, i) & !str_detect(temp$question, "/")
     , str_replace(temp$question, paste(i, '_', sep = ""), paste(i, '/', sep = ""))
     , temp$question
-    )
+  )
 }
 
 temp$original <- str_replace(temp$question, "/", "_")
@@ -368,5 +371,4 @@ write_xlsx(data, "Data_clean_test.xlsx")
 #  
 # wb_name =  paste0(project, ".xlsx") # this can be easily personalised
 # write_list(list_of_datasets,wb_name)
-
 
