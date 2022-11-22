@@ -119,57 +119,61 @@ youth_count_admin <- youth_count %>%
             "hromada_name_short" = "hromada_name")
   )
 
-youth_centers %>% filter(oblast_name_short=="Волинська"&
-                       rayon_name_short=="Луцький"&
-                       hromada_name_short =="Луцька") %>% View()
-
-youth_count %>% filter(oblast_name_short=="Волинська"&
-                       rayon_name_short=="Луцький"&
-                       hromada_name_short=="Луцька") %>% View()
-
-youth_count_admin %>% filter(oblast_name_short=="Волинська"&
-                               rayon_name_short=="Луцький"&
-                               hromada_name_short=="Луцька") %>% View()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Merging admin data to entrepreneurship support centers
+business_support <- business_support[!duplicated(business_support$name),]
+
 business_support_merge <- business_support %>% 
-  inner_join(
+  left_join(
     ds_admin
     ,by = c("town" = "settlement_name",
             "oblast_name_short" = "oblast_name")
   )
 
-business_support_merge %>% filter(,duplicated(name)) %>% 
-  View()
 
-business_support_merge_full <- business_support %>% 
-  full_join(
+business_support_merge_duplicated <- business_support_merge %>%
+  filter(,duplicated(name)) %>%
+  select(oblast,
+         oblast_name_short,
+         settlement_type.x,
+         town,
+         name,
+         category,
+         description,
+         address)
+
+colnames(business_support_merge_duplicated)[3] <- "settlement_type"
+
+business_supportmerge__without_duplicated <- business_support_merge[!(business_support_merge$name %in% 
+                                                            business_support_merge_duplicated$name),]
+
+business_support_merge_add <- business_support_merge_duplicated %>% 
+  left_join(
     ds_admin
     ,by = c("town" = "settlement_name",
-            "oblast_name_short" = "oblast_name")
+            "oblast_name_short" = "oblast_name",
+            "settlement_type" = "settlement_type")
   )
 
-full_merge <- business_support_merge_full %>% 
-  full_join(
-    youth_count
-    ,by = c("oblast_name_short" = "oblast_name_short",
-            "raion_name" = "rayon_name_short",
-            "hromada_name" = "hromada_name_short"))
 
-summary <- full_merge %>% group_by(hromada_code, hromada_name) %>%
-  summarise(Youth_councils = Youth_councils,
-            Youth_centers = Youth_centers,
-            Business_support_centers = sum(!is.na(name))) %>% distinct(hromada_code, .keep_all=TRUE)
+business_supportmerge__without_duplicated$settlement_type.x <- business_supportmerge__without_duplicated$settlement_type.y
+colnames(business_supportmerge__without_duplicated)[3] <- "settlement_type"
+business_supportmerge__without_duplicated <- business_supportmerge__without_duplicated %>% select(-settlement_type.y)
+
+business_support_merge_full <- rbind(business_supportmerge__without_duplicated, business_support_merge_add)
+
+business_support_atc <- business_support_merge_full %>%
+  group_by(hromada_code, hromada_name) %>%
+  summarise(Business_support_centers = sum(!is.na(name)))
+
+summary_community_competence <- business_support_atc %>% 
+  full_join(
+    youth_count_admin
+    ,by = c("hromada_code" = "hromada_code")
+  ) %>% select(hromada_code,
+               hromada_name,
+               Youth_councils,
+               Youth_centers,
+               Business_support_centers)
+
+#+ save-data, eval=eval_chunks -------------------------------------------------
+readr::write_csv(summary_community_competence, "./data-private/derived/community-competence-hromada.csv") #aggregated on hromada level

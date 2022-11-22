@@ -378,11 +378,12 @@ d2 <- full_merge %>%
 
 d2 <- d2 %>% 
   group_by(hromada_code) %>% 
-  mutate(sum_osbb_2019 = sum(registration_year!="2020", na.rm = TRUE) - sum(!is.na(termination_year)&termination_year!="2020", na.rm = TRUE),
-         sum_osbb_2018 = sum(registration_year!=c("2020","2019"), na.rm = TRUE) - sum(!is.na(termination_year)&termination_year!=c("2020","2019"), na.rm = TRUE),
-         sum_osbb_2017 = sum(registration_year!=c("2020","2019","2018"), na.rm = TRUE) - sum(!is.na(termination_year)&termination_year!=c("2020","2019","2018"), na.rm = TRUE),
-         sum_osbb_2016 = sum(registration_year!=c("2020","2019","2018","2017"), na.rm = TRUE) - sum(!is.na(termination_year)&termination_year!=c("2020","2019","2018","2017"), na.rm = TRUE),
-         sum_osbb_2015 = sum(registration_year!=c("2020","2019","2018","2017","2016"), na.rm = TRUE) - sum(!is.na(termination_year)&termination_year!=c("2020","2019","2018","2017","2016"), na.rm = TRUE))
+  mutate(sum_osbb_2019 = (sum(registration_year!="2020", na.rm = TRUE)+sum(is.na(registration_year))-sum(!is.na(termination_year)&termination_year!="2020", na.rm = TRUE)),
+         sum_osbb_2018 = (sum(registration_year!="2020"&registration_year!="2019", na.rm = TRUE)+sum(is.na(registration_year))-sum(termination_year!="2020"&registration_year!="2019", na.rm = TRUE)),
+         sum_osbb_2017 = (sum(registration_year!="2020"&registration_year!="2019"&registration_year!="2018", na.rm = TRUE)+sum(is.na(registration_year))-sum(termination_year!="2020"&registration_year!="2019"&registration_year!="2018", na.rm = TRUE)),
+         sum_osbb_2016 = (sum(registration_year!="2020"&registration_year!="2019"&registration_year!="2018"&registration_year!="2017", na.rm = TRUE)+sum(is.na(registration_year))-sum(termination_year!="2020"&registration_year!="2019"&registration_year!="2018"&registration_year!="2017", na.rm = TRUE)),
+         sum_osbb_2015 = (sum(registration_year!="2020"&registration_year!="2019"&registration_year!="2018"&registration_year!="2017"&registration_year!="2016", na.rm = TRUE)+sum(is.na(registration_year))-sum(termination_year!="2020"&registration_year!="2019"&registration_year!="2018"&registration_year!="2017"&registration_year!="2016", na.rm = TRUE))
+  )
 
 ds2 <- d2 %>%
   distinct(hromada_code,.keep_all= TRUE) %>%
