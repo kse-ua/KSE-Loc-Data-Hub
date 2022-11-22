@@ -181,6 +181,13 @@ ds_hromadas_heads_fin <- ds_hromada_heads_clean %>%
             by = c('hromada' = 'hromada_name', 'raion' = 'raion_name', 
                    'oblast' = 'oblast_name', 'rada_type' = 'type'))
 
+d1 <- ds_hromadas_heads_fin %>% group_by(hromada) %>% summarise(count = n()) %>% filter(count > 2)
+
+d1 %>%
+  ggplot(aes(x=count, y=fct_reorder(as.factor(hromada), count))) +
+  geom_col() +
+  ggthemes::theme_fivethirtyeight()
+
 #+ save-to-disk final dataset, eval=eval_chunks-----------------------------------------------
 ds_hromadas_heads_fin %>% openxlsx::write.xlsx("./data-public/derived/hromada_heads.xlsx")
 
