@@ -263,6 +263,26 @@ p2
 
 p2 %>% quick_save("2-hromada-communication", w= 12, h = 7)
 
+head_hromada_communication_levels <- c('2_3_times', 'once_a_day', 'few_times_a_week',
+                                       'once_a_week', 'none')
+
+d3 %>% count(head_hromada_communication) %>% mutate(freq = n/sum(n)) %>%
+  ggplot(aes(x = factor(head_hromada_communication, levels = head_hromada_communication_levels), y = freq)) +
+  geom_col() +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  scale_y_continuous(labels = scales::percent)
+
+# national resistance
+
+help_military <- d3 %>% select(starts_with('help_for_military/')) %>% colnames()
+
+g1 <- d3 %>% select(help_military) %>% 
+  summarise(across(everything(.), ~ mean(., na.rm = TRUE))) %>% 
+  ggplot(aes(x = ))
+
 #COMPARISON OF SURVEYED HROMADAS WITH GENERAL POPULATION OF HROMADAS
 
 
