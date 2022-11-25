@@ -17,7 +17,7 @@ library(readr)
 library(readxl)
 library(survey)
 library(fastDummies)
-
+library(lubridate)
 #+ declare-globals -------------------------------------------------------------
 # printed figures will go here:
 prints_folder <- paste0("./manipulation/ellis-survey-prints/")
@@ -152,7 +152,7 @@ d2 <- d1 %>%
     ,comm_channels_count = rowSums(across(comm_channels), na.rm = T)
     ,help_military_count = rowSums(across("help_for_military/rooms":"help_for_military/other"), na.rm = T)
     ,idp_help_count = rowSums(across("idp_help/communal_placement":"idp_help/transit_center"), na.rm = T)
-    ,dftg_creation_time = difftime(dftg_creation_date, "2022-02-24", unit = "day") #negarive values - choose another date
+    ,dftg_creation_time = difftime(dftg_creation_date, "2022-02-24", unit = "day") #negative values - choose another date
     ,commun_between_hromadas = case_when(commun_between_hromadas == '__' ~ 'Daily',
                                          commun_between_hromadas == '______' ~ 'Several times a week',
                                          commun_between_hromadas == '_______1' ~ 'Several times a month',
@@ -325,9 +325,11 @@ p3 <- d3 %>% count(dftg_creation) %>% mutate(freq = n/sum(n)) %>%
 
 p3 %>% quick_save("3-dftg-creation", w= 12, h = 7)
 
-#
+# dftg creation time
 
-d3$dftg_creation_time
+d3 %>% select(dftg_creation_date,dftg_creation_time) %>% filter(dftg_creation_time<0)
+
+plot(d3$dftg_creation_time)
 
 # date of dftg creation
 g1 <- d3 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>% 
@@ -335,16 +337,26 @@ g1 <- d3 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>%
   filter(!is.na(dftg_creation_date) & dftg_creation_date > '2020-01-01') %>%
   mutate(cum = cumsum(n))
 
+first_month <- lubridate::interval(as.POSIXct("2022-02-24"),
+                                   as.POSIXct("2022-03-24"))
+
+g1 %>% filter(dftg_creation_date %within% first_month) %>% summarise(sum = sum(n))
+
 p3 <- g1 %>%
   ggplot(aes(x = dftg_creation_date, y = cum)) +
-  geom_line() +
+  # geom_line() +
+  geom_point() +
   geom_vline(aes(xintercept = as.POSIXct('2022-02-24')), color = 'red', linetype = 'dashed') +
+  geom_rect(aes(xmin = as.POSIXct('2022-02-24'), xmax = as.POSIXct('2022-03-24'), ymin = -Inf, ymax = Inf),
+            color = 'coral1', fill = 'coral1', alpha = 0.02) +
   theme_bw() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank()) +
   scale_x_datetime(date_breaks = '2 month') +
-  annotate(geom = 'label', x = as.POSIXct('2022-01-03'), y = 80, label = 'Full-scale \nrussian invasion') +
+  annotate(geom = 'label', x = as.POSIXct('2022-01-03'), y = 60, label = 'Full-scale \nrussian invasion') +
+  annotate(geom = 'text', x = as.POSIXct('2022-01-05'), y = 90, label = '55 DFTGs created \nin a first month', fontface = 'italic') +
   labs(title = 'Number of DFTG created by hromadas')
+p3 
 
 p3 %>% quick_save("3-dftg-creation-date", w= 12, h = 7)
 
