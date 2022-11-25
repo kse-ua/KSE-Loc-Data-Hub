@@ -48,7 +48,13 @@ edem_names <- c(
 )
 
 d0 <- readr::read_csv(path_edem, col_names = edem_names, skip = 1)
-ds_hromada <- readr::read_csv(path_hromada)
+ds_hromada <- readr::read_csv(path_hromada) %>% 
+  mutate(
+    hromada_name = case_when(
+      hromada_name == "Жданівська" & oblast_name == "Вінницька" ~ "Війтівецька"
+      ,TRUE ~ hromada_name
+      )
+  )
 
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
@@ -71,14 +77,26 @@ d1 <-
   left_join(
     hromdas_unique %>% select(hromada_code, key)
     ,by = "key"
-  )
-
-d1 %>% filter(is.na(hromada_code)) %>%  View()
-
-
+  ) %>% 
+  mutate(
+    index = seq(1:length(hromada_name))
+    ,hromada_code = case_when(
+      key == "Миколаївська Первомайська" ~ "UA48080130000028458"
+      ,key == "Чернігівська Талалаївська" ~ "UA74080190000091939"
+      ,key ==  "Одеська Чорноморська" ~ "UA51100370000040590"
+      ,index == "239" ~ "UA12140250000015858"
+      ,index == "240" ~ "UA12080090000039979"
+      ,TRUE ~ hromada_code
+    )
+    ,edem_total = rowSums(across(petitions:open_hromada))
+  ) %>% 
+  select(-key, -index) %>% 
+  rename(edem_petitions = petitions, edem_consultations = consultations,       
+         edem_participatory_budget = participatory_budget, edem_open_hromada = open_hromada)
+  
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-# readr::write_csv(ds_geo_full, "./data-public/derived/geography.csv")
+readr::write_csv(d1, "./data-private/derived/edem-data.csv")
 
 
 
