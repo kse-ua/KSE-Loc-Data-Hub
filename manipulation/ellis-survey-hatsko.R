@@ -358,7 +358,7 @@ p3 <- g1 %>%
   labs(title = 'Number of DFTG created by hromadas')
 p3 
 
-p3 %>% quick_save("3-dftg-creation-date", w= 12, h = 7)
+p3 %>% quick_save("3-dftg-creation-date-alternativ", w= 12, h = 7)
 
 # help for military
 
