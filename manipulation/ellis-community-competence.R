@@ -45,9 +45,13 @@ ds_admin <- readr::read_csv(path_admin)
 ## Correcting mistakes
 youth_centers$hromada_name_short <- gsub("ої","а", youth_centers$hromada_name_short)
 youth_centers$hromada_name_short <- gsub("'","’", youth_centers$hromada_name_short)
-youth_councils$hromada_name_short <- gsub("'","’", business_support$hromada_name_short)
-youth_councils$hromada_name_short <- gsub("'","’", business_support$hromada_name_short)
-
+youth_councils$hromada_name_short <- gsub("'","’", youth_councils$hromada_name_short)
+youth_councils$hromada_name_short <- gsub("'","’", youth_councils$hromada_name_short)
+youth_centers<- youth_centers %>% 
+  mutate(hromada_name_short = case_when(hromada_name_short=="Війтівецька"~"Жданівська",
+                                     TRUE ~ hromada_name_short))
+youth_councils <- youth_councils[!(youth_councils$hromada_name_short=="м. Київ"),]
+youth_centers <- youth_centers[!(youth_centers$town=="Київ"),]
 
 ## Correcting mistakes
 business_support$town <- gsub("'","’", business_support$town)
@@ -57,6 +61,12 @@ business_support$town <- gsub("Запоріжжя","місто Запоріжж�
 ds_admin<- ds_admin %>% 
   mutate(settlement_name = case_when(settlement_name=="Запоріжжя"&settlement_type=="місто"~"місто Запоріжжя",
                                      TRUE ~ settlement_name))
+business_support <- business_support[!is.na(business_support$name),]
+business_support <- business_support[!(business_support$town=="Київ"),]
+business_support<- business_support %>% 
+  mutate(oblast_name_short = case_when(town=="місто Запоріжжя"&oblast_name_short=="Луганська"~"Запорізька",
+                                     TRUE ~ oblast_name_short))
+
 
 ## Looking at youth councils:
 table(youth_councils$oblast) # regional distribution
@@ -131,7 +141,7 @@ business_support_merge <- business_support %>%
 
 
 business_support_merge_duplicated <- business_support_merge %>%
-  filter(,duplicated(name)) %>%
+  filter(,duplicated(name)) %>% distinct(name, .keep_all = TRUE) %>%
   select(oblast,
          oblast_name_short,
          settlement_type.x,
@@ -160,20 +170,26 @@ colnames(business_supportmerge__without_duplicated)[3] <- "settlement_type"
 business_supportmerge__without_duplicated <- business_supportmerge__without_duplicated %>% select(-settlement_type.y)
 
 business_support_merge_full <- rbind(business_supportmerge__without_duplicated, business_support_merge_add)
+business_support_merge_full %>% filter(,duplicated(name)) %>%View()
 
 business_support_atc <- business_support_merge_full %>%
   group_by(hromada_code, hromada_name) %>%
   summarise(Business_support_centers = sum(!is.na(name)))
 
+#colnames(business_support_atc)[2] <- "hromada_name_short"
+
 summary_community_competence <- business_support_atc %>% 
   full_join(
     youth_count_admin
-    ,by = c("hromada_code" = "hromada_code")
+    ,by = c("hromada_code" = "hromada_code",
+            "hromada_name" = "hromada_name_short")
   ) %>% select(hromada_code,
                hromada_name,
                Youth_councils,
                Youth_centers,
                Business_support_centers)
+summary_community_competence <- summary_community_competence[!(summary_community_competence$hromada_name=="м.Київ"),]
+summary_community_competence[is.na(summary_community_competence)] <- 0
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
 readr::write_csv(summary_community_competence, "./data-private/derived/community-competence-hromada.csv") #aggregated on hromada level
