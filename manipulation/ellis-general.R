@@ -45,7 +45,8 @@ path_zno <- "./data-private/derived/zno-2022-aggragated.csv"
 path_budget_income <- "./data-public/derived/hromada_budget_2020_2022.xlsx"
 path_heads <- "./data-public/derived/hromada_heads.xlsx"
 path_dfrr <- "./data-private/derived/dfrr_hromadas.csv"
-# path_community_competence <- "./data-private/raw/ua-admin-codes.csv"
+path_edem <- "./data-private/derived/edem-data.csv"
+path_community_competence <- "./data-private/derived/community-competence-hromada.csv"
 # path_budget_expences <- 
 
 #additional datasets
@@ -71,8 +72,9 @@ ds_zno<- readr::read_csv(path_zno)
 ds_budget_income <- readxl::read_xlsx(path_budget_income)
 ds_heads <- readxl::read_xlsx(path_heads)
 ds_dfrr <- readr::read_csv(path_dfrr)
-
-# ds_community_competence <- readr::read_csv(path_community_competence)
+ds_edem <- readr::read_csv(path_edem)
+ds_community_competence <- readr::read_csv(path_community_competence) %>% 
+  janitor::clean_names() #TODO: check NAs
 # ds_budget_expences <- readr::read_csv(path_budget_expences)
 
 
@@ -164,11 +166,19 @@ d1 <-
   left_join(
     ds_osbb %>% select(hromada_code, sum_osbb_2020)
     ,by = "hromada_code"  
-  ) 
+  ) %>% 
+  left_join(
+    ds_edem %>% select(hromada_code, edem_total, edem_petitions, edem_consultations,       
+                       edem_participatory_budget, edem_open_hromada)
+    ,by = "hromada_code" 
+  ) %>% 
+  left_join(
+    ds_community_competence %>% select(hromada_code, youth_councils, youth_centers, business_support_centers)
+    ,by = "hromada_code"
+  )
 
 #TO-DO: add partnerships
 #TO-DO: add big taxpayers
-#TO-DO: add community competence + civic activities
 #TO-DO: add dates of creation + status based on military actions/occupation
 
 
