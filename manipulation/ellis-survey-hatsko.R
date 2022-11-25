@@ -153,7 +153,11 @@ d2 <- d1 %>%
     ,help_military_count = rowSums(across("help_for_military/rooms":"help_for_military/other"), na.rm = T)
     ,idp_help_count = rowSums(across("idp_help/communal_placement":"idp_help/transit_center"), na.rm = T)
     ,dftg_creation_time = difftime(dftg_creation_date, "2022-02-24", unit = "day") #negarive values - choose another date
-  ) 
+    ,commun_between_hromadas = case_when(commun_between_hromadas == '__' ~ 'Daily',
+                                         commun_between_hromadas == '______' ~ 'Several times a week',
+                                         commun_between_hromadas == '_______1' ~ 'Several times a month',
+                                         commun_between_hromadas == '________' ~ 'Once a month and less',
+                                         commun_between_hromadas == '____' ~ 'No meetings/calls'))
 
 
 #SPEARMEN RANK CORRELATION FOR Q on preparations (between 14 items + total score + financial metrics)
@@ -210,14 +214,18 @@ for (i in preparation) {
 
 # plot for state communication
 
-d3 %>% count(state_communication) %>% mutate(freq = n/sum(n)) %>%
+p1 <- d3 %>% count(state_communication) %>% mutate(freq = n/sum(n)) %>%
   ggplot(aes(x = state_communication, y = freq)) +
   geom_col() +
   geom_label(aes(label = scales::percent(freq)))  + 
   theme_bw() +
-  theme(axis.title.y = element_blank()) +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(title = 'Was there communication for preparation from the government?') +
   scale_y_continuous(labels = scales::percent)
 
+p1 %>% quick_save("1-gov-communication", w= 12, h = 7)
+  
 # plot for preparation
 g1 <- d2 %>% select(hromada_text, preparation) %>% mutate(across(everything(.), as_factor)) %>% 
   pivot_longer(-hromada_text, names_to = 'preparation', values_to = 'degree') %>% 
@@ -227,14 +235,29 @@ g1 <- d2 %>% select(hromada_text, preparation) %>% mutate(across(everything(.), 
                             degree == 2 ~ 'before 24'),
          degree = factor(degree, levels = c('none', 'after 24', 'before 24')))
 
-g2 <- g1 %>% count(preparation, degree) %>% group_by(preparation) %>% mutate(freq = n/sum(n))
+g2 <- g1 %>% count(preparation, degree) %>% group_by(preparation) %>% 
+  mutate(freq = n/sum(n),
+         preparation = factor(preparation, levels = prep_levels)) %>%
+  arrange(preparation, degree)
 
-p1 <- ggplot(g2, aes(x = degree, y = freq, group = preparation, fill = degree)) +
+prep_levels <- c('first_aid_water', 'first_aid_fuel', 'reaction_plan', 'evacuation_plan',
+                 'reaction_plan_oth_hromadas', 'reaction_plan_oda', 'dftg_creation',
+                 'national_resistance', 'starosta_meeting', 'communal_meetiing',
+                 'online_map', 'shelter_list', 'notification_check', 'backup', 
+                 'partly_backup')
+  
+p1 <- ggplot(g2, aes(x = degree, y = freq, 
+                     group = preparation, 
+                     fill = degree)) +
   geom_col() +
+  geom_text(aes(label = scales::percent(freq, accuracy = 1), vjust = -0.5)) +
   facet_wrap(~ preparation) +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank()) +
-  scale_y_continuous(labels = scales::percent)
+  labs(title = "Hromadas preparation for invasion",
+       fill = NULL) +
+  scale_y_continuous(labels = scales::percent, limits = c(0,1))
+p1
 
 p1 %>% quick_save("1-hromada-preparation", w= 12, h = 7)
 
@@ -250,7 +273,10 @@ g1 <- d2 %>% select(hromada_text, comm_channels) %>% mutate(across(everything(.)
                             degree == 2 ~ 'before 24'),
          degree = factor(degree, levels = c('none', 'after 24', 'before 24')))
 
-g2 <- g1 %>% count(channels, degree) %>% group_by(channels) %>% mutate(freq = n/sum(n))
+g2 <- g1 %>% count(channels, degree) %>% group_by(channels) %>% 
+  mutate(freq = n/sum(n),
+         channels = factor(channels, levels = comm_channels)) %>%
+  arrange(channels, degree)
 
 p2 <- ggplot(g2, aes(x = degree, y = freq, group = channels, fill = degree)) +
   geom_col() +
@@ -258,6 +284,8 @@ p2 <- ggplot(g2, aes(x = degree, y = freq, group = channels, fill = degree)) +
   facet_wrap(~ channels) +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank()) +
+  labs(title = 'Communication channels of hromadas',
+       fill = NULL) +
   scale_y_continuous(labels = scales::percent, limits = c(0,1))
 p2
 
@@ -266,22 +294,102 @@ p2 %>% quick_save("2-hromada-communication", w= 12, h = 7)
 head_hromada_communication_levels <- c('2_3_times', 'once_a_day', 'few_times_a_week',
                                        'once_a_week', 'none')
 
-d3 %>% count(head_hromada_communication) %>% mutate(freq = n/sum(n)) %>%
+p3 <- d3 %>% count(head_hromada_communication) %>% mutate(freq = n/sum(n)) %>%
   ggplot(aes(x = factor(head_hromada_communication, levels = head_hromada_communication_levels), y = freq)) +
   geom_col() +
   geom_label(aes(label = scales::percent(freq)))  + 
   theme_bw() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank()) +
+  labs(title = 'Frequency of head of hromada communication')+
   scale_y_continuous(labels = scales::percent)
+
+p3 %>% quick_save("3-hromada-head-communication", w= 12, h = 7)
+
 
 # national resistance
 
-help_military <- d3 %>% select(starts_with('help_for_military/')) %>% colnames()
+# dftg creation
 
-g1 <- d3 %>% select(help_military) %>% 
-  summarise(across(everything(.), ~ mean(., na.rm = TRUE))) %>% 
-  ggplot(aes(x = ))
+dftg_levels <- c('yes', 'not_able', 'still_not')
+                                       
+p3 <- d3 %>% count(dftg_creation) %>% mutate(freq = n/sum(n)) %>%
+  ggplot(aes(x = factor(dftg_creation, levels = dftg_levels), y = freq)) +
+  geom_col() +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(title = 'How many hromadas created a DFTG?')+
+  scale_y_continuous(labels = scales::percent)
+
+p3 %>% quick_save("3-dftg-creation", w= 12, h = 7)
+
+#
+
+d3$dftg_creation_time
+
+# date of dftg creation
+g1 <- d3 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>% 
+  summarise(n = n()) %>%
+  filter(!is.na(dftg_creation_date) & dftg_creation_date > '2020-01-01') %>%
+  mutate(cum = cumsum(n))
+
+p3 <- g1 %>%
+  ggplot(aes(x = dftg_creation_date, y = cum)) +
+  geom_line() +
+  geom_vline(aes(xintercept = as.POSIXct('2022-02-24')), color = 'red', linetype = 'dashed') +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  scale_x_datetime(date_breaks = '2 month') +
+  annotate(geom = 'label', x = as.POSIXct('2022-01-03'), y = 80, label = 'Full-scale \nrussian invasion') +
+  labs(title = 'Number of DFTG created by hromadas')
+
+p3 %>% quick_save("3-dftg-creation-date", w= 12, h = 7)
+
+# help for military
+
+help_military_levels <- c('rooms', 'transport', 'money', 'products', 'other')
+
+g1 <- d3 %>% select(hromada_text, starts_with('help_for_military/')) %>% 
+  pivot_longer(-hromada_text, names_to = 'help', values_to = 'count') %>%
+  count(help, count) %>% group_by(help) %>% 
+  mutate(freq = n/sum(n),
+         help = str_remove(help, 'help_for_military/')) %>%
+  filter(count == 1)
+
+p3 <- g1 %>% 
+  ggplot(aes(x = factor(help, levels = help_military_levels), y = freq)) +
+  geom_col() +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(title = 'Provided assistance for military') +
+  scale_y_continuous(labels = scales::percent)
+p3
+
+p3 %>% quick_save("3-help-for-military", w= 12, h = 7)
+
+# administrative adaptation
+
+com_hromadas_levels <- c('Daily', 'Several times a week', 'Several times a month',
+                         'Once a month and less', 'No meetings/calls')
+
+p4 <- d3 %>% select(commun_between_hromadas) %>% count(commun_between_hromadas) %>%
+  mutate(freq = n/sum(n)) %>%
+  ggplot(aes(x = factor(commun_between_hromadas, levels = com_hromadas_levels), y = freq)) +
+  geom_col() +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(title = 'Meetings/calls with other hromadas in first 3 months')+
+  scale_y_continuous(labels = scales::percent)
+p4
+
+p4 %>% quick_save("4-meetings-other-hromadas", w= 12, h = 7)
 
 #COMPARISON OF SURVEYED HROMADAS WITH GENERAL POPULATION OF HROMADAS
 
