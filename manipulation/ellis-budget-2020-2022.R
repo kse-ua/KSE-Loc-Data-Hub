@@ -222,6 +222,7 @@ ds5_long <- ds4_long %>%
   mutate(
     own_income_change = round((income_own / lag(income_own)) - 1,2)
     ,own_prop_change = own_income_prop - lag(own_income_prop)
+    ,own_income_change_net = income_own - lag(income_own)
   ) %>%
   ungroup() %>%
   left_join(
@@ -264,7 +265,8 @@ description <- c('Hromada budget code', 'Hromada budget name', 'Hromada name',
                  'Own income (w/o tranferts)', 'Share of own income', 'Share of tranferts',
                  'Share of tax on military personnel income', 'Share of income tax',
                  'Share of unified tax', 'Share of property tax', 'Share of excise duty',
-                 'Change of own income (from 2021)', 'Change of own income share (from 2021)')
+                 'Percent change of own income (from 2021)', 'Change of own income share (from 2021)',
+                 'Absolute change of own income (from 2021)')
 
 metadata <- data.frame(variables, description)
 
