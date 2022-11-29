@@ -36,17 +36,18 @@ library(tmap)
 #main datasets
 path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
 path_hromada <- "./data-private/derived/hromada.csv"
-# path_hromada_events <- "./data-private/raw/hromada.csv"
-path_hromada_dates <- "./data-private/derived/hromadas-dates.csv"
+path_time  <- "./data-private/derived/time_rada.csv" #TO-DO: check the dates
 path_geography <- "./data-public/derived/geography.csv"
 path_demography <- "./data-private/derived/ua-pop-2022.csv"
 path_osbb <- "./data-private/derived/osbb-hromada.csv"
 path_zno <- "./data-private/derived/zno-2022-aggragated.csv"
 path_budget_income <- "./data-public/derived/hromada_budget_2020_2022.xlsx"
-path_heads <- "./data-public/derived/hromada_heads.xlsx"
+path_heads <- "./data-private/raw/hromada_heads.xlsx"
 path_dfrr <- "./data-private/derived/dfrr_hromadas.csv"
 path_edem <- "./data-private/derived/edem-data.csv"
 path_community_competence <- "./data-private/derived/community-competence-hromada.csv"
+path_declarations <- "./data-public/derived/declarations-hromada.csv"
+
 # path_budget_expences <- 
 
 #additional datasets
@@ -62,8 +63,7 @@ cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
 ds_admin <- readr::read_csv(path_admin)
 ds_hromada <- readr::read_csv(path_hromada)
-# ds_hromada_events <- readr::read_csv(path_hromada_events)
-hromada_dates <-  readr::read_csv(path_hromada_dates)
+ds_time <-  readr::read_csv(path_time) #TO-DO: check the dates
 ds_geography <- readr::read_csv(path_geography) %>% 
   rename(area = square, travel_time = ttime)
 ds_demography <- readr::read_csv(path_demography) 
@@ -73,33 +73,57 @@ ds_budget_income <- readxl::read_xlsx(path_budget_income)
 ds_heads <- readxl::read_xlsx(path_heads)
 ds_dfrr <- readr::read_csv(path_dfrr)
 ds_edem <- readr::read_csv(path_edem)
+ds_declarations<- readr::read_csv(path_declarations)
 ds_community_competence <- readr::read_csv(path_community_competence) %>% 
   janitor::clean_names() #TODO: check NAs
 # ds_budget_expences <- readr::read_csv(path_budget_expences)
-
+ds_oblasts <- readr::read_csv(path_oblast)
 
 #+ inspect-data ----------------------------------------------------------------
 
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
+# ds1_demography <- 
+#   ds_demography %>% 
+#   left_join(
+#     ds_declarations %>% 
+#       rename_at(vars(total:working_age_pct), ~paste(., "declarations", sep ="_")) %>% 
+#       select(-area, -hromada_name)
+#     ,by = "hromada_code"
+#   ) %>% 
+#   mutate(
+#     declarations_pct = total_declarations/total_popultaion_2022
+#     ,urban_declarations_pct = case_when(
+#       urban_popultaion_2022 != 0 ~ urban_declarations/urban_popultaion_2022
+#       ,TRUE ~ NA_real_
+#     )
+#   )
 
 
+#comparison population 2022 and declarations
 
-#aggregate income data for 2021 as a predictor
+
+#ADD script on events
+
+#aggregate income data for 2022 as a dependent variable
+income_2022 <- 
+  ds_budget_income %>% 
+  filter(year == "2022") %>% 
+  select(hromada_code, own_income_change, own_prop_change)
+
+#aggregate income data for 2021 as a predictor and combine with data for 2022
 ds1_budget_income <- 
   ds_budget_income %>% 
   group_by(hromada_name, hromada_code, year) %>% 
   summarise_at(vars(income_total:income_own), ~sum(.x, na.rm = TRUE)) %>% 
   filter(year == "2021") %>% 
   ungroup()
+
   
 colnames(ds1_budget_income) <- ifelse(
   str_detect(colnames(ds1_budget_income), "income")
   ,paste(colnames(ds1_budget_income), "2021", sep = "_")
   ,colnames(ds1_budget_income))
-
-#aggregate income data for 2022 as a dependent variable
-
 
 
 #aggregate DFRR data for all years
@@ -108,16 +132,34 @@ ds1_dfrr <-
   group_by(hromada_code) %>% 
   summarise(dfrr_executed = sum(budget_executed, na.rm=T), .groups = "drop")
 
-
+#changes in ds_heads
 ds1_heads <-
   ds_heads %>% 
-  select(hromada_code, turnout, sex, age, education, incumbent, rda, not_from_here) %>% 
+  select(hromada_code, turnout, sex, age, education, incumbent, rda, not_from_here,
+         party, enterpreuner, unemployed, priv_work, polit_work, communal_work,
+         ngo_work) %>% 
   rename(sex_head = sex, age_head = age, education_head = education, turnout_2020 = turnout) %>% 
   mutate(
     sex_head = factor(sex_head, labels = c("female", "male"))
     ,education_head = case_when(
       education_head == "освіта вища" ~ "higher"
       ,education_head != "освіта вища" ~ "non-higher"
+    )
+    ,party_national_winner = case_when(
+      party == 'Слуга народу' ~ 1,
+      TRUE ~ 0
+    )
+    ,no_party = case_when(
+      party == 'Самовисування' ~ 1
+      ,TRUE ~ 0
+    )
+    ,male = case_when(
+      sex_head == 'male' ~ 1
+      ,TRUE ~ 0
+    )
+    ,high_educ = case_when(
+      education_head == 'higher' ~ 1
+      ,TRUE ~ 0
     )
   ) %>% 
   mutate_at(
@@ -127,6 +169,28 @@ ds1_heads <-
     )
   )
 
+#create dataset of creation dates
+ds_hromada_dates <- 
+  ds_time %>% 
+  group_by(hromada_code) %>% 
+  mutate(
+    creation_date = min(date)
+  ) %>% 
+  ungroup() %>% 
+  distinct(hromada_code, creation_date) %>% 
+  mutate(
+    creation_year = year(creation_date)
+    ,time_before_24th = difftime("2022-02-24", creation_date, units = "days")
+    ,voluntary = ifelse(creation_date != "2020-08-16", 1, 0)
+  )
+
+
+
+#create dummy variables for hromadas-oblast centers
+hromadas_oblast_centers <- 
+  ds_admin %>% 
+  filter(settlement_code == oblast_center_code) %>% 
+  pull(hromada_code)
 
 
 #+ combine ---------------------------------------------------------------------
@@ -136,6 +200,7 @@ d1 <-
   filter(!oblast_name == "Автономна Республіка Крим") %>% 
   mutate(
     hromada_full_name = paste(hromada_name, type, "громада")
+    ,oblast_center = ifelse(hromada_code %in% hromadas_oblast_centers, 1, 0)
   ) %>% 
   left_join(
     ds_geography %>% select(-c(hromada_type, hromada, oblast_name, raion_name, key))
@@ -153,6 +218,10 @@ d1 <-
   ) %>% 
   left_join(
     ds1_budget_income %>% select(-hromada_name, -year)
+    ,by = "hromada_code"  
+  ) %>% 
+  left_join(
+    income_2022
     ,by = "hromada_code"  
   ) %>% 
   left_join(
@@ -175,6 +244,22 @@ d1 <-
   left_join(
     ds_community_competence %>% select(hromada_code, youth_councils, youth_centers, business_support_centers)
     ,by = "hromada_code"
+  ) %>% 
+  left_join(
+    ds_oblasts %>% select(oblast_code, region_en)
+    ,by = "oblast_code"
+  ) %>% 
+  #TEMPORARY - CHECK THE DATES IN THIS DATASET
+  left_join(
+    ds_hromada_dates
+    ,by = "hromada_code"
+  ) %>% 
+  mutate_at(
+    vars(edem_total, edem_petitions, edem_consultations,       
+         edem_participatory_budget, edem_open_hromada, youth_councils, youth_centers, 
+         business_support_centers, enterpreuner, unemployed, priv_work,     
+         polit_work, communal_work, ngo_work)
+    ,~replace(., is.na(.), 0)
   )
 
 #TO-DO: add partnerships
