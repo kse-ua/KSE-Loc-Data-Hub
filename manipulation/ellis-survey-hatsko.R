@@ -38,7 +38,7 @@ survey_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey
 choices_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "choices")
 
 # Survey data
-d0 <- readxl::read_excel("./data-private/raw/Resilience_survey_2022_11_05_eng.xlsx")
+d0 <- readxl::read_excel("./data-private/raw/Resilience_survey_2022_11_29_eng_clean.xlsx")
 
 ds_population <- readr::read_csv("./data-private/derived/ua-pop-2022.csv")
 
@@ -49,7 +49,6 @@ ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv") %>%
 
 
 ds_budget <- readxl::read_xlsx("./data-public/derived/hromada_budget_2020_2022.xlsx") 
-
 
 ds_1 <- ds_budget %>% 
   filter(year == "2021") %>% 
@@ -152,7 +151,8 @@ d2 <- d1 %>%
     ,comm_channels_count = rowSums(across(comm_channels), na.rm = T)
     ,help_military_count = rowSums(across("help_for_military/rooms":"help_for_military/other"), na.rm = T)
     ,idp_help_count = rowSums(across("idp_help/communal_placement":"idp_help/transit_center"), na.rm = T)
-    ,dftg_creation_time = difftime(dftg_creation_date, "2022-02-24", unit = "day") #negative values - choose another date
+    ,dftg_creation_time = floor(difftime(idp_registration_date, "2022-02-24", unit = "day")) #negative values - choose another date
+    ,idp_registration_time = floor(difftime(dftg_creation_date, "2022-02-24", unit = "day"))
     ,commun_between_hromadas = case_when(commun_between_hromadas == '__' ~ 'Daily',
                                          commun_between_hromadas == '______' ~ 'Several times a week',
                                          commun_between_hromadas == '_______1' ~ 'Several times a month',
@@ -168,15 +168,20 @@ coded_hromada_names <- readxl::read_excel("./data-private/derived/survey-contact
 d3 <- 
   d2 %>% 
   left_join(
-    coded_hromada_names %>% select("_id", hromada_name_right, key )
+    coded_hromada_names %>% select("_id", oblast_name, hromada_name_right, key )
     , by = "_id"
   ) %>% 
   left_join(
-    ds_hromada %>% select(key, hromada_code)
-    ,by = c("hromada_name_right"="key")
+    ds_hromada %>% select(key, hromada_code, oblast_name)
+    ,by = c('oblast_name'
+            ,"hromada_name_right"="key")
   ) %>% 
   left_join(
     ds_1 %>% select(hromada_code, income_tot_per_capita, income_own_per_capita)
+    ,by = "hromada_code"
+  ) %>%
+  left_join(
+    ds_population %>% select(hromada_code, total_population_2022)
     ,by = "hromada_code"
   )
 
@@ -327,9 +332,22 @@ p3 %>% quick_save("3-dftg-creation", w= 12, h = 7)
 
 # dftg creation time
 
-d3 %>% select(dftg_creation_date,dftg_creation_time) %>% filter(dftg_creation_time<0)
+d4 <- d3 %>% select(idp_registration_time,dftg_creation_time) %>% 
+  filter(dftg_creation_time>=0 & idp_registration_time>=0) %>%
+  mutate(dftg_creation_time = as.numeric(dftg_creation_time),
+         idp_registration_time = as.numeric(idp_registration_time))
 
-plot(d3$dftg_creation_time)
+sum(is.na(d3$idp_registration_date))
+sum(is.na(d3$dftg_creation_date))
+
+# no correlation
+cor(d4)
+
+p1 <- d4 %>% 
+  ggplot(aes(x=idp_registration_time, y=dftg_creation_time))+
+  geom_point()
+
+p1 %>% quick_save("4-dftg-idp-correlation", w= 12, h = 7)
 
 # date of dftg creation
 g1 <- d3 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>% 
@@ -359,6 +377,35 @@ p3 <- g1 %>%
 p3 
 
 p3 %>% quick_save("3-dftg-creation-date-alternativ", w= 12, h = 7)
+
+# date of idp creation
+
+g1 <- d3 %>% select(idp_registration_date) %>% group_by(idp_registration_date) %>% 
+  summarise(n = n()) %>%
+  filter(!is.na(idp_registration_date) & idp_registration_date > '2022-02-23') %>%
+  mutate(cum = cumsum(n))
+
+first_month <- lubridate::interval(as.POSIXct("2022-02-24"),
+                                   as.POSIXct("2022-03-24"))
+
+g1 %>% filter(dftg_creation_date %within% first_month) %>% summarise(sum = sum(n))
+
+p3 <- g1 %>%
+  ggplot(aes(x = idp_registration_date, y = cum)) +
+  # geom_line() +
+  geom_point() +
+  geom_vline(aes(xintercept = as.POSIXct('2022-02-24')), color = 'red', linetype = 'dashed') +
+  theme_bw() +
+  geom_rect(aes(xmin = as.POSIXct('2022-02-24'), xmax = as.POSIXct('2022-03-24'), ymin = -Inf, ymax = Inf),
+            color = 'coral1', fill = 'coral1', alpha = 0.02) +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  scale_x_datetime(date_breaks = '2 weeks') +
+  annotate(geom = 'label', x = as.POSIXct('2022-03-03'), y = 100, label = 'Full-scale \nrussian invasion') +
+  labs(title = 'Number of hromadas that started registering IDPs')
+p3 
+
+p3 %>% quick_save("3-idp-registration-date", w= 12, h = 7)
 
 # help for military
 
@@ -402,6 +449,37 @@ p4 <- d3 %>% select(commun_between_hromadas) %>% count(commun_between_hromadas) 
 p4
 
 p4 %>% quick_save("4-meetings-other-hromadas", w= 12, h = 7)
+
+# IDP
+
+d4 <- d3 %>% 
+  select(starts_with('idp'), income_tot_per_capita, total_population_2022) %>%
+  mutate(idp_registration_number = as.numeric(idp_registration_number),
+         idp_real_number = as.numeric(idp_real_number),
+         idp_child_education = as.numeric(idp_child_education),
+         idp_registration_share = idp_registration_number / total_population_2022,
+         idp_real_share = idp_real_number / total_population_2022,
+         idp_child_share = idp_child_education / idp_registration_number,
+         mutate(across(starts_with('idp_help/'), ~ . * idp_registration_number, .names = '{.col}_number'))) %>%
+  filter(!is.na(idp_accept))
+
+d4_numbers <- d4 %>% select(ends_with('number')) %>%
+  select(-c('idp_room_number')) %>% 
+  summarise(across(everything(), list(sum = sum, mean = mean), .names = '{.col}_{.fn}', na.rm = TRUE))
+
+d4_numbers %>% select(ends_with('sum')) %>% 
+  t() %>%
+  ggplot()+
+  geom_col(aes(x=help, y=sum))
+
+d4 %>% ggplot()+
+  geom_histogram(aes(x=idp_real_number), fill = 'tomato1', position = 'identity', bins = 40)+
+  geom_histogram(aes(x=idp_registration_number), fill = 'pink', alpha = 0.5, 
+                 position = 'identity', bins = 40)
+
+
+  
+  
 
 #COMPARISON OF SURVEYED HROMADAS WITH GENERAL POPULATION OF HROMADAS
 
