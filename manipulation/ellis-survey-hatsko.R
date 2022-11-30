@@ -128,6 +128,7 @@ openxlsx::write.xlsx(text_data, "./data-private/derived/survey-text-data.xlsx")
 #create counters for mcq
 preparation <- d1 %>% select(starts_with("prep_")) %>% colnames()
 comm_channels <- d1 %>% select(telegram:hotline) %>% colnames()
+idp_help <- d1 %>% select(starts_with('idp_help/')) %>% colnames()
 
 
 d2 <- d1 %>% 
@@ -147,8 +148,13 @@ d2 <- d1 %>%
     )
   ) %>% 
   mutate(
-    prep_count= rowSums(across(preparation), na.rm = T)
-    ,comm_channels_count = rowSums(across(comm_channels), na.rm = T)
+    idp_registration_number = as.numeric(idp_registration_number)
+    ,idp_real_number = as.numeric(idp_real_number)
+    ,idp_child_education = as.numeric(idp_child_education)
+    ,across(starts_with('idp_help/'), ~ . * idp_registration_number, .names = '{.col}_number')
+    ,idp_help_count = across(starts_with('idp_help/'), sum, na.rm = TRUE)
+    ,prep_count= rowSums(across(all_of(preparation)), na.rm = T)
+    ,comm_channels_count = rowSums(across(all_of(comm_channels)), na.rm = T)
     ,help_military_count = rowSums(across("help_for_military/rooms":"help_for_military/other"), na.rm = T)
     ,idp_help_count = rowSums(across("idp_help/communal_placement":"idp_help/transit_center"), na.rm = T)
     ,dftg_creation_time = floor(difftime(idp_registration_date, "2022-02-24", unit = "day")) #negative values - choose another date
@@ -177,7 +183,8 @@ d3 <-
             ,"hromada_name_right"="key")
   ) %>% 
   left_join(
-    ds_1 %>% select(hromada_code, income_tot_per_capita, income_own_per_capita)
+    ds_1 %>% select(hromada_code, income_tot_per_capita, income_own_per_capita, 
+                    ends_with('prop'), income_total)
     ,by = "hromada_code"
   ) %>%
   left_join(
@@ -453,15 +460,31 @@ p4 %>% quick_save("4-meetings-other-hromadas", w= 12, h = 7)
 # IDP
 
 d4 <- d3 %>% 
-  select(starts_with('idp'), income_tot_per_capita, total_population_2022) %>%
-  mutate(idp_registration_number = as.numeric(idp_registration_number),
-         idp_real_number = as.numeric(idp_real_number),
-         idp_child_education = as.numeric(idp_child_education),
-         idp_registration_share = idp_registration_number / total_population_2022,
+  select(starts_with('idp'), income_tot_per_capita, income_total, total_population_2022, ends_with('prop')) %>%
+  mutate(idp_registration_share = idp_registration_number / total_population_2022,
          idp_real_share = idp_real_number / total_population_2022,
-         idp_child_share = idp_child_education / idp_registration_number,
-         mutate(across(starts_with('idp_help/'), ~ . * idp_registration_number, .names = '{.col}_number'))) %>%
+         idp_child_share = idp_child_education / idp_registration_number) %>%
   filter(!is.na(idp_accept))
+
+d4_cor <- d4 %>% select(-c(idp_accept, idp_registration_date, idp_help,
+                           starts_with('idp_help/'), idp_room_number, idp_place_rooms,
+                            idp_child_education, idp_child_share,
+                           idp_real_number, idp_real_share, idp_registration_date, idp_registration_time))
+
+cor_mat_idp <- 
+  cor(d4_cor
+      ,use = "complete.obs"
+      ,method = "spearman")
+
+png(height=1800, width=1800, file="./analysis/prints/cor_idp.png", type = "cairo")
+
+corrplot::corrplot(cor_mat_idp, tl.col = "black",tl.cex = 1.5, addCoef.col = "black", number.cex=1.5, order = "FPC")
+
+dev.off()
+
+hist(d4$idp_registration_share)
+hist(d4$idp_real_share)
+hist(d4$idp_child_share)
 
 d4_numbers <- d4 %>% select(ends_with('number')) %>%
   select(-c('idp_room_number')) %>% 
