@@ -342,8 +342,8 @@ ds_admin_old <-
     ,~str_replace_all(., c("'"="’", "\\s\\s"=" ","Короcтишів"="Коростишів", "\\s+\\(.+\\)"=""))
   )
 
-ds_admin_old %>% count(raion_name) %>% View()
-ds_admin_old %>% count(oblast_name) %>% View()
+# ds_admin_old %>% count(raion_name) %>% View()
+# ds_admin_old %>% count(oblast_name) %>% View()
 
 readr::write_csv(ds_admin_old, "./data-public/derived/ua-admin-old.csv")
 
