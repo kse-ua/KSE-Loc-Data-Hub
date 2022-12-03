@@ -42,7 +42,7 @@ d0 <- readxl::read_excel("./data-private/raw/Resilience_survey_2022_11_29_eng_cl
 
 ds_population <- readr::read_csv("./data-private/derived/ua-pop-2022.csv")
 
-ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv") %>% 
+ds_hromada <- readr::read_delim("./data-private/derived/hromada.csv", delim = ';') %>% 
   mutate(
     key = paste(hromada_name, type, "громада")
   )
@@ -87,7 +87,7 @@ oblasts <- readr::read_csv("./data-private/raw/oblast.csv") %>%
 #select and store contact data
 contact_data <- d0 %>% 
   filter(hromada_text %ni% c("Тест", "тест")) %>% 
-  select(oblast, raion_text, hromada_text, telegram_link, facebook_link, contact_text)
+  select(oblast, raion_text, hromada_text, telegram_link, facebook_link, contact_text, '_id')
 
 openxlsx::write.xlsx(contact_data, "./data-private/derived/survey-contact-data.xlsx")
 
@@ -174,12 +174,12 @@ coded_hromada_names <- readxl::read_excel("./data-private/derived/survey-contact
 d3 <- 
   d2 %>% 
   left_join(
-    coded_hromada_names %>% select("_id", oblast_name, hromada_name_right, key )
+    coded_hromada_names %>% select("_id", oblast_name, hromada_name_right, raion_name)
     , by = "_id"
   ) %>% 
   left_join(
-    ds_hromada %>% select(key, hromada_code, oblast_name)
-    ,by = c('oblast_name'
+    ds_hromada %>% select(key, hromada_code, hromada_name, raion_name, oblast_name)
+    ,by = c('oblast_name', 'raion_name'
             ,"hromada_name_right"="key")
   ) %>% 
   left_join(
@@ -500,9 +500,15 @@ d4 %>% ggplot()+
   geom_histogram(aes(x=idp_registration_number), fill = 'pink', alpha = 0.5, 
                  position = 'identity', bins = 40)
 
+# population
 
+d4 <- d3 %>% 
+  select(hromada_name, hromada_name_right, raion_text, raion_name, oblast, oblast_name, 
+         population_text,total_population_2022) %>%
+  filter(hromada_name_right %ni% c('Дзвиняцька сільська громада'))
   
-  
+openxlsx::write.xlsx(d4, "./data-private/derived/survey-population-data.xlsx")
+
 
 #COMPARISON OF SURVEYED HROMADAS WITH GENERAL POPULATION OF HROMADAS
 
