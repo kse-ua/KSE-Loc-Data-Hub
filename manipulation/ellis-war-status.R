@@ -44,17 +44,22 @@ hromadas <- ds_hromada %>% filter(oblast_name!="Автономна Респуб�
          raion_code,
          raion_name,
          hromada_code,
-         hromada_name)
+         hromada_name,
+         type)
 
 # merging admin data with war status data
 
 merge <- nakaz_war_status %>% 
-  right_join(
+   right_join(
     hromadas
     ,by = c("hromada_short_name" = "hromada_name",
             "raion_short_name" = "raion_name",
-            "oblast_short_name" = "oblast_name")
-  )
+            "oblast_short_name" = "oblast_name",
+            'hromada_type' = 'type')
+  ) %>%
+  left_join(hromadas %>% select(hromada_code, type)
+            ,by = c('hromada_code')) %>%
+  mutate(across(starts_with('war_zone'), ~replace_na(.,0)))
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
 readr::write_csv(merge, "./data-private/derived/minregion-war-status.csv") #aggregated on hromada level

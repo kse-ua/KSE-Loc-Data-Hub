@@ -44,7 +44,7 @@ path_admin_old <- "./data-private/raw/ua-admin-codes-old.csv"
 #source: https://docs.google.com/spreadsheets/d/1tONOFUsX0Q-0AwIabPZET8lmZ9INA1Rh/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
 path_admin_fin <- "./data-private/raw/admin-fin.xlsx" 
 #Old codifier of budget codes as of 01.01.2019 (voluntarily formed hromadas + radas/separate settlements)
-#source:https://docs.google.com/spreadsheets/d/13gDuQTUuCjE0TUuRHS1sLvqkLYdL7gGW/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
+#source: https://docs.google.com/spreadsheets/d/13gDuQTUuCjE0TUuRHS1sLvqkLYdL7gGW/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
 path_admin_fin_old <- "./data-private/raw/admin-fin-old.xlsx" 
 # Kодифікатор. tab "області"
 # https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true 
@@ -129,7 +129,7 @@ ds_fin0 %>% glimpse()
 ds0 %>% count(object_category)
 ds_comp0 %>% count(object_category)
 ds_old0 %>% count(object_category)
-ds_fin0 %>% count(object_category)
+# ds_fin0 %>% count(object_category) # 
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
 
@@ -342,8 +342,8 @@ ds_admin_old <-
     ,~str_replace_all(., c("'"="’", "\\s\\s"=" ","Короcтишів"="Коростишів", "\\s+\\(.+\\)"=""))
   )
 
-ds_admin_old %>% count(raion_name) %>% View()
-ds_admin_old %>% count(oblast_name) %>% View()
+# ds_admin_old %>% count(raion_name) %>% View()
+# ds_admin_old %>% count(oblast_name) %>% View()
 
 readr::write_csv(ds_admin_old, "./data-public/derived/ua-admin-old.csv")
 
@@ -530,7 +530,7 @@ ds_admin_full <-
 
 
 
-ds_admin_full %>% filter(is.na(budget_code_old) ) %>% View()
+# ds_admin_full %>% filter(is.na(budget_code_old) ) %>% View()
 
 #identification of relevant settlement name among three variables
 # ds_admin_full %>% 
