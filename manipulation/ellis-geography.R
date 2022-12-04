@@ -165,6 +165,10 @@ ds_oblast <-
   ds0_oblast %>% 
   cbind(
     ds_oblast_geo %>% 
+      mutate(
+        lat = ifelse(query == "Київська Київ", "50.45183", lat)
+        ,lon = ifelse(query == "Київська Київ", "30.61140", lon)
+      ) %>% 
       select(lat, lon) %>% 
       rename(oblast_center_lat = lat,oblast_center_lon=lon)
   ) %>%
@@ -189,23 +193,30 @@ ds_geo <-
   select(-c(lat1, lon1, lat2, lon2, key1, key2)) %>% 
   filter(oblast_name != "Автономна Республіка Крим")
 
+
 #calculation of travel times between oblast centers and hromada centers
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
 times <- tibble()
 for (i in 1:length(ds_oblast$oblast_name)) {
   obl <- ds_oblast$oblast_name[i]
   a <- ds_oblast %>% 
     filter(oblast_name == obl) %>% 
     select(oblast_name, oblast_center_lat, oblast_center_lon)
+  a <- st_as_sf(x = a,                         
+                coords = c("oblast_center_lon", "oblast_center_lat"),
+                crs = projcrs)
   b <- ds_geo %>% 
     filter(oblast_name == obl) %>% 
     select(hromada_code, lat_center, lon_center)
-  times <- rbind(times, 
-    as_tibble(
-      osrmTable(src = b, dst = a, measure = 'duration')$durations
-      , rownames = "hromada_code") %>% 
-      rename(ttime = ds_oblast$oblast_name[i])
-  )
+  b <- st_as_sf(x = b,                         
+                coords = c("lon_center", "lat_center"),
+                crs = projcrs)
+  travel_times <- osrmTable(src = b, dst = a, measure = 'duration')$durations %>% as.vector()
+  times_obl <- tibble(travel_time = travel_times, hromada_code = b$hromada_code)
+  times <- rbind(times, times_obl)
 }
+
 
 
 #combine all geo info in one dataset
