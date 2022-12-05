@@ -124,8 +124,6 @@ ds_admin4_lkp <-
   distinct(admin4_code, admin4_label)
 
 # ---- tweak-data-2 ------------------------------------------------------------
-ds1 %>% glimpse()
-
 ds2_long <- 
   ds1 %>%
   mutate(inc_code = str_extract(inco4, '[0-9]+')) %>%
@@ -145,10 +143,6 @@ ds2_wide <-
   ds2_long %>% 
   pivot_wider(names_from = inc_code, values_from = income) %>%
   select(admin4_code, admin4_label, year, month, sort( names(.)))
-
-ds1 %>% glimpse()
-ds2_long %>% glimpse()
-ds2_wide %>% glimpse()
 
 # ---- final dataset with separate incomes ------------------------------------------------------------
 
