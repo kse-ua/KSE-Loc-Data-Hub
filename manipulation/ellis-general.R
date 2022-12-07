@@ -47,6 +47,7 @@ path_dfrr <- "./data-private/derived/dfrr_hromadas.csv"
 path_edem <- "./data-private/derived/edem-data.csv"
 path_community_competence <- "./data-private/derived/community-competence-hromada.csv"
 path_declarations <- "./data-public/derived/declarations-hromada.csv"
+path_war <- "./data-private/derived/minregion-war-status.csv"
 
 # path_budget_expences <- 
 
@@ -62,10 +63,9 @@ cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
 ds_admin <- readr::read_csv(path_admin)
-ds_hromada <- readr::read_csv(path_hromada)
+ds_hromada <- readr::read_delim(path_hromada, delim = ';')
 ds_time <-  readr::read_csv(path_time) #TO-DO: check the dates
-ds_geography <- readr::read_csv(path_geography) %>% 
-  rename(area = square, travel_time = ttime)
+ds_geography <- readr::read_csv(path_geography)
 ds_demography <- readr::read_csv(path_demography) 
 ds_osbb <- readr::read_csv(path_osbb)
 ds_zno<- readr::read_csv(path_zno)
@@ -78,6 +78,7 @@ ds_community_competence <- readr::read_csv(path_community_competence) %>%
   janitor::clean_names() #TODO: check NAs
 # ds_budget_expences <- readr::read_csv(path_budget_expences)
 ds_oblasts <- readr::read_csv(path_oblast)
+ds_war <- readr::read_csv(path_war)
 
 #+ inspect-data ----------------------------------------------------------------
 
@@ -109,19 +110,18 @@ ds_oblasts <- readr::read_csv(path_oblast)
 income_2022 <- 
   ds_budget_income %>% 
   filter(year == "2022") %>% 
-  select(hromada_code, own_income_change, own_prop_change)
+  select(hromada_code, own_income_change, own_prop_change, total_income_change, 
+         income_own, income_total, income_transfert)
 
 #aggregate income data for 2021 as a predictor and combine with data for 2022
 ds1_budget_income <- 
   ds_budget_income %>% 
-  group_by(hromada_name, hromada_code, year) %>% 
-  summarise_at(vars(income_total:income_own), ~sum(.x, na.rm = TRUE)) %>% 
-  filter(year == "2021") %>% 
-  ungroup()
-
+  filter(year == "2021") %>%
+  select(-c(ends_with('change'), ends_with('net')))
   
 colnames(ds1_budget_income) <- ifelse(
-  str_detect(colnames(ds1_budget_income), "income")
+  str_detect(colnames(ds1_budget_income), "income") |
+    str_detect(colnames(ds1_budget_income), "prop")
   ,paste(colnames(ds1_budget_income), "2021", sep = "_")
   ,colnames(ds1_budget_income))
 
@@ -179,7 +179,7 @@ ds_hromada_dates <-
   ungroup() %>% 
   distinct(hromada_code, creation_date) %>% 
   mutate(
-    creation_year = year(creation_date)
+    creation_year = lubridate::year(creation_date)
     ,time_before_24th = difftime("2022-02-24", creation_date, units = "days")
     ,voluntary = ifelse(creation_date != "2020-08-16", 1, 0)
   )
@@ -217,7 +217,8 @@ d1 <-
     ,by = "hromada_code"  
   ) %>% 
   left_join(
-    ds1_budget_income %>% select(-hromada_name, -year)
+    ds1_budget_income %>% select(-c(hromada_name, year, raion_code, raion_name,
+                                    oblast_code, oblast_name))
     ,by = "hromada_code"  
   ) %>% 
   left_join(
@@ -260,11 +261,16 @@ d1 <-
          business_support_centers, enterpreuner, unemployed, priv_work,     
          polit_work, communal_work, ngo_work)
     ,~replace(., is.na(.), 0)
+  ) %>%
+  left_join(
+    ds_war %>% select(hromada_code, starts_with('war_zone'))
+    ,by = "hromada_code"
   )
+  
 
 #TO-DO: add partnerships
 #TO-DO: add big taxpayers
-#TO-DO: add dates of creation + status based on military actions/occupation
+#TO-DO: add dates of creation + status based on military actions/occupation (DONE)
 
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
