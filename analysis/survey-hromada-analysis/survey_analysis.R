@@ -85,7 +85,7 @@ dev.off()
 #+ correlations of preparation index with economic indicators ------------------
 
 income <- ds_survey %>%
-  select(starts_with('income')) %>% colnames()
+  select(starts_with('income'), ends_with('prop_2021')) %>% colnames()
 
 cor_mat <- 
   cor(ds_survey %>% select(all_of(income), prep_count, prep_winter_count)
@@ -96,7 +96,7 @@ png(height=1800, width=1800,
     file="./analysis/survey-hromada-analysis/prints/cor_preparation_economics.png", 
     type = "cairo")
 
-corrplot::corrplot(cor_mat[1:16,15:16, drop=F], tl.col = "black",tl.cex = 1.5, 
+corrplot::corrplot(cor_mat[1:23,22:23, drop=F], tl.col = "black",tl.cex = 1.5, 
                    addCoef.col = "black", number.cex=1.5, cl.pos = 'n')
 
 dev.off()
