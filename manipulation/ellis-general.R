@@ -110,20 +110,18 @@ ds_war <- readr::read_csv(path_war)
 income_2022 <- 
   ds_budget_income %>% 
   filter(year == "2022") %>% 
-  select(hromada_code, own_income_change, own_prop_change, income_own, 
-         income_total, income_transfert)
+  select(hromada_code, own_income_change, own_prop_change, total_income_change, 
+         income_own, income_total, income_transfert)
 
 #aggregate income data for 2021 as a predictor and combine with data for 2022
 ds1_budget_income <- 
   ds_budget_income %>% 
-  group_by(hromada_name, hromada_code, year) %>% 
-  summarise_at(vars(income_total:income_own), ~sum(.x, na.rm = TRUE)) %>% 
-  filter(year == "2021") %>% 
-  ungroup()
-
+  filter(year == "2021") %>%
+  select(-c(ends_with('change'), ends_with('net')))
   
 colnames(ds1_budget_income) <- ifelse(
-  str_detect(colnames(ds1_budget_income), "income")
+  str_detect(colnames(ds1_budget_income), "income") |
+    str_detect(colnames(ds1_budget_income), "prop")
   ,paste(colnames(ds1_budget_income), "2021", sep = "_")
   ,colnames(ds1_budget_income))
 
@@ -219,7 +217,8 @@ d1 <-
     ,by = "hromada_code"  
   ) %>% 
   left_join(
-    ds1_budget_income %>% select(-hromada_name, -year)
+    ds1_budget_income %>% select(-c(hromada_name, year, raion_code, raion_name,
+                                    oblast_code, oblast_name))
     ,by = "hromada_code"  
   ) %>% 
   left_join(
