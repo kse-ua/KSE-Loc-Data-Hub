@@ -49,22 +49,6 @@ mcq<-survey_xls%>%
 
 #+ VISUALIZATIONS
 
-# correlations
-
-#SPEARMEN RANK CORRELATION FOR Q on preparations (between 14 items + total score + financial metrics)
-# ?financial metrics which represent preparation - income per capita, level of own income
-
-cor_mat <- 
-  cor(d3 %>% select(all_of(preparation), prep_count)
-      ,use = "complete.obs"
-      ,method = "spearman")
-
-png(height=1800, width=1800, file="./analysis/prints/cor_preparation.png", type = "cairo")
-
-corrplot::corrplot(cor_mat, tl.col = "black",tl.cex = 1.5, addCoef.col = "black", number.cex=1.5, order = "FPC")
-
-dev.off()
-
 #+ plot for state communication ------------------------------------------------
 
 p1 <- d3 %>% count(state_communication) %>% mutate(freq = n/sum(n)) %>%
@@ -308,30 +292,6 @@ p4
 p4 %>% quick_save("4-meetings-other-hromadas", w= 12, h = 7)
 
 #+ IDP correlation -------------------------------------------------------------
-
-d4 <- d3 %>% 
-  select(starts_with('idp'), income_tot_per_capita, income_total, total_population_2022, ends_with('prop')) %>%
-  mutate(idp_registration_share = idp_registration_number / total_population_2022,
-         idp_real_share = idp_real_number / total_population_2022,
-         idp_child_share = idp_child_education / idp_registration_number) %>%
-  filter(!is.na(idp_accept))
-
-d4_cor <- d4 %>% select(-c(idp_accept, idp_registration_date, idp_help,
-                           starts_with('idp_help/'), idp_room_number, idp_place_rooms,
-                           idp_child_education, idp_child_share,
-                           idp_real_number, idp_real_share, idp_registration_date, idp_registration_time))
-
-# plot
-cor_mat_idp <- 
-  cor(d4_cor
-      ,use = "complete.obs"
-      ,method = "spearman")
-
-png(height=1800, width=1800, file="./analysis/prints/cor_idp.png", type = "cairo")
-
-corrplot::corrplot(cor_mat_idp, tl.col = "black",tl.cex = 1.5, addCoef.col = "black", number.cex=1.5, order = "FPC")
-
-dev.off()
 
 
 hist(d4$idp_registration_share)
