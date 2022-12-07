@@ -53,7 +53,7 @@ survey_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey
 choices_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "choices")
 
 # Survey data
-d0 <- readxl::read_excel("./data-private/raw/Resilience_survey_2022_11_29_eng_clean.xlsx")
+d0 <- readxl::read_excel("./data-private/raw/Resilience_survey_2022_12_02_eng_clean.xlsx")
 
 ds_population <- readr::read_csv("./data-private/derived/ua-pop-2022.csv")
 
