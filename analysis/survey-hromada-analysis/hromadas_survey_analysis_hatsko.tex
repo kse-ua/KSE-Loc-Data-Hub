@@ -1,0 +1,297 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={hromadas-survey-analysis},
+  pdfauthor={KSE},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{hromadas-survey-analysis}
+\author{KSE}
+\date{2022-12-08}
+
+\begin{document}
+\maketitle
+
+Dependent variable:
+
+prep\_count
+
+(1)
+
+(2)
+
+(3)
+
+log(income\_total)
+
+-0.708 (1.757)
+
+-1.033 (1.720)
+
+0.503 (2.480)
+
+own\_income\_prop\_2021
+
+6.355* (3.684)
+
+4.821 (3.632)
+
+6.185 (4.926)
+
+log(total\_population\_2022)
+
+1.734 (1.933)
+
+2.957 (1.923)
+
+2.735 (2.652)
+
+urban\_pct
+
+2.597 (1.799)
+
+3.652** (1.798)
+
+1.625 (2.477)
+
+n\_settlements
+
+-0.006 (0.024)
+
+-0.025 (0.024)
+
+-0.044 (0.027)
+
+region\_enEast
+
+0.446 (1.225)
+
+1.565 (1.237)
+
+-0.424 (1.650)
+
+region\_enNorth
+
+-1.291 (1.514)
+
+-1.604 (1.492)
+
+-1.647 (1.961)
+
+region\_enSouth
+
+-0.341 (1.471)
+
+-0.560 (1.452)
+
+-5.540** (2.589)
+
+region\_enWest
+
+0.550 (1.243)
+
+-0.465 (1.306)
+
+-1.682 (1.692)
+
+occupationoccupied\_april
+
+-1.529 (2.039)
+
+-2.413 (2.057)
+
+2.930 (4.322)
+
+occupationoccupied\_august
+
+-7.641 (4.644)
+
+-7.533 (4.547)
+
+occupationoccupied\_now
+
+-5.480** (2.637)
+
+-5.007* (2.577)
+
+-4.161 (3.547)
+
+military\_actioncombat\_now
+
+1.744 (2.361)
+
+2.496 (2.304)
+
+3.372 (3.684)
+
+military\_actionno\_combat
+
+0.306 (2.186)
+
+-0.098 (2.170)
+
+5.297 (4.968)
+
+voluntary
+
+0.697 (0.747)
+
+0.757 (0.739)
+
+2.006** (0.949)
+
+turnout\_2020
+
+19.734*** (6.065)
+
+14.700* (7.442)
+
+sex\_headmale
+
+0.572 (0.804)
+
+1.041 (1.085)
+
+age\_head
+
+0.017 (0.041)
+
+-0.065 (0.065)
+
+education\_headnon-higher
+
+-1.526 (1.438)
+
+-0.305 (1.903)
+
+incumbent
+
+0.500 (0.732)
+
+0.103 (0.941)
+
+youth\_councils
+
+-1.756 (1.672)
+
+youth\_centers
+
+-2.063** (0.999)
+
+sum\_osbb\_2020
+
+0.012 (0.008)
+
+Constant
+
+5.401 (14.804)
+
+-8.495 (15.140)
+
+-31.748 (23.313)
+
+Observations
+
+137
+
+136
+
+75
+
+R2
+
+0.266
+
+0.330
+
+0.535
+
+Adjusted R2
+
+0.175
+
+0.214
+
+0.338
+
+Residual Std. Error
+
+3.975 (df = 121)
+
+3.856 (df = 115)
+
+3.511 (df = 52)
+
+F Statistic
+
+2.927*** (df = 15; 121)
+
+2.832*** (df = 20; 115)
+
+2.719*** (df = 22; 52)
+
+Note:
+
+\emph{p\textless0.1; \textbf{p\textless0.05; }}p\textless0.01
+
+```
+
+\end{document}
