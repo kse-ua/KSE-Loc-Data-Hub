@@ -8,6 +8,7 @@ make_bi_freq_table <- function(
     d
     , var1                # 1st categorical variable
     , var2=var1           # 2nd categorical variable
+    , rows_ids = TRUE
 ){
   # browser()
   # d <- ds1 # load the data set before testing the function
@@ -18,13 +19,20 @@ make_bi_freq_table <- function(
   if( ls_var_names[1][[1]] == ls_var_names[2][[1]] ){
     ls_var_names <- ls_var_names[-2]
   }
-
+  
+  if(rows_ids!=TRUE & is.character(rows_ids)){
+    rows_ids_name <- rows_ids
+  }else{
+    rows_ids_name <- "rows_ids_auto"
+  }
+  
   d1 <- d %>%
+    mutate(rows_ids_auto = row_number()) %>%
     # dplyr::group_by(.dots = unique(c(var1, var2)))%>% # simpler but depricated
     dplyr::group_by(!!!rlang::syms(ls_var_names)) %>%
     dplyr::summarize(
       row_count = n()
-      ,id_count = n_distinct(person_oid) # counts UNIUQE persons
+      ,id_count = n_distinct(!!rlang::sym(rows_ids_name)) # counts UNIUQE persons
       ,.groups = "keep"
     ) %>%
     dplyr::ungroup() %>%
@@ -35,7 +43,7 @@ make_bi_freq_table <- function(
     dplyr::group_by(!!rlang::sym(var1)) %>%
     dplyr::mutate(
       var1_count = sum(id_count, na.rm = T)
-
+      
       ,var1_prop = (var1_count/id_count_total)
       ,var12_prop = (id_count/var1_count)
       #
@@ -43,7 +51,7 @@ make_bi_freq_table <- function(
       ,var12_pct = scales::label_percent(accuracy=.1)(var12_prop)
     ) %>%
     ungroup()
-
+  
   # ,pct_1 = scales::label_percent()(total_1/total)
   # ,pct_12 = scales::label_percent()(n_people/total_1)
   #
@@ -86,16 +94,17 @@ make_bi_freq_graph <- function(
       mutate_at(
         .vars = all_of(var1)
         ,.funs = ~fct_rev(.data[[var1]])
-
+        
       )
   }
-
+  
   d2 <- d1 %>% filter(!is.na(.data[[var1]])) # drop empty factors
-
+  
   n_total <-  d2 %>% pull(id_count) %>% unique()
-
+  
   g1 <- d2 %>%
-    ggplot2::ggplot(ggplot2::aes_string(x =var1, y = "id_count", fill = var2 ))+
+    # ggplot2::ggplot(ggplot2::aes_string(x =var1, y = "id_count", fill = var2 ))+
+    ggplot2::ggplot(ggplot2::aes(x =!!rlang::sym(var1), y = id_count, fill = !!rlang::sym(var2) ))+
     ggplot2::geom_col(position = ggplot2::position_dodge(), alpha = .7, color = "black")+
     # ggplot2::geom_text(ggplot2::aes(label = n_people),position = ggplot2::position_dodge(.9), vjust = 1.5, color = "white", size = 5 )+
     ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = voption
@@ -107,23 +116,24 @@ make_bi_freq_graph <- function(
       , labels = scales::comma_format()
       # ,breaks =pretty_breaks()
       ,breaks = scales::breaks_pretty(n=n_breaks)
-
+      
     )
   g1
   if(var1 == var2){
     g1 <- g1 +
-      ggplot2::geom_text(ggplot2::aes_string(label = "var1_pct"),position = ggplot2::position_dodge(.9), hjust = -0.1, color = "black", size = 4)+
+      # ggplot2::geom_text(ggplot2::aes_string(label = "var1_pct"),position = ggplot2::position_dodge(.9), hjust = -0.1, color = "black", size = 4)+
+      ggplot2::geom_text(ggplot2::aes(label = var1_pct),position = ggplot2::position_dodge(.9), hjust = -0.1, color = "black", size = 4)+
       ggplot2::labs(y = "Count", title = paste0("Frequency distribution of (",var1,")"))
   }else{
     g1 <- g1 +
-      ggplot2::geom_text(ggplot2::aes_string(label = "var12_pct"),position = ggplot2::position_dodge(.9)
+      ggplot2::geom_text(ggplot2::aes(label = var12_pct),position = ggplot2::position_dodge(.9)
                          # , vjust = -.5
                          ,hjust = -0.1
                          , color = "black", size = 4)
     g1 <- g1 + ggplot2::labs(y = "Number of respondents", title = paste0("Association between (",var1,") and (",var2,")"))
   }
-
-
+  
+  
   return(g1)
 }
 # How to use
@@ -137,7 +147,7 @@ run_contingency <- function(d,var1, var2){
   # d <- ds1
   # var1 <- "sex"
   # var2 <- "ulcer"
-
+  
   # d1 <- d %>% select(.data[[var1]], .data[[var2]]) %>% na.omit()
   # v1 <- d1 %>% select(.data[[var1]]) %>% mutate_all(., as.character) %>% pull()
   # v2 <- d1 %>% select(.data[[var2]]) %>% mutate_all(., as.character) %>% pull()
@@ -147,18 +157,18 @@ run_contingency <- function(d,var1, var2){
     select(all_of(c(var1,var2))) %>%
     na.omit() %>%
     mutate_all(., as.character) # to ensure factors and integers are treated as factors
-
+  
   # (crosstab <- table(v1,v2))
   (crosstab <- table(d1[[var1]], d1[[var2]]))
-
+  
   # Interpretations (min, max)
   # contingency_c   - (0,1) - Misfit adjusted for sample size
   # cramer_v        - (0,1) - Strength of association (none to perfect)
   # uncertainty_c   - (0,1) - Entropy/ given Y, what fraction of the bits of X can we predict?
   # kruskal_lambda  - (0,1) - Proportional Reduction in Error
-
+  
   chisq.test(crosstab) %>% print()
-
+  
   # Contingency Coefficient Corrected - rescaled to be 0 to 1 (C_max is not bound by 1 and depends on dims(crosstab))
   # measures the degree of association (from none to perfect),
   contingency_coef_corrected <- DescTools::ContCoef(crosstab, correct = TRUE)
@@ -170,9 +180,9 @@ run_contingency <- function(d,var1, var2){
   # Proportional reduction in error - Goodman-Kruskal Lambda
   kruskal_lambda <- DescTools::Lambda(crosstab, direction = "column") # Count( var1) is independed. X(var1) predicts Y(var2)
   # for verification see https://rcompanion.org/handbook/H_10.html
-
+  
   # crosstab %>% DescTools::Assocs() # view a useful set of indices
-
+  
   lto <- list(
     "varnames"        = c("var1"=var1, "var2"=var2)
     ,"crosstab"       = crosstab
@@ -182,7 +192,7 @@ run_contingency <- function(d,var1, var2){
       ,"uncertainty_c"  = uncertainty_c
       ,"kruskal_lambda" = kruskal_lambda
     )
-
+    
   )
   return(lto)
 }
@@ -213,7 +223,7 @@ get_model_fit <- function(m, print=T){
         "\np-value = ", mfit$pvalue,"\n"
     )
   }
-
+  
   return(mfit)
 }
 
@@ -239,10 +249,10 @@ run_logistic_binary <- function(
   )
   # Direction of Effect (Significance Level at %)
   # To help with meaningful colors of effect interpretation
-
+  
   # 1 - FORMULA
   eq_formula <- as.formula(paste0(dependent," ~ ", paste(explanatory, collapse = " + ") ) )
-
+  
   # 2 - MODEL
   model <- stats::glm(
     formula = eq_formula
@@ -263,9 +273,9 @@ run_logistic_binary <- function(
       ,log_odds = predict(object = model, newdata = .)
       ,probability2 = plogis(log_odds) # same thing, double checke
     )
-
-
-
+  
+  
+  
   # 4 - compute ROC and AUC model performance index
   d_pred <- model %>%
     broom::augment() %>%
@@ -289,7 +299,7 @@ run_logistic_binary <- function(
       )
       ,color =  binary_colors["TRUE"]
     )
-
+  
   # 5 - format and augment the table of coefficients
   # to separate variable name from variable value in the summary(model) table
   pattern_starts_with_explanatory <- paste0("^",explanatory, collapse = "|")
@@ -330,10 +340,10 @@ run_logistic_binary <- function(
       ,sign_direction = ifelse(sign_direction %in% c("Increase  ", "Decrease  "), " ", sign_direction)
       ,sign_direction = fct_relevel(sign_direction,names(pal_direction_significance))
     )
-
+  
   # 6 - MODEL FIT
   model_fit <- model %>% get_model_fit(print=F)
-
+  
   # LASTLY - assemble everything into a list object
   ls_out <- list() # create the shell for the object
   ls_out[["equation"]]  <- list(
@@ -353,8 +363,8 @@ run_logistic_binary <- function(
   ls_out[["focal_factor"]] <- list(
     "levels" = levels(d[[explanatory[1]]])
   )
-
-
+  
+  
   return(ls_out)
 }
 # How to use
@@ -391,7 +401,7 @@ run_logistic_binary_model_comparison <- function(
     "reduced"  = d %>% run_logistic_binary(dependent, reduced_model_spec)
     ,"full"    = d %>% run_logistic_binary(dependent, full_model_spec)
   )
-
+  
   # Model comparison test
   chi_square_diff <- ls_model$full$model_fit$chisquare - ls_model$reduced$model_fit$chisquare
   df_diff         <- ls_model$full$model_fit$df - ls_model$reduced$model_fit$df
@@ -407,7 +417,7 @@ run_logistic_binary_model_comparison <- function(
     ,", R-Square  = ", numformat(r_squared_full, 3),", gained ",
     numformat(r_squared_diff,3)
   )
-
+  
   # Make model comparison table
   t_reduced <- ls_model$reduced$model %>% gtsummary::tbl_regression(exponentiate=T)
   t_full    <- ls_model$full$model %>% gtsummary::tbl_regression(exponentiate=T)
@@ -422,7 +432,7 @@ run_logistic_binary_model_comparison <- function(
     "test" = chi_squared_diff_test
     ,"table" = t_out
   )
-
+  
   return(ls_model)
 }
 # How to use
@@ -459,7 +469,7 @@ make_odds_ratios_graph <- function(
     ls_model
 ){
   # browser()
-
+  
   pal_direction_significance <-  c( # turn on, when absent in environment
     "Increase (99%)"   = "#2b8cbe"
     ,"Increase (95%)"  = "#7bccc4"
@@ -473,9 +483,9 @@ make_odds_ratios_graph <- function(
   l_model <- ls_model$full
   var_focal <- l_model$equation$explanatory[1]
   d_est     <- l_model$estimates
-
+  
   g <- d_est %>%
-
+    
     filter(var_name==var_focal) %>%
     mutate(
       value_level = factor(value_level, levels = l_model$focal_factor$levels) %>%
@@ -483,7 +493,7 @@ make_odds_ratios_graph <- function(
     ) %>%
     ggplot(aes(x=conv_odds, y = value_level, fill = sign_direction ))+
     # ggplot(aes(x=or_prop, y = predictor, fill = sign_direction))+
-    geom_col( color = "black", size = .3)+
+    geom_col( color = "black", linewidth = .3)+
     # coord_flip()+
     scale_fill_manual(values = pal_direction_significance)+
     geom_vline(xintercept = 0,  color = "black")+
@@ -532,8 +542,8 @@ make_bi_contingency_graph_components <- function(
   # n_breaks = 10
   # rev = FALSE
   # d <- ds2
-
-
+  
+  
   d1 <- d  %>%
     make_bi_freq_table(var1, var2) %>%
     mutate_at(
@@ -556,7 +566,8 @@ make_bi_contingency_graph_components <- function(
   n_total <-  d2 %>% pull(id_count) %>% sum()
   # browser()
   g0 <- d2 %>%
-    ggplot2::ggplot(ggplot2::aes_string(x =var1, y = "id_count", fill = var2 ))+
+    # ggplot2::ggplot(ggplot2::aes_string(x =var1, y = "id_count", fill = var2 ))+
+    ggplot2::ggplot(ggplot2::aes(x =!!rlang::sym(var1), y = id_count, fill = !!rlang::sym(var2) ))+
     # ggplot2::geom_col(position = ggplot2::position_stack(), alpha = .7, color = "black")+
     # ggplot2::geom_col(position = ggplot2::position_fill(), alpha = .7, color = "black")+
     ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = voption
@@ -620,7 +631,7 @@ make_bi_contingency_graph_components <- function(
         ,labels = index_name
       )
     )
-
+  
   g3 <- d_test %>%
     ggplot(aes(x=measure_name, y = value, fill = measure_name))+
     geom_col(alpha = .7, color = "black")+
@@ -630,13 +641,13 @@ make_bi_contingency_graph_components <- function(
       # ,size = 8
     )+
     scale_y_continuous(
-
+      
       # limits = c(0,.5)
       # breaks = seq(0,1,.1)
       # ,minor_breaks = seq(0,1,.05)
       expand=ggplot2::expansion(mult = c(0,.3))
       ,labels = RemoveLeadingZero
-
+      
     )+
     # scale_x_discrete(
     #   position="top"
@@ -658,7 +669,7 @@ make_bi_contingency_graph_components <- function(
          )
     )
   g3
-
+  
   return(list( "stack"=g1, "fill" = g2, "measures" = g3))
 }
 # How to use
@@ -680,15 +691,15 @@ make_bi_contingency_graph <- function(
   # var2 = "sex"
   # Assemble the final display
   # ds3 %>% make_bi_contingency_graph("has_ea")
-
-
-
+  
+  
+  
   ls_graph <- d %>% make_bi_contingency_graph_components(var1,var2)
-
+  
   p1 <- ls_graph$stack
   p2 <- ls_graph$fill
   p3 <- ls_graph$measures
-
+  
   # store the legend to share later
   legend <- cowplot::get_legend(
     p2 +
@@ -718,7 +729,7 @@ make_bi_contingency_graph <- function(
       # so title is aligned with left edge of first plot
       plot.margin = margin(0, 0, 0, 0)
     )
-
+  
   plot_row <- cowplot::plot_grid(
     title
     ,combined_plot
@@ -726,7 +737,7 @@ make_bi_contingency_graph <- function(
     ,ncol = 1
     # rel_heights values control vertical title margins
     ,rel_heights = c(0.1, 1)
-
+    
   )+
     theme(
       plot.background =element_rect(fill = "white", color = "white")
@@ -760,7 +771,7 @@ get_bi_test_objects <- function(
   # to save the model file to cache for easier graphing later
   model_name <- paste0(c(dependent, explanatory), collapse = "-")
   model_path <- paste0(data_cache_folder,model_name,".rds")
-
+  
   # delete cache file if exisits
   if(clear_cache==TRUE){
     # testit::assert("File for this model does not exist", file.exists(model_path))
@@ -785,7 +796,7 @@ get_bi_test_objects <- function(
   }else{
     testit::assert("File for this model does not exist", file.exists(model_path))
     dto <- readr::read_rds(model_path)
-
+    
   }
   return(dto)
   # Components we'll need for display A
@@ -819,7 +830,7 @@ multi_line2 <- function(x){
 multi_line2_formula <- function(x){
   fobject <- x %>% as.character()
   fstring <- paste0(fobject[2]," ~ ", fobject[3])
-
+  
   paste0(
     fstring %>% substr(1,round(nchar(fstring)/2))
     ,"\n"
@@ -842,7 +853,7 @@ make_bi_test_output_A <- function(
   p4 <- dto$ls_bi_graph$measures # Measures of association
   p5 <- dto$ls_model$full$roc$roc_plot # ROC plot
   # p6 <- dto$ls_model$compare$estimate_plot
-
+  
   var1 <- dto$ls_crosstab$varnames[["var1"]]
   var2 <- dto$ls_crosstab$varnames[["var2"]]
   p7 <- d %>% make_bi_freq_graph(var1, var2,n_breaks = 4)
@@ -856,10 +867,10 @@ make_bi_test_output_A <- function(
       theme(
         legend.position = "top"
         ,legend.title = element_text(size = 16)
-
+        
       )
   )
-
+  
   ### - First row of Display A : three horizontal bar-plots
   ### - Counts + Percent + Change in Odds
   top_row_effects <- cowplot::plot_grid(
@@ -871,7 +882,7 @@ make_bi_test_output_A <- function(
         ,plot.title.position = "panel"
         ,plot.title = element_text(hjust = .5)
       )
-
+    
     ,p2 +
       labs(title="Group Percent", y = NULL)+
       theme(
@@ -892,9 +903,9 @@ make_bi_test_output_A <- function(
     ,rel_widths = c(.35,.35, .3)
   )
   # top_row_effects
-
-
-
+  
+  
+  
   second_row_performance <- cowplot::plot_grid(
     plot.new()
     ,p4 +
@@ -908,7 +919,7 @@ make_bi_test_output_A <- function(
     ,nrow = 1
     ,rel_widths = c(.2,.6,.4)
   )
-
+  
   third_row_bi_graphs <- cowplot::plot_grid(
     p7
     ,p8
@@ -928,7 +939,7 @@ make_bi_test_output_A <- function(
     ,ncol = 1
     # rel_heights values control vertical title margins
     ,rel_heights = c(.1, .1, .5, .6,.2, .7)
-
+    
   )+
     theme(
       plot.background =element_rect(fill = "white", color = "white")
@@ -947,11 +958,11 @@ make_bi_test_output_A <- function(
     limitsize = FALSE,
     ...
   )
-
+  
   return(final_plot)
-
-
-
+  
+  
+  
 }
 # How to use
 # gA <- dto %>% make_bi_test_output_A()
