@@ -4,7 +4,7 @@ eval_chunks <- TRUE
 cache_chunks <- TRUE
 report_render_start_time <- Sys.time()
 options(width=100) # number of characters to display in the output (dflt = 80)
-Sys.setlocale("LC_CTYPE", "ukr")
+Sys.setlocale("LC_CTYPE", "rus")
 rm(list = ls())
 
 #+ load-sources ------------------------------------------------------------
@@ -15,6 +15,9 @@ pacman::p_load(tidyr,dplyr, ggplot2)
 library(tidyverse)
 library(readr)
 library(readxl)
+library(ggplot2)
+library(car)
+library(broom)
 library(survey)
 library(fastDummies)
 library(lubridate)
@@ -68,9 +71,20 @@ ds_survey <- ds_survey %>%
          income_tranfert_per_capita = income_transfert_2021 / total_population_2022,
          idp_registration_share = idp_registration_number / total_population_2022,
          idp_real_share = idp_real_number / total_population_2022,
-         idp_child_share = idp_child_education / idp_registration_number)
+         idp_child_share = idp_child_education / idp_registration_number,
+         sum_osbb_2020 = replace_na(sum_osbb_2020, 0)
+  )
 
 #+ ANALYSIS
+
+check <- c('youth_councils', 'youth_centers', 'sum_osbb_2020')
+
+ds_survey %>%
+  select(all_of(check)) %>%
+  summarise_all(funs(sum(is.na(.)))) %>% t()
+
+ds_survey %>%
+  filter(is.na(sum_osbb_2020)) %>% arrange(type) %>% view()
 
 #+ correlations of preparation items with preparation index --------------------
 
@@ -104,7 +118,34 @@ corrplot::corrplot(cor_mat[1:23,22:23, drop=F], tl.col = "black",tl.cex = 1.5,
 
 dev.off()
 
-#+ vol/nonvol amalgamation and preparation index ---------------------------------
+#+ models of preparation index -------------------------------------------------
+
+model_prep_count_1 <- lm(data = ds_survey %>% filter(!is.na(prep_count)),
+                         prep_count ~ log(income_total) + own_income_prop_2021 +
+                           urban_pct + n_settlements + region_en +
+                           occupation + military_action + voluntary)
+model_prep_count_2 <- lm(data = ds_survey %>% filter(!is.na(prep_count)),
+                         prep_count ~ log(income_total) + own_income_prop_2021 +
+                           urban_pct + n_settlements + region_en +
+                           occupation + military_action + voluntary + turnout_2020 +
+                           sex_head + age_head + education_head + incumbent)
+model_prep_count_3 <- lm(data = ds_survey %>% filter(!is.na(prep_count)) %>%
+                           mutate(sum_osbb_2020 = replace_na(sum_osbb_2020, 0)),
+                         prep_count ~ log(income_total) + own_income_prop_2021 + turnout_2020 +
+                           urban_pct + n_settlements + region_en +
+                           occupation + military_action + voluntary + sex_head + age_head +
+                           education_head + incumbent + youth_councils + youth_centers + 
+                           sum_osbb_2020)
+stargazer(model_prep_count_1, model_prep_count_2, model_prep_count_3, single.row = T, 
+          dep.var.labels = 'Index of Preparation', type = 'html')
+
+plot(model_prep_count_1)
+model.diag.metrics <- augment(model_prep_count_1)
+
+model.diag.metrics %>%
+  top_n(3, wt = .cooksd) %>%view()
+plot(model_prep_count_1, 4)
+#+ vol/nonvol amalgamation and preparation index -------------------------------
 
 ds_survey %>%
   group_by(voluntary) %>%
