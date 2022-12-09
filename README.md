@@ -15,8 +15,8 @@ The project is funded by ... grant (#`grant_id`)
   |Andriy Koval     |Statistical modeling, data visualization, reproducible research   | andkov  |
   |Maryna Rabinovych|   |   |
   |Myroslava Savisko|   |   |
-  |Serhii Tytiuk    |   |   |
-  |Iryna Zasimovych |   |   |
+  |Serhii Tytiuk    |Data Analyst   | tytser  |
+  |Igor Piddubniy |  Data Analyst |  ipiddubnyi |
 
 # Data Products
 
