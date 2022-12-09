@@ -9,12 +9,12 @@ The project is funded by ... grant (#`grant_id`)
 
   | Name            |Role   | @   |
   |---              |---|---|
-  |Tymofii Brik     |   |   |
-  |Andriy Darkovich |   |   |
+  |Tymofii Brik     | Lead Researcher  |   |
+  |Andriy Darkovich | Research Assistant  |   |
   |Valentyn Hatsko  |Data Analyst   | valgat29  |
   |Andriy Koval     |Statistical modeling, data visualization, reproducible research   | andkov  |
-  |Maryna Rabinovych|   |   |
-  |Myroslava Savisko|   |   |
+  |Maryna Rabinovych| Senior Researcher  |   |
+  |Myroslava Savisko| Project Manager  | splanetina  |
   |Serhii Tytiuk    |Data Analyst   | tytser  |
   |Igor Piddubniy |  Data Analyst |  ipiddubnyi |
 
