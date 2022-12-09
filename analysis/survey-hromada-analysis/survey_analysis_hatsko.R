@@ -35,7 +35,7 @@ cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
 ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean.xlsx")
-
+ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
 # Xls_form
 survey_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey")
 choices_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "choices")
@@ -119,32 +119,41 @@ corrplot::corrplot(cor_mat[1:23,22:23, drop=F], tl.col = "black",tl.cex = 1.5,
 dev.off()
 
 #+ models of preparation index -------------------------------------------------
+cor_mat <- 
+  cor(ds_general %>% select(sum_osbb_2020, youth_councils, youth_centers, business_support_centers)
+      ,use = "complete.obs"
+      ,method = "spearman")
 
-model_prep_count_1 <- lm(data = ds_survey %>% filter(!is.na(prep_count)),
+psych::KMO(cor_mat)
+psych::cortest.bartlett(cor_mat)
+ev <- eigen(cor_mat) # get eigenvalues
+psych::scree(ds_general %>% select(sum_osbb_2020, youth_councils, youth_centers, business_support_centers), pc=FALSE)  # Use pc=FALSE for factor analysis
+
+##
+ds_models <- ds_survey %>% filter(!is.na(turnout_2020))
+
+model_prep_count_1 <- lm(data = ds_models %>% filter(!is.na(prep_count)),
                          prep_count ~ log(income_total) + own_income_prop_2021 +
                            urban_pct + n_settlements + region_en +
                            occupation + military_action + voluntary)
-model_prep_count_2 <- lm(data = ds_survey %>% filter(!is.na(prep_count)),
+model_prep_count_2 <- lm(data = ds_models %>% filter(!is.na(prep_count)),
                          prep_count ~ log(income_total) + own_income_prop_2021 +
                            urban_pct + n_settlements + region_en +
                            occupation + military_action + voluntary + turnout_2020 +
                            sex_head + age_head + education_head + incumbent)
-model_prep_count_3 <- lm(data = ds_survey %>% filter(!is.na(prep_count)) %>%
+model_prep_count_3 <- lm(data = ds_models %>% filter(!is.na(prep_count)) %>%
                            mutate(sum_osbb_2020 = replace_na(sum_osbb_2020, 0)),
                          prep_count ~ log(income_total) + own_income_prop_2021 + turnout_2020 +
                            urban_pct + n_settlements + region_en +
                            occupation + military_action + voluntary + sex_head + age_head +
-                           education_head + incumbent + youth_councils + youth_centers + 
-                           sum_osbb_2020)
+                           education_head + incumbent + business_support_centers + 
+                           youth_centers + sum_osbb_2020)
 stargazer(model_prep_count_1, model_prep_count_2, model_prep_count_3, single.row = T, 
           dep.var.labels = 'Index of Preparation', type = 'html')
 
-plot(model_prep_count_1)
-model.diag.metrics <- augment(model_prep_count_1)
-
-model.diag.metrics %>%
-  top_n(3, wt = .cooksd) %>%view()
-plot(model_prep_count_1, 4)
+# model diagnostics
+plot(model_prep_count_3)
+anova(model_prep_count_1, model_prep_count_2, model_prep_count_3)
 #+ vol/nonvol amalgamation and preparation index -------------------------------
 
 ds_survey %>%
