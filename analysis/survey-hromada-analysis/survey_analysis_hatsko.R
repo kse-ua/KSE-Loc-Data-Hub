@@ -77,6 +77,73 @@ ds_survey <- ds_survey %>%
 
 #+ ANALYSIS
 
+#+ general info about survey ---------------------------------------------------
+
+d1 <- ds_general %>%
+  count(oblast_name_en)
+
+d2 <-  ds_survey %>%
+  count(oblast_name_en)
+
+d3 <- d1 %>% left_join(d2, by = c('oblast_name_en'))
+
+d4 <- d3 %>%
+  filter(!is.na(oblast_name_en)) %>%
+  rename(total_number_ATC = n.x,
+         survey_number_ATC = n.y) %>%
+  mutate(survey_number_ATC = replace_na(survey_number_ATC, 0),
+         survey_coverage_atc = case_when(is.na(survey_number_ATC) ~ 0,
+                                     TRUE ~ survey_number_ATC / total_number_ATC),
+         survey_coverage_atc_perc = scales::percent(survey_coverage_atc, 1)
+  ) %>%
+  arrange(desc(survey_coverage_atc)) %>%
+  select(-survey_coverage_atc)
+
+d5 <- ds_general %>%
+  group_by(oblast_name_en) %>%
+  summarise(population = sum(total_population_2022))
+
+d6 <- ds_survey %>%
+  group_by(oblast_name_en) %>%
+  summarise(survey_population = sum(total_population_2022))
+
+d7 <- d5 %>% left_join(d6, by = c('oblast_name_en'))
+  
+  
+d8 <- d7 %>%
+  filter(!is.na(oblast_name_en)) %>%
+  mutate(survey_population = replace_na(survey_population, 0),
+         survey_coverage_pop = case_when(is.na(survey_population) ~ 0,
+                                     TRUE ~ survey_population / population),
+         survey_coverage_pop_perc = scales::percent(survey_coverage_pop, accuracy = 1)
+  ) %>%
+  arrange(desc(survey_coverage_pop)) %>%
+  select(-survey_coverage_pop)
+
+d9 <- d4 %>% left_join(d8 %>% select(oblast_name_en, survey_coverage_pop_perc), by = c('oblast_name_en'))
+
+survey_cov_gttable1 <- gt::gt(d9)
+
+d10 <- d2 %>% 
+  mutate(pct = n / sum(n), perc = scales::percent(pct, 1)) %>% 
+  arrange(desc(pct)) %>%
+  select(-pct) %>%
+  rename(ATCs = n, Share = perc)
+  
+survey_cov_gttable2 <- gt::gt(d10)
+
+survey_cov_gttable1 <- survey_cov_gttable1 %>%
+  gt::tab_header(
+    title = "Survey Regional Coverage"
+    ) %>%
+  gt::cols_label(oblast_name_en = 'Oblast',
+                 total_number_ATC = 'Total number \nof ATCs',
+                 survey_number_ATC = 'ATCs in the survey',
+                 survey_coverage_atc_perc = 'Survey Coverage of ATCs',
+                 survey_coverage_pop_perc ='Survey Coverage of Population'
+                 )
+survey_cov_gttable1 %>% gt::gtsave("tab_1.png", expand = 10)
+#+ social capital --------------------------------------------------------------
 check <- c('youth_councils', 'youth_centers', 'sum_osbb_2020')
 
 ds_survey %>%
