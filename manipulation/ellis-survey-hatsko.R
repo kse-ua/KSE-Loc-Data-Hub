@@ -67,7 +67,7 @@ ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
 oblasts <- readr::read_csv("./data-private/raw/oblast.csv") %>% 
   mutate(
     oblast_name_en = case_when(
-      oblast_name_en == "Driproptrovska" ~ "Dnipropetrovska"
+      oblast_name_en == "Dripropetrovska" ~ "Dnipropetrovska"
       ,oblast_name_en == "Ivano-Frankivsk" ~ "Ivano_Frankivsk"
       ,oblast_name_en == "Kyiv-oblast" ~ "Kyivska"
       ,oblast_name_en == "Vonyn" ~ "Volyn"
