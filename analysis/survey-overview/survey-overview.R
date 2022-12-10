@@ -27,6 +27,7 @@ library(readr)
 library(readxl)
 library(survey)
 library(fastDummies)
+library(gt)
 
 # ---- load-sources ------------------------------------------------------------
 base::source("./scripts/common-functions.R")             # basics
@@ -45,24 +46,31 @@ data_cache_folder <- prints_folder # to sink modeling steps
 
 
 # ---- load-data ---------------------------------------------------------------
-ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean.xlsx")
-# Xls_form
-# meta_survey  <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey")
-# meta_choices <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "choices")
+# the product of ./manipulation/ellis-general.R
+ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
 # 
+ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean.xlsx")
 
-# to better control
+# meta_oblast <- googlesheets4::read_sheet(sheet_name,"choices",skip = 0)
+
+# Originally, we pulled the meta data object from Kobo front end and stored to 
+# survey_xls  <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey")
+# we put this on google drive now, to control manually
 googlesheets4::gs4_deauth() # to indicate there is no need for a access token
 # https://googlesheets4.tidyverse.org/ 
 # https://docs.google.com/spreadsheets/d/1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo/edit?usp=sharing
-sheet_name <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
-meta_survey <- googlesheets4::read_sheet(sheet_name,"survey",skip = 0)
-meta_choices <- googlesheets4::read_sheet(sheet_name,"choices",skip = 0)
+survey_url <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
+meta_survey <- googlesheets4::read_sheet(survey_url,"survey",skip = 0)
+meta_choices <- googlesheets4::read_sheet(survey_url,"choices",skip = 0)
 
 
 
 # ---- inspect-data ------------------------------------------------------------
 ds_survey %>% glimpse()
+meta_survey %>% filter(group == 'preamble')
+
+ds_survey %>% pull(hromada_code) %>% unique()
+
 # ---- variable-groups -----------------------------------------------------------
 # create supporting objects for convenient reference of variable groups
 
@@ -126,10 +134,18 @@ meta_survey %>%
 
 
 meta_survey %>% glimpse()
+
 # ---- tweak-data-0 ----------------------
 
-
-
+ds_general0 <- 
+  ds_general %>% 
+  mutate(
+    survey_response = case_when(
+      hromada_code %in% (ds_survey %>% pull(hromada_code) %>% unique()) ~ TRUE
+      ,TRUE ~ FALSE
+    )
+  )
+# ds_general0 %>% group_by(survey_response) %>% count()
 
 
 
