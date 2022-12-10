@@ -1,0 +1,215 @@
+rm(list = ls(all.names = TRUE)) # Clear the memory of variables from previous run. This is not called by knitr, because it's above the first chunk.
+cat("\014") # Clear the console
+
+# ---- load-packages -----------------------------------------------------------
+# Choose to be greedy: load only what's needed
+# Three ways, from least (1) to most(3) greedy:
+# -- 1.Attach these packages so their functions don't need to be qualified: 
+# http://r-pkgs.had.co.nz/namespace.html#search-path
+library(ggplot2)   # graphs
+library(forcats)   # factors
+library(stringr)   # strings
+library(lubridate) # dates
+library(labelled)  # labels
+library(dplyr)     # data wrangling
+library(tidyr)     # data wrangling
+# -- 2.Import only certain functions of a package into the search path.
+import::from("magrittr", "%>%")
+# -- 3. Verify these packages are available on the machine, but their functions need to be qualified
+requireNamespace("readr"    )# data import/export
+requireNamespace("readxl"   )# data import/export
+requireNamespace("janitor"  )# tidy data
+requireNamespace("testit"   )# For asserting conditions meet expected patterns.
+
+pacman::p_load(tidyr,dplyr, ggplot2)
+library(tidyverse)
+library(readr)
+library(readxl)
+library(survey)
+library(fastDummies)
+
+# ---- load-sources ------------------------------------------------------------
+base::source("./scripts/common-functions.R")             # basics
+base::source("./scripts/graphing/graph-presets.R")       # font size, colors etc
+base::source("./scripts/operational-functions.R")        # quick specific functions
+base::source("./scripts/binary-categorical-functions.R") # graphing and modeling
+
+# ---- declare-globals ---------------------------------------------------------
+# printed figures will go here:
+prints_folder <- paste0("./analysis/survey-hromada-analysis/prints")
+if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
+
+data_cache_folder <- prints_folder # to sink modeling steps
+# ---- declare-functions -------------------------------------------------------
+'%ni%' <- Negate(`%in%`)
+
+
+# ---- load-data ---------------------------------------------------------------
+ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean.xlsx")
+# Xls_form
+survey_xls  <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey")
+choices_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "choices")
+
+# ---- inspect-data ------------------------------------------------------------
+ds_survey %>% glimpse()
+# ---- variable-groups -----------------------------------------------------------
+# create supporting objects for convenient reference of variable groups
+
+# multiple choice questions
+mcq <-
+  survey_xls%>%
+  dplyr::select(type,name)%>%
+  dplyr::filter(str_detect(type, "select_multiple"))%>%
+  dplyr::select(name)%>%
+  pull() %>%  
+  print()
+
+#vectors of mcq names
+preparation <- 
+  ds_survey %>% 
+  select(starts_with("prep_"), -prep_winter_count, -prep_count) %>% 
+  colnames() %>% 
+  print()
+
+comm_channels <- 
+  ds_survey %>% 
+  select(telegram:hotline) %>% 
+  colnames() %>% 
+  print()
+
+idp_help <- 
+  ds_survey %>%
+  select(starts_with('idp_help/'), -ends_with('number')) %>% 
+  colnames() %>% 
+  print()
+
+military_help <- 
+  ds_survey %>% 
+  select(starts_with('help_for_military/')) %>% 
+  colnames() %>% 
+  print()
+
+# only for occupied hromadas - few cases
+hromada_cooperation <- 
+  ds_survey %>% 
+  select(starts_with('hromada_cooperation/')) %>% 
+  colnames() %>% 
+  print()
+
+prep_for_winter <- c('info_campaign', 'reserves', 'count_power_sources', 
+                     'count_heaters_need', 'solid_fuel_boiler')
+# vector of income variables 
+income <- 
+  ds_survey %>%
+  select(ends_with('capita'), ends_with('prop_2021')) %>%
+  colnames() %>% 
+  print()
+
+# ---- meta-data-1 -------------------------------------------------------------
+
+
+# ---- tweak-data-0 ----------------------
+ds0 <- 
+  ds_survey %>% 
+  mutate(
+    income_own_per_capita       = income_own_2021         / total_population_2022,
+    income_total_per_capita     = income_total_2021       / total_population_2022,
+    income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
+    idp_registration_share      = idp_registration_number / total_population_2022,
+    idp_real_share              = idp_real_number         / total_population_2022,
+    idp_child_share             = idp_child_education     / idp_registration_number
+  ) %>% 
+  mutate(
+    prep_score = rowSums(across(preparation),na.rm = T) # composite score of preparedness
+    ,prep_score_binary = rowSums(
+      across(
+        .cols = preparation
+        ,.fns = ~case_when(
+          . ==  0 ~ 0L #"No"
+          ,. == 1 ~ 1L #"After Feb 24"
+          ,. == 2 ~ 1L #"Before Feb 24"
+          ,TRUE   ~ NA_integer_
+        ) 
+      )
+      ,na.rm = T
+    )
+  ) 
+
+# ---- inspect-data-0 ------------------------------------------------------------
+
+# ---- tweak-data-1 ------------------------------------------------------------
+# compute total binary score (preparations are made at all, regardless of timing)
+
+# Raw scale (0,1,2)
+ds1_ordinal_integers <- 
+  ds0 %>% 
+  select(hromada_code, preparation, prep_score, prep_score_binary)
+
+
+# Raw scale (0,1,2) with factors
+ds1_ordinal_factors <- 
+  ds0 %>% 
+  mutate(
+    across(
+      .cols = preparation
+      ,.fns = ~case_when(
+        . == 0  ~ "No"
+        ,. == 1 ~ "After Feb 24"
+        ,. == 2 ~ "Before Feb 24"
+        ,TRUE   ~ "Not Applicable"
+      ) %>% factor(levels=c("No","Before Feb 24","After Feb 24",  "Not Applicable"))
+    )
+  ) %>% 
+  select(hromada_code, preparation, prep_score, prep_score_binary)
+
+# Binary scales (0,1)
+ds1_binary_integers <- 
+  ds0 %>% 
+  mutate(
+    across(
+      .cols = preparation
+      ,.fns = ~case_when(
+        . ==  0 ~ FALSE #"No"
+        ,. == 1 ~ TRUE #"After Feb 24"
+        ,. == 2 ~ TRUE #"Before Feb 24"
+        ,TRUE   ~ NA
+      ) 
+    ) 
+  ) %>% 
+  select(hromada_code, preparation, prep_score, prep_score_binary)
+# Binary scale (0,1) with factors
+ds1_binary_factors <- 
+  ds0 %>% 
+  mutate(
+    across(
+      .cols = preparation
+      ,.fns = ~case_when(
+        .  == 0  ~ "No"
+        ,. == 1 ~ "Yes"
+        ,. == 2 ~ "Yes"
+        ,TRUE   ~ "Not Applicable"
+      ) %>% factor(levels=c("No","Yes","Not Applicable"))
+    )
+  ) %>% 
+  select(hromada_code, preparation, prep_score, prep_score_binary)
+
+# ----- inspect-data-1 -----------------------
+
+ds1_ordinal_integers %>% glimpse()
+ds1_ordinal_factors %>% glimpse()
+ds1_binary_integers %>% glimpse()
+ds1_binary_factors %>% glimpse()
+
+# ---- save-to-disk ------------------------------------------------------------
+
+# ---- publish ------------------------------------------------------------
+path <- "./analysis/survey-overview/survey-overview.Rmd"
+rmarkdown::render(
+  input = path ,
+  output_format=c(
+    "html_document"
+    # "word_document"
+    # "pdf_document"
+  ),
+  clean=TRUE
+)

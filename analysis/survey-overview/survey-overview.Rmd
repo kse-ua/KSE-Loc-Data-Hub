@@ -1,0 +1,462 @@
+---
+title: "Invasion Prep"
+author: 
+- "Valentyn Hatsko"
+- "Andriy Koval"  
+date: "Last updated: `r Sys.Date()`"
+output:
+  html_document:
+    keep_md: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+    theme: cerulean
+    highlight: zenburn
+editor_options: 
+  chunk_output_type: console
+---
+
+> This report visualizes key information about Resilience Survey
+
+___Important Definitions___
+
+> Research Sample: Hromadas who responded to the survey. 
+
+<!--  Set the working directory to the repository's base directory; this assumes the report is nested inside of two directories.-->
+```{r, echo=F, message=F}
+# cat("Working directory: ", getwd())
+library(knitr)
+opts_knit$set(root.dir='../../')  #Don't combine this call with any other chunk -especially one that uses file paths.
+```
+
+```{r set_options, echo=F, message=FALSE, warning=FALSE, results = 'hide'}
+# cat("Working directory: ", getwd()) # turn on to test the location
+report_render_start_time <- Sys.time()
+# set options shared by all chunks
+opts_chunk$set(
+  results      = 'show',
+  message      = FALSE,
+  warning      = FALSE,
+  comment      = NA,
+  tidy         = FALSE,
+  # dpi        = 400, # dots per inch,
+  # out.width  = "650px", # pixels, this affects only the markdown, not the underlying png file.  The height will be scaled appropriately.
+  fig.width    = 6, # inches
+  fig.height   = 4, # inches
+  fig.path     = 'figure-png-iso/' # where figures are stored
+)
+echo_chunks    <- FALSE #Toggle for debugging.
+message_chunks <- FALSE #Toggle for debugging.
+options(width=100) # number of characters to display in the output (dflt = 80)
+ggplot2::theme_set(ggplot2::theme_bw()) # common theme for all graphs
+read_chunk("./analysis/survey-overeview/survey-overview.R") #This allows knitr to call chunks tagged in the underlying *.R file.
+Sys.setlocale("LC_CTYPE", "ukr")
+```
+
+# Environment
+
+> Reviews the components of the working environment of the report. Non-technical readers are welcomed to skip. Come back if you need to understand the origins of custom functions, scripts, or data objects.
+
+
+<details>
+<summary> Packages used <span class="glyphicon glyphicon-plus-sign"></span></summary>
+Packages used in current report
+
+```{r load-packages, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+<details>
+<summary> External scripts <span class="glyphicon glyphicon-plus-sign"></span></summary>
+ 
+Collection of custom functions used in current repository (`sda-information-requests`)
+
+```{r load-sources, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+  
+  
+  <details>
+  <summary> Global values <span class="glyphicon glyphicon-plus-sign"></span></summary>
+  
+  
+  Values used throughout the report.
+
+```{r declare-globals, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+  
+  
+  <details>
+  <summary> Functions <span class="glyphicon glyphicon-plus-sign"></span></summary>
+  
+  Custom functions defined for use in this report.
+
+```{r declare-functions, message=message_chunks, echo=T, results="hide"}
+```
+</details>
+  
+# Data
+
+## Input
+  
+```{r load-data, results='show', message=FALSE, cache = T, eval=T}
+```
+
+<details>
+  <summary> click to glimpse <span class="glyphicon glyphicon-plus-sign"></span></summary>
+```{r inspect-data, results='show', message=message_chunks,cache=F, class.source = "fold-show"}
+```
+</details>  
+> 
+
+
+Next, we define useful sets of variable names to be used throughout the report
+
+<details>
+  <summary> click to see the groups <span class="glyphicon glyphicon-plus-sign"></span></summary>
+```{r variable-groups, results='show', message=message_chunks,cache=F, class.source = "fold-show"}
+```
+</details> 
+>  
+
+<details>
+  <summary> meta data <span class="glyphicon glyphicon-plus-sign"></span></summary>
+```{r meta-data-1,  class.source = "fold-show"}
+```
+</details> 
+
+  
+  
+## Transformations 
+
+For the state `ds0`, we augment the focal table of the report with additional columns and transform existing variable to better fit visualization/modeling needs
+
+```{r tweak-data-0, results='show', message=message_chunks,cache=T, class.source = "fold-hide"}
+```
+
+To make our analysis more nimble we create four alternative versions of `ds1` with Invasion Preparedness questions
+
+<details>
+  <summary> show transformations <span class="glyphicon glyphicon-plus-sign"></span></summary>
+```{r tweak-data-1,  class.source = "fold-show"}
+```
+</details> 
+> 
+
+<details>
+  <summary> examine the versions <span class="glyphicon glyphicon-plus-sign"></span></summary>
+
+```{r inspect-data-1,  class.source = "fold-show"}
+```
+</details>
+  
+  
+# Variable List 
+
+The following variables are present in the processed data table of survey responses:  
+  
+```{r results='show', message=message_chunks,cache=F, class.source = "fold-hide"}
+ds0 %>% explore::describe_all() %>%neat_DT()
+```
+
+# 0. Introduction
+
+<mark>0.1</mark> What is the goal of this report? 
+  
+> This report explores preparations hromadas were making in anticipation/response to the full-scale invasion  on February 24, 2022
+
+<mark>0.2</mark> How many hromadas contributed responses to so far? 
+  
+> As of ```r Sys.Date() %>% as.character()```, ```r ds0 %>% summarize(response_count = n_distinct(hromada_code)) %>% pull(response_count) %>% scales::comma()``` hromadas contributed valid response to the survey
+
+# 1. Preparedness Scale
+
+<mark>1.1</mark> What questions were asked about preparations hromadas made? 
+  
+```{r class.source = "fold-hide"}
+ds0 %>% 
+  select(preparation) %>% 
+  explore::describe_all() %>% 
+  left_join(d_meta_prep,by=c("variable"="item_name")) %>% 
+  relocate(c("label_ua","label_ua_full"),.after = "variable") %>% 
+  select(1:3) %>%
+  neat()
+```
+
+# Summary of Responses
+
+<mark>1.2</mark> What preparatory steps were most common? 
+
+```{r freq-summary-1, fig.height=5, fig.width=12,class.source="fold-hide",eval=F}
+d1 <- 
+  ds1_ordinal_factors %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>% 
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d2 <- 
+  ds1_binary_factors %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>% 
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d12 <- 
+  bind_rows(
+    d1
+    ,d2 %>% filter(value == "Yes")
+  ) %>% 
+  left_join(
+    d_meta_prep
+  ) %>% 
+  arrange(item_name, value)
+
+order_of_levels <- 
+  d12 %>% 
+  left_join(d_meta_prep) %>% 
+  filter(value == "Yes") %>% 
+  arrange(prop) %>%
+  # arrange(desc(item_number)) %>%
+  pull(label_en)
+
+g <- 
+  d12 %>% 
+  mutate(
+    display_name = label_en
+    ,display_name = factor(display_name, levels = order_of_levels)
+    ,value = fct_relevel(
+      value
+      , "Before Feb 24", "After Feb 24","Yes", "No", "Not Applicable",
+    ) 
+  ) %>% 
+  ggplot(aes(x=prop, y = display_name))+
+  geom_point()+
+  geom_text(aes(label = str_remove(pct,"\\%")),hjust = -.7, size = 3)+
+  geom_segment(aes(x=0,xend=prop,yend=display_name))+
+  geom_segment(aes(x=1,xend=1,y=-Inf,yend=Inf),linetype = "dotted", alpha =.5, linewidth = .4, color = "grey50")+
+  facet_wrap(facets = "value", nrow=1)+
+  scale_x_continuous(breaks = seq(.0,1,.25),labels = scales::percent_format(), expand = expansion(add=c(.05,.15)))+
+  labs(
+    title = "Have your hromada made the following preparations?"
+    ,x = "Percent of respondents", y = NULL
+  )+
+  theme(
+    panel.grid = element_blank()
+  )
+g
+g %>% quick_save("1-preparation-summary",w=12,h=5)
+
+```
+
+```{r freq-summary-2, fig.height=5, fig.width=12,class.source="fold-hide"}
+d1 <- 
+  ds1_ordinal_factors %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>% 
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d2 <- 
+  ds1_binary_factors %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>% 
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d12 <- 
+  bind_rows(
+    d1
+    ,d2 %>% filter(value == "Yes")
+  ) %>% 
+  left_join(
+    d_meta_prep
+  ) %>% 
+  arrange(item_name, value) 
+
+d_in <- 
+  d12 %>% 
+    mutate(
+    display_name = label_en
+    ,display_name = factor(
+      display_name
+      ,levels =  d12 %>%
+        left_join(d_meta_prep) %>%
+        filter(value == "Yes") %>%
+        # filter(value == "Before Feb 24") %>%
+        arrange(prop) %>%
+        # arrange(desc(item_number)) %>%
+        pull(label_en)
+    ) # display_name
+    ,value = fct_relevel(
+      value
+      , "Before Feb 24", "After Feb 24","Yes", "No", "Not Applicable",
+    ) %>% fct_rev()
+  ) %>% select(-label_ua, -label_ua_full)
+
+g <- 
+  d_in %>% 
+  { 
+  ggplot(
+    data = (.) %>% filter(value !="Yes") %>% mutate(value=factor(value))
+    ,aes(x=prop, y = display_name, fill=value)
+  )+
+  geom_col(position = position_stack()
+           , alpha = .7
+           ,data =
+  )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = 1
+            , size = 4
+            ,color="white"
+            ,position = position_stack()
+            ,data = . %>% filter(value !="Yes")
+            )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = -.5
+            ,vjust = .5
+            , size = 2
+            ,color="black"
+            ,position = position_stack()
+            ,data = (.) %>% filter(value=="Yes") %>% mutate(value=NA)
+
+            )+
+  scale_x_continuous(
+    breaks = seq(.1,1,.1)
+    ,labels = scales::percent_format()
+    ,expand = expansion(add=c(-.000,-.0))
+  )+
+  scale_fill_viridis_d(
+    begin = .8, end = .0, direction = -1
+    , option = "plasma", guide= guide_legend(reverse=T)
+  )+
+  labs(
+    title = "Have your hromada made the following preparations?"
+    ,x = "Percent of respondents", y = NULL, fill = NULL
+    ,caption = "Cummulative percent shown in black"
+  )+
+  theme(
+    # panel.grid = element_blank()
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "black")
+  )
+  }
+
+g
+g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
+
+```
+
+# Individual Responses
+
+```{r fig.height=3, fig.width=8, message=FALSE, class.source="fold-hide", results='show',results="asis", eval=T, cache =T }
+
+loop_vars <- d_meta_prep %>% pull(item_name) %>% unique()
+
+for(i in seq_along(loop_vars)){
+  # i <- 1
+  item_name_i <- loop_vars[i]
+  item_label <- d_meta_prep %>% filter(item_name==item_name_i) %>% pull(label_ua)
+  item_label_full <- d_meta_prep %>% filter(item_name==item_name_i) %>% pull(label_ua_full)
+  cat("\n## ", item_name_i,"\n\n")
+  cat("\n")
+  g <-  ds1_ordinal_factors %>% make_bi_freq_graph(item_name_i)
+  g <- 
+    g +
+    labs(
+      title = item_label
+      ,subtitle = item_label_full
+    )   
+  g %>% print()
+  cat("\n")
+  g <-  ds1_binary_factors %>% make_bi_freq_graph(item_name_i)
+  g <- 
+    g +
+    labs(
+      title = item_label
+      ,subtitle = item_label_full
+    )   
+  g %>% print()
+  cat("\n")
+  # ds1 %>% make_bi_freq_graph("occupation",item_name_i) %>% print()
+  # cat("\n")
+  # ds1 %>% make_bi_freq_graph(item_name_i,"occupation") %>% print()
+  # cat("\n")
+  
+}
+```
+
+# Investigations 
+
+Давайте розглянемо як стать голови ради була пов'язана з заготовкою палива
+
+```{r}
+ds1_ordinal_factors %>%
+  left_join(ds0 %>% select(hromada_code, sex_head)) %>% 
+  make_bi_freq_graph(var1 = "sex_head",var2 = "prep_first_aid_fuel")
+
+ds1_ordinal_factors %>%
+  left_join(ds0 %>% select(hromada_code, sex_head)) %>% 
+  make_bi_freq_graph(var1 = "prep_first_aid_fuel",var2 = "sex_head")
+
+```
+
+
+
+Session Information {#session-info}
+===========================================================================
+    
+For the sake of documentation and reproducibility, the current report was rendered in the following environment.  Click the line below to expand.
+  
+  <details>
+    <summary>Environment <span class="glyphicon glyphicon-plus-sign"></span></summary>
+```{r session-info, echo=FALSE}
+if( requireNamespace("devtools", quietly = TRUE) ) {
+  devtools::session_info()
+    } else {
+      sessionInfo()
+    }
+```
+    </details>
+      
+```{r session-duration, echo=FALSE}
+    report_render_duration_in_seconds <- round(as.numeric(difftime(Sys.time(), report_render_start_time, units="secs")))
+```
+    
+Report rendered by `r Sys.info()["user"]` at `r strftime(Sys.time(), "%Y-%m-%d, %H:%M %z")` in `r report_render_duration_in_seconds` seconds.
