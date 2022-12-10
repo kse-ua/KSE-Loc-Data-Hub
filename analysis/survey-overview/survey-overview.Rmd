@@ -151,8 +151,12 @@ To make our analysis more nimble we create four alternative versions of `ds1` wi
 
 <summary>show transformations </summary>
 
-```{r tweak-data-1,  class.source = "fold-show"}
+```{r tweak-data-1-prep,  class.source = "fold-show"}
 ```
+
+```{r tweak-data-1-info,  class.source = "fold-show"}
+```
+
 
 </details>
 
@@ -254,30 +258,16 @@ ds0 %>% make_bi_freq_graph("occupation","military_action")
 
 # 2. Preparation
 
-<mark>2.1</mark> What questions were asked about preparations hromadas made? 
-  
-```{r class.source = "fold-hide"}
-ds0 %>% 
-  select(preparation) %>% 
-  explore::describe_all() %>% 
-  left_join(
-    meta_survey %>% filter(group=="preparation") %>% select(name,label_en,label)
-    ,by=c("variable"="name")) %>% 
-  relocate(c("label_en","label"),.after = "variable") %>% 
-  select(1:3) %>%
-  neat()
-```
 
 
-
-```{r preparation-summary-1, fig.height=5, fig.width=12,class.source="fold-hide"}
+```{r preparation-summary-1, fig.height=5, fig.width=12,class.source="fold-hide", cache=T}
 d_meta_prep <- 
   meta_survey %>% 
   filter(group=="preparation") %>% 
   select(item_name = name,label_en,label)
 
 d1 <- 
-  ds1_ordinal_factors %>% 
+  ds1_prep_ordinal_factors %>% 
   pivot_longer(cols = preparation, names_to = "item_name") %>% 
   group_by(item_name,value) %>% 
   summarize(
@@ -292,7 +282,7 @@ d1 <-
   ungroup()
 
 d2 <- 
-  ds1_binary_factors %>% 
+  ds1_prep_binary_factors %>% 
   pivot_longer(cols = preparation, names_to = "item_name") %>% 
   group_by(item_name,value) %>% 
   summarize(
@@ -389,8 +379,191 @@ g
 # g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
 ```
 
+<mark>2.1</mark> What questions were asked about preparations hromadas made? 
+
+```{r class.source = "fold-hide"}
+ds0 %>% 
+  select(preparation) %>% 
+  explore::describe_all() %>% 
+  left_join(
+    meta_survey %>% filter(group=="preparation") %>% select(name,label_en,label)
+    ,by=c("variable"="name")) %>% 
+  relocate(c("label_en","label"),.after = "variable") %>% 
+  select(1:3) %>%
+  neat()
+```
+
+
 
 # 3. Information
+
+
+```{r results="show", calss.source="fold-hide"}
+meta_survey %>% filter(group=="information_hat") %>% pull(label) %>% cat()
+```
+
+```{r information-summary-1, fig.height=3, fig.width=12,class.source="fold-hide"}
+
+d1 <- 
+  ds1_info %>% 
+  pivot_longer(
+    cols = item_information
+    ,names_to = "item_name"
+    ,values_to = "item_response"
+  ) %>% 
+  group_by(item_name,item_response) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d2 <- 
+  ds1_info %>% 
+   pivot_longer(
+    cols = item_information
+    ,names_to = "item_name"
+    ,values_to = "item_response"
+  ) %>% 
+  mutate(
+    item_response = case_when(
+      item_response != "No" ~ "Yes"
+    )
+  ) %>%
+  group_by(item_name,item_response) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d12 <- 
+  bind_rows(
+    d1
+    ,d2 %>% filter(item_response == "Yes")
+  ) %>% 
+  left_join(
+    d_meta_info
+  ) %>% 
+  arrange(item_name, item_response) 
+
+d_in <- 
+  d12 %>% 
+    mutate(
+    display_name = label_en
+    ,display_name = factor(
+      display_name
+      ,levels =  d12 %>%
+        left_join(d_meta_info) %>%
+        filter(item_response == "Yes") %>%
+        # filter(value == "Before Feb 24") %>%
+        arrange(prop) %>%
+        # arrange(desc(item_number)) %>%
+        pull(label_en)
+    ) # display_name
+    ,item_response = fct_relevel(
+      item_response
+      , "Before Feb 24", "After Feb 24","Yes", "No", "Not Applicable",
+    ) %>% fct_rev()
+  ) 
+
+g <- 
+  d_in %>% 
+  { 
+  ggplot(
+    data = (.) %>% filter(item_response !="Yes") %>% mutate(item_response=factor(item_response))
+    ,aes(x=prop, y = display_name, fill=item_response)
+  )+
+  geom_col(position = position_stack()
+           , alpha = .7
+           ,data =
+  )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = 1
+            , size = 4
+            ,color="white"
+            ,position = position_stack()
+            ,data = . %>% filter(item_response !="Yes")
+            )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = -.5
+            ,vjust = .5
+            , size = 2
+            ,color="black"
+            ,position = position_stack()
+            ,data = (.) %>% filter(item_response=="Yes") %>% mutate(item_response=NA)
+
+            )+
+  scale_x_continuous(
+    breaks = seq(.1,1,.1)
+    ,labels = scales::percent_format()
+    ,expand = expansion(add=c(-.000,-.0))
+  )+
+  scale_fill_viridis_d(
+    begin = .8, end = .0, direction = -1
+    , option = "plasma", guide= guide_legend(reverse=T)
+  )+
+  labs(
+    title = "What channels of communication are used to dissiminate information?"
+    ,x = "Percent of respondents", y = NULL, fill = NULL
+    ,caption = "Cummulative percent shown in black"
+  )+
+  theme(
+    # panel.grid = element_blank()
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "black")
+  )
+  }
+
+g
+```
+
+
+```{r results="show", calss.source="fold-hide"}
+meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
+```
+
+
+```{r fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+  mutate(
+    head_hromada_communication = fct_recode(
+      head_hromada_communication,
+       "Once a week"       = "once_a_week"
+      ,"Once a day"       = "once_a_day"
+      ,"Never"            = "none"
+      ,"Few times a week" = "few_times_a_week"
+      ,"2-3 times a day" = "2_3_times"
+    ) %>% factor( levels = c(
+       "Never"           
+       ,"Once a week"     
+       ,"Few times a week"
+       ,"Once a day"      
+       ,"2-3 times a day"
+    )
+    )
+  ) %>% 
+  make_bi_freq_graph("head_hromada_communication") )+
+  labs(
+    title = "How frequently did hromada head communicated in the frist month of invasion?"
+    ,x = NULL
+  )
+
+```
+
+
+
 
 # 4. National Resistance
 
