@@ -45,6 +45,68 @@ data_cache_folder <- prints_folder # to sink modeling steps
 '%ni%' <- Negate(`%in%`)
 
 
+make_corr_matrix <- function(d,metaData=d_meta,item_names,display_var="label_en", method="pearson"){
+  # browser()
+  # d <- ds0
+  # metaData <- d_meta
+  # item_names <- (d_meta %>% pull(item_name) %>% as.character() )[1:3]
+  # add_short_label <- TRUE
+  #
+  # d %>% glimpse()
+  # d <- ds %>% dplyr::select(foc_01:foc_49)
+  d1 <- d %>% dplyr::select(all_of(item_names))
+  d2 <- d1[complete.cases(d1),]
+  # d2 %>% glimpse()
+  rownames <- metaData %>%
+    dplyr::filter(item_name %in% item_names) %>%
+    dplyr::mutate(display_name = !!rlang::sym(display_var))
+  # rownames <- rownames[,"display_name"]
+  # rownames <- rownames %>% as.list() %>% unlist() %>% as.character()
+  rownames <- rownames %>% pull(display_name)
+  d3 <- sapply(d2, as.numeric)
+  # d3 %>% glimpse()
+  cormat <- cor(d3,method = method)
+  colnames(cormat) <- rownames; rownames(cormat) <- rownames
+  return(cormat)
+}
+
+
+make_corr_plot <- function (
+    corr,
+    lower="number",
+    upper="number",
+    bg="white",
+    addgrid.col="gray"
+    ,title 
+    , ...
+){
+  corrplot::corrplot(
+    corr
+    , add=F
+    , type   = "lower"
+    , method = lower
+    , diag   = TRUE
+    , tl.pos = "lt"
+    , cl.pos = "n"
+    # ,order = "hclust"
+    # ,addrect = 3
+    ,...
+  )
+  corrplot::corrplot(
+    corr
+    ,add=T
+    , type="upper"
+    , method=upper
+    , diag=TRUE
+    , tl.pos="n"
+    # ,order = "hclust"
+    # ,addrect = 3
+    ,title = title  
+    , ...
+  )
+  
+}
+
 # ---- load-data ---------------------------------------------------------------
 # the product of ./manipulation/ellis-general.R
 ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
@@ -181,13 +243,13 @@ ds0 <-
 # compute total binary score (preparations are made at all, regardless of timing)
 
 # Raw scale (0,1,2)
-ds1_ordinal_integers <- 
+ds1_prep_ordinal_integers <- 
   ds0 %>% 
   select(hromada_code, preparation, prep_score, prep_score_binary)
 
 
 # Raw scale (0,1,2) with factors
-ds1_ordinal_factors <- 
+ds1_prep_ordinal_factors <- 
   ds0 %>% 
   mutate(
     across(
@@ -203,7 +265,7 @@ ds1_ordinal_factors <-
   select(hromada_code, preparation, prep_score, prep_score_binary)
 
 # Binary scales (0,1)
-ds1_binary_integers <- 
+ds1_prep_binary_integers <- 
   ds0 %>% 
   mutate(
     across(
@@ -218,7 +280,7 @@ ds1_binary_integers <-
   ) %>% 
   select(hromada_code, preparation, prep_score, prep_score_binary)
 # Binary scale (0,1) with factors
-ds1_binary_factors <- 
+ds1_prep_binary_factors <- 
   ds0 %>% 
   mutate(
     across(
