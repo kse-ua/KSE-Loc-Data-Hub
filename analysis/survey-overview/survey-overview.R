@@ -47,8 +47,19 @@ data_cache_folder <- prints_folder # to sink modeling steps
 # ---- load-data ---------------------------------------------------------------
 ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean.xlsx")
 # Xls_form
-survey_xls  <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey")
-choices_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "choices")
+# meta_survey  <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey")
+# meta_choices <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "choices")
+# 
+
+# to better control
+googlesheets4::gs4_deauth() # to indicate there is no need for a access token
+# https://googlesheets4.tidyverse.org/ 
+# https://docs.google.com/spreadsheets/d/1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo/edit?usp=sharing
+sheet_name <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
+meta_survey <- googlesheets4::read_sheet(sheet_name,"survey",skip = 0)
+meta_choices <- googlesheets4::read_sheet(sheet_name,"choices",skip = 0)
+
+
 
 # ---- inspect-data ------------------------------------------------------------
 ds_survey %>% glimpse()
@@ -57,7 +68,7 @@ ds_survey %>% glimpse()
 
 # multiple choice questions
 mcq <-
-  survey_xls%>%
+  meta_survey%>%
   dplyr::select(type,name)%>%
   dplyr::filter(str_detect(type, "select_multiple"))%>%
   dplyr::select(name)%>%
@@ -106,9 +117,22 @@ income <-
   print()
 
 # ---- meta-data-1 -------------------------------------------------------------
+meta_survey %>% glimpse()
+
+meta_survey %>% 
+  filter(type %in% c("begin_group","end_group")) %>% 
+  select(1:5) %>% 
+  print_all()
 
 
+meta_survey %>% glimpse()
 # ---- tweak-data-0 ----------------------
+
+
+
+
+
+
 ds0 <- 
   ds_survey %>% 
   mutate(
