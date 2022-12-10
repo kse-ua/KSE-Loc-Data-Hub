@@ -271,6 +271,11 @@ ds0 %>%
 
 
 ```{r preparation-summary-1, fig.height=5, fig.width=12,class.source="fold-hide"}
+d_meta_prep <- 
+  meta_survey %>% 
+  filter(group=="preparation") %>% 
+  select(item_name = name,label_en,label)
+
 d1 <- 
   ds1_ordinal_factors %>% 
   pivot_longer(cols = preparation, names_to = "item_name") %>% 
@@ -329,7 +334,7 @@ d_in <-
       value
       , "Before Feb 24", "After Feb 24","Yes", "No", "Not Applicable",
     ) %>% fct_rev()
-  ) %>% select(-label_ua, -label_ua_full)
+  ) 
 
 g <- 
   d_in %>% 
@@ -381,7 +386,8 @@ g <-
   }
 
 g
-g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
+# g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
+```
 
 
 # 3. Information
