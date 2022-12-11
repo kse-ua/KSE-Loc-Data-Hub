@@ -1,0 +1,938 @@
+---
+title: "Resilience Survey Overview"
+author: 
+- "Valentyn Hatsko"
+- "Andriy Koval"  
+date: "Last updated: `r Sys.Date()`"
+output:
+  html_document:
+    keep_md: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+    theme: cerulean
+    highlight: zenburn
+editor_options: 
+  chunk_output_type: console
+---
+
+> This report visualizes key information about Resilience Survey
+
+***Important Definitions***
+
+> Research Sample: Hromadas who responded to the survey.
+
+<!--  Set the working directory to the repository's base directory; this assumes the report is nested inside of two directories.-->
+
+```{r, echo=F, message=F}
+# cat("Working directory: ", getwd())
+library(knitr)
+opts_knit$set(root.dir='../../')  #Don't combine this call with any other chunk -especially one that uses file paths.
+```
+
+```{r set_options, echo=F, message=FALSE, warning=FALSE, results = 'hide'}
+# cat("Working directory: ", getwd()) # turn on to test the location
+report_render_start_time <- Sys.time()
+# set options shared by all chunks
+opts_chunk$set(
+  results      = 'show',
+  message      = FALSE,
+  warning      = FALSE,
+  comment      = NA,
+  tidy         = FALSE,
+  # dpi        = 400, # dots per inch,
+  # out.width  = "650px", # pixels, this affects only the markdown, not the underlying png file.  The height will be scaled appropriately.
+  fig.width    = 6, # inches
+  fig.height   = 4, # inches
+  fig.path     = 'figure-png-iso/' # where figures are stored
+)
+echo_chunks    <- FALSE #Toggle for debugging.
+message_chunks <- FALSE #Toggle for debugging.
+options(width=100) # number of characters to display in the output (dflt = 80)
+ggplot2::theme_set(ggplot2::theme_bw()) # common theme for all graphs
+read_chunk("./analysis/survey-overview/survey-overview.R") #This allows knitr to call chunks tagged in the underlying *.R file.
+Sys.setlocale("LC_CTYPE", "ukr")
+```
+
+# Environment
+
+> Reviews the components of the working environment of the report. Non-technical readers are welcomed to skip. Come back if you need to understand the origins of custom functions, scripts, or data objects.
+
+<details>
+
+<summary>Packages used </summary>
+
+Packages used in current report
+
+```{r load-packages, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+
+<details>
+
+<summary>External scripts </summary>
+
+Collection of custom functions used in current repository (`sda-information-requests`)
+
+```{r load-sources, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+
+<details>
+
+<summary>Global values </summary>
+
+Values used throughout the report.
+
+```{r declare-globals, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+
+<details>
+
+<summary>Functions </summary>
+
+Custom functions defined for use in this report.
+
+```{r declare-functions, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+
+# Data
+
+## Input
+
+```{r load-data, results='show', message=FALSE, cache = F, eval=T}
+```
+
+<details>
+
+<summary>click to glimpse </summary>
+
+```{r inspect-data, results='show', message=message_chunks,cache=F, class.source = "fold-show"}
+```
+
+</details>
+
+Next, we define useful sets of variable names to be used throughout the report
+
+<details>
+
+<summary>click to see the groups </summary>
+
+```{r variable-groups, results='show', message=message_chunks,cache=F, class.source = "fold-show"}
+```
+
+</details>
+
+<details>
+
+<summary>meta data </summary>
+
+```{r meta-data-1,  class.source = "fold-show"}
+```
+
+</details>
+
+## Transformations
+
+For the state `ds0`, we augment the focal table of the report with additional columns and transform existing variable to better fit visualization/modeling needs
+
+```{r tweak-data-0, results='show', message=message_chunks,cache=F, class.source = "fold-hide"}
+```
+
+To make our analysis more nimble we create four alternative versions of `ds1` with Invasion Preparedness questions
+
+<details>
+
+<summary>show transformations </summary>
+
+```{r tweak-data-1-prep,  class.source = "fold-show"}
+```
+
+```{r tweak-data-1-info,  class.source = "fold-show"}
+```
+
+
+</details>
+
+<details>
+
+<summary>examine the versions </summary>
+
+```{r inspect-data-1,  class.source = "fold-show"}
+```
+
+</details>
+
+# Variable List
+
+The following variables are present in the processed data table of survey responses:
+
+```{r results='show', message=message_chunks,cache=F, class.source = "fold-hide"}
+ds0 %>% explore::describe_all() %>%neat_DT()
+```
+
+# 0. Introduction
+
+<mark>0.1</mark> What is the goal of this report?
+
+> This report overviews the responses to the survey conducted by \_\_\_\_\_ in Ukraine during 2022
+
+
+# 1. General Information
+
+```{r results="show"}
+meta_survey %>% filter(group=="preamble") %>% pull(label) %>% cat()
+```
+
+<mark>1.1</mark> How many hromadas contributed responses to so far?
+
+> As of `r Sys.Date() %>% as.character()`, `r ds0 %>% summarize(response_count = n_distinct(hromada_code)) %>% pull(response_count) %>% scales::comma()` hromadas contributed valid response to the survey
+
+<mark>1.2</mark> What oblasts are represented in this sample>? 
+
+
+```{r class.source="fold-hide"}
+ds_survey %>% 
+  group_by(region_en, oblast_name_en) %>% 
+  summarize(
+    hormada_count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  left_join(
+    ds_general %>% 
+      group_by(region_en=region_en.y,  oblast_name_en=oblast_name_en.x ) %>% 
+      summarize(hromada_count_total = n())
+  ) %>% 
+  mutate(
+    prop = hormada_count/hromada_count_total
+    ,pct = scales::percent(prop, accuracy = .1)
+  ) %>% 
+  arrange(region_en, oblast_name_en) %>% 
+  select(-prop) %>% 
+  ungroup() %>%
+  # neat_DT()
+  neat()
+```
+
+
+
+<mark>1.3</mark> What type of hromadas are represented in the sample? 
+
+
+```{r fig.height=4, fig.width=8, class.source="fold-hide"}
+(ds0 %>% make_bi_freq_graph("type"))+
+  labs(
+    title = "What types of hromadas repsonded to the survey?"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = NULL
+  )
+```
+
+<mark>1.4</mark> What hromadas experienced military occupation or  military actions? 
+```{r fig.height=4, fig.width=8, class.source="fold-hide"}
+(ds0 %>% make_bi_freq_graph("military_action"))+
+  labs(
+    title = "How many respondent hromadas have experienced military action at the time of the interview?"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = NULL
+  )
+
+(ds0 %>% make_bi_freq_graph("occupation"))+
+  labs(
+    title = "How many respondent hromadas have experienced occupation at the time of the interview?"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y=NULL
+  )
+ds0 %>% make_bi_freq_graph("military_action","occupation")
+ds0 %>% make_bi_freq_graph("occupation","military_action")
+
+```
+
+
+
+# 2. Preparation
+
+
+
+```{r preparation-summary-1, fig.height=5, fig.width=12,class.source="fold-hide", cache=T}
+
+
+d1 <- 
+  ds1_prep_ordinal_factors %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>% 
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d2 <- 
+  ds1_prep_binary_factors %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>% 
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d12 <- 
+  bind_rows(
+    d1
+    ,d2 %>% filter(value == "Yes")
+  ) %>% 
+  left_join(
+    d_meta_prep
+  ) %>% 
+  arrange(item_name, value) 
+
+d_in <- 
+  d12 %>% 
+    mutate(
+    display_name = label_en
+    ,display_name = factor(
+      display_name
+      ,levels =  d12 %>%
+        left_join(d_meta_prep) %>%
+        filter(value == "Yes") %>%
+        # filter(value == "Before Feb 24") %>%
+        arrange(prop) %>%
+        # arrange(desc(item_number)) %>%
+        pull(label_en)
+    ) # display_name
+    ,value = fct_relevel(
+      value
+      , "Before Feb 24", "After Feb 24","Yes", "No", "Not Applicable",
+    ) %>% fct_rev()
+  ) 
+
+g <- 
+  d_in %>% 
+  { 
+  ggplot(
+    data = (.) %>% filter(value !="Yes") %>% mutate(value=factor(value))
+    ,aes(x=prop, y = display_name, fill=value)
+  )+
+  geom_col(position = position_stack()
+           , alpha = .7
+           ,data =
+  )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = 1
+            , size = 4
+            ,color="white"
+            ,position = position_stack()
+            ,data = . %>% filter(value !="Yes")
+            )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = -.5
+            ,vjust = .5
+            , size = 2
+            ,color="black"
+            ,position = position_stack()
+            ,data = (.) %>% filter(value=="Yes") %>% mutate(value=NA)
+
+            )+
+  scale_x_continuous(
+    breaks = seq(.1,1,.1)
+    ,labels = scales::percent_format()
+    ,expand = expansion(add=c(-.000,-.0))
+  )+
+  scale_fill_viridis_d(
+    begin = .8, end = .0, direction = -1
+    , option = "plasma", guide= guide_legend(reverse=T)
+  )+
+  labs(
+    title = "Have your hromada made the following preparations?"
+    ,x = "Percent of respondents", y = NULL, fill = NULL
+    ,caption = "Cummulative percent shown in black"
+  )+
+  theme(
+    # panel.grid = element_blank()
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "black")
+  )
+  }
+
+g
+# g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
+```
+
+<mark>2.1</mark> What questions were asked about preparations hromadas made? 
+
+```{r class.source = "fold-hide"}
+ds0 %>% 
+  select(preparation) %>% 
+  explore::describe_all() %>% 
+  left_join(
+    meta_survey %>% filter(group=="preparation") %>% select(name,label_en,label)
+    ,by=c("variable"="name")) %>% 
+  relocate(c("label_en","label"),.after = "variable") %>% 
+  select(1:3) %>%
+  neat()
+```
+
+## Item-total correlation 
+
+We can conceptualize the preparation for invation as two scores: the first received for steps taken prior to Feb 24, 2022 (the `Before` prep score) and the second for the steps undertaken after Feb 24 (the `After` prep score), as recorded at the time of data collection ( October - November 20200). 
+
+
+```{r}
+ds1_prep %>% select(1:4) # + individual preparation items
+# prep_score =  0 to  30, sum of (0|1|2) for each of 15 items, 2 pts for prepping before 2022-02-24 1 pts after.
+# prep_score_before = 0 to 15, sum of (0|1) items, where 1 = prepping before Feb 24
+# prep_score_after = 0 to 15, sum of (0|1) items, where 1 = prepping eventually (Nov 2022)
+
+```
+
+ These  scores have a convenient conceptualization and a straightforward interpretation
+ 
+ - `Before` - number of preparatory items on the prep list completed before Feb 24
+ - `AFter` - number of preparatory steps completed by the hromada at the time of the interview
+ - `Total` - the sum of `Before` and `After`. Evaluates the readiness of the hromada at the time of the interview, valuing steps undertaken prior to Feb 24 twice as influential in the final score
+
+`Before` and `After` scores have a more clear conceptualization, but th `Total` score has a more appealing distribution shape, making it more useful for statistical modeling. 
+
+```{r info-score-distribution, fig.height=6, fig.width=4,class.source="fold-hide", cache=T}
+
+g <-  ds1_prep %>%
+  # To standardize the metrics of each scale : 0 to 10, where 10 - most prepared
+  mutate(
+     prep_score = prep_score / 3 # because 15 items, maximum 2 points each
+    ,prep_score_before =prep_score_before /1.5 # because 15 items, maximum 1 point each
+    ,prep_score_after = prep_score_after /1.5 # because 15 items, maximum 1 point each
+  ) %>% 
+  select(starts_with("prep_score")) %>% 
+  pivot_longer(cols = everything(),names_to = "measure",values_to="value") %>% 
+  mutate( 
+    measure = factor(measure,
+                        levels = c("prep_score_before","prep_score_after","prep_score")
+                        ,labels = c("Prep Score (Before)","Prep Score (After)", "Prep Score")
+                        )
+  ) %>% 
+  ggplot(aes(x=value))+
+  geom_histogram(binwidth = 1, alpha = .4)+
+  scale_x_continuous(breaks = seq(0,10,1))+
+  facet_wrap("measure",ncol =1)
+g
+g %>%  quick_save("score-distribution",w=4, h=6)
+```
+
+The item-total correlation also indicates that psychometrically the `Total` score is a better choice - having no negative values and generally having a higher discrimination capacity of items.   
+
+```{r prep-item-total, fig.height=4, fig.width=8,class.source="fold-hide", cache=T}
+(d_item_total%>% 
+  slice(1:15) %>% 
+  pivot_longer(
+     cols = c("Total","Before","After")
+    ,names_to = "scenario"
+    ,values_to = "correlation"
+  ) %>% 
+  mutate(
+    discrimination = case_when(
+      correlation <= 0  ~ "problematic"
+      ,correlation > 0 & correlation < .2 ~ "poor"
+      ,correlation >=.2 & correlation < .4 ~ "good"
+      ,correlation >=.4  ~ "very good"
+    ) %>% factor(levels = c("problematic","poor","good","very good"))
+    ,scenario = scenario %>% factor(level=c("Before","After","Total"))
+    ,item_name = factor(item_name, levels = d_meta_prep %>% pull(label_en)) %>% 
+      fct_rev()
+  ) %>% 
+  ggplot(aes(x = item_name, y = correlation, color = discrimination, group = scenario))+
+  geom_line(aes(group = "scenario"))+
+  geom_point()+
+  geom_text(aes(label=correlation %>% scales::number(accuracy = .01) %>% RemoveLeadingZero()),hjust=-.3
+            ,size = 3)+
+  geom_hline(aes(x=0, yintercept = 0))+ 
+  facet_wrap("scenario",nrow=1)+
+  scale_y_continuous(limits = c(-.3,.6), expand = expansion(add = c(0,.2)))+
+  scale_color_brewer(type ="div",palette = "RdYlGn")+
+  coord_flip() +
+    labs(
+      title = "Item-total corellations under three measurement scenarios"
+      ,subtitle = "Before = prior to Feb 24, After = at time of interview, Oct-Nov 2022, Total = Before + After"
+      ,y = "Item-total Correlation (Spearman)"
+      ,x = NULL
+      ,color = "Discrimination"
+    )
+  ) %>% 
+  print() %>% 
+  quick_save("item-total",w=8,h=4)
+```
+
+While all three metrics should be considered during modeling, our current understanding of the data sugggests that we should prefer the `Total` score in relating hromada's preparedness to other attributes. 
+
+
+# 3. Information
+
+
+```{r results="show", calss.source="fold-hide"}
+meta_survey %>% filter(group=="information_hat") %>% pull(label) %>% cat()
+```
+
+```{r information-summary-1, fig.height=3, fig.width=12,class.source="fold-hide"}
+
+d1 <- 
+  ds1_info %>% 
+  pivot_longer(
+    cols = item_information
+    ,names_to = "item_name"
+    ,values_to = "item_response"
+  ) %>% 
+  group_by(item_name,item_response) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d2 <- 
+  ds1_info %>% 
+   pivot_longer(
+    cols = item_information
+    ,names_to = "item_name"
+    ,values_to = "item_response"
+  ) %>% 
+  mutate(
+    item_response = case_when(
+      item_response != "No" ~ "Yes"
+    )
+  ) %>%
+  group_by(item_name,item_response) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d12 <- 
+  bind_rows(
+    d1
+    ,d2 %>% filter(item_response == "Yes")
+  ) %>% 
+  left_join(
+    d_meta_info
+  ) %>% 
+  arrange(item_name, item_response) 
+
+d_in <- 
+  d12 %>% 
+    mutate(
+    display_name = label_en
+    ,display_name = factor(
+      display_name
+      ,levels =  d12 %>%
+        left_join(d_meta_info) %>%
+        filter(item_response == "Yes") %>%
+        # filter(value == "Before Feb 24") %>%
+        arrange(prop) %>%
+        # arrange(desc(item_number)) %>%
+        pull(label_en)
+    ) # display_name
+    ,item_response = fct_relevel(
+      item_response
+      , "Before Feb 24", "After Feb 24","Yes", "No", "Not Applicable",
+    ) %>% fct_rev()
+  ) 
+
+g <- 
+  d_in %>% 
+  { 
+  ggplot(
+    data = (.) %>% filter(item_response !="Yes") %>% mutate(item_response=factor(item_response))
+    ,aes(x=prop, y = display_name, fill=item_response)
+  )+
+  geom_col(position = position_stack()
+           , alpha = .7
+           ,data =
+  )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = 1
+            , size = 4
+            ,color="white"
+            ,position = position_stack()
+            ,data = . %>% filter(item_response !="Yes")
+            )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = -.5
+            ,vjust = .5
+            , size = 2
+            ,color="black"
+            ,position = position_stack()
+            ,data = (.) %>% filter(item_response=="Yes") %>% mutate(item_response=NA)
+
+            )+
+  scale_x_continuous(
+    breaks = seq(.1,1,.1)
+    ,labels = scales::percent_format()
+    ,expand = expansion(add=c(-.000,-.0))
+  )+
+  scale_fill_viridis_d(
+    begin = .8, end = .0, direction = -1
+    , option = "plasma", guide= guide_legend(reverse=T)
+  )+
+  labs(
+    title = "What channels of communication are used to dissiminate information?"
+    ,x = "Percent of respondents", y = NULL, fill = NULL
+    ,caption = "Cummulative percent shown in black"
+  )+
+  theme(
+    # panel.grid = element_blank()
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "black")
+  )
+  }
+
+g
+```
+
+
+```{r results="show", calss.source="fold-hide"}
+meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
+```
+
+
+```{r info-1 , fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+  mutate(
+    
+    head_hromada_communication = fct_recode(
+      head_hromada_communication,
+       "Once a week"      = "once_a_week"
+      ,"Once a day"       = "once_a_day"
+      ,"Never"            = "none"
+      ,"Few times a week" = "few_times_a_week"
+      ,"2-3 times a day"  = "2_3_times"
+    ) %>% factor( levels = c(
+       "Never"           
+       ,"Once a week"     
+       ,"Few times a week"
+       ,"Once a day"      
+       ,"2-3 times a day"
+    )
+    )
+  ) %>% 
+  make_bi_freq_graph("head_hromada_communication") )+
+  labs(
+    title = "How frequently did hromada head communicated in the frist month of invasion?"
+    ,x = NULL
+  )
+
+```
+
+
+```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+
+d <- 
+  ds0 %>%  
+  select(hromada_code,head_hromada_communication, facebook,viber,telegram ) %>% 
+  pivot_longer(cols = c("facebook","viber","telegram")) %>% 
+  mutate(
+    had_sn_before = case_when(
+      value %in% c(0,1) ~ "No cccount before Feb24"
+      ,value %in% c(2)  ~ "Had cccount before Feb24"
+    )
+  ) %>% 
+  arrange(hromada_code, head_hromada_communication) %>% 
+  group_by(hromada_code,head_hromada_communication) %>% 
+  mutate(
+    had_any_sn_before_feb24 = sum(value==2,na.rm = T)>0
+  ) %>% 
+  ungroup() %>% 
+  distinct(hromada_code, head_hromada_communication,had_any_sn_before_feb24) %>% 
+  mutate(
+    time_per_week = fct_recode(head_hromada_communication,
+        "1"  = "once_a_week"    
+      , "7"  = "once_a_day"   
+      , "0"  = "none"   
+      , "3"  = "few_times_a_week"  
+      , "15" = "2_3_times"   
+    ) %>% as.character() %>% as.integer()
+    , head_hromada_communication = fct_recode(
+      head_hromada_communication,
+       "Once a week"      = "once_a_week"
+      ,"Once a day"       = "once_a_day"
+      ,"Never"            = "none"
+      ,"Few times a week" = "few_times_a_week"
+      ,"2-3 times a day"  = "2_3_times"
+    ) %>% factor( levels = c(
+       "Never"           
+       ,"Once a week"     
+       ,"Few times a week"
+       ,"Once a day"      
+       ,"2-3 times a day"
+    )
+    )
+  ) 
+(d %>% make_bi_freq_graph("had_any_sn_before_feb24")) +
+  labs(
+    title = "Did hromadas have account on any social network?"
+    ,subtitle = "Social networks considered: Facebook, Viber, Telegram"
+    ,y = NULL, fill = "Had account"
+  )
+```
+
+```{r info-3 , fig.height=3, fig.width=9,class.source="fold-hide"}
+
+d %>% 
+  group_by(had_any_sn_before_feb24) %>% 
+  summarize(mean_times_per_week = mean(time_per_week,na.rm =T)) %>% 
+  ggplot(aes(x=mean_times_per_week, y= had_any_sn_before_feb24,
+             fill = had_any_sn_before_feb24))+
+  geom_col()+
+  geom_text(aes(label=scales::comma(mean_times_per_week)))+
+  labs(
+    title = "How freqently did heads of hromadas communicate with the community during the first month of invation?"
+    ,subtitle = "Social networks considered: Facebook, Viber, Telegram"
+    ,y = NULL, x = "Average times per week", fill = "Had account on\nany social network"
+  )
+
+```
+
+```{r info-4 , fig.height=3, fig.width=9,class.source="fold-hide"}
+
+d %>% 
+  group_by(head_hromada_communication,had_any_sn_before_feb24) %>% 
+  summarize(
+    hromada_count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(had_any_sn_before_feb24) %>% 
+  mutate(
+    prop = hromada_count/sum(hromada_count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ggplot(aes(x=prop, y = head_hromada_communication, fill = had_any_sn_before_feb24))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), hjust = -.5,position = position_dodge(width = .9))+
+  scale_x_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
+    )+
+  labs(
+    title = "How frequently did heads of hromadas communicated during the first month of invation?"
+    ,fill = "Had accounts\non social networks\nbefore Feb 24"
+    ,x = "Percent of respondents in each group"
+    , y = NULL
+  )
+```
+
+
+# 4. National Resistance
+
+## 4.1 Transport Help
+
+# 5. Administrative Adaptation
+
+# 6. Evacuation
+
+# 7. IDP
+
+# 8. Economics
+
+```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+  mutate(
+    `Special fund's expenditures were relocated` = fct_recode(
+      special_fund_relocation,
+       "Yes"      = "yes"
+      ,"No"       = "no"
+    ) %>% factor( levels = c(
+       "Yes"           
+       ,"No"     
+    )
+    )
+  ) %>% 
+  make_bi_freq_graph("Special fund's expenditures were relocated") )+
+  labs(
+    title = "Were budget expenditures from the special fund streamed to finance other, current needs?"
+    ,x = NULL
+  )
+```
+
+```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+ds0 %>% 
+  filter(special_fund_relocation == "yes") %>% 
+  select(hromada_name, `special_fund_relocation_needs/state_functions`:`special_fund_relocation_needs/healthcare`) %>% 
+  pivot_longer(-c(hromada_name), names_to = "sector", values_to = "cut") %>% 
+  mutate(
+    sector = str_to_title(str_remove(sector, "sectors_"))
+  ) %>% 
+  group_by(sector) %>% 
+  summarise(`Number of Hromadas` = sum(cut), .groups = "drop") %>% 
+  filter(`Number of Hromadas` > 0)  %>% 
+ mutate(sector = case_when(sector=="Special_fund_relocation_needs/Defense"~"Defense",
+                           sector=="Special_fund_relocation_needs/Economic_activity"~"Economic Activity",
+                           sector=="Special_fund_relocation_needs/Education"~"Education",
+                           sector=="Special_fund_relocation_needs/Environment"~"Environment",
+                           sector=="Special_fund_relocation_needs/Healthcare"~"Healthcare",
+                           sector=="Special_fund_relocation_needs/Social_protection"~"Social Protection",
+                           sector=="Special_fund_relocation_needs/Spirit_development"~"Spirit Development",
+                           sector=="Special_fund_relocation_needs/State_functions"~"State Functions",
+                           sector=="Special_fund_relocation_needs/Utilities"~"Utilities",
+                           sector=="Special_fund_relocation_needs/Public_order"~"Public Order",
+                           TRUE~sector)
+ ) %>%
+  ggplot(aes(x = `Number of Hromadas`, y = fct_reorder(sector, `Number of Hromadas`))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  theme_bw()+
+  labs(
+    title = "Sectors for which the funds of the special fund were redistributed"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = "Sector"
+  )+
+  geom_col(position = position_stack()
+           , alpha = .5
+           ,data =
+  )
+```
+
+```{r class.source="fold-hide"}
+ds0 %>% 
+  mutate(relocated_companies = as.numeric(relocated_companies_text)) %>%
+      group_by(region_en,  oblast_name_en ) %>% 
+      summarize(`Relocated companies` = sum(relocated_companies, na.rm = TRUE)) %>% 
+  filter(`Relocated companies`>0) %>%
+    ggplot(aes(x = `Relocated companies`, y = fct_reorder(oblast_name_en, `Relocated companies`))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  theme_bw()+
+  labs(
+    title = "Relocated businesses by destination region"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = "Oblast"
+  )+
+  geom_col(position = position_stack()
+           , alpha = .5
+           ,data =
+  )
+```
+
+```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+   mutate(
+    `Jobs created` = fct_recode(
+      created_jobs,
+       "Don't know" = "dk",
+      "0-50" = "0_50_jobs",
+      "51-100" = "51_100_jobs",
+      "101-250" = "101_250_jobs"
+    ) %>% factor( levels = c(
+       "Don't know"           
+       ,"0-50" ,
+       "51-100",
+       "101-250"
+    )
+    )
+  ) %>%
+   make_bi_freq_graph("Jobs created"))+
+  labs(
+    title = "How many jobs were created in the hromada thanks to the relocated enterprises?"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = NULL
+  )
+```
+
+```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+ds0 %>% filter(bussiness_stimules_none == 0) %>%
+  select(hromada_name, `bussiness_stimules/tax_benefits`:`bussiness_stimules/other`) %>% 
+  pivot_longer(-c(hromada_name), names_to = "type", values_to = "done") %>% 
+  mutate(
+    type = str_to_title(str_remove(type, "types_"))
+  ) %>% 
+  group_by(type) %>% 
+  summarise(`number of hromadas` = sum(done), .groups = "drop") %>% 
+  filter(`number of hromadas`>0) %>% 
+  mutate(type = case_when(type == "Bussiness_stimules/Education" ~ "Organized Educational Events",
+                          type == "Bussiness_stimules/Free_rooms" ~ "Provided Premises for Free",
+                          type == "Bussiness_stimules/Tax_benefits" ~ "Provided with Tax Benefits",
+                          type == "Bussiness_stimules/Other" ~ "Other Methods",
+  TRUE~type)
+  ) %>%
+  ggplot(aes(x = `number of hromadas`, y = fct_reorder(type, `number of hromadas`))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  theme_bw()+
+  geom_col(position = position_stack()
+           , alpha = .5
+           ,data =
+  )+
+  labs(
+    title = "Which incentives have been used to support business in the community since February 24?"
+    ,x = "Number of Hromadas", y = NULL, fill = NULL
+  )+
+  theme(
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "black")
+  )
+```
+
+# 9. Humanitarian
+
+# 10. Reconstructioin
+
+## 10.1 Demage Evaluation
+
+# 11. Current Challenges
+
+## 11.1 Heating season
+
+## 11.2 Problem Involvement
+
+```{r}
+meta_survey %>% filter(group=="preparation") %>% pull(name)
+
+
+```
+
+# Session Information {#session-info}
+
+For the sake of documentation and reproducibility, the current report was rendered in the following environment. Click the line below to expand.
+
+<details>
+
+<summary>Environment </summary>
+
+```{r session-info, echo=FALSE}
+if( requireNamespace("devtools", quietly = TRUE) ) {
+  devtools::session_info()
+    } else {
+      sessionInfo()
+    }
+```
+
+</details>
+
+```{r session-duration, echo=FALSE}
+    report_render_duration_in_seconds <- round(as.numeric(difftime(Sys.time(), report_render_start_time, units="secs")))
+```
+
+Report rendered by `r Sys.info()["user"]` at `r strftime(Sys.time(), "%Y-%m-%d, %H:%M %z")` in `r report_render_duration_in_seconds` seconds.
