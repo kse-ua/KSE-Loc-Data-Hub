@@ -239,7 +239,11 @@ ds0 <-
 
 # ---- inspect-data-0 ------------------------------------------------------------
 
-# ---- tweak-data-1 ------------------------------------------------------------
+# --- -----
+meta_survey %>% filter(group== "information") %>% select(name,label_en,item_number)
+
+
+# ---- tweak-data-1-prep ------------------------------------------------------------
 # compute total binary score (preparations are made at all, regardless of timing)
 
 # Raw scale (0,1,2)
@@ -295,12 +299,38 @@ ds1_prep_binary_factors <-
   ) %>% 
   select(hromada_code, preparation, prep_score, prep_score_binary)
 
-# ----- inspect-data-1 -----------------------
+# ----- inspect-data-1-prep -----------------------
 
-ds1_ordinal_integers %>% glimpse()
-ds1_ordinal_factors %>% glimpse()
-ds1_binary_integers %>% glimpse()
-ds1_binary_factors %>% glimpse()
+
+ds1_prep_ordinal_integers %>% glimpse()
+ds1_prep_ordinal_factors %>% glimpse()
+ds1_prep_binary_integers %>% glimpse()
+ds1_prep_binary_factors %>% glimpse()
+# ---- tweak-data-1-info --------------------
+
+d_meta_info <- 
+  meta_survey %>% 
+  filter(group== "information") %>%
+  select(item_name = name,label_en,item_number)
+meta_choices %>% filter(list_name=="commun_prep")
+item_information <- d_meta_info %>% pull(item_name)
+
+ds1_info <- 
+  ds0 %>% 
+  mutate(
+    across(
+      .cols = item_information
+      ,.fns = ~case_when(
+        . == 0  ~ "No"
+        ,. == 1 ~ "After Feb 24"
+        ,. == 2 ~ "Before Feb 24"
+        ,TRUE   ~ "Not Applicable"
+      ) %>% factor(levels=c("No","Before Feb 24","After Feb 24",  "Not Applicable"))
+    )
+  ) %>% 
+  select(hromada_code,item_information)
+
+# ----- -------------
 
 # ---- save-to-disk ------------------------------------------------------------
 
