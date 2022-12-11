@@ -330,37 +330,23 @@ ds1_info <-
   ) %>% 
   select(hromada_code,item_information)
 
-# ----- testing -------------
+# ----- testing chunks -------------
 
-ds_survey %>% 
-  group_by(region_en, oblast_name_en) %>% 
-  summarize(
-    hromada_count = n_distinct(hromada_code)
-    ,.groups = "drop"
-  ) %>% 
-  right_join(
-    ds_general %>% 
-      group_by(region_en, oblast_name_en) %>% 
-      summarize(hromada_count_total = n())
-  ) %>% 
-  filter(!is.na(region_en)) %>%
-  mutate(
-    hromada_count = replace_na(hromada_count, 0)
-    ,prop = hromada_count/hromada_count_total
-    ,pct = scales::percent(prop, accuracy = .1)
-  ) %>% 
-  arrange(region_en, desc(prop)) %>% 
-  select(-prop) %>% 
-  ungroup() %>%
-  # neat_DT()
-  gt::gt() %>%
-  gt::cols_label(region_en = 'Region',
-                 oblast_name_en = 'Oblast',
-                 hromada_count_total = 'Total number \nof ATCs',
-                 hromada_count = 'ATCs in the survey',
-                 pct = 'Survey Coverage of ATCs',
+d <- ds0 %>% 
+  select(hromada_code, dftg_creation, type) %>%
+  mutate(dftg_creation = factor(dftg_creation, levels = c('not_able', 'still_not', 'yes')),
+         type = factor(type, levels = c('сільська', "селищна", "міська")),
+         dftg_creation = fct_recode(dftg_creation,
+             'Yes' = 'yes'
+            ,"Didn't due to quick occupation" = 'not_able'
+            ,'Still not created' = 'still_not')
   )
 
+(d %>% make_bi_freq_graph('dftg_creation')) +
+  labs(
+    title = "Did hromadas create a voluntary formation of a territorial community?"
+    ,y = NULL, x = NULL, fill = NULL
+  )
 
 # ---- save-to-disk ------------------------------------------------------------
 
