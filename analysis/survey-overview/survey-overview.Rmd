@@ -481,6 +481,184 @@ The item-total correlation also indicates that psychometrically the `Total` scor
 
 While all three metrics should be considered during modeling, our current understanding of the data sugggests that we should prefer the `Total` score in relating hromada's preparedness to other attributes. 
 
+## Prep score change
+
+
+```{r}
+d <- 
+  ds1_prep %>% select(hromada_code, starts_with("prep_score")) %>% 
+  left_join(ds0 %>% select(hromada_code
+                           ,income_own_per_capita           
+                           ,income_total_per_capita         
+                           ,income_tranfert_per_capita      
+                           # ,idp_registration_share          
+                           # ,idp_real_share                  
+                           # ,idp_child_share  
+                           ))
+  # mutate(
+  #   prep_score = prep_score / 3 # because 15 items, maximum 2 points each
+  #   ,prep_score_before =prep_score_before /1.5 # because 15 items, maximum 1 point each
+  #   ,prep_score_after = prep_score_after /1.5 # because 15 items, maximum 1 point each
+  # ) %>%
+
+d %>% glimpse()
+g <- 
+  d %>% 
+  mutate(
+    hromada_code = hromada_code %>% factor() %>% fct_reorder(prep_score)
+  ) %>% 
+  # sample_n(10) %>% 
+  slice(1:10) %>% 
+  ggplot(aes(y=hromada_code))+
+  geom_segment(
+    aes(
+      y     = hromada_code
+      ,yend = hromada_code
+      ,x    = prep_score_before
+      ,xend = prep_score_after
+    )
+    ,linewidth = 2 ,alpha = .2
+  )+
+  labs()+
+  theme(
+    # axis.text.y = element_blank()
+  )
+g %>% quick_save("prep-change",w=5,h=9)
+```
+
+
+```{r}
+#  Large faceted graph to see correlations with other variables
+# x = prep_score
+# y = 
+
+
+d <- 
+  ds1_prep %>% select(hromada_code, starts_with("prep_score")) %>% 
+  left_join(ds0 %>% select(hromada_code
+                           ,income_own_per_capita           
+                           ,income_total_per_capita         
+                           ,income_tranfert_per_capita      
+                           # ,idp_registration_share          
+                           # ,idp_real_share                  
+                           # ,idp_child_share  
+                           ))
+```
+
+```{r}
+# Continuous - good for spreading out
+comparison_vars_continuous <- c(
+   "income_own_per_capita"           
+  ,"income_total_per_capita"         
+  ,"income_tranfert_per_capita"      
+  ,"idp_registration_share"
+  ,"idp_real_share"
+  ,"idp_child_share"
+  
+  
+  ,"square"
+  ,"n_settlements"
+  ,"travel_time"
+  ,"urban_pct"
+  ,"total_population_2022"
+  ,"urban_population_2022"                              
+  ,"sum_osbb_2020"                                      
+  ,"turnout_2020"
+  ,"age_head"
+  ,"time_before_24th"
+)
+# Categorical - for color
+comparison_vars_discreate <- c(
+   "sex_head"
+  ,"education_head"
+  ,"type"
+  ,"voluntary"
+  ,"region_en"
+)
+comparison_vars <- c(
+  comparison_vars_discreate
+   ,comparison_vars_continuous
+)
+
+d <- 
+  ds1_prep %>% 
+  select(hromada_code, starts_with("prep_score")) %>% 
+  left_join(ds0 %>% select(hromada_code,all_of(comparison_vars))) %>% glimpse() %>% 
+  mutate(
+    across(
+      .cols = comparison_vars_discreate
+      ,.fns = ~factor(.)
+    )
+  ) %>%
+  pivot_longer(
+    cols = comparison_vars_continuous
+    ,names_to = "item_name"
+    ,values_to = "item_value"
+  ) %>% glimpse()
+
+make_plot_prepvs <- function(
+    d
+    ,xvar    # "prep_score"
+    ,yvar    # "item_value"
+    ,fillvar # "region_en"
+    ){
+  g <- 
+  d %>% 
+  ggplot(aes(
+      x     = !!rlang::sym(xvar)
+      ,y    = !!rlang::sym(yvar)
+      ,fill = !!rlang::sym(fillvar)
+      ))+
+  ggplot2::scale_fill_viridis_d(
+    begin = 0, end = .8, direction = -1
+    ,option = "plasma",guide= guide_legend(reverse=T)
+  )+
+  facet_wrap(facets = "item_name", scales = "free_y")+
+  geom_point(shape=21,color = "black", size =3, alpha = .5, position=position_jitter(seed=42))+
+    labs(
+      title = paste0("Relationship between Invasion Preparedness Score (horizontal) and other attributes of hromadas")
+    )
+  
+  file_name <- paste0(xvar,"-",fillvar)
+  g %>% quick_save(paste0("/1/",file_name),w=12,h=8)
+  
+}  
+
+for(i in comparison_vars_discreate){
+  
+  for(ii in c("prep_score","prep_score_before","prep_score_after")){
+    d %>% 
+      make_plot_prepvs(
+        xvar     = ii
+        ,yvar    = "item_value"
+        ,fillvar = i
+      )  
+    }
+}
+
+
+
+
+
+g <- 
+  d %>% 
+  ggplot(aes(
+      x  = prep_score
+      ,y = item_value
+      ,fill = region_en
+      ))+
+  ggplot2::scale_fill_viridis_d(
+    begin = 0, end = .8, direction = -1
+    ,option = "plasma",guide= guide_legend(reverse=T)
+  )+
+  facet_wrap(facets = "item_name", scales = "free_y")+
+  geom_point(shape=21,color = "black", size =3, alpha = .5, position=position_jitter(seed=42))
+g %>% quick_save("prep_score-vs-other_items",w=12, h=8)
+
+
+
+d %>% select(2:4)
+```
 
 # 3. Information
 
