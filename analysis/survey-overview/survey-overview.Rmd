@@ -432,7 +432,7 @@ g <-  ds1_prep %>%
   geom_histogram(binwidth = 1, alpha = .4)+
   scale_x_continuous(breaks = seq(0,10,1))+
   facet_wrap("measure",ncol =1)
-
+g
 g %>%  quick_save("score-distribution",w=4, h=6)
 ```
 
