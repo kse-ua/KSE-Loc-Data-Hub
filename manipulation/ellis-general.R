@@ -54,7 +54,7 @@ path_war <- "./data-private/derived/minregion-war-status.csv"
 #additional datasets
 path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
 path_oblast <- "./data-private/raw/oblast.csv"
-
+path_passangers <- "./data-private/derived/passangers.csv"
 
 #+ declare-functions -----------------------------------------------------------
 
@@ -63,7 +63,7 @@ cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
 ds_admin <- readr::read_csv(path_admin)
-ds_hromada <- readr::read_delim(path_hromada, delim = ';')
+ds_hromada <- readr::read_delim(path_hromada)
 ds_time <-  readr::read_csv(path_time) #TO-DO: check the dates
 ds_geography <- readr::read_csv(path_geography)
 ds_demography <- readr::read_csv(path_demography) 
@@ -79,6 +79,7 @@ ds_community_competence <- readr::read_csv(path_community_competence) %>%
 # ds_budget_expences <- readr::read_csv(path_budget_expences)
 ds_oblasts <- readr::read_csv(path_oblast)
 ds_war <- readr::read_csv(path_war)
+ds_passangers <- readr::read_csv(path_passangers)
 
 #+ inspect-data ----------------------------------------------------------------
 
@@ -111,7 +112,8 @@ income_2022 <-
   ds_budget_income %>% 
   filter(year == "2022") %>% 
   select(hromada_code, own_income_change, own_prop_change, total_income_change, 
-         income_own, income_total, income_transfert)
+         income_own, income_total, income_transfert) %>% 
+  rename(income_own_2022 = income_own, income_total_2022 = income_total, income_transfert_2022 = income_transfert)
 
 #aggregate income data for 2021 as a predictor and combine with data for 2022
 ds1_budget_income <- 
@@ -247,7 +249,7 @@ d1 <-
     ,by = "hromada_code"
   ) %>% 
   left_join(
-    ds_oblasts %>% select(oblast_code, region_en)
+    ds_oblasts %>% select(oblast_code)
     ,by = "oblast_code"
   ) %>% 
   #TEMPORARY - CHECK THE DATES IN THIS DATASET
@@ -265,7 +267,18 @@ d1 <-
   left_join(
     ds_war %>% select(hromada_code, starts_with('war_zone'))
     ,by = "hromada_code"
-  )
+  ) %>% 
+  left_join(
+    ds_passangers
+    ,by = "hromada_code"
+  ) %>% 
+  mutate(
+    train_station = ifelse(is.na(passangers_2021), 0, 1)
+  ) %>% 
+  mutate_at(
+    vars(starts_with("income_")), ~./1000
+  ) %>% 
+  rename(area = square)
   
 
 #TO-DO: add partnerships
