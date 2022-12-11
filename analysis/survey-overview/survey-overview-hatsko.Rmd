@@ -635,11 +635,11 @@ d %>%
   geom_col()+
   geom_text(aes(label=scales::comma(mean_times_per_week)))+
   labs(
-    title = "How frequently did heads of hromadas communicate with the community during the first month of invation n\depending on having any social account before 24th February?"
+    title = "How frequently did heads of hromadas communicate with the community during the first month of invation \ndepending on having any social account before 24th February?"
     ,subtitle = "Social networks considered: Facebook, Viber, Telegram"
     ,y = NULL, x = "Average times per week", fill = "Had account on\nany social network"
   ) +
-  scale_x_discrete(labels=c('TRUE' = 'Had account', 'FALSE' = 'No account')) +
+  scale_y_discrete(labels=c('TRUE' = 'Had account', 'FALSE' = 'No account')) +
   scale_fill_discrete(labels=c('TRUE' = 'Had account', 'FALSE' = 'No account'))
 
 ```
@@ -662,9 +662,10 @@ d %>%
   geom_text(aes(label = pct), hjust = -.5,position = position_dodge(width = .9))+
   scale_x_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
   ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
+                                ,labels = c('TRUE' = 'Had account', 'FALSE' = 'No account')
     )+
   labs(
-    title = "How frequently did heads of hromadas communicated during the first month of invation?"
+    title = "How frequently did heads of hromadas communicated during the first month of invasion?"
     ,fill = "Had accounts\non social networks\nbefore Feb 24"
     ,x = "Percent of respondents in each group"
     , y = NULL
@@ -695,6 +696,48 @@ d <- ds0 %>%
   labs(
     title = "Did hromadas create a voluntary formation of a territorial community?"
     ,y = NULL, x = NULL, fill = NULL
+  )
+```
+
+Many village communities didn't have a voluntary formation of a territorial community at the time of the survey
+
+```{r dftg-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+d %>%
+  group_by(type) %>%
+  count(dftg_creation) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1)) %>% 
+  ggplot(aes(x=prop, y = dftg_creation, fill = type))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), hjust = -.5,position = position_dodge(width = .9))+
+  scale_x_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
+  )+
+  labs(
+    title = "Did hromadas create a voluntary formation of a territorial community?"
+    ,fill = "Hromada Type"
+    ,x = "Percent of respondents in each group"
+    , y = NULL
+  )
+```
+
+```{r dftg-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+d %>%
+  group_by(type) %>%
+  count(dftg_creation) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1)) %>% 
+  ggplot(aes(x=prop, y = dftg_creation, fill = type))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), hjust = -.5,position = position_dodge(width = .9))+
+  scale_x_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
+  )+
+  labs(
+    title = "Did hromadas create a voluntary formation of a territorial community?"
+    ,fill = "Hromada Type"
+    ,x = "Percent of respondents in each group"
+    , y = NULL
   )
 ```
 

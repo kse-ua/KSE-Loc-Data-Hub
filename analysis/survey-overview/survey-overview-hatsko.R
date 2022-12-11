@@ -332,22 +332,78 @@ ds1_info <-
 
 # ----- testing chunks -------------
 
-d <- ds0 %>% 
-  select(hromada_code, dftg_creation, type) %>%
-  mutate(dftg_creation = factor(dftg_creation, levels = c('not_able', 'still_not', 'yes')),
-         type = factor(type, levels = c('сільська', "селищна", "міська")),
-         dftg_creation = fct_recode(dftg_creation,
-             'Yes' = 'yes'
-            ,"Didn't due to quick occupation" = 'not_able'
-            ,'Still not created' = 'still_not')
-  )
+d1 <- ds0 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>% 
+  summarise(n = n()) %>%
+  filter(!is.na(dftg_creation_date) & dftg_creation_date > '2021-12-28') %>%
+  mutate(cum = cumsum(n))
 
-(d %>% make_bi_freq_graph('dftg_creation')) +
-  labs(
-    title = "Did hromadas create a voluntary formation of a territorial community?"
-    ,y = NULL, x = NULL, fill = NULL
-  )
+d2 <- ds0 %>% select(dftg_creation_date, type) %>% group_by(dftg_creation_date, type) %>% 
+  filter(!is.na(dftg_creation_date) & dftg_creation_date > '2021-12-28') %>%
+  summarise(n = n()) %>%
+  pivot_wider(values_from = n, names_from = type) %>%
+  rename(c = 'міська', v = 'сільська', s = 'селищна') %>%
+  ungroup() %>% 
+  mutate(c = replace_na(c, 0),
+         v = replace_na(v, 0),
+         s = replace_na(s, 0),
+         c_cum = cumsum(c),
+         s_cum = cumsum(s),
+         v_cum = cumsum(v)) %>% 
+  select(-c(c,v,s)) %>%
+  pivot_longer(-dftg_creation_date, values_to = 'n', names_to = 'type')
+  
 
+first_month <- lubridate::interval(as.POSIXct("2022-01-24"),
+                                   as.POSIXct("2022-03-24"))
+
+d1 %>% filter(dftg_creation_date %within% first_month) %>% summarise(sum = sum(n))
+
+p1 <- d1 %>%
+  ggplot(aes(x = dftg_creation_date, y = cum)) +
+  geom_point() +
+  geom_vline(aes(xintercept = as.POSIXct('2022-02-24')), 
+             color = 'red', linetype = 'dashed') +
+  geom_vline(aes(xintercept = as.POSIXct('2021-12-29')), 
+             color = 'red', linetype = 'dashed') +
+  geom_rect(aes(xmin = as.POSIXct('2022-02-24'), xmax = as.POSIXct('2022-03-24'), 
+                ymin = -Inf, ymax = Inf),
+            color = 'coral1', fill = 'coral1', alpha = 0.02) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  scale_x_datetime(limits = c(as.POSIXct('2021-12-01'), as.POSIXct('2022-10-15')), date_breaks = '1 month') +
+  annotate(geom = 'label', x = as.POSIXct('2021-12-31'), y = 80,
+           label = 'December 29th: \nThe order of formation and \nactivity of the voluntary \nformations of ATC was defined') +
+  annotate(geom = 'label', x = as.POSIXct('2022-02-28'), y = 70, 
+           label = 'Full-scale \nrussian invasion') +
+  annotate(geom = 'text', x = as.POSIXct('2022-03-26'), y = 90, hjust = 0, 
+           label = '59 voluntary formations of ATC \nafter a first month', fontface = 'italic') +
+  labs(title = 'Number of DFTG created by ATCs')
+p1
+
+p2 <- d2 %>%
+  ggplot(aes(x = dftg_creation_date, y = n, color = type)) +
+  geom_point() +
+  geom_vline(aes(xintercept = as.POSIXct('2022-02-24')), 
+             color = 'red', linetype = 'dashed') +
+  geom_vline(aes(xintercept = as.POSIXct('2021-12-29')), 
+             color = 'red', linetype = 'dashed') +
+  geom_rect(aes(xmin = as.POSIXct('2022-02-24'), xmax = as.POSIXct('2022-03-24'), 
+                ymin = -Inf, ymax = Inf),
+            color = 'coral1', fill = 'coral1', alpha = 0.007) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  scale_x_datetime(limits = c(as.POSIXct('2021-12-01'), as.POSIXct('2022-10-15')), date_breaks = '1 month') +
+  scale_y_continuous(limits = c(0,40)) +
+  annotate(geom = 'label', x = as.POSIXct('2021-12-31'), y = 36,
+           label = 'December 29th: \nThe order of formation and \nactivity of the voluntary \nformations of ATC was defined') +
+  annotate(geom = 'label', x = as.POSIXct('2022-02-28'), y = 37, 
+           label = 'Full-scale \nrussian invasion') +
+  annotate(geom = 'text', x = as.POSIXct('2022-03-26'), y = 37, hjust = 0, 
+           label = '59 voluntary formations of ATC \nafter a first month', fontface = 'italic') +
+  labs(title = 'Number of DFTG created by ATCs')
+p2
 # ---- save-to-disk ------------------------------------------------------------
 
 # ---- publish ------------------------------------------------------------
