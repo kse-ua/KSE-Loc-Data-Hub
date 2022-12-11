@@ -224,7 +224,7 @@ ds_survey %>%
                  oblast_name_en = 'Oblast',
                  hromada_count_total = 'Total number \nof ATCs',
                  hromada_count = 'ATCs in the survey',
-                 pct = 'Survey Coverage of ATCs',
+                 pct = 'Survey Coverage of ATCs'
   )
 
 ```
@@ -538,41 +538,6 @@ g <-
 g
 ```
 
-
-```{r results="show", class.source="fold-hide"}
-meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
-```
-
-
-```{r info-1 , fig.height=3, fig.width=9,class.source="fold-hide"}
-(ds0 %>% 
-  mutate(
-    
-    head_hromada_communication = fct_recode(
-      head_hromada_communication,
-       "Once a week"      = "once_a_week"
-      ,"Once a day"       = "once_a_day"
-      ,"Never"            = "none"
-      ,"Few times a week" = "few_times_a_week"
-      ,"2-3 times a day"  = "2_3_times"
-    ) %>% factor( levels = c(
-       "Never"           
-       ,"Once a week"     
-       ,"Few times a week"
-       ,"Once a day"      
-       ,"2-3 times a day"
-    )
-    )
-  ) %>% 
-  make_bi_freq_graph("head_hromada_communication") )+
-  labs(
-    title = "How frequently did hromada head communicated in the frist month of invasion?"
-    ,x = NULL
-  )
-
-```
-
-
 ```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
 
 d <- 
@@ -618,10 +583,46 @@ d <-
   ) 
 (d %>% make_bi_freq_graph("had_any_sn_before_feb24")) +
   labs(
-    title = "Did hromadas have account on any social network?"
+    title = "Did hromadas have account on any social network before the invasion?"
     ,subtitle = "Social networks considered: Facebook, Viber, Telegram"
-    ,y = NULL, fill = "Had account"
+    ,y = NULL, x = NULL, fill = "Had account"
+  ) +
+  scale_x_discrete(labels=c('TRUE' = 'Had account', 'FALSE' = 'No account')) +
+  scale_fill_discrete(labels=c('TRUE' = 'Had account', 'FALSE' = 'No account'))
+```
+
+
+```{r results="show", class.source="fold-hide"}
+meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
+```
+
+
+```{r info-1 , fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+  mutate(
+    
+    head_hromada_communication = fct_recode(
+      head_hromada_communication,
+       "Once a week"      = "once_a_week"
+      ,"Once a day"       = "once_a_day"
+      ,"Never"            = "none"
+      ,"Few times a week" = "few_times_a_week"
+      ,"2-3 times a day"  = "2_3_times"
+    ) %>% factor( levels = c(
+       "Never"           
+       ,"Once a week"     
+       ,"Few times a week"
+       ,"Once a day"      
+       ,"2-3 times a day"
+    )
+    )
+  ) %>% 
+  make_bi_freq_graph("head_hromada_communication") )+
+  labs(
+    title = "How frequently did hromada head communicated in the first month of invasion?"
+    ,x = NULL, fill = NULL
   )
+
 ```
 
 ```{r info-3 , fig.height=3, fig.width=9,class.source="fold-hide"}
@@ -634,10 +635,12 @@ d %>%
   geom_col()+
   geom_text(aes(label=scales::comma(mean_times_per_week)))+
   labs(
-    title = "How freqently did heads of hromadas communicate with the community during the first month of invation?"
+    title = "How frequently did heads of hromadas communicate with the community during the first month of invation n\depending on having any social account before 24th February?"
     ,subtitle = "Social networks considered: Facebook, Viber, Telegram"
     ,y = NULL, x = "Average times per week", fill = "Had account on\nany social network"
-  )
+  ) +
+  scale_x_discrete(labels=c('TRUE' = 'Had account', 'FALSE' = 'No account')) +
+  scale_fill_discrete(labels=c('TRUE' = 'Had account', 'FALSE' = 'No account'))
 
 ```
 
@@ -670,6 +673,30 @@ d %>%
 
 
 # 4. National Resistance
+
+```{r results="show", class.source="fold-hide"}
+meta_survey %>% filter(name=="dftg_creation") %>% pull(label) %>% cat()
+
+```
+
+```{r dftg-1, fig.height=3, fig.width=9,class.source="fold-hide"}
+
+d <- ds0 %>% 
+  select(hromada_code, dftg_creation, type) %>%
+  mutate(dftg_creation = factor(dftg_creation, levels = c('not_able', 'still_not', 'yes')),
+         type = factor(type, levels = c('сільська', "селищна", "міська")),
+         dftg_creation = fct_recode(dftg_creation,
+             'Yes' = 'yes'
+            ,"Didn't due to quick occupation" = 'not_able'
+            ,'Still not created' = 'still_not')
+  )
+
+(d %>% make_bi_freq_graph('dftg_creation')) +
+  labs(
+    title = "Did hromadas create a voluntary formation of a territorial community?"
+    ,y = NULL, x = NULL, fill = NULL
+  )
+```
 
 ## 4.1 Transport Help
 
