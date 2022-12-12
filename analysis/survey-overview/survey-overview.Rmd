@@ -392,7 +392,7 @@ ds0 %>%
 
 ## Item-total correlation 
 
-We can conceptualize the preparation for invation as two scores: the first received for steps taken prior to Feb 24, 2022 (the `Before` prep score) and the second for the steps undertaken after Feb 24 (the `After` prep score), as recorded at the time of data collection ( October - November 20200). 
+We can conceptualize the preparation for invasion as two scores: the first received for steps taken prior to Feb 24, 2022 (the `Before` prep score) and the second for the steps undertaken after Feb 24 (the `After` prep score), as recorded at the time of data collection ( October - November 20200). 
 
 
 ```{r}
@@ -971,7 +971,7 @@ d %>%
   geom_col()+
   geom_text(aes(label=scales::comma(mean_times_per_week)))+
   labs(
-    title = "How freqently did heads of hromadas communicate with the community during the first month of invation?"
+    title = "How freqently did heads of hromadas communicate with the community during the first month of invasion?"
     ,subtitle = "Social networks considered: Facebook, Viber, Telegram"
     ,y = NULL, x = "Average times per week", fill = "Had account on\nany social network"
   )
@@ -998,7 +998,7 @@ d %>%
   ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
     )+
   labs(
-    title = "How frequently did heads of hromadas communicated during the first month of invation?"
+    title = "How frequently did heads of hromadas communicated during the first month of invasion?"
     ,fill = "Had accounts\non social networks\nbefore Feb 24"
     ,x = "Percent of respondents in each group"
     , y = NULL
