@@ -201,16 +201,16 @@ meta_survey %>% filter(group=="preamble") %>% pull(label) %>% cat()
 ds_survey %>% 
   group_by(region_en, oblast_name_en) %>% 
   summarize(
-    hormada_count = n_distinct(hromada_code)
+    hromada_count = n_distinct(hromada_code)
     ,.groups = "drop"
   ) %>% 
   left_join(
     ds_general %>% 
-      group_by(region_en=region_en.y,  oblast_name_en=oblast_name_en.x ) %>% 
+      group_by(region_en,  oblast_name_en) %>% 
       summarize(hromada_count_total = n())
   ) %>% 
   mutate(
-    prop = hormada_count/hromada_count_total
+    prop = hromada_count/hromada_count_total
     ,pct = scales::percent(prop, accuracy = .1)
   ) %>% 
   arrange(region_en, oblast_name_en) %>% 
