@@ -362,7 +362,7 @@ d_item_total_binary <-
 
 
 # ----- prep-modeling ---------------
-# Continuous - good for spreading out
+# Continuous - good for spreading out # Valentyn, please add relevant predictors here
 predictor_vars_continuous <- c(
   "income_own_per_capita"           
   ,"income_total_per_capita"         
@@ -382,7 +382,7 @@ predictor_vars_continuous <- c(
   ,"age_head"
   ,"time_before_24th"
 )
-# Categorical - for color
+# Categorical - for color # Valentyn, please add relevant predictors here
 predictor_vars_discreate <- c(
   "sex_head"
   ,"education_head"
