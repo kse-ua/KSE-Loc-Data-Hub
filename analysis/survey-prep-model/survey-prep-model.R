@@ -215,7 +215,9 @@ ds0 <-
     idp_registration_share      = idp_registration_number / total_population_2022,
     idp_real_share              = idp_real_number         / total_population_2022,
     idp_child_share             = idp_child_education     / idp_registration_number
-  ) 
+  ) %>%
+  left_join(ds_general %>% select(hromada_code, train_station, passangers_2021),
+            by = 'hromada_code')
 
 ds0 %>% glimpse(80)
 # ---- inspect-data-0 ------------------------------------------------------------
@@ -314,7 +316,7 @@ m_prep <-
     ,method = "spearman"
   ) 
 
-# TO test a hypothesis that binary measure of prepration item is better (not)
+# TO test a hypothesis that binary measure of preparation item is better (not)
 m_prep_binary <- 
   ds1_prep %>% 
   select(-hromada_code) %>%
@@ -370,8 +372,13 @@ predictor_vars_continuous <- c(
   ,"idp_registration_share"
   ,"idp_real_share"
   ,"idp_child_share"
-  
-  ,"square"
+  ,'square'
+  ,'dfrr_executed'
+  ,'edem_total'
+  ,'passangers_2021'
+  ,'business_support_centers'
+  ,'youth_centers'
+  ,'youth_councils'
   ,"n_settlements"
   ,"travel_time"
   ,"urban_pct"
@@ -389,6 +396,20 @@ predictor_vars_discreate <- c(
   ,"type"
   ,"voluntary"
   ,"region_en"
+  ,'incumbent'
+  ,'rda'
+  ,'not_from_here'
+  ,'enterpreuner'
+  ,'unemployed'
+  ,'polit_work'
+  ,'party_national_winner'
+  ,'no_party'
+  ,'edem_petitions'
+  ,'edem_consultations'
+  ,'edem_participatory_budget'
+  ,'edem_open_hromada'
+  ,'war_zone_27_04_2022'
+  ,'train_station'
 )
 predictor_vars <- c(
   predictor_vars_continuous
