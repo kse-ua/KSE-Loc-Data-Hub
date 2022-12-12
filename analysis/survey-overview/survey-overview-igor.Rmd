@@ -772,7 +772,7 @@ d %>%
     )
     )
   ) %>% 
-  make_bi_freq_graph("Special fund's expenditures were relocated") )+
+  make_bi_freq_graph("military_action","Special fund's expenditures were relocated") )+
   labs(
     title = "Were budget expenditures from the special fund streamed to finance other, current needs?"
     ,x = NULL
