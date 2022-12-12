@@ -224,10 +224,6 @@ ds0 <-
 
 # ---- inspect-data-0 ------------------------------------------------------------
 
-# --- -----
-meta_survey %>% filter(group== "information") %>% select(name,label_en,item_number)
-
-
 # ---- tweak-data-1-prep ------------------------------------------------------------
 # compute total binary score (preparations are made at all, regardless of timing)
 d_meta_prep <- 
