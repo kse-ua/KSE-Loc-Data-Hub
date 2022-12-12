@@ -363,7 +363,7 @@ d_item_total_binary <-
 
 # ----- prep-modeling ---------------
 # Continuous - good for spreading out
-comparison_vars_continuous <- c(
+predictor_vars_continuous <- c(
   "income_own_per_capita"           
   ,"income_total_per_capita"         
   ,"income_tranfert_per_capita"      
@@ -383,16 +383,16 @@ comparison_vars_continuous <- c(
   ,"time_before_24th"
 )
 # Categorical - for color
-comparison_vars_discreate <- c(
+predictor_vars_discreate <- c(
   "sex_head"
   ,"education_head"
   ,"type"
   ,"voluntary"
   ,"region_en"
 )
-comparison_vars <- c(
-  comparison_vars_discreate
-  ,comparison_vars_continuous
+predictor_vars <- c(
+  predictor_vars_continuous
+  ,predictor_vars_discreate
 )
 
 ds2_prep <- 
@@ -400,11 +400,11 @@ ds2_prep <-
   select(hromada_code, starts_with("prep_score")) %>% 
   left_join(
     ds0 %>% 
-      select(c(hromada_code,comparison_vars))
+      select(c(hromada_code,predictor_vars))
   ) %>% 
   mutate(
     across(
-      .cols = all_of(comparison_vars_discreate)
+      .cols = all_of(predictor_vars_discreate)
       ,.fns = ~factor(.)
     )
   )
