@@ -148,26 +148,26 @@ For the state `ds0`, we augment the focal table of the report with additional co
 To make our analysis more nimble we create four alternative versions of `ds1` with Invasion Preparedness questions
 
 <details>
-
-<summary>show transformations </summary>
-
+<summary> transformations for PREPAREDNESS scale </summary>
 ```{r tweak-data-1-prep,  class.source = "fold-show"}
 ```
-
-```{r tweak-data-1-info,  class.source = "fold-show"}
-```
-
-
 </details>
+
+>  
 
 <details>
+<summary> transformations for INFORMATION scale </summary>
+```{r tweak-data-1-info,  class.source = "fold-show"}
+```
+</details>
 
-<summary>examine the versions </summary>
 
+<details>
+<summary>examine data versions </summary>
 ```{r inspect-data-1,  class.source = "fold-show"}
 ```
-
 </details>
+
 
 # Variable List
 
@@ -319,7 +319,7 @@ d_in <-
     ) # display_name
     ,value = fct_relevel(
       value
-      , "Before Feb 24", "After Feb 24","Yes", "No", "Not Applicable",
+      , "As of Oct", "As of Feb","Yes", "No", "Not Applicable",
     ) %>% fct_rev()
   ) 
 
@@ -390,59 +390,124 @@ ds0 %>%
   neat()
 ```
 
-## Item-total correlation 
+## Item-total correlations 
 
-We can conceptualize the preparation for invasion as two scores: the first received for steps taken prior to Feb 24, 2022 (the `Before` prep score) and the second for the steps undertaken after Feb 24 (the `After` prep score), as recorded at the time of data collection ( October - November 20200). 
 
+We can conceptualize hromadas' the preparation for invasion as two quantities:  
+- `prep_score_feb` - the number of security measures implemented as of February 2022   
+- `prep_score_oct` - the number of security measures implemented as of October 2022
 
 ```{r}
 ds1_prep %>% select(1:4) # + individual preparation items
-# prep_score =  0 to  30, sum of (0|1|2) for each of 15 items, 2 pts for prepping before 2022-02-24 1 pts after.
-# prep_score_before = 0 to 15, sum of (0|1) items, where 1 = prepping before Feb 24
-# prep_score_after = 0 to 15, sum of (0|1) items, where 1 = prepping eventually (Nov 2022)
-
 ```
+We  also compute `prep_score_combo`, which is a sum of `prep_score_feb` and `prep_score_oct`, the quantity equivalent to weighting the implementation of security measures  prior to Feb 24, 2022 **twice as important**.
 
- These  scores have a convenient conceptualization and a straightforward interpretation
- 
- - `Before` - number of preparatory items on the prep list completed before Feb 24
- - `AFter` - number of preparatory steps completed by the hromada at the time of the interview
- - `Total` - the sum of `Before` and `After`. Evaluates the readiness of the hromada at the time of the interview, valuing steps undertaken prior to Feb 24 twice as influential in the final score
-
-`Before` and `After` scores have a more clear conceptualization, but th `Total` score has a more appealing distribution shape, making it more useful for statistical modeling. 
-
-```{r info-score-distribution, fig.height=6, fig.width=4,class.source="fold-hide", cache=T}
-
-g <-  ds1_prep %>%
-  # To standardize the metrics of each scale : 0 to 10, where 10 - most prepared
-  mutate(
-     prep_score = prep_score / 3 # because 15 items, maximum 2 points each
-    ,prep_score_before =prep_score_before /1.5 # because 15 items, maximum 1 point each
-    ,prep_score_after = prep_score_after /1.5 # because 15 items, maximum 1 point each
-  ) %>% 
+These three scores are distributed as follows:  
+```{r info-score-distribution, fig.height=6, fig.width=5,class.source="fold-hide", cache=F}
+g <-  
+  ds1_prep %>%
   select(starts_with("prep_score")) %>% 
   pivot_longer(cols = everything(),names_to = "measure",values_to="value") %>% 
   mutate( 
     measure = factor(measure,
-                        levels = c("prep_score_before","prep_score_after","prep_score")
-                        ,labels = c("Prep Score (Before)","Prep Score (After)", "Prep Score")
+                        levels = c("prep_score_feb","prep_score_oct","prep_score_combo")
+                        ,labels = c("..as of February","..as of October", "Combined = Feb + Oct")
                         )
   ) %>% 
   ggplot(aes(x=value))+
   geom_histogram(binwidth = 1, alpha = .4)+
-  scale_x_continuous(breaks = seq(0,10,1))+
-  facet_wrap("measure",ncol =1)
+  scale_x_continuous(breaks = seq(0,30,5),minor_breaks = NULL)+
+  facet_wrap("measure",ncol =1)+
+  labs(
+    title = "How many security measures have your hromada implemented..."
+    # ,subtitle = "Combined score = February + October"
+  )
 g
-g %>%  quick_save("score-distribution",w=4, h=6)
+# g %>%  quick_save("score-distribution",w=3.5, h=6)
 ```
 
-The item-total correlation also indicates that psychometrically the `Total` score is a better choice - having no negative values and generally having a higher discrimination capacity of items.   
+```{r fig.height=7, fig.width=8,class.source="fold-hide", cache=T}
+ds1_prep %>% select(starts_with("prep_score")) %>% GGally::ggpairs()
+# Note that correlation coefficient is Pearson
+```
+
+The item-total correlations indicates that all three preparedness scores are adequate unidimensional measures.
 
 ```{r prep-item-total, fig.height=4, fig.width=8,class.source="fold-hide", cache=T}
-(d_item_total%>% 
-  slice(1:15) %>% 
+
+# Step 1 - create data sets with re-coded item responses
+# As of February 2022, how many of these security steps have been implemented?
+d_feb <- 
+  ds_survey %>% 
+  mutate(
+    across(
+      .cols = preparation
+      ,.fns = ~case_when(
+        .  == 0 ~ 0 #"No"
+        ,. == 1 ~ 0 #"After Feb 24"
+        ,. == 2 ~ 1 #"Before Feb 24"
+      )
+    )
+  ) %>% 
+  select(hromada_code, preparation)
+
+
+# As of October 20200, how many of these security steps have been implemented?
+d_oct <- 
+  ds_survey %>% 
+  mutate(
+    across(
+      .cols = preparation
+      ,.fns = ~case_when(
+        .  == 0 ~ 0 #"No"
+        ,. == 1 ~ 1 #"After Feb 24"
+        ,. == 2 ~ 1 #"Before Feb 24"
+      )
+    )
+  ) %>% 
+  select(hromada_code, preparation)
+
+# What is the combined score of preparedness if we give 2 points for having
+# a security measure implemented as of February, and 1 point - as of October?
+d_combo <- 
+  ds_survey %>% 
+  select(hromada_code, preparation)
+
+
+
+# convert to matrices
+m_feb <- 
+  ds1_prep %>% select(hromada_code, starts_with("prep_score_")) %>% 
+  left_join(d_feb) %>% # raw scores have been converted to binary for as of Feb
+  select(-hromada_code) %>% 
+  make_corr_matrix(na_action = "remove", method="spearman")
+
+m_oct <- 
+  ds1_prep %>% select(hromada_code, starts_with("prep_score_")) %>% 
+  left_join(d_oct) %>% # raw scores have been converted to binary for as of Oct
+  select(-hromada_code) %>% 
+  make_corr_matrix(na_action = "remove", method="spearman")
+
+m_combo <- 
+  ds1_prep %>% select(hromada_code, starts_with("prep_score_")) %>% 
+  left_join(d_combo) %>% 
+  select(-hromada_code) %>% 
+  make_corr_matrix(na_action = "remove", method="spearman")
+
+
+d_item_total <- 
+  list(
+    "Combination" = m_combo[,"prep_score_combo"]
+    ,"February"  = m_feb[,"prep_score_feb"]
+    ,"October"  = m_oct[,"prep_score_oct"]
+  ) %>% 
+  as_tibble() %>% 
+  mutate(item_name = rownames(m_combo)) %>% 
+  filter(item_name != c("prep_score_combo","prep_score_feb","prep_score_oct")) %>% 
+  mutate(item_name = factor(item_name)) %>% 
+  relocate(item_name) %>% 
   pivot_longer(
-     cols = c("Total","Before","After")
+    cols = 2:4
     ,names_to = "scenario"
     ,values_to = "correlation"
   ) %>% 
@@ -453,37 +518,150 @@ The item-total correlation also indicates that psychometrically the `Total` scor
       ,correlation >=.2 & correlation < .4 ~ "good"
       ,correlation >=.4  ~ "very good"
     ) %>% factor(levels = c("problematic","poor","good","very good"))
-    ,scenario = scenario %>% factor(level=c("Before","After","Total"))
-    ,item_name = factor(item_name, levels = d_meta_prep %>% pull(label_en)) %>% 
-      fct_rev()
-  ) %>% 
+    ,scenario = scenario %>% factor(
+      labels=c("February","October","Combination"))
+    ,item_name = factor(item_name,levels = preparation) %>% fct_rev()
+  )
+
+discrimination_levels <- c(
+  "problematic" = "#d01c8b"
+  ,"poor"        = "#f1b6da"
+  ,"good"        = "#b8e186"
+  ,"very good"   = "#4dac26"
+)
+
+g_item_total <-
+  d_item_total %>% 
   ggplot(aes(x = item_name, y = correlation, color = discrimination, group = scenario))+
   geom_line(aes(group = "scenario"))+
   geom_point()+
   geom_text(aes(label=correlation %>% scales::number(accuracy = .01) %>% RemoveLeadingZero()),hjust=-.3
             ,size = 3)+
-  geom_hline(aes(x=0, yintercept = 0))+ 
+  geom_hline(aes( yintercept = 0))+ 
   facet_wrap("scenario",nrow=1)+
-  scale_y_continuous(limits = c(-.3,.6), expand = expansion(add = c(0,.2)))+
-  scale_color_brewer(type ="div",palette = "RdYlGn")+
+  scale_y_continuous(limits = c(-.3,.7), expand = expansion(add = c(0,.2)))+
+  scale_color_manual(
+    values = discrimination_levels
+    , limits = names(discrimination_levels)
+  )+
   coord_flip() +
-    labs(
-      title = "Item-total corellations under three measurement scenarios"
-      ,subtitle = "Before = prior to Feb 24, After = at time of interview, Oct-Nov 2022, Total = Before + After"
-      ,y = "Item-total Correlation (Spearman)"
-      ,x = NULL
-      ,color = "Discrimination"
-    )
-  ) %>% 
-  print() %>% 
-  quick_save("item-total",w=8,h=4)
+  labs(
+    title = "Item-total corellations under three scoring scenarios"
+    ,y = "Item-total Correlation (Spearman)"
+    ,x = NULL
+    ,color = "Discrimination"
+  )
+
+g_item_total
+g_item_total %>% quick_save("item-total",w=8,h=4)
 ```
 
-While all three metrics should be considered during modeling, our current understanding of the data sugggests that we should prefer the `Total` score in relating hromada's preparedness to other attributes. 
+While all three metrics should be considered during modeling, the next section demonstrates why and how the interpreations of these scores will differ
 
 ## Prep score change
  
-```{r prep-vs-scatter, eval=F}
+Let's us visualize individual scores of invasion preparedness
+```{r prep-change-segment-1, eval=T,fig.width=5.5, fig.height=8,class.source="fold-hide"}
+d <- 
+  ds1_prep %>% 
+  select(hromada_code, starts_with("prep_score_")) %>% 
+arrange(prep_score_oct, prep_score_feb) 
+
+make_plot_prep_change_bw <- function(
+    d
+    ,order_by #= c("prep_score_feb","prep_score_oct")
+    ,color_by #= "row_number_ntile"
+    ,ntile_count = 10
+){
+  # browser()
+  
+  level_order <- d %>% arrange(!!!rlang::syms(order_by)) %>% pull(hromada_code)
+  caption_text = paste0("Order by: ", paste0(order_by,collapse = " + "), " | Color by: ", color_by)
+  g <- 
+    d %>%
+    arrange(!!!rlang::syms(order_by)) %>% 
+    mutate(
+      hromada_code = hromada_code %>% factor(levels = level_order)
+      ,prep_score_combo_ntile = ntile(prep_score_combo,ntile_count)        %>% factor()
+      ,prep_score_feb_ntile   = ntile(prep_score_feb,ntile_count) %>% factor()
+      ,prep_score_oct_ntile   = ntile(prep_score_oct,ntile_count)  %>% factor()
+      ,row_number_ntile       = ntile(row_number(),ntile_count)      %>% factor()
+    ) %>% 
+    # graphing begins
+    ggplot(aes(y=hromada_code, color = !!rlang::sym(color_by) ))+
+    geom_segment(
+      aes(
+        y     = hromada_code
+        ,yend = hromada_code
+        ,x    = prep_score_feb
+        ,xend = prep_score_oct
+      )
+      ,linewidth = 2 ,alpha = 1
+    )+
+    geom_segment(
+      aes(
+        y     = hromada_code
+        ,yend = hromada_code
+        ,x    = 0
+        ,xend = prep_score_feb
+      )
+      ,linewidth = 2 ,alpha = .1
+      , color = "black"
+    )+
+    scale_color_brewer(type="div", palette = "Spectral")+
+    scale_x_continuous(
+      breaks = seq(0,15,5),minor_breaks = seq(0,15,1)
+      # ,limits = c(-10,25)
+      )+
+    labs(
+      title = paste0("The number of security measures implemented by hromadas (N= ",
+                     d %>% summarize(n=n_distinct(hromada_code)) %>% pull(n)
+                     ,")")
+      ,subtitle = caption_text
+      ,x = "Each segment starts at February and ends at October preparedness score"
+      # ,caption = caption_text
+      ,y = NULL
+      ,color = "Percentile\nGroup\n"
+    )+
+    theme(
+      axis.text.y = element_blank()
+      ,panel.grid.major.y = element_blank()
+      ,panel.border = element_blank()
+    )+
+    guides(color = guide_legend(override.aes = list(linewidth=7), reverse=TRUE))
+  return(g)
+}
+# Ordering by the total score (before + after OR sum(0|1|2)) 
+g <- d %>% make_plot_prep_change_bw(order_by = "prep_score_combo",color_by = "prep_score_combo_ntile") # 
+g + labs(color = "Percentile\nGroup\n(Combo)")
+# g %>% quick_save("prep-change-segment-bw",w=5.5,h=9)
+```
+
+However,this scoring method may not work for operationalizing preparedness as of October
+
+```{r prep-change-segment-2, eval=T,fig.width=5.5, fig.height=8,class.source="fold-hide"}
+g <- d %>% make_plot_prep_change_bw(order_by = c("prep_score_oct","prep_score_feb"), color_by = "prep_score_combo_ntile")
+g + labs(color = "Percentile\nGroup\n(Combo)")
+```
+
+or as of February
+
+```{r prep-change-segment-3, eval=T,fig.width=5.5, fig.height=8,class.source="fold-hide"}
+g <- d %>% make_plot_prep_change_bw(order_by = c("prep_score_feb","prep_score_oct"), color_by = "prep_score_combo_ntile")
+g + labs(color = "Percentile\nGroup\n(Combo)")
+```
+
+
+ 
+<mark>**Conclusion**</mark> 
+
+> Both `prep_score_feb` and `prep_score_oct` are meaningful, adequate unidimensional measures with a straightforward interpretation: *Number of security measures implemented as of a given date*. 
+
+> The measure `prep_score_combo` is also an adequate unidimensional measure, but it does not have a clear interpretation of its value.
+
+ 
+ 
+```{r prep-vs-scatter, eval=F, echo=F}
 # Continuous - good for spreading out
 comparison_vars_continuous <- c(
    "income_own_per_capita"           
@@ -585,7 +763,7 @@ for(i in comparison_vars_discreate){
 ```
 
 
-```{r prep-change-segment-color, eval=F}
+```{r prep-change-segment-color, eval=F, echo=F}
 # Continuous - good for spreading out
 comparison_vars_continuous <- c(
    "income_own_per_capita"           
@@ -684,61 +862,6 @@ return(g)
 
 ```
 
-
-```{r prep-change-segment-bw, eval=F}
-d <- 
-  ds1_prep %>% 
-  select(hromada_code, starts_with("prep_score")) %>% 
-  left_join(ds0 %>% select(hromada_code,all_of(comparison_vars))) 
-
-# d %>% glimpse()
-
-make_plot_prep_change_bw <- function(
-    d
-  ){
-  # browser()
-  # level_order <- d %>% arrange(prep_score_after, prep_score_before) %>% pull(hromada_code)
-  level_order <- d %>% arrange(prep_score_before, prep_score_after) %>% pull(hromada_code)
-  
-  g <- 
-    d %>% 
-    mutate(
-      hromada_code = hromada_code %>% factor(levels = level_order)
-    ) %>% 
-    ggplot(aes(y=hromada_code))+
-    geom_segment(
-      aes(
-        y     = hromada_code
-        ,yend = hromada_code
-        ,x    = prep_score_before
-        ,xend = prep_score_after
-        # ,x    = 0                                   # to see only after 
-        # ,xend = prep_score_after-prep_score_before  # to see only after
-      )
-      ,linewidth = 2 ,alpha = .2
-    )+
-    labs(
-      title = paste0("The number of preparedness items secured by hromadas (N= ",
-                     d %>% summarize(n=n_distinct(hromada_code)) %>% pull(n)
-                     ,")")
-      ,subtitle = "(Before) = prior to Feb 24, (After) = at time of interview, Oct-Nov 2022"
-      ,x = "Each segment starts at (Before) score and ends at (After)"
-      ,caption = "Ordered by Before + After"
-      # ,caption = "Ordered by After + Before"
-      ,y = NULL
-    )+
-    theme(
-      axis.text.y = element_blank()
-      ,panel.grid.major.y = element_blank()
-    )
-  return(g)
-}
-(d %>% 
-  make_plot_prep_change_bw()
-  ) %>% 
-   quick_save("prep-change-segment-bw-before",w=5.5,h=9)
-
-```
 
 
 # 3. Information
