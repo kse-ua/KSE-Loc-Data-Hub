@@ -45,28 +45,36 @@ data_cache_folder <- prints_folder # to sink modeling steps
 '%ni%' <- Negate(`%in%`)
 
 
-make_corr_matrix <- function(d,metaData=d_meta,item_names,display_var="label_en", method="pearson"){
+make_corr_matrix <- function(d,na_action="remove", method="pearson"){
+  
+  item_names <- names(d)
   # browser()
-  # d <- ds0
-  # metaData <- d_meta
-  # item_names <- (d_meta %>% pull(item_name) %>% as.character() )[1:3]
-  # add_short_label <- TRUE
-  #
-  # d %>% glimpse()
-  # d <- ds %>% dplyr::select(foc_01:foc_49)
-  d1 <- d %>% dplyr::select(all_of(item_names))
-  d2 <- d1[complete.cases(d1),]
-  # d2 %>% glimpse()
-  rownames <- metaData %>%
-    dplyr::filter(item_name %in% item_names) %>%
-    dplyr::mutate(display_name = !!rlang::sym(display_var))
-  # rownames <- rownames[,"display_name"]
-  # rownames <- rownames %>% as.list() %>% unlist() %>% as.character()
-  rownames <- rownames %>% pull(display_name)
-  d3 <- sapply(d2, as.numeric)
-  # d3 %>% glimpse()
-  cormat <- cor(d3,method = method)
-  colnames(cormat) <- rownames; rownames(cormat) <- rownames
+  d1 <- 
+    d %>% 
+    select(all_of(item_names)) %>% 
+    mutate(
+      across(
+        .cols = everything()
+        ,.fns = ~as.numeric(.)
+      )
+    ) 
+  
+  if(na_action == "remove"){
+    d2 <- d1 %>% drop_na()
+  }
+  
+  if(na_action == "replace"){
+    d2 <-
+      d1 %>%
+      mutate(
+        across(
+          .cols = everything()
+          ,.fns = ~replace_na(.,0L)
+        )
+      )
+  }
+  cormat <- cor(d2,method = method)
+  # row.names(cormat) <- item_names
   return(cormat)
 }
 
@@ -235,8 +243,8 @@ ds1_prep <-
   ds0 %>% 
   mutate(
     # sum of 0|1|2 where larger numbers indicate more preparedness
-    prep_score = rowSums(across(preparation),na.rm = T) 
-   ,prep_score_before = rowSums(
+    prep_score_combo = rowSums(across(all_of(preparation)),na.rm = T) 
+    ,prep_score_feb = rowSums(
       across(
         .cols = preparation
         ,.fns = ~case_when(
@@ -247,7 +255,7 @@ ds1_prep <-
       )
       ,na.rm = T
     )
-    ,prep_score_after = rowSums(
+    ,prep_score_oct = rowSums(
       across(
         .cols = preparation
         ,.fns = ~case_when(
@@ -259,18 +267,10 @@ ds1_prep <-
       ,na.rm = T
     )
   )  %>% 
-  # to normalize the metric, making every scale to be out of 10 points maximum
-  # mutate(
-  #   prep_score = prep_score / 3 # because 15 items, maximum 2 points each
-  #   ,prep_score_before =prep_score_before /1.5 # because 15 items, maximum 1 point each
-  #   ,prep_score_after = prep_score_after /1.5 # because 15 items, maximum 1 point each
-  # ) %>%
-  select(hromada_code, starts_with("prep_score"),preparation) %>% 
-  relocate(c("prep_score","prep_score_before","prep_score_after"),.after=1)
-ds1_prep %>% select(2:4)
+  select(hromada_code, starts_with("prep_score"),preparation)  
+ds1_prep %>% select(1:4)
 
-
-
+## Some handy datasets for quick visualization
 # Raw scale (0,1,2) with factors
 ds1_prep_ordinal_factors <- 
   ds1_prep %>% 
@@ -279,10 +279,10 @@ ds1_prep_ordinal_factors <-
       .cols = preparation
       ,.fns = ~case_when(
         . == 0  ~ "No"
-        ,. == 1 ~ "After Feb 24"
-        ,. == 2 ~ "Before Feb 24"
+        ,. == 1 ~ "As of Oct"
+        ,. == 2 ~ "As of Feb"
         ,TRUE   ~ "Not Applicable"
-      ) %>% factor(levels=c("No","Before Feb 24","After Feb 24",  "Not Applicable"))
+      ) %>% factor(levels=c("No","As of Oct","As of Feb",  "Not Applicable"))
     )
   ) %>% 
   select(hromada_code, starts_with("prep_score"),preparation)
@@ -302,69 +302,6 @@ ds1_prep_binary_factors <-
     )
   ) %>% 
   select(hromada_code, starts_with("prep_score"),preparation)
-
-
-
-m_prep <- 
-  ds1_prep %>% 
-  select(-hromada_code) %>%
-  # you would recode into binary at this point, but we dont' in this case
-  make_corr_matrix(
-    item_names = names(.)
-    ,metaData=d_meta_prep %>% bind_rows(
-      list(
-        "item_name" = c("prep_score","prep_score_before","prep_score_after")
-        ,"label_en" = c("Prep Score","Prep Score (Before)","Prep Score (After)")
-      ) %>% as_tibble()
-    )
-    ,method = "spearman"
-  ) 
-
-# TO test a hypothesis that binary measure of prepration item is better (not)
-m_prep_binary <- 
-  ds1_prep %>% 
-  select(-hromada_code) %>%
-  # recode individual items into binary
-  mutate(
-    across(
-      .cols = preparation
-      ,.fns = ~ case_when(.==2~1,T~.)
-    )
-  ) %>% 
-  make_corr_matrix(
-    item_names = names(.)
-    ,metaData=d_meta_prep %>% bind_rows(
-      list(
-        "item_name" = c("prep_score","prep_score_before","prep_score_after")
-        ,"label_en" = c("Prep Score","Prep Score (Before)","Prep Score (After)")
-      ) %>% as_tibble()
-    )
-    ,method = "spearman"
-  )  
-  
-d_item_total <- 
-  list(
-    "Total" = m_prep[,"Prep Score"]
-    ,"Before"= m_prep[,"Prep Score (Before)"]
-    ,"After" = m_prep[,"Prep Score (After)"]
-  ) %>% 
-  as_tibble() %>% 
-  mutate(item_name = rownames(m_prep)) %>% 
-  filter(item_name != "Total Prep Score") %>% 
-  mutate(item_name = factor(item_name)) %>% 
-  relocate(item_name)
-
-d_item_total_binary <- 
-  list(
-    "Total"  = m_prep_binary[,"Prep Score"]
-    ,"Before"= m_prep_binary[,"Prep Score (Before)"]
-    ,"After" = m_prep_binary[,"Prep Score (After)"]
-  ) %>% 
-  as_tibble() %>% 
-  mutate(item_name = rownames(m_prep)) %>% 
-  filter(item_name != "Total Prep Score") %>% 
-  mutate(item_name = factor(item_name)) %>% 
-  relocate(item_name)
 
 
 
