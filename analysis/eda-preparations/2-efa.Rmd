@@ -1,0 +1,236 @@
+---
+title: "EFA: New scale"
+output:
+  html_document:
+    css: ../../libs/css/sidebar.css
+    highlight: tango
+    keep_md: yes
+    theme: flatly
+    toc: yes
+---
+This report narrates the process of factor analizing the proposed scale
+<!-- These two chunks should be added in the beginning of every .Rmd that you want to source an .R script -->
+<!--  The 1st mandatory chunck  -->
+<!--  Set the working directory to the repository's base directory -->
+```{r, echo=F, message=F} 
+#Don't combine this call with any other chunk 
+# cat("Working directory: ", getwd()) # check where you are
+  library(knitr)
+# Rmd is in "./reports/reportA/reportA.Rmd", but now the root is "./"
+  knitr::opts_knit$set(root.dir='../../') 
+```
+
+<!--  The 2nd mandatory chunck  -->
+<!-- Set the report-wide options, and point to the external code file. -->
+```{r set_options, echo=F}
+# set options shared by all chunks
+opts_chunk$set(
+  results='show', 
+  message = TRUE,
+  comment = NA, 
+  tidy = FALSE,
+  fig.height = 12,
+  fig.width = 11,
+  # out.width = "550px",
+  fig.path = 'figures-phase/',     
+  dev = "png",
+  dpi = 100
+  # fig.path = 'figure_pdf/',     
+  # dev = "pdf"#,
+  # dev.args=list(pdf = list(colormodel = 'cmyk'))
+)
+echoChunks <- FALSE
+options(width=120) #So the output is 50% wider than the default.
+# connect to the file with the underlying R script  
+read_chunk("./analysis/2-efa/2-efa.R") 
+```
+
+<!-- Load 'sourced' R files.  Suppress the output when loading packages. --> 
+```{r load-packages, echo=echoChunks, message=FALSE}
+```
+
+<!-- Load the sources.  Suppress the output when loading sources. --> 
+```{r load-sources, echo=echoChunks, message=FALSE}
+```
+
+<!-- Load any Global functions and variables declared in the R file.  Suppress the output. --> 
+```{r declare-globals, echo=echoChunks, results='hide', message=FALSE}
+```
+
+<!-- Declare any global functions specific to a Rmd output.Suppress the output. --> 
+```{r, echo=echoChunks, message=FALSE}
+```
+
+<!-- Load the datasets.   -->
+```{r load-data, echo=echoChunks, results='hide', message=FALSE}
+```
+
+<!-- Inspect the datasets.   -->
+```{r inspect-data, echo=FALSE, results='hide', message=FALSE}
+```
+
+<!-- Tweak the datasets.   -->
+```{r tweak-data, echo=FALSE, results='hide', message=FALSE}
+```
+
+
+# Introduction
+
+The purpose of this research was to develop a new scale for measuring subjective wellbing of people condending with substance use disorder using a mobile device. Participants were 427 students of Indiana State University.
+
+
+# Overview
+
+By comparing various rotations and considering interpretive qualities of the solutions, we have decided to use orthogonal bifactor rotation, as the one that offers the greatest interpretability. 
+
+## Analysis Steps
+
+   
+### 1.Scree 
+Scree plot is plotted and top eigen values are displayed
+
+### 2.MAP 
+`psych::nfactors` call is applied, producing  Very Simple Structure, Velicer's MAP, and other criteria to determine the appropriate number of factors. See [documentation](http://www.personality-project.org/r/html/VSS.html)
+
+### 3.Parallel Analysis 
+`psych::fa.parallel` call is applied, comparing the number of factors in the correlation matrix to random "parallel" matrices. For details, see [documentation](https://www.rdocumentation.org/packages/psych/versions/1.6.9/topics/fa.parallel?)
+
+### 4.Fit
+`psych::fa` call is applied to conduct maximum likelihood factor analysis (`fm="ml"`) in order to obtain the chi-square of the proposed models, which incrementally increase the number of retained factors. CFI and TLI indices are then computed, following the formulae:
+```
+  CFI = ((chisq_null-df_null) - (chisq-df))/(chisq_null-df_null)
+  TLI = ((chisq_null/df_null) - (chisq/df))/((chisq_null/df_null)-1)
+```
+For details on `psych::fa` see [documentation](https://www.rdocumentation.org/packages/psych/versions/1.6.9/topics/fa)
+
+### 5.RMSEA 
+RMSEA diagnostic is conducted using [Advanced Factor Function](http://statpower.net/Content/312/R%20Stuff/AdvancedFactorFunctions.txt) by James Steiger. The routine relies on the maxim likelihood factor analysis conducted by `stats::factanal` call. For details on the latter see [here](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/factanal.html) 
+
+### 6.Estimate
+Using [Advanced Factor Function](http://statpower.net/Content/312/R%20Stuff/AdvancedFactorFunctions.txt) by James Steiger, we conduct maximum likelihood factor analysis, by obtaining the unrotated solution from `stats::factanal` call and then rotating solution using gradient projection algorithms (Bernaards & Jennrich, 2005). 
+
+### 7.Confirm
+Applying "Exploratory-Confirmatory" procedure described by [Joreskog(1978)](https://scholar.google.ca/scholar?q=Structural+analysis+of+covariance+and+correlation+matrices&btnG=&hl=en&as_sdt=0%2C33), we find the largest loading for each column of the factor pattern, then constrain all the other loadings in that row to be zero, and fit the resulting model as a confirmatory factor model. Given that we chose the orthogonal bifactor solution, we permit the the cross-loadings between general factor and subfactors. 
+
+
+# EFA
+
+We create a correlation matrix using all items on the administered scale and conduct eigen diagnostics: 
+```{r create-correlation-matrix-0, echo=TRUE, results='hide', message=FALSE}
+```
+## Scree
+```{r diagnose-0a, echo=echoChunks, results='show', message=FALSE, eval=T,fig.width=7, fig.height=5}
+```
+Scree plot is somewhat ambiguious, suggesting a solution involving up to 3 factors, following the Keiser rule (eigenvalue > 1). 
+
+## MAP
+`psych::nfactors` call is applied, producing  Very Simple Structure, Velicer's MAP, and other criteria to determine the appropriate number of factors. See [documentation](http://www.personality-project.org/r/html/VSS.html)
+
+The solution again suggests that no more than 3 meaningful factors can be extracted from the correlation structure.
+
+```{r diagnose-0b, echo=echoChunks, results='show', message=FALSE, eval=T,fig.width=7, fig.height=5}
+```
+
+## Parallel
+`psych::fa.parallel` call is applied, comparing the number of factors in the correlation matrix to random "parallel" matrices. For details, see [documentation](https://www.rdocumentation.org/packages/psych/versions/1.6.9/topics/fa.parallel?)
+
+There are only two non-general factors that appear to be more distinguishable than their simulated counterparts. While the analysis technically suggests 4 factors, the last one barely makes the cut ( 0.2696 vs 0.2557) and is not supported by the scree test and MAP analysis.  
+```{r diagnose-0c, echo=echoChunks, results='show', message=FALSE, eval=T,fig.width=7, fig.height=5}
+```
+
+## Fit
+`psych::fa` call is applied to conduct maximum likelihood factor analysls (`fm="ml"`) in order to obtain the chi-square of the proposed models, which incrementally increase the number of retained factors. CFI and TLI indices are then computed from the produced criteria. For details on `psych::fa` see [documentation](https://www.rdocumentation.org/packages/psych/versions/1.6.9/topics/fa)
+```{r diagnose-0d, echo=echoChunks, results='show', message=FALSE, eval=T,fig.width=7, fig.height=5}
+```
+
+## RMSEA
+RMSEA diagnostic is conducted using [Advanced Factor Function](http://statpower.net/Content/312/R%20Stuff/AdvancedFactorFunctions.txt) by James Steiger. The routine  relies on the maxim likelihood factor analysis conducted by `stats::factanal` call. For details on the latter see [here](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/factanal.html) 
+
+The confidence intervale of RMSEA point estimate does not include values below the threshhold (<.08) for the models with two factors. When a more liberal threshhold is adopted (<.05), the model with 3 factors appear to be preferable. 
+```{r diagnose-0e, echo=echoChunks, results='show', message=FALSE, eval=T,fig.width=7, fig.height=5}
+```
+
+## Estimate
+Using  [Advanced Factor Function](http://statpower.net/Content/312/R%20Stuff/AdvancedFactorFunctions.txt) by James Steiger, we conduct maximum likelihood factor analysis, by obtaining the unrotated solution from `stats::factanal` call and then rotating solution using gradient projection algorithms (Bernaards & Jennrich, 2005). 
+
+```{r estimate-0, echo=echoChunks, results='show', message=FALSE, warning=F,fig.height = 12,fig.width = 9,out.width="700px"}
+```
+
+## Confirm
+Applying "Exploratory-Confirmatory" procedure described by [Joreskog(1978)](https://scholar.google.ca/scholar?q=Structural+analysis+of+covariance+and+correlation+matrices&btnG=&hl=en&as_sdt=0%2C33), we find the largest loading for each column of the factor pattern, then constrain all the other loadings in that row to be zero, and fit the resulting model as a confirmatory factor model. Given that we chose the orthogonal bifactor solution, we permit the the cross-loadings between general factor and subfactors. 
+
+```{r confirm-0, echo=echoChunks, results='show', message=FALSE, warning=F,fig.height = 12,fig.width = 7,out.width="700px", eval=T}
+```
+
+# Rotations
+```{r print-solution, echo=echoChunks, fig.height=10, fig.width=4, message=FALSE, warning=FALSE, results='asis'}
+```
+
+# Correlations 
+
+```{r more-cor-1, echo=echoChunks, fig.height=20, fig.width=20, message=FALSE, warning=FALSE, results='asis', out.width = 1200}
+```
+
+# Decisions
+
+What items should be included into the daily questionnaire? 
+
+Guidelines for preference:   
+- High item-total correlation to the new scale  
+- High item-total correlation to the CHU and Warwick scales  
+- Items should cover all factors that seem to be present (3)  
+- Items with more pronounced weights onto a single factore should be preferred  
+
+
+1. Even though the new scale shows good unidimentionality, diagnostic tests revealed that there appear to be two subfactors:  
+  - "Self-Care"  
+    - `Q4_13`(_Today I feel energetic_)  
+    - `Q4_5` (_Today I feel rested_)  
+    - `Q6_1` (_Today I woke up feeling well-rested_)  
+    - `Q6_2` (_Today I ate well_)  
+    - `Q6_3` (_Today I took good care of myself_)  
+
+  - "Distress"
+    - `Q4_11` (_Today I feel sad_)  
+    - `Q4_15` (_Today I feel angry_)  
+    - `Q4_4`  (_Today I feel annoyed/irritable_)  
+    - `Q4_7`  (_Today I feel in physical pain_)  
+    - `Q4_9`  (_Today I feel worried/anxious_)  
+
+2. Item `Q4_4` (_Today I feel annoyed/irritable_) was selected because it consistened loaded the strongest onto the "Distress" factor. 
+
+3. Items `Q4_5`(_Today I feel rested_) and `Q6_1`(_Today I woke up feeling well-rested_) had highest loadings on the "Self-Care" factors, consistently across rotations. Deciding between them, we opted for `Q4_5` because it had slightly higher item-total correlations with both the new and existing scales. These two items had a high correlation (R = .75). 
+
+4. Two other items had the next highest loadings on the "Self-Care" factor: `Q4_13`	(_Today I feel energetic_) and `Q6_3`	(_Today I took good care of myself_). We felt that `Q4_13` was similar to `Q4_5`, whicle `Q6_3` provided a different facet of well-being. Therefore, choosing between the two we settled on the latter.
+
+5. We inclued `Q4_6`	(_Today I feel happy_) because it had the highest loading on the general factor and highest item-total correlation on all scales.  
+
+6. With 4 items included into the new questionnaire, we had 2-3 items to assist `Q4_6` in capturing the genral factor. The following group stood out:
+ 
+  - `Q4_8`   (_Today I feel confident_)
+  - `Q4_16`  (_Today I feel in charge of my life_)
+  - `Q4_10`  (_Today I feel that my life has a purpose_)
+  - `Q4_2`   (_Today I feel optimistic about the future_)
+
+All of these appear to have similar loadings, with minor variations. We chose `Q4_10` because this items appears to cover the spiritual/self-actualization domain. We also chose `Q4_8` it had consistently higher loading on the general factor that other two (`Q4_16` and `Q4_2`) while being similar to them in term of the content. 
+
+
+7. To represent social facet, we chose `Q4_14` (_Today I feel supported_) over `Q4_3` (_Today I feel loved_), because the former had higher loading, and higher item-total correlations. 
+
+# Chosen items
+
+- `Q4_6`	(_Today I feel happy_) 
+- `Q4_8`   (_Today I feel confident_)
+- `Q4_10`  (_Today I feel that my life has a purpose_)
+- `Q4_14` (_Today I feel supported_)
+
+- `Q6_3` (_Today I took good care of myself_) - SELFCARE subfactor
+- `Q4_5`(_Today I feel rested_) - SELFCARE subfactor
+- `Q4_4` (_Today I feel annoyed/irritable_)  - DISTRESS subfactor
+
+
+
+# Reproducibility
+```{r}
+sessionInfo()
+```
