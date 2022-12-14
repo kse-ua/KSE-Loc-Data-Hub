@@ -383,8 +383,9 @@ g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
 
 ```
 
-  
-```{r fig.height=3, fig.width=8, message=FALSE, class.source="fold-hide", results='show',results="asis", eval=F}
+# Individual Responses
+
+```{r fig.height=3, fig.width=8, message=FALSE, class.source="fold-hide", results='show',results="asis", eval=T, cache =T }
 
 loop_vars <- d_meta_prep %>% pull(item_name) %>% unique()
 
@@ -420,6 +421,22 @@ for(i in seq_along(loop_vars)){
   
 }
 ```
+
+# Investigations 
+
+Давайте розглянемо як стать голови ради була пов'язана з заготовкою палива
+
+```{r}
+ds1_ordinal_factors %>%
+  left_join(ds0 %>% select(hromada_code, sex_head)) %>% 
+  make_bi_freq_graph(var1 = "sex_head",var2 = "prep_first_aid_fuel")
+
+ds1_ordinal_factors %>%
+  left_join(ds0 %>% select(hromada_code, sex_head)) %>% 
+  make_bi_freq_graph(var1 = "prep_first_aid_fuel",var2 = "sex_head")
+
+```
+
 
 
 Session Information {#session-info}
