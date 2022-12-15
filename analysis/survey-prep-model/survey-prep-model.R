@@ -37,7 +37,7 @@ base::source("./scripts/binary-categorical-functions.R") # graphing and modeling
 
 # ---- declare-globals ---------------------------------------------------------
 # printed figures will go here:
-prints_folder <- paste0("./analysis/survey-overview/prints")
+prints_folder <- paste0("./analysis/survey-prep-model/prints")
 if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
 
 data_cache_folder <- prints_folder # to sink modeling steps
@@ -45,28 +45,36 @@ data_cache_folder <- prints_folder # to sink modeling steps
 '%ni%' <- Negate(`%in%`)
 
 
-make_corr_matrix <- function(d,metaData=d_meta,item_names,display_var="label_en", method="pearson"){
+make_corr_matrix <- function(d,na_action="remove", method="pearson"){
+  
+  item_names <- names(d)
   # browser()
-  # d <- ds0
-  # metaData <- d_meta
-  # item_names <- (d_meta %>% pull(item_name) %>% as.character() )[1:3]
-  # add_short_label <- TRUE
-  #
-  # d %>% glimpse()
-  # d <- ds %>% dplyr::select(foc_01:foc_49)
-  d1 <- d %>% dplyr::select(all_of(item_names))
-  d2 <- d1[complete.cases(d1),]
-  # d2 %>% glimpse()
-  rownames <- metaData %>%
-    dplyr::filter(item_name %in% item_names) %>%
-    dplyr::mutate(display_name = !!rlang::sym(display_var))
-  # rownames <- rownames[,"display_name"]
-  # rownames <- rownames %>% as.list() %>% unlist() %>% as.character()
-  rownames <- rownames %>% pull(display_name)
-  d3 <- sapply(d2, as.numeric)
-  # d3 %>% glimpse()
-  cormat <- cor(d3,method = method)
-  colnames(cormat) <- rownames; rownames(cormat) <- rownames
+  d1 <- 
+    d %>% 
+    select(all_of(item_names)) %>% 
+    mutate(
+      across(
+        .cols = everything()
+        ,.fns = ~as.numeric(.)
+      )
+    ) 
+  
+  if(na_action == "remove"){
+    d2 <- d1 %>% drop_na()
+  }
+  
+  if(na_action == "replace"){
+    d2 <-
+      d1 %>%
+      mutate(
+        across(
+          .cols = everything()
+          ,.fns = ~replace_na(.,0L)
+        )
+      )
+  }
+  cormat <- cor(d2,method = method)
+  # row.names(cormat) <- item_names
   return(cormat)
 }
 
@@ -223,7 +231,7 @@ ds0 %>% glimpse(80)
 # ---- inspect-data-0 ------------------------------------------------------------
 
 # ---- tweak-data-1-prep ------------------------------------------------------------
-# Select the focal section of the investigation - Invasion Preparation Block
+# compute total binary score (preparations are made at all, regardless of timing)
 d_meta_prep <- 
   meta_survey %>% 
   filter(group=="preparation") %>% 
@@ -233,8 +241,8 @@ ds1_prep <-
   ds0 %>% 
   mutate(
     # sum of 0|1|2 where larger numbers indicate more preparedness
-    prep_score = rowSums(across(preparation),na.rm = T) 
-    ,prep_score_before = rowSums(
+    prep_score_combo = rowSums(across(all_of(preparation)),na.rm = T) 
+    ,prep_score_feb = rowSums(
       across(
         .cols = preparation
         ,.fns = ~case_when(
@@ -245,7 +253,7 @@ ds1_prep <-
       )
       ,na.rm = T
     )
-    ,prep_score_after = rowSums(
+    ,prep_score_oct = rowSums(
       across(
         .cols = preparation
         ,.fns = ~case_when(
@@ -257,18 +265,10 @@ ds1_prep <-
       ,na.rm = T
     )
   )  %>% 
-  # to normalize the metric, making every scale to be out of 10 points maximum
-  # mutate(
-  #   prep_score = prep_score / 3 # because 15 items, maximum 2 points each
-  #   ,prep_score_before =prep_score_before /1.5 # because 15 items, maximum 1 point each
-  #   ,prep_score_after = prep_score_after /1.5 # because 15 items, maximum 1 point each
-  # ) %>%
-  select(hromada_code, starts_with("prep_score"),preparation) %>% 
-  relocate(c("prep_score","prep_score_before","prep_score_after"),.after=1)
-ds1_prep %>% select(2:4)
+  select(hromada_code, starts_with("prep_score"),preparation)  
+ds1_prep %>% select(1:4)
 
-
-# ---- prep-custom-objects ------------------------------
+## Some handy datasets for quick visualization
 # Raw scale (0,1,2) with factors
 ds1_prep_ordinal_factors <- 
   ds1_prep %>% 
@@ -277,10 +277,10 @@ ds1_prep_ordinal_factors <-
       .cols = preparation
       ,.fns = ~case_when(
         . == 0  ~ "No"
-        ,. == 1 ~ "After Feb 24"
-        ,. == 2 ~ "Before Feb 24"
+        ,. == 1 ~ "As of Oct"
+        ,. == 2 ~ "As of Feb"
         ,TRUE   ~ "Not Applicable"
-      ) %>% factor(levels=c("No","Before Feb 24","After Feb 24",  "Not Applicable"))
+      ) %>% factor(levels=c("No","As of Oct","As of Feb",  "Not Applicable"))
     )
   ) %>% 
   select(hromada_code, starts_with("prep_score"),preparation)
@@ -301,96 +301,25 @@ ds1_prep_binary_factors <-
   ) %>% 
   select(hromada_code, starts_with("prep_score"),preparation)
 
-m_prep <- 
-  ds1_prep %>% 
-  select(-hromada_code) %>%
-  # you would recode into binary at this point, but we dont' in this case
-  make_corr_matrix(
-    item_names = names(.)
-    ,metaData=d_meta_prep %>% bind_rows(
-      list(
-        "item_name" = c("prep_score","prep_score_before","prep_score_after")
-        ,"label_en" = c("Prep Score","Prep Score (Before)","Prep Score (After)")
-      ) %>% as_tibble()
-    )
-    ,method = "spearman"
-  ) 
-
-# TO test a hypothesis that binary measure of preparation item is better (not)
-m_prep_binary <- 
-  ds1_prep %>% 
-  select(-hromada_code) %>%
-  # recode individual items into binary
-  mutate(
-    across(
-      .cols = preparation
-      ,.fns = ~ case_when(.==2~1,T~.)
-    )
-  ) %>% 
-  make_corr_matrix(
-    item_names = names(.)
-    ,metaData=d_meta_prep %>% bind_rows(
-      list(
-        "item_name" = c("prep_score","prep_score_before","prep_score_after")
-        ,"label_en" = c("Prep Score","Prep Score (Before)","Prep Score (After)")
-      ) %>% as_tibble()
-    )
-    ,method = "spearman"
-  )  
-  
-d_item_total <- 
-  list(
-    "Total" = m_prep[,"Prep Score"]
-    ,"Before"= m_prep[,"Prep Score (Before)"]
-    ,"After" = m_prep[,"Prep Score (After)"]
-  ) %>% 
-  as_tibble() %>% 
-  mutate(item_name = rownames(m_prep)) %>% 
-  filter(item_name != "Total Prep Score") %>% 
-  mutate(item_name = factor(item_name)) %>% 
-  relocate(item_name)
-
-d_item_total_binary <- 
-  list(
-    "Total"  = m_prep_binary[,"Prep Score"]
-    ,"Before"= m_prep_binary[,"Prep Score (Before)"]
-    ,"After" = m_prep_binary[,"Prep Score (After)"]
-  ) %>% 
-  as_tibble() %>% 
-  mutate(item_name = rownames(m_prep)) %>% 
-  filter(item_name != "Total Prep Score") %>% 
-  mutate(item_name = factor(item_name)) %>% 
-  relocate(item_name)
-
 
 # ----- prep-modeling ---------------
-# Continuous - good for spreading out # Valentyn, please add relevant predictors here
-predictor_vars_continuous <- c(
-  "income_own_per_capita"           
-  ,"income_total_per_capita"         
-  ,"income_tranfert_per_capita"      
-  ,"idp_registration_share"
-  ,"idp_real_share"
-  ,"idp_child_share"
-  ,'square'
-  ,'dfrr_executed'
-  ,'edem_total'
-  ,'passangers_2021'
-  ,'business_support_centers'
-  ,'youth_centers'
-  ,'youth_councils'
-  ,"n_settlements"
-  ,"travel_time"
-  ,"urban_pct"
-  ,"total_population_2022"
-  ,"urban_population_2022"
-  ,"sum_osbb_2020"
-  ,"turnout_2020"
-  ,"age_head"
-  ,"time_before_24th"
+# Support 
+
+support_vars <- c(
+  "hromada_name"
 )
+
+# Outcomes
+
+outcomes_vars <- c(
+  "prep_score_feb"
+  ,"prep_score_oct"
+  ,"prep_score_combo"
+)
+
+
 # Categorical - for color # Valentyn, please add relevant predictors here
-predictor_vars_discreate <- c(
+predictor_vars_categorical <- c(
   "sex_head"
   ,"education_head"
   ,"type"
@@ -410,10 +339,37 @@ predictor_vars_discreate <- c(
   ,'edem_open_hromada'
   ,'war_zone_27_04_2022'
   ,'train_station'
+  ,'youth_centers'
+  ,'youth_councils'
 )
 predictor_vars <- c(
   predictor_vars_continuous
-  ,predictor_vars_discreate
+  ,predictor_vars_categorical
+)
+
+
+# Continuous - good for spreading out # Valentyn, please add relevant predictors here
+predictor_vars_continuous <- c(
+  "income_own_per_capita"           
+  ,"income_total_per_capita"         
+  ,"income_tranfert_per_capita"      
+  ,"idp_registration_share"
+  ,"idp_real_share"
+  ,"idp_child_share"
+  ,'dfrr_executed'
+  ,'edem_total'
+  ,'passangers_2021'
+  ,'business_support_centers'
+  ,"n_settlements"
+  ,"travel_time"
+  ,"urban_pct"
+  ,"total_population_2022"
+  ,"urban_population_2022"
+  ,"sum_osbb_2020"
+  ,"turnout_2020"
+  ,'square'
+  ,"age_head"
+  ,"time_before_24th"
 )
 
 ds2_prep <- 
@@ -421,23 +377,173 @@ ds2_prep <-
   select(hromada_code, starts_with("prep_score")) %>% 
   left_join(
     ds0 %>% 
-      select(c(hromada_code,predictor_vars))
+      select(hromada_code,all_of(predictor_vars), oblast_name_en, hromada_name)
   ) %>% 
   mutate(
     across(
-      .cols = all_of(predictor_vars_discreate)
+      .cols = all_of(predictor_vars_categorical)
       ,.fns = ~factor(.)
     )
-  )
-
-ds2_prep %>% glimpse()
-
-
-
-
+  ) %>% 
+  # scaling 
+  mutate(
+    ""
+  )  
 
 
+ds2_prep %>% glimpse(90)
+ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
 
+# ---- -------------
+
+d <- 
+  ds2_prep %>% 
+  pivot_longer(
+    cols = predictor_vars_continuous
+    ,names_to = "item_name"
+    ,values_to = "item_value"
+  ) %>% glimpse()
+
+make_plot_prepvs <- function(
+    d
+    ,xvar    # "prep_score"
+    ,yvar    # "item_value"
+    ,fillvar # "region_en"
+)
+{
+  g <- 
+    d %>% 
+    mutate(
+      item_name = factor(item_name, levels = predictor_vars_continuous)
+    ) %>% 
+    ggplot(aes(
+      x     = !!rlang::sym(xvar)
+      ,y    = !!rlang::sym(yvar)
+      ,fill = !!rlang::sym(fillvar)
+      ,color = !!rlang::sym(fillvar)
+    ))+
+    ggplot2::scale_fill_viridis_d(
+      begin = 0, end = .8, direction = -1
+      ,option = "plasma",guide= guide_legend(reverse=T)
+    )+
+    ggplot2::scale_color_viridis_d(
+      begin = 0, end = .8, direction = -1
+      ,option = "plasma",guide= guide_legend(reverse=T)
+    )+
+    geom_point(
+      shape=21,color = "black", size =3, alpha = .1
+      ,position=position_jitter(seed=42)
+    )+
+    geom_smooth(method="lm", se=F,linewidth=.8)+
+    scale_y_continuous(
+      labels = scales::comma_format()
+      ,expand = expansion(mult =c(.1,.4))
+      )+
+    scale_x_continuous(
+      labels = scales::comma_format()
+    )+
+    facet_wrap(facets = "item_name", scales = "free_x")+
+    ggpmisc::stat_poly_eq(
+      formula = y ~ + x
+      ,aes(
+        label = paste(..eq.label.., ..rr.label.., ..n.label..,sep = "~~~")
+        ,color = !!rlang::sym(fillvar)
+        )
+      ,parse = TRUE
+      , vstep = .08
+      ,size = 3
+      ) +
+    # coord_flip()+
+    labs(
+      title = paste0("Relationship between Invasion Preparedness Score (horizontal) and other attributes of hromadas")
+    )
+  g
+}  
+# To see how it works
+g <- 
+  d %>% 
+  mutate(country = "Ukraine") %>% 
+  make_plot_prepvs(
+    xvar     = "item_value"
+    ,yvar    = "prep_score_feb"
+    ,fillvar = "sex_head"
+  )  
+g %>% quick_save("tester",w=16,h=9)
+
+
+# What hromada is outlier on total population?
+outliers_total_population_2022 <- 
+  ds2_prep %>%
+  filter(total_population_2022 > 200000) %>% 
+  # select(hromada_code,hromada_name, oblast_name_en) %>% 
+  pull(hromada_code)
+outliers_sum_osbb_2020 <- 
+  ds2_prep %>%
+  filter(sum_osbb_2020 > 190) %>% 
+  # select(hromada_code,hromada_name, oblast_name_en) %>% 
+  pull(hromada_code)
+outliers_passangers_2021 <- 
+  ds2_prep %>%
+  filter(passangers_2021 >60000) %>% 
+  # select(hromada_code,hromada_name, oblast_name_en) %>% 
+  pull(hromada_code)
+
+outliers <- 
+  c(outliers_total_population_2022
+  ,outliers_sum_osbb_2020
+  ,outliers_passangers_2021) %>% 
+  unique() 
+outliers %>% length()
+
+g <- 
+  d %>% 
+  filter(hromada_code %ni% outliers) %>% 
+  make_plot_prepvs(
+    xvar     = "item_value"
+    ,yvar    = "prep_score_feb"
+    ,fillvar = "voluntary"
+  )  
+g %>% quick_save("tester2",w=16,h=9)
+
+g <- 
+  d %>% 
+  filter(hromada_code %in% outliers) %>% 
+  make_plot_prepvs(
+    xvar     = "item_value"
+    ,yvar    = "prep_score_feb"
+    ,fillvar = "voluntary"
+  )  
+g %>% quick_save("tester3",w=16,h=9)
+
+
+# ----- print-many-models -------------
+# To execution multiple scenarios
+for(i in predictor_vars_categorical){
+  
+  for(ii in outcomes_vars){
+    
+    g <- 
+      d %>% 
+      make_plot_prepvs(
+        xvar    = "item_value"
+        ,yvar     = ii
+        ,fillvar = i
+      )   
+      file_name <- paste0(ii,"/",i)
+      g %>% quick_save(paste0("/bivar-cont/",file_name),w=16,h=9)
+      
+      g <- 
+        d %>% 
+        filter(hromada_code %ni% outliers) %>% 
+        make_plot_prepvs(
+          xvar    = "item_value"
+          ,yvar     = ii
+          ,fillvar = i
+        )   
+      file_name <- paste0(ii,"/",i)
+      g %>% quick_save(paste0("/bivar-cont/",file_name,"-no_out"),w=16,h=9)
+  }
+}
 
 
 
