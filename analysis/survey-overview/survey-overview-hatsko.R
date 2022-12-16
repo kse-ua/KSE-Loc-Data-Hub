@@ -403,39 +403,7 @@ ds1_info <-
   ) %>% 
   select(hromada_code,item_information)
 
-# ----- testing-chunks -------------
-
-d <- ds0 %>%
-  select(hromada_code, military_help) %>%
-  pivot_longer(-hromada_code) %>%
-  group_by(name) %>% 
-  count(value) %>%
-  mutate(
-    freq = n/sum(n),
-    name = str_remove(name, 'help_for_military/')
-  ) %>% 
-  filter(value == 1) %>%
-  arrange(desc(freq)) %>%
-  ungroup() %>%
-  select(name, freq)
-
-d %>% 
-  ggplot(aes(x = fct_reorder(name, freq), y = freq)) +
-  geom_col(aes(fill = fct_reorder(name, freq))) +
-  geom_label(aes(label = scales::percent(freq)))  +
-  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, 
-                                option = "plasma",
-                                ) + 
-  theme_bw() +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank()) +
-  labs(title = 'Provided assistance for military', fill = NULL) +
-  scale_y_continuous(labels = scales::percent) +
-  coord_flip()
-
-
-
-
+# ----- -------------
 
 # ---- save-to-disk ------------------------------------------------------------
 
@@ -444,9 +412,9 @@ path <- "./analysis/survey-overview/survey-overview-hatsko.Rmd"
 rmarkdown::render(
   input = path ,
   output_format=c(
-    # "html_document"
+    "html_document"
     # "word_document"
-    "pdf_document"
+    # "pdf_document"
   ),
   clean=TRUE
 )
