@@ -302,7 +302,8 @@ ds1_prep_binary_factors <-
   select(hromada_code, starts_with("prep_score"),preparation)
 
 
-# ----- prep-modeling ---------------
+
+# ----- prep-modeling sex---------------
 # Support 
 
 support_vars <- c(
@@ -545,6 +546,31 @@ for(i in predictor_vars_categorical){
   }
 }
 
+
+
+
+
+
+# ---- modeling-demonstration -----------------------
+d_model <- 
+  ds2_prep %>% 
+  select(
+    prep_score_oct, age_head, sex_head, incumbent, income_own_per_capita, idp_child_share , travel_time
+  )
+
+d_model %>% GGally::ggpairs()
+
+# ---- modeling-demonstration -----------------------
+
+model <- 
+  stats::glm(
+    
+  )
+
+model <- 
+  stats::glm(
+    
+  )
 
 
 # ---- save-to-disk ------------------------------------------------------------
