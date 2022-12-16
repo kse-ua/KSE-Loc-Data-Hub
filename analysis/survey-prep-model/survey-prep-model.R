@@ -673,7 +673,6 @@ anova(fit4_full, fit4_reduced,test = "Chisq")
 fit4_full %>% broom::tidy()
 # jtools::plot_summs(model.names = c("Full","Reduced"),fit4_full, fit4_reduced)
 
-
 g <- 
   fit4_full %>% 
   broom::augment() %>% 
@@ -691,25 +690,37 @@ g
 
 
 # ---- fit5 ----------
+
+d_model <- 
+  ds2_prep %>% 
+  mutate(
+    urban = case_when(
+      type %in% c("селищна","сільска") ~ TRUE
+      ,TRUE ~ FALSE
+    )
+  ) %>% 
+  select(prep_score_feb, income_own_per_capita_k, type) %>% glimpse()
+
+
 fit5_full <- 
   glm(
-    formula = prep_score_feb ~ income_total_per_capita_k + type +income_total_per_capita_k*type 
-    ,data = ds2_prep
-    ,family = "gaussian"
-  )
-fit5_reduced <- 
-  glm(
-    formula = prep_score_feb ~ income_total_per_capita_k + type 
+    formula = prep_score_feb ~ income_own_per_capita_k + type + income_own_per_capita_k*type 
     ,data = ds2_prep
     ,family = "poisson"
   )
-anova(fit5_full, fit5_reduced,test = "Chisq")
+fit5_reduced <- 
+  glm(
+    formula = prep_score_feb ~ income_own_per_capita_k + type 
+    ,data = ds2_prep
+    ,family = "poisson"
+  )
+anova( fit5_reduced,fit5_full,test = "Chisq")
 fit5_full %>% broom::tidy()
 
 g <- 
   fit5_full %>% 
   broom::augment() %>% 
-  ggplot(aes(y = .fitted, x = income_total_per_capita_k, fill=type, color=type))+
+  ggplot(aes(y = .fitted, x = income_own_per_capita_k, fill=type, color=type))+
   geom_point()
 g
 
@@ -718,6 +729,9 @@ ds2_prep %>%
   geom_boxplot()+
   geom_jitter()
 
+
+ds2_prep %>% select(income_own_per_capita, income_total_per_capita, income_tranfert_per_capita) %>% 
+  GGally::ggpairs()
 
 # ----- fit6 ---------------------------------
 d_model <- 
@@ -728,7 +742,8 @@ d_model <-
       ,TRUE ~ FALSE
     )
   ) %>% 
-  select(prep_score_feb, income_total_per_capita_k, urban)
+  # select(prep_score_feb, income_total_per_capita_k, urban)
+  select(prep_score_feb, income_own_per_capita_k, urban)
 
 fit5_full <- 
   glm(
@@ -755,13 +770,14 @@ g
 # ---- --------
 
 vars_density <- c( 
-  , 'square'
+   'square'
   ,"n_settlements"
-  ,"urban_pct"
-  # ,"time_before_24th_years"
   ,"total_population_2022"
-  # ,"urban_population_2022"
 )
+
+
+ds2_prep %>% make_bi_freq_graph("type")
+ds2_prep %>% make_bi_freq_graph("type", "voluntary")
 
 
 
