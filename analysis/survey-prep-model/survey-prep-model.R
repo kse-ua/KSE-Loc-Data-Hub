@@ -304,7 +304,11 @@ ds1_prep_binary_factors <-
 
 
 # ----- prep-modeling sex---------------
-# Support 
+# Support
+
+ds_general %>% explore::describe(passangers_2021) 
+ds_general %>% select(passangers_2021, hromada_name) %>% arrange(passangers_2021) %>% View()
+
 
 support_vars <- c(
   "hromada_name"
@@ -318,6 +322,52 @@ outcomes_vars <- c(
   ,"prep_score_combo"
 )
 
+
+# Continuous - good for spreading out # Valentyn, please add relevant predictors here
+predictor_vars_continuous <- c(
+  "income_own_per_capita"     # весь дохід з податків (без видатків з держви) - заможність громади
+  ,"income_total_per_capita"  # свій доход + дотації, суммарний дохід
+  ,"income_tranfert_per_capita" # що надходить від держави, 
+  ,"idp_registration_share" # внутрішньо переміщені особи - кількість ВПО \ загальне населення до вторгнення
+  ,"idp_real_share" # corrected index above 
+  ,"idp_child_share" # відсоток ВПО дітей від популяціі громади до вторгнення
+  ,'dfrr_executed' # сума всіх проектів (скільки дали на розвиток громади - спец прокти), виграні інвестиційні проекти, на скільки г. залучила інвест кошти в рамках програми
+  ,'passangers_2021'
+  ,'business_support_centers' # кількість центрів
+  ,"n_settlements" #кількість населенних пунктів у громаді
+  ,"travel_time" # відстань до обласного центру
+  ,"urban_pct"
+  ,"total_population_2022"
+  ,"urban_population_2022"
+  ,"sum_osbb_2020" # кількість ОСББ 
+  ,"turnout_2020" # явка
+  ,'square' # площа громади у кв.км
+  ,"age_head"
+  ,"time_before_24th" # коли сформувалась громада
+)
+
+predictor_vars_continuous_scaled <- c(
+  "income_own_per_capita_k"           
+  ,"income_total_per_capita_k"         
+  ,"income_tranfert_per_capita_k"      
+  ,"idp_registration_share"
+  ,"idp_real_share"
+  ,"idp_child_share"
+  ,'dfrr_executed'
+  ,'passangers_2021'
+  ,'business_support_centers'
+  ,"travel_time"
+  ,"sum_osbb_2020"
+  ,"turnout_2020"
+  ,"age_head"
+
+    ,'square'
+  ,"n_settlements"
+  ,"urban_pct"
+  ,"time_before_24th_years"
+  ,"total_population_2022"
+  ,"urban_population_2022"
+)
 
 # Categorical - for color # Valentyn, please add relevant predictors here
 predictor_vars_categorical <- c(
@@ -334,12 +384,13 @@ predictor_vars_categorical <- c(
   ,'polit_work'
   ,'party_national_winner'
   ,'no_party'
-  ,'edem_petitions'
-  ,'edem_consultations'
-  ,'edem_participatory_budget'
-  ,'edem_open_hromada'
   ,'war_zone_27_04_2022'
   ,'train_station'
+  ,'edem_total' # cкільки інструментів електрон.демографіі залучену у громаді
+  ,'edem_petitions' # binary from above
+  ,'edem_consultations'# binary from above
+  ,'edem_participatory_budget'# binary from above
+  ,'edem_open_hromada' # binary from above
   ,'youth_centers'
   ,'youth_councils'
 )
@@ -349,29 +400,6 @@ predictor_vars <- c(
 )
 
 
-# Continuous - good for spreading out # Valentyn, please add relevant predictors here
-predictor_vars_continuous <- c(
-  "income_own_per_capita"           
-  ,"income_total_per_capita"         
-  ,"income_tranfert_per_capita"      
-  ,"idp_registration_share"
-  ,"idp_real_share"
-  ,"idp_child_share"
-  ,'dfrr_executed'
-  ,'edem_total'
-  ,'passangers_2021'
-  ,'business_support_centers'
-  ,"n_settlements"
-  ,"travel_time"
-  ,"urban_pct"
-  ,"total_population_2022"
-  ,"urban_population_2022"
-  ,"sum_osbb_2020"
-  ,"turnout_2020"
-  ,'square'
-  ,"age_head"
-  ,"time_before_24th"
-)
 
 ds2_prep <- 
   ds1_prep %>% 
@@ -388,9 +416,12 @@ ds2_prep <-
   ) %>% 
   # scaling 
   mutate(
-    ""
-  )  
-
+    income_own_per_capita_k = income_own_per_capita/1000
+    ,income_total_per_capita_k = income_total_per_capita/1000
+    ,income_tranfert_per_capita_k = income_tranfert_per_capita/1000
+    ,time_before_24th_years = time_before_24th/365
+  )  %>% 
+  mutate(country = "Ukraine") 
 
 ds2_prep %>% glimpse(90)
 ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
@@ -400,7 +431,7 @@ ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
 d <- 
   ds2_prep %>% 
   pivot_longer(
-    cols = predictor_vars_continuous
+    cols = predictor_vars_continuous_scaled
     ,names_to = "item_name"
     ,values_to = "item_value"
   ) %>% glimpse()
@@ -415,7 +446,7 @@ make_plot_prepvs <- function(
   g <- 
     d %>% 
     mutate(
-      item_name = factor(item_name, levels = predictor_vars_continuous)
+      item_name = factor(item_name, levels = predictor_vars_continuous_scaled)
     ) %>% 
     ggplot(aes(
       x     = !!rlang::sym(xvar)
@@ -424,11 +455,11 @@ make_plot_prepvs <- function(
       ,color = !!rlang::sym(fillvar)
     ))+
     ggplot2::scale_fill_viridis_d(
-      begin = 0, end = .8, direction = -1
+      begin = 0, end = .8, direction = 1
       ,option = "plasma",guide= guide_legend(reverse=T)
     )+
     ggplot2::scale_color_viridis_d(
-      begin = 0, end = .8, direction = -1
+      begin = 0, end = .8, direction = 1
       ,option = "plasma",guide= guide_legend(reverse=T)
     )+
     geom_point(
@@ -466,8 +497,8 @@ g <-
   mutate(country = "Ukraine") %>% 
   make_plot_prepvs(
     xvar     = "item_value"
-    ,yvar    = "prep_score_feb"
-    ,fillvar = "sex_head"
+    ,yvar    = "prep_score_oct"
+    ,fillvar = "country"
   )  
 g %>% quick_save("tester",w=16,h=9)
 
@@ -501,8 +532,8 @@ g <-
   filter(hromada_code %ni% outliers) %>% 
   make_plot_prepvs(
     xvar     = "item_value"
-    ,yvar    = "prep_score_feb"
-    ,fillvar = "voluntary"
+    ,yvar    = "prep_score_oct"
+    ,fillvar = "country"
   )  
 g %>% quick_save("tester2",w=16,h=9)
 
@@ -511,10 +542,227 @@ g <-
   filter(hromada_code %in% outliers) %>% 
   make_plot_prepvs(
     xvar     = "item_value"
-    ,yvar    = "prep_score_feb"
-    ,fillvar = "voluntary"
+    ,yvar    = "prep_score_oct"
+    ,fillvar = "country"
   )  
 g %>% quick_save("tester3",w=16,h=9)
+
+
+# ---- one-model -----------------------
+
+fit1_gaussian <- 
+  glm(
+    formula = prep_score_feb ~ income_own_per_capita_k + sex_head
+    ,data = ds2_prep
+    ,family = "gaussian"
+  )
+fit1_poisson <- 
+  glm(
+    formula = prep_score_feb ~ income_own_per_capita_k + sex_head
+    ,data = ds2_prep
+    ,family = "poisson"
+  )
+
+fit1_gaussian %>% summary()
+
+fit1_gaussian %>% broom::glance() # model properties
+fit1_gaussian %>% broom::tidy() # coefficients
+fit1_gaussian %>% broom::augment() # add predicted values
+
+fit1_poisson %>% broom::glance() # model properties
+fit1_poisson %>% broom::tidy() # coefficients
+fit1_poisson %>% broom::augment() # add predicted values
+
+fit1_gaussian %>% jtools::plot_summs()
+fit1_poisson %>% jtools::plot_summs()
+
+jtools::plot_summs(fit1_gaussian, fit1_poisson)
+
+
+# Resources for handling modeling objects
+# jtools vignette - https://cran.r-project.org/web/packages/jtools/vignettes/summ.html
+# broom vignette - https://cran.r-project.org/web/packages/broom/vignettes/broom_and_dplyr.html
+# GGally - https://ggobi.github.io/ggally/
+
+fit2_gaussian <- 
+  glm(
+    formula = prep_score_feb ~ sex_head
+    ,data = ds2_prep
+    ,family = "gaussian"
+  )
+fit2_poisson <- 
+  glm(
+    formula = prep_score_feb ~ sex_head
+    ,data = ds2_prep
+    ,family = "poisson"
+  )
+
+fit2_gaussian %>% broom::tidy() # coefficients
+fit2_poisson %>% broom::tidy() # coefficients
+
+
+jtools::plot_summs(fit2_gaussian, fit2_poisson)
+
+
+vars_density <- c( 
+"prep_score"
+, 'square'
+,"n_settlements"
+,"urban_pct"
+# ,"time_before_24th_years"
+,"total_population_2022"
+# ,"urban_population_2022"
+  )
+ds2_prep %>% 
+  filter(total_population_2022 < 200000) %>% #select(hromada_name, total_population_2022)
+  select(vars_density) %>% GGally::ggpairs()
+
+
+fit3_full <- 
+  glm(
+    formula = prep_score_feb ~ income_own_per_capita_k + type
+    ,data = ds2_prep
+    ,family = "gaussian"
+  )
+fit3_reduced <- 
+  glm(
+    formula = prep_score_feb ~ income_own_per_capita_k 
+    ,data = ds2_prep
+    ,family = "poisson"
+  )
+anova(fit3_full, fit3_reduced,test = "Chisq")
+
+jtools::plot_summs(model.names = c("Full","Reduced"),fit3_full, fit3_reduced)
+fit3_full %>% broom::tidy()
+
+d <- 
+  fit3_full %>% 
+  broom::augment()
+
+g <- 
+  d %>% 
+  # ggplot(aes(y = prep_score_feb, x = income_own_per_capita_k, fill=type, color=type))+
+  ggplot(aes(y = .fitted, x = income_own_per_capita_k, fill=type, color=type))+
+  # geom_smooth(method = "lm", se=F)+
+  # facet_wrap("type")+
+  geom_point()
+g
+
+ds2_prep %>% 
+  ggplot(aes(x=type, y = prep_score_feb))+
+  geom_boxplot()+
+  geom_jitter()
+
+
+
+# ----- fit4 ---------------------
+
+fit4_full <- 
+  glm(
+    formula = prep_score_feb ~ income_own_per_capita_k + type +income_own_per_capita_k*type 
+    ,data = ds2_prep
+    ,family = "poisson"
+  )
+fit4_reduced <- 
+  glm(
+    formula = prep_score_feb ~ income_own_per_capita_k + type 
+    ,data = ds2_prep
+    ,family = "poisson"
+  )
+anova(fit4_full, fit4_reduced,test = "Chisq")
+fit4_full %>% broom::tidy()
+# jtools::plot_summs(model.names = c("Full","Reduced"),fit4_full, fit4_reduced)
+
+
+g <- 
+  fit4_full %>% 
+  broom::augment() %>% 
+  # ggplot(aes(y = prep_score_feb, x = income_own_per_capita_k, fill=type, color=type))+
+  ggplot(aes(y = .fitted, x = income_own_per_capita_k, fill=type, color=type))+
+  # geom_smooth(method = "lm", se=F)+
+  # facet_wrap("type")+
+  geom_point()
+g
+# 
+# ds2_prep %>% 
+#   ggplot(aes(x=type, y = prep_score_feb))+
+#   geom_boxplot()+
+#   geom_jitter()
+
+
+# ---- fit5 ----------
+fit5_full <- 
+  glm(
+    formula = prep_score_feb ~ income_total_per_capita_k + type +income_total_per_capita_k*type 
+    ,data = ds2_prep
+    ,family = "gaussian"
+  )
+fit5_reduced <- 
+  glm(
+    formula = prep_score_feb ~ income_total_per_capita_k + type 
+    ,data = ds2_prep
+    ,family = "poisson"
+  )
+anova(fit5_full, fit5_reduced,test = "Chisq")
+fit5_full %>% broom::tidy()
+
+g <- 
+  fit5_full %>% 
+  broom::augment() %>% 
+  ggplot(aes(y = .fitted, x = income_total_per_capita_k, fill=type, color=type))+
+  geom_point()
+g
+
+ds2_prep %>% 
+  ggplot(aes(x=type, y = prep_score_feb))+
+  geom_boxplot()+
+  geom_jitter()
+
+
+# ----- fit6 ---------------------------------
+d_model <- 
+  ds2_prep %>% 
+  mutate(
+    urban = case_when(
+      type %in% c("селищна","сільска") ~ TRUE
+      ,TRUE ~ FALSE
+    )
+  ) %>% 
+  select(prep_score_feb, income_total_per_capita_k, urban)
+
+fit5_full <- 
+  glm(
+    formula = prep_score_feb ~ (.)^2 
+    ,data = d_model
+    ,family = "poisson"
+  )
+fit5_reduced <- 
+  glm(
+    formula = prep_score_feb ~  (.)^2
+    ,data = d_model
+    ,family = "poisson"
+  )
+anova(fit5_full, fit5_reduced,test = "Chisq")
+fit5_full %>% broom::tidy()
+
+g <- 
+  fit5_full %>% 
+  broom::augment() %>% 
+  ggplot(aes(y = .fitted, x = income_total_per_capita_k, fill=urban, color=urban))+
+  geom_point()
+g
+
+# ---- --------
+
+vars_density <- c( 
+  , 'square'
+  ,"n_settlements"
+  ,"urban_pct"
+  # ,"time_before_24th_years"
+  ,"total_population_2022"
+  # ,"urban_population_2022"
+)
+
 
 
 # ----- print-many-models -------------
@@ -551,7 +799,10 @@ for(i in predictor_vars_categorical){
 
 
 
-# ---- modeling-demonstration -----------------------
+# ---- modeling-simple-case -----------------------
+# Let us review the anatomy of glm models using a simple case to see how we can scale it up
+# we want to run many simple  models (only one or two predictors)
+
 d_model <- 
   ds2_prep %>% 
   select(
@@ -559,6 +810,11 @@ d_model <-
   )
 
 d_model %>% GGally::ggpairs()
+
+fit1  <- 
+  glm(
+    f
+  )
 
 # ---- modeling-demonstration -----------------------
 
