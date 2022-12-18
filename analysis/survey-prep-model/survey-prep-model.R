@@ -307,7 +307,7 @@ ds1_prep_binary_factors <-
 # Support
 
 ds_general %>% explore::describe(passangers_2021) 
-ds_general %>% select(passangers_2021, hromada_name) %>% arrange(passangers_2021) %>% View()
+ds_general %>% select(passangers_2021, hromada_name) %>% arrange(passangers_2021) #%>% View()
 
 
 support_vars <- c(
@@ -426,51 +426,109 @@ ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
 
 
 # ----- simple-model-scan -----------------------
-# Goal: scan the bivariate relationship bw outcome and a set of predictors
-# to understand what has the strongest association
+# Goal: scan the bivariate relationship between an outcome and a set of predictors, one at a time
+# You can add confounders for a more targeted exploration, but be careful
+# not to make the bins too sparse and cause estimation issues or untrustworthy results
 
 source("./analysis/survey-prep-model/custom-model-functions.R")
-predictor_vars_continuous_scaled
-
 ls_temp <- list()
 # for(i in predictor_vars_continuous_scaled){
 for(i in predictor_vars_categorical){
-# source("./analysis/survey-prep-model/custom-model-functions.R")
-  model_i <- 
+# the function returns a tibble of one row, where row = 1 model
+  ls_temp[[i]] <- 
     ds2_prep %>% 
-    run_simple_model(
+    run_simple_scan(
       dependent    = "prep_score_feb"
-      ,explanatory = c(i)
-      ,depdist     = "poisson"
-   )
-  
-  ls_temp[[model_i$equation$formula %>% deparse()]] <- 
-    list(
-      "outcome"     = model_i$equation$outcome
-      ,"predictor"  = model_i$equation$predictor 
-      ,"confounder"  = model_i$equation$confounder %>% paste0(collapse = " + ")
-      ,"rsq"       = model_i$model_fit$rsquare # explanatory capacity of the full model
-      ,"rsq_change" = model_i$rsq_change # gains in explanatory capacity due to predictor
-      ,"nobs"       = model_i$nobs
-      ,"distribution" = model_i$depdist
+      ,explanatory = c(i) # add your confounder(s) here
+      ,depdist     = "poisson" # distribution of the dependent variable
     )
-  }
-d <- 
-  ls_temp %>% bind_rows()
-d
-
+}
+d <- ls_temp %>% bind_rows()
+# here each row = model
+d %>% print_all()
+# which we can now visualize
 d %>% 
-  ggplot(aes(y= fct_reorder(predictor,rsq),x = rsq ))+
-  geom_segment(aes(x=0,xend=rsq,yend=predictor))+
-  geom_point()+
-  geom_point(aes(x=rsq_change),color="red")+
-  geom_segment(aes(x=0,xend=rsq,yend=predictor))+
-  scale_x_continuous(labels = scales::percent_format())+
-  labs(
-    title = paste0("Outcome: ",d %>% pull(outcome) %>% unique())
-    ,subtitle = paste0("Adjusting for: ", d %>% pull(confounder) %>% unique())
-    ,x = "Percent of variabilty in the outcome explained by predictor(s)"
+  {
+    ggplot(.,aes(y= fct_reorder(predictor,rsq),x = rsq ))+
+      geom_segment(aes(x=0,xend=rsq,yend=predictor))+
+      geom_point()+
+      geom_point(aes(x=rsq_change),color="red")+
+      geom_segment(aes(x=0,xend=rsq,yend=predictor))+
+      scale_x_continuous(labels = scales::percent_format())+
+      labs(
+        # title = paste0("Outcome: ",d %>% pull(outcome) %>% unique())
+        subtitle = paste0("After adjusting for: ", unique(.$confounder))
+        ,title = paste0("Modeling (", unique(.$outcome), ") from  ... ",
+                        " with a ", unique(.$distribution), " distribution"
+        )
+        
+        ,x = "Percent of variabilty in the outcome explained by predictor(s)"
+      )  
+  }
+# this demonstration for a better understanding of the function
+# however, in practice `run_complex_scan` might be more useful
+  
+
+# ---- complex-model-scan -----------------------------
+# a more specialized functions designed to distinguish between
+# continous and categorical predictors
+source("./analysis/survey-prep-model/custom-model-functions.R")
+d <- 
+  ds2_prep %>% 
+  run_complex_scan(
+    dependent = "voluntary"
+    ,depdist = "binomial"
+    ,confounder = "sex_head"
+    ,explantory_continous = setdiff(predictor_vars_continuous_scaled,"time_before_24th_years")
+    ,explanatory_categorical = predictor_vars_categorical
   )
+d
+d %>% 
+    {
+      ggplot(.,aes(y= fct_reorder(predictor,rsq),x = rsq ))+
+        geom_segment(aes(x=0,xend=rsq,yend=predictor))+
+        geom_point()+
+        geom_point(aes(x=rsq_change),color="red")+
+        geom_segment(aes(x=0,xend=rsq,yend=predictor))+
+        scale_x_continuous(labels = scales::percent_format())+
+        labs(
+          # title = paste0("Outcome: ",d %>% pull(outcome) %>% unique())
+          subtitle = paste0("After adjusting for: ", unique(.$confounder))
+          ,title = paste0("Modeling (", unique(.$outcome), ") from  ... ",
+                          " with a ", unique(.$distribution), " distribution"
+          )
+          
+          ,x = "Percent of variabilty in the outcome explained by predictor(s)"
+        )  
+    }
+
+# ----- plot-complex-scan ----------------l
+
+plot_complex_scan <- function(d){
+  
+  confounder_text <- unique(.$confounder)
+  outcome_text <- unique(.$confounder)
+  distribution_text <- unique(.$confounder)
+  
+  ggplot(.,aes(y= fct_reorder(predictor,rsq),x = rsq ))+
+    geom_segment(aes(x=0,xend=rsq,yend=predictor))+
+    geom_point()+
+    geom_point(aes(x=rsq_change),color="red")+
+    geom_segment(aes(x=0,xend=rsq,yend=predictor))+
+    scale_x_continuous(labels = scales::percent_format())+
+    labs(
+      # title = paste0("Outcome: ",d %>% pull(outcome) %>% unique())
+      subtitle = paste0("After adjusting for: ", unique(.$confounder))
+      ,title = paste0("Modeling (", unique(.$outcome), ") from  ... ",
+                      " with a ", unique(.$distribution), " distribution"
+      )
+      
+      ,x = "Percent of variabilty in the outcome explained by predictor(s)"
+    )
+  
+}
+
+
 # ---- model-graph-testers-------------
 
 # developing function to print a faceted scatter y=criterion
