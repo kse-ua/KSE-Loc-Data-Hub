@@ -34,7 +34,7 @@ base::source("./scripts/common-functions.R")             # basics
 base::source("./scripts/graphing/graph-presets.R")       # font size, colors etc
 base::source("./scripts/operational-functions.R")        # quick specific functions
 base::source("./scripts/binary-categorical-functions.R") # graphing and modeling
-
+source("./analysis/survey-prep-model/custom-model-functions.R") # plots
 # ---- declare-globals ---------------------------------------------------------
 # printed figures will go here:
 prints_folder <- paste0("./analysis/survey-prep-model/prints")
@@ -502,33 +502,105 @@ d %>%
         )  
     }
 
-# ----- plot-complex-scan ----------------l
-
-plot_complex_scan <- function(d){
+# ----- plot-complex-scan ----------------
+source("./analysis/survey-prep-model/custom-model-functions.R")
+plot_complex_scan <- function(d_in){
   
-  confounder_text <- unique(.$confounder)
-  outcome_text <- unique(.$confounder)
-  distribution_text <- unique(.$confounder)
-  
-  ggplot(.,aes(y= fct_reorder(predictor,rsq),x = rsq ))+
-    geom_segment(aes(x=0,xend=rsq,yend=predictor))+
-    geom_point()+
-    geom_point(aes(x=rsq_change),color="red")+
-    geom_segment(aes(x=0,xend=rsq,yend=predictor))+
+  confounder_text <- unique(d_in$confounder)
+  outcome_text <- unique(d_in$outcome)
+  distribution_text <- str_to_title(unique(d_in$distribution))
+  point_size <- 2
+  # browser()
+  g_out <- 
+    {d_in %>% 
+      mutate(
+        model_sign_05 = model_pval <= .05
+        ,model_reduced_sign_05 = model_reduced_pval <= .05
+      ) 
+    } %>% 
+    
+    ggplot(
+      .
+      ,aes(
+        y= fct_reorder(predictor,rsq)
+        # ,x = rsq
+        # ,color = model_sign_05, fill= model_sign_05
+        # ,shape = model_sign_05
+        ))+
+    
+    # REDUCED - predictive capacity of the REDUCED model (outcome ~ confounder(s))
+    geom_point(
+      aes(
+        x = rsq-rsq_change
+        ,shape = model_reduced_sign_05
+      )
+      ,size = point_size
+      # ,fill = "grey80"
+      # , color = "grey80"
+    )+
+    geom_segment(
+      aes(
+        x     = 0
+        ,xend = rsq-rsq_change,yend=predictor
+      )
+      ,linetype = "dotted"
+    )+
+    # FULL - predictive capacity of the FULL model  (outcome ~ explanatory + confounder)
+    geom_segment(
+      aes(
+        x     = rsq - rsq_change
+        ,xend = rsq
+        ,yend = predictor
+      )
+      ,linetype="solid"
+      ,linewidth=2
+      ,alpha =.2
+      )+
+    geom_point(
+      aes(
+       x      = rsq
+       ,shape = model_sign_05
+      )
+      ,size = point_size
+      )+
+    # adjustment
+    scale_shape_manual(values = c("TRUE"=16,"FALSE"=21))+
     scale_x_continuous(labels = scales::percent_format())+
     labs(
-      # title = paste0("Outcome: ",d %>% pull(outcome) %>% unique())
-      subtitle = paste0("After adjusting for: ", unique(.$confounder))
-      ,title = paste0("Modeling (", unique(.$outcome), ") from  ... ",
-                      " with a ", unique(.$distribution), " distribution"
+      subtitle = paste0("After adjusting for [", confounder_text,"]")
+      ,title = paste0("Modeling  [", outcome_text, "]  from  [ ... ] ",
+                      " with a ", distribution_text, " distribution"
       )
       
       ,x = "Percent of variabilty in the outcome explained by predictor(s)"
+      ,shape = "Model\nsignificant\nat .05 level"
+    )+
+    theme(
+      axis.text.y = element_text(size =10)
     )
-  
+  return(g_out)
 }
+# function study
+# d %>% plot_complex_scan()
 
 
+# ---- model-scan-narrative -----------------------------
+# 
+d <-
+  ds2_prep %>%
+  run_complex_scan(
+    dependent = "prep_score_feb"
+    ,depdist = "poisson"
+    # ,confounder = c("voluntary")
+    # ,explantory_continous = setdiff(predictor_vars_continuous_scaled,"time_before_24th_years")
+    ,explantory_continous = predictor_vars_continuous_scaled
+    ,explanatory_categorical = predictor_vars_categorical
+  )
+# d %>% filter(predictor %in% c("urban_pct","rda","idp_real_share")) %>%
+#   select(predictor,rsq:nobs)
+g <- d %>% plot_complex_scan()
+g
+g %>% quick_save("model-scan",w=8, h=8)
 # ---- model-graph-testers-------------
 
 # developing function to print a faceted scatter y=criterion

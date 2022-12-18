@@ -58,6 +58,7 @@ run_simple_scan <- function(
   # model %>% broom::augment()
   # model_reduced %>% broom::augment()
   
+
   # browser()
   # 4 - format and augment the table of coefficients
   # to separate variable name from variable value in the summary(model) table
@@ -122,37 +123,15 @@ run_simple_scan <- function(
   
   
   # 6 - MODEL FIT
-  model_fit <- model %>% get_model_fit(print=F)
+  model_fit         <- model %>% get_model_fit(print=F)
+  model_reduced_fit <- model_reduced %>% get_model_fit(print=F)
+  model_improvement <- model_fit$rsquare - model_reduced_fit$rsquare
+  model_improvement_pval <- (anova(model_reduced, model, test = "Chisq"))$`Pr(>Chi)`[2]
+ 
+  model_reduced_pval <- ifelse(
+    model_reduced_fit$pvalue %in% c(0L,1L),NA,model_reduced_fit$pvalue
+  )
   
-  model_imrovement <- 
-    ((model %>% get_model_fit(print=F))$rsquare) -
-    ((model_reduced %>% get_model_fit(print=F))$rsquare) 
-  # browser()
-  # LASTLY - assemble everything into a list object
-  # ls_out <- list() # create the shell for the object
-  # ls_out[["equation"]]  <- list(
-  #   "formula"      = eq_formula
-  #   ,"outcome"   = dependent
-  #   ,"predictor"   = explanatory[1]
-  #   ,"confounder"     = setdiff(explanatory,explanatory[1])
-  # )
-  # ls_out[["model"]]     <- model
-  # ls_out[["estimates"]] <- d_estimates
-  # ls_out[["model_fit"]] <- model_fit
-  # ls_out[["anova"]] <- (anova(model_reduced, model, test = "Chisq"))[,2] %>% pull(`Pr(>Chi)`)
-  # ls_out[["rsq_change"]] <- model_imrovement
-  # ls_out[["nobs"]] <- model %>% broom::glance() %>% pull(nobs)
-  # ls_out[["depdist"]] <- depdist
-  # # 
-  # # Final product
-  # 
-  # ls_out[["equation"]]  <- list(
-  #   "formula"      = eq_formula
-  #   ,"outcome"   = dependent
-  #   ,"predictor"   = explanatory[1]
-  #   ,"confounder"     = setdiff(explanatory,explanatory[1])
-  # )
-  # 
   d_out <- 
     list(
     "outcome"       = dependent
@@ -160,8 +139,9 @@ run_simple_scan <- function(
     ,"confounder"   = setdiff(explanatory,explanatory[1]) %>% paste0(collapse = " + ")
     ,"rsq"          = model_fit$rsquare # explanatory capacity of the full model
     ,"model_pval"   = model_fit$pvalue
-    ,"rsq_change"   = model_imrovement # gains in explanatory capacity due to predictor
-    ,"model_change_pval"   = (anova(model_reduced, model, test = "Chisq"))$`Pr(>Chi)`[2]
+    ,"rsq_change"   = model_improvement # gains in explanatory capacity due to predictor
+    ,"model_change_pval"   = model_improvement_pval # Full vs Reduced test
+    ,"model_reduced_pval" = model_reduced_pval
     ,"nobs"         = model %>% broom::glance() %>% pull(nobs)
     ,"distribution" = depdist
   ) %>% 
