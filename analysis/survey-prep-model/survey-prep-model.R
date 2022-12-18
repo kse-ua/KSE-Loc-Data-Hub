@@ -342,33 +342,31 @@ predictor_vars_continuous <- c(
   ,"sum_osbb_2020" # кількість ОСББ 
   ,"turnout_2020" # явка
   ,'square' # площа громади у кв.км
-  ,"age_head"
+  ,"age_head" # вік голови громади
   ,"time_before_24th" # коли сформувалась громада
 )
 
 predictor_vars_continuous_scaled <- c(
-  "income_own_per_capita_k"           
-  ,"income_total_per_capita_k"         
-  ,"income_tranfert_per_capita_k"      
-  ,"idp_registration_share"
-  ,"idp_real_share"
-  ,"idp_child_share"
-  ,'dfrr_executed'
+  "income_own_per_capita_k"     # весь дохід з податків (без видатків з держви) - заможність громади
+  ,"income_total_per_capita_k"  # свій доход + дотації, суммарний дохід
+  ,"income_tranfert_per_capita_k" # що надходить від держави, 
+  ,"idp_registration_share" # внутрішньо переміщені особи - кількість ВПО \ загальне населення до вторгнення
+  ,"idp_real_share" # corrected index above 
+  ,"idp_child_share" # відсоток ВПО дітей від популяціі громади до вторгнення
+  ,'dfrr_executed' # сума всіх проектів (скільки дали на розвиток громади - спец прокти), виграні інвестиційні проекти, на скільки г. залучила інвест кошти в рамках програми
   ,'passangers_2021'
-  ,'business_support_centers'
-  ,"travel_time"
-  ,"sum_osbb_2020"
-  ,"turnout_2020"
-  ,"age_head"
-
-    ,'square'
-  ,"n_settlements"
+  ,'business_support_centers' # кількість центрів
+  ,"n_settlements" #кількість населенних пунктів у громаді
+  ,"travel_time" # відстань до обласного центру
   ,"urban_pct"
-  ,"time_before_24th_years"
   ,"total_population_2022"
   ,"urban_population_2022"
+  ,"sum_osbb_2020" # кількість ОСББ 
+  ,"turnout_2020" # явка
+  ,'square' # площа громади у кв.км
+  ,"age_head" # вік голови громади
+  ,"time_before_24th_years" # коли сформувалась громада
 )
-
 # Categorical - for color # Valentyn, please add relevant predictors here
 predictor_vars_categorical <- c(
   "sex_head"
@@ -426,8 +424,56 @@ ds2_prep <-
 ds2_prep %>% glimpse(90)
 ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
 
-# ---- -------------
 
+# ----- simple-model-scan -----------------------
+# Goal: scan the bivariate relationship bw outcome and a set of predictors
+# to understand what has the strongest association
+
+source("./analysis/survey-prep-model/custom-model-functions.R")
+predictor_vars_continuous_scaled
+
+ls_temp <- list()
+# for(i in predictor_vars_continuous_scaled){
+for(i in predictor_vars_categorical){
+# source("./analysis/survey-prep-model/custom-model-functions.R")
+  model_i <- 
+    ds2_prep %>% 
+    run_simple_model(
+      dependent    = "prep_score_feb"
+      ,explanatory = c(i)
+      ,depdist     = "poisson"
+   )
+  
+  ls_temp[[model_i$equation$formula %>% deparse()]] <- 
+    list(
+      "outcome"     = model_i$equation$outcome
+      ,"predictor"  = model_i$equation$predictor 
+      ,"confounder"  = model_i$equation$confounder %>% paste0(collapse = " + ")
+      ,"rsq"       = model_i$model_fit$rsquare # explanatory capacity of the full model
+      ,"rsq_change" = model_i$rsq_change # gains in explanatory capacity due to predictor
+      ,"nobs"       = model_i$nobs
+      ,"distribution" = model_i$depdist
+    )
+  }
+d <- 
+  ls_temp %>% bind_rows()
+d
+
+d %>% 
+  ggplot(aes(y= fct_reorder(predictor,rsq),x = rsq ))+
+  geom_segment(aes(x=0,xend=rsq,yend=predictor))+
+  geom_point()+
+  geom_point(aes(x=rsq_change),color="red")+
+  geom_segment(aes(x=0,xend=rsq,yend=predictor))+
+  scale_x_continuous(labels = scales::percent_format())+
+  labs(
+    title = paste0("Outcome: ",d %>% pull(outcome) %>% unique())
+    ,subtitle = paste0("Adjusting for: ", d %>% pull(confounder) %>% unique())
+    ,x = "Percent of variabilty in the outcome explained by predictor(s)"
+  )
+# ---- model-graph-testers-------------
+
+# developing function to print a faceted scatter y=criterion
 d <- 
   ds2_prep %>% 
   pivot_longer(
@@ -812,6 +858,12 @@ for(i in predictor_vars_categorical){
 
 
 
+# ---- simple-model-scan --------------------
+# 1 - Distributions of outcomes and predictors (cont + cat)
+# 2 - Rsq of a simple model: outcome ~  p1 (+p(2...N)), where p2...N is an optional confounder
+# 3 -  Faceted scatter (x = p1...N, y = outcome, color = p1...N)
+# 3a - Faceted scatter (x = cont.predictor, y =outcome, color=cat.prdictor)
+# 3b - Faceted boxplot (x = cat.predictor, y =outcome, color=con.prdictor)
 
 
 
