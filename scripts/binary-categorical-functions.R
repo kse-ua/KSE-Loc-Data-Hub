@@ -203,12 +203,16 @@ run_contingency <- function(d,var1, var2){
 
 # ----- modeling-functions ---------------
 get_rsquared <- function(m){
+  (1 - (summary(m)$deviance/summary(m)$null.deviance))
+}
+
+print_rsquared <- function(m){
   cat("R-Squared, Proportion of Variance Explained = ",
       scales::percent((1 - (summary(m)$deviance/summary(m)$null.deviance)),accuracy = .01)
       , "\n")
 }
 
-get_model_fit <- function(m, print=T){
+get_model_fit <- function(m, print=F){
   mfit <- list(
     "chisquare" =  with(m, null.deviance - deviance)
     ,"df"       = with(m, df.null - df.residual)
