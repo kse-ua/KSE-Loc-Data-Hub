@@ -511,14 +511,24 @@ d <-
   # ds2_prep %>%
   ds1 %>%
   run_complex_scan(
-    dependent = 'idp_registration_number'
+    dependent = 'idp_registration_share'
     # dependent = 'prep_score_feb'
-    ,depdist = "poisson"
+    # ,depdist = "poisson"
+    ,depdist = "gaussian"
     # ,confounder = c("voluntary")
     # ,explantory_continous = setdiff(predictor_vars_continuous_scaled,"time_before_24th_years")
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
-    ,explanatory_categorical = predictor_vars_categorical
+    # ,explantory_continous = 'total_population_2022'
+    # ,explanatory_categorical = predictor_vars_categorical
   )
+
+m <- glm(data=ds1, idp_registration_share ~ region_en, family = 'gaussian')
+
+ds1$idp_registration_share
+broom::glance(m)
+get_model_fit(m)
+
+
 
 source("./analysis/survey-prep-model/custom-model-functions.R")
 g <- d %>% plot_complex_scan()
