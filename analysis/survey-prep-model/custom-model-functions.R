@@ -244,20 +244,27 @@ plot_complex_scan <- function(d_in){
           model_sign_05 = pval_full <= .05
           ,model_reduced_sign_05 = pval_reduced <= .05
           ,model_improvement_sign_05 = pval_improvement <= .05
-        ) 
+        ) %>% 
+        mutate(
+          across(
+            .cols=  c("model_sign_05", "model_reduced_sign_05","model_improvement_sign_05")
+            ,.fns = ~ factor(.,levels =c(TRUE,FALSE),labels=c("Yes","No"))
+          )
+        )
+      
     } %>% 
     
     ggplot(
       .
       ,aes(
-        y= fct_reorder(predictor,rsq_full)
+        y = fct_reorder(predictor,rsq_full)
       ))+
     
     # REDUCED - predictive capacity of the REDUCED model (outcome ~ confounder(s))
     geom_point(
       aes(
         x = rsq_full-rsq_improvement
-        ,shape = model_reduced_sign_05
+        ,shape = model_reduced_sign_05 #%>% factor(levels =c(TRUE,FALSE),labels=c("Yes","No"))
       )
       ,size = point_size
     )+
@@ -282,12 +289,13 @@ plot_complex_scan <- function(d_in){
     geom_point(
       aes(
         x      = rsq_full
-        ,shape = model_sign_05
+        ,shape = model_sign_05 #%>% factor(levels =c(TRUE,FALSE),labels=c("Yes","No"))
       )
       ,size = point_size
     )+
     # adjustment
-    scale_shape_manual(values = c("TRUE"=16,"FALSE"=21))+
+    # scale_shape_manual(values = c("TRUE"=16,"FALSE"=21),drop = FALSE)+
+    scale_shape_manual(values = c("Yes"=16,"No"=21),drop = FALSE)+
     scale_x_continuous(
       labels = scales::percent_format()
       # ,breaks = seq(0,100,2), minor_breaks = seq(0,100,1)
