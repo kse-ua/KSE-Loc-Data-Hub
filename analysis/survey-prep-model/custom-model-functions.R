@@ -281,6 +281,7 @@ plot_complex_scan <- function(d_in){
         x     = rsq_full - rsq_improvement
         ,xend = rsq_full
         ,yend = predictor
+        ,color = model_improvement_sign_05
       )
       ,linetype="solid"
       ,linewidth=2
@@ -296,6 +297,7 @@ plot_complex_scan <- function(d_in){
     # adjustment
     # scale_shape_manual(values = c("TRUE"=16,"FALSE"=21),drop = FALSE)+
     scale_shape_manual(values = c("Yes"=16,"No"=21),drop = FALSE)+
+    scale_color_manual(values = c("Yes"="tomato","No"="grey70"),drop = FALSE)+
     scale_x_continuous(
       labels = scales::percent_format()
       # ,breaks = seq(0,100,2), minor_breaks = seq(0,100,1)
@@ -307,6 +309,7 @@ plot_complex_scan <- function(d_in){
       )
       ,x = "Percent of variabilty in the outcome explained by predictor(s)"
       ,shape = "Model\nsignificant\nat .05 level"
+      ,color = "Improvement\nsignificant\nat .05 level"
     )+
     theme(
       axis.text.y = element_text(size =10)
