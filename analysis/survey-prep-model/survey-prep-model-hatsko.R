@@ -320,6 +320,18 @@ outcomes_vars <- c(
   "prep_score_feb"
   ,"prep_score_oct"
   ,"prep_score_combo"
+  ,"idp_registration_number" # внутрішньо переміщені особи - кількість ВПО
+  ,"idp_registration_share" # внутрішньо переміщені особи - кількість ВПО \ загальне населення до вторгнення
+  ,"idp_real_number" # corrected index above 
+  ,"idp_real_share" # corrected index above 
+  ,"idp_child_education" # кількість ВПО дітей
+  ,"idp_child_share" # відсоток ВПО дітей від популяціі громади до вторгнення
+  ,'created_jobs' # ordinal
+  ,'relocated_companies_text' # к-сть релокованих компаній
+  ,'international_projects' # к-сть проєктів з міжнародними донорами
+  ,'finance_school_shelters'
+  ,'no_school_days_coded'
+  ,'hromada_exp'
 )
 
 
@@ -328,9 +340,8 @@ predictor_vars_continuous <- c(
   "income_own_per_capita"     # весь дохід з податків (без видатків з держви) - заможність громади
   ,"income_total_per_capita"  # свій доход + дотації, суммарний дохід
   ,"income_tranfert_per_capita" # що надходить від держави, 
-  ,"idp_registration_share" # внутрішньо переміщені особи - кількість ВПО \ загальне населення до вторгнення
-  ,"idp_real_share" # corrected index above 
-  ,"idp_child_share" # відсоток ВПО дітей від популяціі громади до вторгнення
+  ,'own_income_prop_2021' # відсоток власних доходів у загальному доході
+  ,'transfert_prop_2021' # відсоток трансфертів у загальному доході
   ,'dfrr_executed' # сума всіх проектів (скільки дали на розвиток громади - спец прокти), виграні інвестиційні проекти, на скільки г. залучила інвест кошти в рамках програми
   ,'passangers_2021'
   ,'business_support_centers' # кількість центрів
@@ -352,7 +363,9 @@ predictor_vars_continuous <- c(
 predictor_vars_continuous_scaled <- c(
   "income_own_per_capita_k"           
   ,"income_total_per_capita_k"         
-  ,"income_tranfert_per_capita_k"      
+  ,"income_tranfert_per_capita_k"
+  ,'own_income_prop_2021' # відсоток власних доходів у загальному доході
+  ,'transfert_prop_2021' # відсоток трансфертів у загальному доході
   ,"idp_registration_share" # more of an outcome
   ,"idp_real_share" # more of an outcome
   ,"idp_child_share" # more of an outcome
@@ -378,7 +391,9 @@ predictor_vars_continuous_scaled <- c(
 predictor_vars_continuous_scaled_wo_na <- c(
   "income_own_per_capita_k"           
   ,"income_total_per_capita_k"         
-  ,"income_tranfert_per_capita_k"      
+  ,"income_tranfert_per_capita_k"
+  ,'own_income_prop_2021' # відсоток власних доходів у загальному доході
+  ,'transfert_prop_2021' # відсоток трансфертів у загальному доході
   # ,"idp_registration_share" # more of an outcome
   # ,"idp_real_share" # more of an outcome
   # ,"idp_child_share" # more of an outcome
@@ -526,6 +541,7 @@ make_plot_prepvs <- function(
     )
   g
 }  
+
 # To see how it works
 g <- 
   d %>% 
@@ -535,7 +551,7 @@ g <-
     ,yvar    = "prep_score_feb"
     ,fillvar = "country"
   )  
-g %>% quick_save("tester_1",w=16,h=9)
+g %>% quick_save("tester",w=16,h=9)
 
 
 # What hromada is outlier on total population?
@@ -567,7 +583,7 @@ g <-
   filter(hromada_code %ni% outliers) %>% 
   make_plot_prepvs(
     xvar     = "item_value"
-    ,yvar    = "prep_score_oct"
+    ,yvar    = "prep_score_feb"
     ,fillvar = "country"
   )  
 g %>% quick_save("tester2",w=16,h=9)
