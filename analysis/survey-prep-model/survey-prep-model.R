@@ -511,37 +511,36 @@ d <-
   # ds2_prep %>%
   ds1 %>%
   run_complex_scan(
-    dependent = 'idp_registration_share'
+    dependent = 'idp_registration_number'
     # dependent = 'prep_score_feb'
     # ,depdist = "poisson"
     ,depdist = "gaussian"
     # ,confounder = c("voluntary")
+    ,confounder = c("urban_pct")
     # ,explantory_continous = setdiff(predictor_vars_continuous_scaled,"time_before_24th_years")
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     # ,explantory_continous = 'total_population_2022'
-    # ,explanatory_categorical = predictor_vars_categorical
+    ,explanatory_categorical = predictor_vars_categorical
   )
-
-m <- glm(data=ds1, idp_registration_share ~ region_en, family = 'gaussian')
-
-ds1$idp_registration_share
-broom::glance(m)
-get_model_fit(m)
-
-
-
-source("./analysis/survey-prep-model/custom-model-functions.R")
+# source("./analysis/survey-prep-model/custom-model-functions.R")
 g <- d %>% plot_complex_scan()
-g <- g + scale_x_continuous(
-  labels = scales::percent_format()
-  ,breaks = seq(0,1,.02)
-  , minor_breaks = seq(0,1,.01)
-  ,limits = c(-.005,.11)
-)
-g %>% quick_save("model-scan-feb-voluntary-voluntary",w=8, h=8)
+# g <- g + scale_x_continuous(
+#   labels = scales::percent_format()
+#   ,breaks = seq(0,1,.02)
+#   , minor_breaks = seq(0,1,.01)
+#   ,limits = c(-.005,.11)
+# )
+g %>% quick_save("scan-tester",w=8, h=8)
 
 
-
+dm <- ds1 %>% 
+  diagnose_one_model(
+    dependent = 'idp_registration_number'
+    ,depdist = "poisson"
+    ,explanatory = "urban_pct"
+  )
+dm$model %>% broom::tidy()
+dm$graph
 # ---- model-graph-testers-------------
 
 # developing function to print a faceted scatter y=criterion
