@@ -125,7 +125,7 @@ run_complex_scan <- function(
   for(i in explantory_continous){
     # for(i in predictor_vars_categorical){
     ls_temp[[i]] <- 
-      ds2_prep %>% 
+      d_in %>% 
       run_simple_scan(
         dependent    = dependent
         ,explanatory = c(i,confounder) %>% na.omit() %>% as.character()
@@ -137,7 +137,7 @@ run_complex_scan <- function(
   
   for(i in predictor_vars_categorical){
     ls_temp[[i]] <- 
-      ds2_prep %>% 
+      d_in %>% 
       run_simple_scan(
         dependent    = dependent
         ,explanatory = c(i,confounder) %>% na.omit() %>% as.character()
