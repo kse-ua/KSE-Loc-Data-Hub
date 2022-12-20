@@ -244,6 +244,7 @@ plot_complex_scan <- function(d_in){
           model_sign_05 = pval_full <= .05
           ,model_reduced_sign_05 = pval_reduced <= .05
           ,model_improvement_sign_05 = pval_improvement <= .05
+          # ,predictor = paste0(predictor, " (",nobs,")")
           ,predictor = fct_reorder(predictor,rsq_full)
         ) %>% 
         mutate(
@@ -298,15 +299,16 @@ plot_complex_scan <- function(d_in){
     geom_text(
       aes(
         label = nobs
-        ,x = 0
+        # ,x = 0
+        ,x = -(max(rsq_full)/10) # hack for when terrain changes quickly
       )
       ,size = 3
       ,alpha = .3
-      ,nudge_x = -.05
+      # ,nudge_x = -.01
       # , data = . %>% distinct()
     )+
     # geom_text(aes(label="N"),x =0,nudge_x=-.05,nudge_y = 2)+
-    annotate("text",x=-.05,y=0, label = "N", )+
+    # annotate("text",x=-.03,y=0, label = "N", )+
     # adjustment
     # scale_shape_manual(values = c("TRUE"=16,"FALSE"=21),drop = FALSE)+
     scale_shape_manual(values = c("Yes"=16,"No"=21),drop = FALSE)+
@@ -314,11 +316,12 @@ plot_complex_scan <- function(d_in){
     scale_x_continuous(
       labels = scales::percent_format()
       # ,breaks = seq(0,100,2), minor_breaks = seq(0,100,1)
-      # ,expand = expansion(mult = c(.05,.05))
-      ,expand = expansion(add = c(.05,.05))
+      ,expand = expansion(mult = c(.08,.04))
+      # ,expand = expansion(add = c(.01,.01))
+      # ,limits = c(-.03,.50)
       )+
     scale_y_discrete(
-      expand = expansion(mult =  c(.05, .05))
+      expand = expansion(mult =  c(.05, .02))
     )+
     labs(
       subtitle = paste0("Adjusting for [", confounder_text,"] (Reduced model)")
@@ -335,6 +338,7 @@ plot_complex_scan <- function(d_in){
     )
   return(g_out)
 }
+
 ## Function study
 # d <-
 #   # ds1  %>%
