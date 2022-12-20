@@ -244,6 +244,7 @@ plot_complex_scan <- function(d_in){
           model_sign_05 = pval_full <= .05
           ,model_reduced_sign_05 = pval_reduced <= .05
           ,model_improvement_sign_05 = pval_improvement <= .05
+          ,predictor = fct_reorder(predictor,rsq_full)
         ) %>% 
         mutate(
           across(
@@ -253,13 +254,12 @@ plot_complex_scan <- function(d_in){
         )
       
     } %>% 
-    
     ggplot(
       .
       ,aes(
-        y = fct_reorder(predictor,rsq_full)
-      ))+
-    
+        y = predictor
+      )
+    )+
     # REDUCED - predictive capacity of the REDUCED model (outcome ~ confounder(s))
     geom_point(
       aes(
@@ -294,6 +294,19 @@ plot_complex_scan <- function(d_in){
       )
       ,size = point_size
     )+
+    # Sample size
+    geom_text(
+      aes(
+        label = nobs
+        ,x = 0
+      )
+      ,size = 3
+      ,alpha = .3
+      ,nudge_x = -.05
+      # , data = . %>% distinct()
+    )+
+    # geom_text(aes(label="N"),x =0,nudge_x=-.05,nudge_y = 2)+
+    annotate("text",x=-.05,y=0, label = "N", )+
     # adjustment
     # scale_shape_manual(values = c("TRUE"=16,"FALSE"=21),drop = FALSE)+
     scale_shape_manual(values = c("Yes"=16,"No"=21),drop = FALSE)+
@@ -301,15 +314,21 @@ plot_complex_scan <- function(d_in){
     scale_x_continuous(
       labels = scales::percent_format()
       # ,breaks = seq(0,100,2), minor_breaks = seq(0,100,1)
+      # ,expand = expansion(mult = c(.05,.05))
+      ,expand = expansion(add = c(.05,.05))
       )+
+    scale_y_discrete(
+      expand = expansion(mult =  c(.05, .05))
+    )+
     labs(
-      subtitle = paste0("After adjusting for [", confounder_text,"]")
+      subtitle = paste0("Adjusting for [", confounder_text,"] (Reduced model)")
       ,title = paste0("Modeling  [", outcome_text, "]  from  [ ... ] ",
                       " with a ", distribution_text, " distribution"
       )
       ,x = "Percent of variabilty in the outcome explained by predictor(s)"
       ,shape = "Model\nsignificant\nat .05 level"
       ,color = "Improvement\nsignificant\nat .05 level"
+      ,y=NULL
     )+
     theme(
       axis.text.y = element_text(size =10)
