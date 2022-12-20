@@ -303,23 +303,35 @@ ds1_prep_binary_factors <-
 #+ ----- vectors with predictors and outcomes ----------------------------------
 
 outcomes_vars <- c(
-  "prep_score_feb"
-  ,"prep_score_oct"
-  ,"prep_score_combo"
-  ,"idp_registration_number" # внутрішньо переміщені особи - кількість ВПО
+  # "prep_score_feb"
+  # ,"prep_score_oct"
+  # ,"prep_score_combo"
+  "idp_registration_number" # внутрішньо переміщені особи - кількість ВПО
   ,"idp_registration_share" # внутрішньо переміщені особи - кількість ВПО \ загальне населення до вторгнення
   ,"idp_real_number" # corrected index above 
   ,"idp_real_share" # corrected index above 
   ,"idp_child_education" # кількість ВПО дітей
   ,"idp_child_share" # відсоток ВПО дітей від популяціі громади до вторгнення
-  ,'created_jobs' # ordinal
   ,'relocated_companies_text' # к-сть релокованих компаній
   ,'international_projects' # к-сть проєктів з міжнародними донорами
-  ,'finance_school_shelters'
+  ,'finance_school_shelters_coded'
   ,'no_school_days_coded'
   ,'hromada_exp'
 )
 
+outcomes_vars_new <-  c(
+  "idp_registration_number" # внутрішньо переміщені особи - кількість ВПО
+  ,"idp_registration_share" # внутрішньо переміщені особи - кількість ВПО \ загальне населення до вторгнення
+  ,"idp_real_number" # corrected index above 
+  ,"idp_real_share" # corrected index above 
+  ,"idp_child_education" # кількість ВПО дітей
+  ,"idp_child_share" # відсоток ВПО дітей від популяціі громади до вторгнення
+  ,'relocated_companies_number' # к-сть релокованих компаній
+  ,'international_projects_number' # к-сть проєктів з міжнародними донорами
+  ,'finance_school_shelters_coded'
+  ,'no_school_days_number'
+  ,'hromada_exp_b'
+)
 
 # Continuous - good for spreading out # Valentyn, please add relevant predictors here
 predictor_vars_continuous <- c(
@@ -498,7 +510,7 @@ ds2_prep <-
 ds1 <- 
   ds0 %>% 
   select(hromada_code, all_of(predictor_vars), oblast_name_en, hromada_name, 
-         starts_with('international_projects')
+         all_of(outcomes_vars)
   ) %>% 
   # scaling 
   mutate(
@@ -507,8 +519,11 @@ ds1 <-
     ,income_tranfert_per_capita_k = income_tranfert_per_capita/1000
     ,time_before_24th_years = time_before_24th/365
     ,dfrr_executed_k = dfrr_executed/1000
-    # ,relocated_companies_number = as.numeric(relocated_companies_text)
+    ,relocated_companies_number = as.numeric(relocated_companies_text)
     ,international_projects_number = as.numeric(international_projects)
+    ,no_school_days_number = as.numeric(no_school_days_coded)
+    ,hromada_exp_b = ifelse(hromada_exp == 'yes', 1, 0)
+    ,
   )  %>% 
   # zero filling NAs
   mutate(
@@ -532,6 +547,10 @@ ds1 <-
   mutate(country = "Ukraine") 
 
 
+ds1 %>% select(all_of(outcomes_vars_new)) %>% explore::describe_all() %>%neat_DT()
+
+ds1 %>% select(all_of(outcomes_vars_new)) %>% GGally::ggpairs()
+hist(ds1$no_school_days_coded)
 #+ --------------- plot-linear-models-1 ----------------------------------------
 
 d <- 
