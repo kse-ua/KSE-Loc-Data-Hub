@@ -37,10 +37,12 @@ d <-
   ds2_prep %>%
   run_complex_scan(
     dependent = 'prep_score_feb'
-    ,depdist = "poisson"
+    # ,depdist = "poisson"
+    ,depdist = "gaussian"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     ,confounder = c("voluntary")
     # ,confounder = c("urban_pct")
+    , explanatory_categorical = predictor_vars_categorical
   )
 d
 d %>% plot_complex_scan()
