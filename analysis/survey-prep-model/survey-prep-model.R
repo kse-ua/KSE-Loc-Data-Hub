@@ -469,6 +469,7 @@ ds2_prep <-
     dfrr_executed_k_zeros = replace_na(dfrr_executed_k, 0)
     ,passengers_2021_zeros = replace_na(passangers_2021, 0)
     ,sum_osbb_2020_zeros = replace_na(sum_osbb_2020, 0)
+    ,city = factor(ifelse(type == 'міська', 1, 0))
   ) %>%
   mutate(country = "Ukraine") 
 
@@ -506,42 +507,45 @@ ds2_prep %>% glimpse(90)
 ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
 
 # ---- model-scan -----------------------------
-# 
+source("./analysis/survey-prep-model/custom-model-functions.R")
 d <-
   # ds2_prep %>%
   ds1 %>%
   run_complex_scan(
-    dependent = 'idp_registration_share'
+    dependent = 'income_own_per_capita'
+    # dependent = 'idp_registration_number'
+    # dependent = 'idp_registration_share'
     # dependent = 'prep_score_feb'
-    # ,depdist = "poisson"
-    ,depdist = "gaussian"
+    ,depdist = "poisson"
+    # ,depdist = "gaussian"
     # ,confounder = c("voluntary")
+    ,confounder = c("urban_pct")
     # ,explantory_continous = setdiff(predictor_vars_continuous_scaled,"time_before_24th_years")
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     # ,explantory_continous = 'total_population_2022'
-    # ,explanatory_categorical = predictor_vars_categorical
+    ,explanatory_categorical = predictor_vars_categorical
   )
-
-m <- glm(data=ds1, idp_registration_share ~ region_en, family = 'gaussian')
-
-ds1$idp_registration_share
-broom::glance(m)
-get_model_fit(m)
-
-
-
-source("./analysis/survey-prep-model/custom-model-functions.R")
+# source("./analysis/survey-prep-model/custom-model-functions.R")
 g <- d %>% plot_complex_scan()
-g <- g + scale_x_continuous(
-  labels = scales::percent_format()
-  ,breaks = seq(0,1,.02)
-  , minor_breaks = seq(0,1,.01)
-  ,limits = c(-.005,.11)
-)
-g %>% quick_save("model-scan-feb-voluntary-voluntary",w=8, h=8)
+# g <- g + scale_x_continuous(
+#   labels = scales::percent_format()
+#   ,breaks = seq(0,1,.02)
+#   , minor_breaks = seq(0,1,.01)
+#   ,limits = c(-.005,.11)
+# )
+g %>% quick_save("scan-tester",w=8, h=8)
 
 
-
+dm <- ds1 %>% 
+  diagnose_one_model(
+    dependent = 'idp_registration_number'
+    # dependent = 'idp_registration_share'
+    # ,depdist = "gaussian"
+    ,depdist = "poisson"
+    ,explanatory = "turnout_2020"
+  )
+dm$model %>% broom::tidy()
+dm$graph
 # ---- model-graph-testers-------------
 
 # developing function to print a faceted scatter y=criterion
@@ -675,8 +679,22 @@ fit1_gaussian <-
   )
 fit1_poisson <- 
   glm(
-    formula = prep_score_feb ~ income_own_per_capita_k + sex_head
-    ,data = ds2_prep
+    formula = idp_registration_number ~ sum_osbb_2020_zeros
+    ,data = ds1
+    ,family = "poisson"
+  )
+
+fit2_poisson <- 
+  glm(
+    formula = idp_registration_number ~ sum_osbb_2020_zeros + city + sum_osbb_2020_zeros*city
+    ,data = ds1
+    ,family = "poisson"
+  )
+
+fit3_poisson <- 
+  glm(
+    formula = idp_registration_number ~ sum_osbb_2020_zeros + region_en + sum_osbb_2020_zeros*region_en
+    ,data = ds1
     ,family = "poisson"
   )
 
@@ -688,13 +706,18 @@ fit1_gaussian %>% broom::augment() # add predicted values
 
 fit1_poisson %>% broom::glance() # model properties
 fit1_poisson %>% broom::tidy() # coefficients
+fit2_poisson %>% broom::tidy() # coefficients
+fit3_poisson %>% broom::tidy() # coefficients
+
 fit1_poisson %>% broom::augment() # add predicted values
 
 fit1_gaussian %>% jtools::plot_summs()
 fit1_poisson %>% jtools::plot_summs()
 
-jtools::plot_summs(fit1_gaussian, fit1_poisson)
+jtools::plot_summs(fit1_poisson, fit3_poisson)
 
+car::vif(fit2_poisson)
+car::vif(fit3_poisson)
 
 # Resources for handling modeling objects
 # jtools vignette - https://cran.r-project.org/web/packages/jtools/vignettes/summ.html

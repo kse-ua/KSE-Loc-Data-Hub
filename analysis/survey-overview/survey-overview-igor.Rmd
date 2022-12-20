@@ -780,6 +780,48 @@ d %>%
 ```
 
 ```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(
+    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
+                                                             special_fund_relocation=="yes"~1)
+  ) %>% 
+  ggplot(aes(x = prep_count, y = `Special fund's expenditures were relocated`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between preparation and special fund realocation for non-combat hromadas') +
+  xlab("counted preparations"))
+```
+
+```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(
+    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
+                                                             special_fund_relocation=="yes"~1)
+  ) %>% 
+  ggplot(aes(x = urban_pct, y = `Special fund's expenditures were relocated`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between urbanisation and special fund realocation for non-combat hromadas') +
+  xlab("share of urban population"))
+```
+
+```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(
+    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
+                                                             special_fund_relocation=="yes"~1)
+  ) %>% 
+  ggplot(aes(x = own_income_prop_2021, y = `Special fund's expenditures were relocated`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between financial autonomy and special fund realocation for non-combat hromadas') +
+  xlab("share of own revenue in total budget in 2021"))
+```
+
+```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
 ds0 %>% 
   filter(special_fund_relocation == "yes") %>% 
   select(hromada_name, `special_fund_relocation_needs/state_functions`:`special_fund_relocation_needs/healthcare`) %>% 
@@ -834,6 +876,31 @@ ds0 %>%
            , alpha = .5
            ,data =
   )
+```
+
+```{r class.source="fold-hide"}
+ds0 %>% 
+  mutate(relocated_companies = as.numeric(relocated_companies_text)) %>% 
+  filter(relocated_companies>0) %>%
+    ggplot(aes(y = relocated_companies, x = own_income_prop_2021 )) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between financial autonomy and business relocation inflow') +
+  xlab("share of own revenue in total budget in 2021")
+  
+```
+
+```{r class.source="fold-hide"}
+ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(relocated_companies = as.numeric(relocated_companies_text)) %>% 
+  filter(relocated_companies>0) %>%
+    ggplot(aes(y = relocated_companies, x = prep_count )) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between preparations and business relocation inflow')
+  
 ```
 
 ```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
