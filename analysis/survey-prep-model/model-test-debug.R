@@ -6,7 +6,7 @@ m <-
   ds1 %>%
   run_simple_model(
     dependent     = 'idp_registration_number'
-    ,explanatory  = "transfert_prop_2021" # enter only one
+    ,explanatory  = c("sum_osbb_2020_zeros",'city') # enter only one
     ,depdist      = "poisson"
     # ,confounder   = "sex_head"   # no confounders by default
   )
@@ -33,18 +33,18 @@ d
 # run multiple models, separating continuous and categorical predictors
 # source("./analysis/survey-prep-model/custom-model-functions.R") # for testing adjustments
 d <-
-  # ds1 %>%
-  ds2_prep %>%
+  ds1 %>%
+  # ds2_prep %>%
   run_complex_scan(
-    dependent = 'prep_score_feb'
+    dependent = 'idp_registration_number'
     # ,depdist = "poisson"
-    ,depdist = "gaussian"
+    ,depdist = "poisson"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
-    ,confounder = c("voluntary")
+    ,confounder = c("region_en")
     # ,confounder = c("urban_pct")
     , explanatory_categorical = predictor_vars_categorical
   )
-d
+d %>% neat_DT()
 d %>% plot_complex_scan()
 
 
@@ -53,11 +53,11 @@ d <-
   run_complex_scan(
     dependent = 'idp_registration_number'
     ,depdist = "poisson"
-    ,explantory_continous = c("sum_osbb_2020","dfrr_executed","passangers_2021")
-    ,confounder = c("urban_pct")
+    ,explantory_continous = c("sum_osbb_2020")
+    ,confounder = c("city")
     # ,confounder = c("voluntary")
   )
-d
+d %>% neat_DT()
 d %>% plot_complex_scan()
 
 # ----- one-model-diagnose ----------------
