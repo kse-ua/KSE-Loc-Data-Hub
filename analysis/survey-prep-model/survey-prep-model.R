@@ -506,15 +506,17 @@ ds2_prep %>% glimpse(90)
 ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
 
 # ---- model-scan -----------------------------
-# 
+source("./analysis/survey-prep-model/custom-model-functions.R")
 d <-
   # ds2_prep %>%
   ds1 %>%
   run_complex_scan(
-    dependent = 'idp_registration_number'
+    dependent = 'income_own_per_capita'
+    # dependent = 'idp_registration_number'
+    # dependent = 'idp_registration_share'
     # dependent = 'prep_score_feb'
-    # ,depdist = "poisson"
-    ,depdist = "gaussian"
+    ,depdist = "poisson"
+    # ,depdist = "gaussian"
     # ,confounder = c("voluntary")
     ,confounder = c("urban_pct")
     # ,explantory_continous = setdiff(predictor_vars_continuous_scaled,"time_before_24th_years")
@@ -536,8 +538,10 @@ g %>% quick_save("scan-tester",w=8, h=8)
 dm <- ds1 %>% 
   diagnose_one_model(
     dependent = 'idp_registration_number'
+    # dependent = 'idp_registration_share'
+    # ,depdist = "gaussian"
     ,depdist = "poisson"
-    ,explanatory = "urban_pct"
+    ,explanatory = "turnout_2020"
   )
 dm$model %>% broom::tidy()
 dm$graph
