@@ -469,6 +469,7 @@ ds2_prep <-
     dfrr_executed_k_zeros = replace_na(dfrr_executed_k, 0)
     ,passengers_2021_zeros = replace_na(passangers_2021, 0)
     ,sum_osbb_2020_zeros = replace_na(sum_osbb_2020, 0)
+    ,city = factor(ifelse(type == 'міська', 1, 0))
   ) %>%
   mutate(country = "Ukraine") 
 
@@ -678,8 +679,22 @@ fit1_gaussian <-
   )
 fit1_poisson <- 
   glm(
-    formula = prep_score_feb ~ income_own_per_capita_k + sex_head
-    ,data = ds2_prep
+    formula = idp_registration_number ~ sum_osbb_2020_zeros
+    ,data = ds1
+    ,family = "poisson"
+  )
+
+fit2_poisson <- 
+  glm(
+    formula = idp_registration_number ~ sum_osbb_2020_zeros + city + sum_osbb_2020_zeros*city
+    ,data = ds1
+    ,family = "poisson"
+  )
+
+fit3_poisson <- 
+  glm(
+    formula = idp_registration_number ~ sum_osbb_2020_zeros + region_en + sum_osbb_2020_zeros*region_en
+    ,data = ds1
     ,family = "poisson"
   )
 
@@ -691,13 +706,18 @@ fit1_gaussian %>% broom::augment() # add predicted values
 
 fit1_poisson %>% broom::glance() # model properties
 fit1_poisson %>% broom::tidy() # coefficients
+fit2_poisson %>% broom::tidy() # coefficients
+fit3_poisson %>% broom::tidy() # coefficients
+
 fit1_poisson %>% broom::augment() # add predicted values
 
 fit1_gaussian %>% jtools::plot_summs()
 fit1_poisson %>% jtools::plot_summs()
 
-jtools::plot_summs(fit1_gaussian, fit1_poisson)
+jtools::plot_summs(fit1_poisson, fit3_poisson)
 
+car::vif(fit2_poisson)
+car::vif(fit3_poisson)
 
 # Resources for handling modeling objects
 # jtools vignette - https://cran.r-project.org/web/packages/jtools/vignettes/summ.html
