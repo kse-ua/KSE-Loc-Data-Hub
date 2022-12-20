@@ -59,7 +59,8 @@ d <-
   ds1 %>%
   run_complex_scan(
     dependent = 'international_projects_number'
-    ,depdist = "Nbinom"
+    # ,depdist = "quasipoisson"
+    ,depdist = "poisson"
     # ,depdist = "gaussian"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     # ,confounder = c("city")
