@@ -551,6 +551,13 @@ ds1 %>% select(all_of(outcomes_vars_new)) %>% explore::describe_all() %>%neat_DT
 
 ds1 %>% select(all_of(outcomes_vars_new)) %>% GGally::ggpairs()
 hist(ds1$no_school_days_coded)
+ds1 %>% sapply(outcomes_vars_new, plot)
+
+par(mfrow = c(4, 3))
+
+lapply(ds1[outcomes_vars_new], FUN=hist)
+
+ggplot(reshape2::melt(ds1[outcomes_vars_new]),aes(x=value)) + geom_histogram() + facet_wrap(~variable, scales = 'free')
 #+ --------------- plot-linear-models-1 ----------------------------------------
 
 d <- 
