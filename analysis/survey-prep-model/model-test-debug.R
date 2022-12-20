@@ -33,29 +33,38 @@ d
 # run multiple models, separating continuous and categorical predictors
 # source("./analysis/survey-prep-model/custom-model-functions.R") # for testing adjustments
 d <-
-  ds1 %>%
-  # ds2_prep %>%
+  # ds1 %>%
+  ds2_prep %>%
   run_complex_scan(
-    dependent = 'idp_registration_number'
+    dependent = 'prep_score_oct'
+    ,depdist = "gaussian"
     # ,depdist = "poisson"
-    ,depdist = "poisson"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
-    ,confounder = c("region_en")
+    # ,confounder = c("region_en")
     # ,confounder = c("urban_pct")
-    , explanatory_categorical = predictor_vars_categorical
+    , explanatory_categorical = predictor_vars_categorical_new
   )
 d %>% neat_DT()
 d %>% plot_complex_scan()
+
+hist(ds1$international_projects_number)
+
+x <- ds1 %>% select(international_projects_number) %>% filter(!is.na(international_projects_number)) %>% pull()
+fitdistrplus::descdist(x, discrete = TRUE)
+normal_dist <- fitdistrplus::fitdist(x, distr = "NBinom")
+plot(normal_dist)
 
 
 d <-
   ds1 %>%
   run_complex_scan(
-    dependent = 'idp_registration_number'
-    ,depdist = "poisson"
-    ,explantory_continous = c("sum_osbb_2020")
-    ,confounder = c("city")
+    dependent = 'international_projects_number'
+    ,depdist = "Nbinom"
+    # ,depdist = "gaussian"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    # ,confounder = c("city")
     # ,confounder = c("voluntary")
+    , explanatory_categorical = predictor_vars_categorical_new
   )
 d %>% neat_DT()
 d %>% plot_complex_scan()
