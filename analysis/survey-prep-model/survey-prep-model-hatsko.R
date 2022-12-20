@@ -354,7 +354,7 @@ predictor_vars_continuous_scaled <- c(
   ,'own_income_prop_2021' # відсоток власних доходів у загальному доході
   ,'transfert_prop_2021' # відсоток трансфертів у загальному доході
   ,'passangers_2021'
-  ,'business_support_centers' # кількість центрів
+  # ,'business_support_centers' # кількість центрів
   ,"n_settlements" #кількість населенних пунктів у громаді
   ,"travel_time" # відстань до обласного центру
   ,"urban_pct"
@@ -366,8 +366,8 @@ predictor_vars_continuous_scaled <- c(
   ,"age_head" # вік голови громади
   ,"time_before_24th_years" # коли сформувалась громада
   ,'edem_total' # cкільки інструментів електрон.демографіі залучену у громаді
-  ,'youth_centers'
-  ,'youth_councils'
+  # ,'youth_centers'
+  # ,'youth_councils'
 )
 
 # Continuous variables with filled by 0 NAs
@@ -382,7 +382,7 @@ predictor_vars_continuous_scaled_wo_na <- c(
   # ,"idp_child_share" # more of an outcome
   ,'dfrr_executed_k_zeros'
   ,'passengers_2021_zeros'
-  ,'business_support_centers'
+  # ,'business_support_centers'
   ,"travel_time"
   ,"sum_osbb_2020_zeros"
   ,"turnout_2020"
@@ -394,11 +394,11 @@ predictor_vars_continuous_scaled_wo_na <- c(
   ,"total_population_2022"
   ,"urban_population_2022"
   ,'edem_total' # cкільки інструментів електрон.демографіі залучену у громаді
-  ,'youth_centers' # к-сть молодіжних центрів
-  ,'youth_councils' # к-сть молодіжних рад
+  # ,'youth_centers' # к-сть молодіжних центрів
+  # ,'youth_councils' # к-сть молодіжних рад
 )
 
-# Categorical - for color # Valentyn, please add relevant predictors here
+# Categorical - for color
 predictor_vars_categorical <- c(
   "sex_head"
   ,"education_head"
@@ -420,6 +420,35 @@ predictor_vars_categorical <- c(
   ,'edem_participatory_budget'# binary from above
   ,'edem_open_hromada' # binary from above
   # ,'city'
+  # ,'youth_centers_b' # наявність молодіжних центрів
+  # ,'youth_councils_b' # наявність молодіжних рад
+  # ,'business_support_centers_b' # наявність центру підтримки бізнесу
+  )
+
+predictor_vars_categorical_new <- c(
+  "sex_head"
+  ,"education_head"
+  ,"type"
+  ,"voluntary"
+  ,"region_en"
+  ,'incumbent'
+  # ,'rda' # too small variation
+  ,'not_from_here'
+  # ,'enterpreuner' # too small variation
+  # ,'unemployed' # too small variation
+  ,'polit_work'
+  ,'party_national_winner'
+  ,'no_party'
+  ,'war_zone_27_04_2022'
+  ,'train_station'
+  ,'edem_petitions' # binary from above
+  ,'edem_consultations'# binary from above
+  ,'edem_participatory_budget'# binary from above
+  ,'edem_open_hromada' # binary from above
+  ,'city'
+  ,'youth_centers_b' # наявність молодіжних центрів
+  ,'youth_councils_b' # наявність молодіжних рад
+  ,'business_support_centers_b' # наявність центру підтримки бізнесу
 )
 
 predictor_vars <- c(
@@ -437,12 +466,6 @@ ds2_prep <-
     ds0 %>% 
       select(hromada_code,all_of(predictor_vars), oblast_name_en, hromada_name)
   ) %>% 
-  mutate(
-    across(
-      .cols = all_of(predictor_vars_categorical)
-      ,.fns = ~factor(.)
-    )
-  ) %>% 
   # scaling 
   mutate(
     income_own_per_capita_k = income_own_per_capita/1000
@@ -457,10 +480,57 @@ ds2_prep <-
     ,passengers_2021_zeros = replace_na(passangers_2021, 0)
     ,sum_osbb_2020_zeros = replace_na(sum_osbb_2020, 0)
   ) %>%
+  # making binary vars where not enough variation
+  mutate(
+    business_support_centers_b = ifelse(business_support_centers == 0, 0, 1)
+    ,youth_centers_b = ifelse(youth_centers == 0, 0, 1)
+    ,youth_councils_b =ifelse(youth_councils == 0, 0, 1)
+    ,city = factor(ifelse(type == 'міська', 1, 0))
+    ) %>%
+  mutate(
+    across(
+      .cols = all_of(predictor_vars_categorical_new)
+      ,.fns = ~factor(.)
+    )
+  ) %>% 
+  mutate(country = "Ukraine")
+
+ds1 <- 
+  ds0 %>% 
+  select(hromada_code, all_of(predictor_vars), oblast_name_en, hromada_name, 
+         starts_with('international_projects')
+  ) %>% 
+  # scaling 
+  mutate(
+    income_own_per_capita_k = income_own_per_capita/1000
+    ,income_total_per_capita_k = income_total_per_capita/1000
+    ,income_tranfert_per_capita_k = income_tranfert_per_capita/1000
+    ,time_before_24th_years = time_before_24th/365
+    ,dfrr_executed_k = dfrr_executed/1000
+    # ,relocated_companies_number = as.numeric(relocated_companies_text)
+    ,international_projects_number = as.numeric(international_projects)
+  )  %>% 
+  # zero filling NAs
+  mutate(
+    dfrr_executed_k_zeros = replace_na(dfrr_executed_k, 0)
+    ,passengers_2021_zeros = replace_na(passangers_2021, 0)
+    ,sum_osbb_2020_zeros = replace_na(sum_osbb_2020, 0)
+  ) %>%
+  # making binary vars where not enough variation
+  mutate(
+    business_support_centers_b = ifelse(business_support_centers == 0, 0, 1)
+    ,youth_centers_b = ifelse(youth_centers == 0, 0, 1)
+    ,youth_councils_b =ifelse(youth_councils == 0, 0, 1)
+    ,city = factor(ifelse(type == 'міська', 1, 0))
+  ) %>%
+  mutate(
+    across(
+      .cols = all_of(predictor_vars_categorical)
+      ,.fns = ~factor(.)
+    )
+  ) %>% 
   mutate(country = "Ukraine") 
 
-ds2_prep %>% glimpse(90)
-ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
 
 #+ --------------- plot-linear-models-1 ----------------------------------------
 
@@ -589,14 +659,14 @@ g %>% quick_save("tester3",w=16,h=9)
 
 fit1_poisson <- 
   glm(
-    formula = idp_registration_number ~ sum_osbb_2020_zeros
+    formula = idp_registration_number ~ urban_pct
     ,data = ds1
     ,family = "poisson"
   )
 
 fit2_poisson <- 
   glm(
-    formula = idp_registration_number ~ sum_osbb_2020_zeros + city + sum_osbb_2020_zeros*city
+    formula = idp_registration_number ~ urban_pct + sum_osbb_2020_zeros
     ,data = ds1
     ,family = "poisson"
   )
@@ -614,7 +684,10 @@ fit1_poisson %>% broom::tidy() # coefficients
 fit2_poisson %>% broom::tidy() # coefficients
 fit3_poisson %>% broom::tidy() # coefficients
 
-jtools::plot_summs(fit1_poisson, fit3_poisson) # plot coeficients
+summary(fit1_poisson)
+summary(fit2_poisson)
+
+jtools::plot_summs(fit1_poisson, fit2_poisson) # plot coeficients
 
 # Resources for handling modeling objects
 # jtools vignette - https://cran.r-project.org/web/packages/jtools/vignettes/summ.html
