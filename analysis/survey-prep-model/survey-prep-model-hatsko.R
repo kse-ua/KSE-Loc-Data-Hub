@@ -216,6 +216,7 @@ ds_general0 <-
 ds0 <- 
   ds_survey %>% 
   mutate(
+    idp_help_count              = rowSums(across(all_of(idp_help), na.rm = T)), # idp_help_count fix
     income_own_per_capita       = income_own_2021         / total_population_2022,
     income_total_per_capita     = income_total_2021       / total_population_2022,
     income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
@@ -228,6 +229,8 @@ ds0 <-
 
 ds0 %>% glimpse(80)
 # ---- inspect-data-0 ------------------------------------------------------------
+
+table(ds0$bussiness_stimules_none)
 
 # ---- tweak-data-1-prep ------------------------------------------------------------
 # compute total binary score (preparations are made at all, regardless of timing)
@@ -469,7 +472,7 @@ predictor_vars <- c(
 )
 
 
-#+ --------------- tweak-data-2 ------------------------------------------------
+#+ - tweak-data-2 --------------------------------------------------------------
 
 ds2_prep <- 
   ds1_prep %>% 
@@ -485,6 +488,7 @@ ds2_prep <-
     ,income_tranfert_per_capita_k = income_tranfert_per_capita/1000
     ,time_before_24th_years = time_before_24th/365
     ,dfrr_executed_k = dfrr_executed/1000
+    ,urban_perc_100 = urban_pct * 100
   )  %>% 
   # zero filling NAs
   mutate(
@@ -522,8 +526,7 @@ ds1 <-
     ,relocated_companies_number = as.numeric(relocated_companies_text)
     ,international_projects_number = as.numeric(international_projects)
     ,no_school_days_number = as.numeric(no_school_days_coded)
-    ,hromada_exp_b = ifelse(hromada_exp == 'yes', 1, 0)
-    ,
+    ,urban_perc_100 = urban_pct * 100
   )  %>% 
   # zero filling NAs
   mutate(
@@ -537,10 +540,11 @@ ds1 <-
     ,youth_centers_b = ifelse(youth_centers == 0, 0, 1)
     ,youth_councils_b =ifelse(youth_councils == 0, 0, 1)
     ,city = factor(ifelse(type == 'міська', 1, 0))
+    ,hromada_exp_b = ifelse(hromada_exp == 'yes', 1, 0)
   ) %>%
   mutate(
     across(
-      .cols = all_of(predictor_vars_categorical)
+      .cols = all_of(predictor_vars_categorical_new)
       ,.fns = ~factor(.)
     )
   ) %>% 
@@ -558,7 +562,7 @@ par(mfrow = c(4, 3))
 lapply(ds1[outcomes_vars_new], FUN=hist)
 
 ggplot(reshape2::melt(ds1[outcomes_vars_new]),aes(x=value)) + geom_histogram() + facet_wrap(~variable, scales = 'free')
-#+ --------------- plot-linear-models-1 ----------------------------------------
+#+ - plot-linear-models-1 ------------------------------------------------------
 
 d <- 
   ds2_prep %>% 
@@ -685,10 +689,104 @@ g %>% quick_save("tester3",w=16,h=9)
 
 fit1_poisson <- 
   glm(
-    formula = idp_registration_number ~ urban_pct
-    ,data = ds1
+    formula = prep_score_feb ~ urban_perc_100
+    ,data = ds2_prep
     ,family = "poisson"
   )
+
+fit1_nbinom <- 
+  MASS::glm.nb(
+    formula = international_projects_number ~ urban_perc_100
+    ,data = ds1
+    )
+
+##
+
+1 - pchisq(summary(fit1_nbinom)$deviance,
+           summary(fit1_nbinom)$df.residual
+)
+
+##
+
+fit1_logn <- 
+  glm(
+    formula = log(idp_registration_number) ~ urban_perc_100
+    ,data = ds1
+    ,family = "gaussian"
+  )
+# for zero-inflated model
+fit1_zi_pois <- pscl::zeroinfl(formula = international_projects_number ~ urban_perc_100 | 1
+               ,data = ds1
+               ,dist = "pois")
+
+
+fit1_zi_nbinom <- pscl::zeroinfl(formula = international_projects_number ~ urban_perc_100 | 1
+                                 ,data = ds1
+                                 ,dist = "negbin")
+
+summary(fit1_zi_nbinom)
+
+
+fit1_poisson %>% broom::glance() # model properties
+fit1_nbinom %>% broom::glance() # model properties
+fit1_logn %>% broom::glance() # model properties
+
+fit1_poisson %>% broom::tidy() # coefficients
+
+summary(fit1_poisson)
+summary(fit1_nbinom)
+summary(fit1_zi_pois)
+summary(fit1_zi_nbinom)
+
+lmtest::lrtest(fit1_zi_pois, fit1_zi_nbinom)
+
+#
+E2 <- resid(fit1_zi_nbinom, type = "pearson")
+N  <- nrow(ds1)
+p  <- length(coef(fit1_zi_nbinom))  
+sum(E2^2) / (N - p)
+
+#
+
+performance::check_overdispersion(fit1_poisson)
+
+hist(ds1$international_projects_number)
+
+x <- ds1 %>% select(international_projects_number) %>% filter(!is.na(international_projects_number)) %>% pull()
+x <- ds1 %>% select(idp_registration_number) %>% filter(!is.na(idp_registration_number)) %>% pull()
+x <- ds2_prep %>% select(prep_score_oct) %>% filter(!is.na(prep_score_oct)) %>% pull()
+
+fitur::fit_dist_addin()
+
+fitdistrplus::descdist(x, discrete = TRUE)
+normal_dist <- fitdistrplus::fitdist(x, distr = "norm")
+plot(normal_dist)
+normal_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+plot(normal_dist)
+
+###
+
+pois_data <-x
+lambda_est <- mean(pois_data)
+
+p0_tilde <- exp(-lambda_est)
+p0_tilde
+n0 <- sum(1*(!(x >0)))
+n <- length(x)
+
+# number of observtions 'expected' to be zero
+n*p0_tilde
+
+#now lets perform the JVDB score test 
+numerator <- (n0 -n*p0_tilde)^2
+denominator <- n*p0_tilde*(1-p0_tilde) - n*lambda_est*(p0_tilde^2)
+
+test_stat <- numerator/denominator
+
+pvalue <- pchisq(test_stat,df=1, ncp=0, lower.tail=FALSE)
+pvalue 
+
+###
 
 fit2_poisson <- 
   glm(
@@ -705,12 +803,10 @@ fit3_poisson <-
   )
 
 
-fit1_poisson %>% broom::glance() # model properties
-fit1_poisson %>% broom::tidy() # coefficients
+
 fit2_poisson %>% broom::tidy() # coefficients
 fit3_poisson %>% broom::tidy() # coefficients
 
-summary(fit1_poisson)
 summary(fit2_poisson)
 
 jtools::plot_summs(fit1_poisson, fit2_poisson) # plot coeficients
