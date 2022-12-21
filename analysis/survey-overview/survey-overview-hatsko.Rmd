@@ -1100,13 +1100,137 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
 
 # 10. Reconstructioin
 
+# small number of answers (38) - omit at this stage
+
 ## 10.1 Demage Evaluation
+
+```{r damage-1, fig.height=3, fig.width=9, class.source="fold-hide"}
+ds0 %>% 
+  count(region_en, is_damaged) %>% 
+  ggplot(aes(x = region_en, y = n, fill = is_damaged)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Were there any destructions in the hromada as a result of military actions?"
+    ,y = "Number of Hromadas", x = NULL, fill = NULL
+  ) +
+  theme_bw()
+
+```
+
+
 
 # 11. Current Challenges
 
+```{r school-shelters, fig.height=3, fig.width=9, class.source="fold-hide"}
+# ds0 %>% 
+#   count(region_en, is_damaged) %>% 
+#   ggplot(aes(x = region_en, y = n, fill = is_damaged)) +
+#   geom_bar(stat = "identity") +
+#   labs(
+#     title = "Were there any destructions in the community as a result of military actions?"
+#     ,y = "Number of Hromadas", x = NULL, fill = NULL
+#   ) +
+#   theme_bw()
+
+```
+
+#poor quality of answerts regarding days without schooling - consider to omit at all
+
 ## 11.1 Heating season
 
+```{r heating-1, fig.height=3, fig.width=9, class.source="fold-hide"}
+ds1_winter_prep %>% 
+  select(hromada_name, all_of(prep_for_winter)) %>% 
+  pivot_longer(
+    -hromada_name
+    ,names_to = "action"
+    ,values_to = "response"
+  ) %>% 
+  group_by(action) %>% 
+  summarise(n = sum(response, na.rm = T), .groups = "drop") %>% 
+  ggplot(aes(x = n, y = fct_reorder(action, n))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(
+    title = "Which of the following measures were implemented to prepare hromada for the heating season?"
+    ,y = NULL, x = NULL, fill = NULL
+  ) +
+  theme_bw()
+```
+
+```{r heating-2, fig.height=3, fig.width=9, class.source="fold-hide"}
+ds1_winter_prep %>% 
+  count(winter_prep_count) %>% 
+  filter(!is.na(winter_prep_count)) %>% 
+  ggplot(aes(x = factor(winter_prep_count), y = n)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(
+    title = "Number of measures implemented to prepare hromada for the heating season"
+    ,y = "Number of hromadas", x = "Number of measures", fill = NULL
+  ) +
+  xlab("winter_prep_count")
+```
+
+```{r heating-models, results = "asis", class.source="fold-hide"}
+
+m1_heating <-lm(data = ds1_winter_prep, 
+       winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 + 
+         type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m2_heating <-lm(data = ds1_winter_prep, 
+             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 + 
+               turnout_2020 + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m3_heating <-lm(data = ds1_winter_prep,
+             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda)
+
+m4_heating <-lm(data = ds1_winter_prep,
+             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda +
+               youth_councils + youth_centers + region_en * sum_osbb_2020)
+
+
+stargazer::stargazer(m1_heating, m2_heating, m3_heating, m4_heating, single.row = T, type = 'html')
+
+```
+
 ## 11.2 Problem Involvement
+```{r problem-models, fig.height=3, fig.width=9, class.source="fold-hide"}
+m1_problem <-glm(data = ds1_problem, 
+             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 + 
+             type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary,
+             family = "binomial")
+
+m2_problem  <-glm(data = ds1_problem, 
+             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 + 
+               turnout_2020 + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary,
+             family = "binomial")
+
+m3_problem  <-glm(data = ds1_problem,
+             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda,
+             family = "binomial")
+
+m4_problem  <-glm(data = ds1_problem,
+             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda +
+               youth_councils + youth_centers + region_en * sum_osbb_2020,
+             family = "binomial")
+
+stargazer::stargazer(m1_problem, m2_problem, m3_problem, m4_problem, single.row = T, type = 'html')
+
+
+```
 
 ```{r}
 meta_survey %>% filter(group=="preparation") %>% pull(name)
