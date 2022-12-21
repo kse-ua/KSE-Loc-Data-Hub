@@ -222,6 +222,27 @@ ds0 <-
     idp_child_share             = idp_child_education     / idp_registration_number
   ) 
 
+ds1_winter_prep <- ds0 %>% 
+  mutate(
+    winter_prep_count = rowSums(across(info_campaign:solid_fuel_boiler), na.rm = T)
+    ,winter_prep_count = case_when(
+      occupation =='not_occupied' | occupation == 'occupied_april' ~ winter_prep_count
+      ,TRUE ~ NA_real_
+    )
+  )
+
+ds1_problem <- ds0 %>% 
+  mutate(
+    hromada_exp = ifelse(hromada_exp == "yes", 1, 0)
+    ,problem_info_index = rowSums(across(contains("hromada_problem_info/")))
+    ,problem_consultation_index = rowSums(across(contains("hromada_problem_consultation/")))
+    ,problem_proposition_index = rowSums(across(contains("hromada_problem_proposition/")))
+    ,problem_system_index = rowSums(across(contains("hromada_problem_system/")))
+    ,problem_feedback_index = rowSums(across(contains("hromada_problem_feedback/")))
+    ,problem_execution_index = rowSums(across(contains("hromada_problem_execution/")))
+  )
+
+
 # ---- inspect-data-0 ------------------------------------------------------------
 
 # --- -----
