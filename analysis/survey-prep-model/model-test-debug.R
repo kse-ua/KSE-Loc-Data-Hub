@@ -36,9 +36,9 @@ d <-
   # ds1 %>%
   ds2_prep %>%
   run_complex_scan(
-    dependent = 'prep_score_oct'
-    ,depdist = "gaussian"
-    # ,depdist = "poisson"
+    dependent = 'prep_score_feb'
+    # ,depdist = "gaussian"
+    ,depdist = "poisson"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     # ,confounder = c("region_en")
     # ,confounder = c("urban_pct")
@@ -47,20 +47,12 @@ d <-
 d %>% neat_DT()
 d %>% plot_complex_scan()
 
-hist(ds1$international_projects_number)
-
-x <- ds1 %>% select(international_projects_number) %>% filter(!is.na(international_projects_number)) %>% pull()
-fitdistrplus::descdist(x, discrete = TRUE)
-normal_dist <- fitdistrplus::fitdist(x, distr = "NBinom")
-plot(normal_dist)
-
-
 d <-
   ds1 %>%
   run_complex_scan(
-    dependent = 'international_projects_number'
-    # ,depdist = "quasipoisson"
-    ,depdist = "poisson"
+    dependent = 'hromada_exp_b'
+    ,depdist = "logit"
+    # ,depdist = "nbinom"
     # ,depdist = "gaussian"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     # ,confounder = c("city")
