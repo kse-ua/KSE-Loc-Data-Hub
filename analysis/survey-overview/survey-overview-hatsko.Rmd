@@ -886,9 +886,74 @@ p
 ## 4.1 Transport Help
 
 # 5. Administrative Adaptation
+```{r info-score-distribution, fig.height=6, fig.width=4,class.source="fold-hide", cache=T}
+
+g <-  ds0 %>%
+  select(starts_with("percent_working")) %>% 
+  pivot_longer(cols = everything(),names_to = "measure",values_to="value") %>% 
+  mutate( 
+    measure = factor(measure,
+                        levels = c("percent_working_march","percent_working_now")
+                        ,labels = c("Pecent of stuff working in March 2022",
+                                    "Pecent of stuff working as of now")
+                        )
+  ) %>% 
+  ggplot(aes(x=value))+
+  geom_histogram(binwidth = 100, alpha = .5, breaks=c(10,20,30,40,50,60,70,80,90,100))+
+  facet_wrap("measure",ncol =5)
+g
+g %>%  quick_save("score-distribution",w=4, h=6)
+```
+
+```{r special-fund-1, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+   filter(!is.na(commun_between_hromadas)) %>%
+  mutate(
+    `Frequency of communication with other hromadas` = fct_recode(
+      commun_between_hromadas,
+       "Daily"      = "Daily"
+      ,"Several times a week"       = "Several times a week"
+      ,"Several times a month" = "Several times a month"
+      ,"Once a month and less" = "Once a month and less"
+      ,"No meetings/calls" = "No meetings/calls"
+    ) %>% factor( levels = c(
+       "Daily"           
+       ,"Several times a week"
+       ,"Several times a month"
+       ,"Once a month and less"
+       ,"No meetings/calls"
+    )
+    )
+  ) %>% 
+  make_bi_freq_graph("military_action","Frequency of communication with other hromadas") )+
+  labs(
+    title = "Frequency of communication with representatives of other hromadas"
+    ,x = NULL
+  )
+```
 
 # 6. Evacuation
-
+```{r special-fund-1, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+  mutate(
+    `Need of evacuation among hromadas` = fct_recode(
+      evacuation,
+       "No need"      = "no"
+      ,"Yes, and executed the evacuation"       = "yes_executed"
+      ,"Yes, but did not manage to execute the evacuation" = "yes_notexecuted"
+    ) %>% factor( levels = c(
+       "No need"           
+       ,"Yes, and executed the evacuation"
+       ,"Yes, but did not manage to execute the evacuation"
+    )
+    )
+  ) %>% 
+  make_bi_freq_graph("military_action","Need of evacuation among hromadas") )+
+  labs(
+    title = "Need of evacuation among hromadas"
+    ,x = NULL
+  )
+```
 # 7. IDP
 
 # 8. Economics
