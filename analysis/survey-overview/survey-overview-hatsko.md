@@ -781,6 +781,26 @@ ds0 <-
     idp_real_share              = idp_real_number         / total_population_2022,
     idp_child_share             = idp_child_education     / idp_registration_number
   ) 
+
+ds1_winter_prep <- ds0 %>% 
+  mutate(
+    winter_prep_count = rowSums(across(info_campaign:solid_fuel_boiler), na.rm = T)
+    ,winter_prep_count = case_when(
+      occupation =='not_occupied' | occupation == 'occupied_april' ~ winter_prep_count
+      ,TRUE ~ NA_real_
+    )
+  )
+
+ds1_problem <- ds0 %>% 
+  mutate(
+    hromada_exp = ifelse(hromada_exp == "yes", 1, 0)
+    ,problem_info_index = rowSums(across(contains("hromada_problem_info/")))
+    ,problem_consultation_index = rowSums(across(contains("hromada_problem_consultation/")))
+    ,problem_proposition_index = rowSums(across(contains("hromada_problem_proposition/")))
+    ,problem_system_index = rowSums(across(contains("hromada_problem_system/")))
+    ,problem_feedback_index = rowSums(across(contains("hromada_problem_feedback/")))
+    ,problem_execution_index = rowSums(across(contains("hromada_problem_execution/")))
+  )
 ```
 
 To make our analysis more nimble we create four alternative versions of `ds1` with Invasion Preparedness questions
@@ -1008,8 +1028,8 @@ ds0 %>% explore::describe_all() %>%neat_DT()
 ```
 
 ```{=html}
-<div id="htmlwidget-e3bc91ff7c80f00d2410" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-e3bc91ff7c80f00d2410">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_now_text","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military_text","transport_help_communal","transport_help_bought","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,0,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,83,46,46,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,26,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,0,0,0,0,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,0,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,18.8,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,0,0,0,0,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,106,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,56,23,32,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,38,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,1,22,11,6,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,null,null,null,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,627,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.01,0],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,null,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,null,null,null,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,627,13.72,4.29,3.39,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,0.1,0.05],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,null,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,null,null,null,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,627,29,10,5,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,0.63,0.33]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-3edf26e2eef70aeb0a1e" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-3edf26e2eef70aeb0a1e">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_now_text","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military_text","transport_help_communal","transport_help_bought","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,0,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,83,46,46,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,26,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,0,0,0,0,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,0,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,18.8,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,0,0,0,0,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,106,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,56,23,32,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,38,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,1,22,11,6,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,null,null,null,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,627,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.01,0],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,null,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,null,null,null,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,627,13.72,4.29,3.39,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,0.1,0.05],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,null,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,null,null,null,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,627,29,10,5,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,0.63,0.33]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
 ```
 
 # 0. Introduction
@@ -1073,12 +1093,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="draqneqxkt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="gcoxklkwun" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#draqneqxkt .gt_table {
+#gcoxklkwun .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -1103,7 +1123,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_heading {
+#gcoxklkwun .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1115,12 +1135,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_caption {
+#gcoxklkwun .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#draqneqxkt .gt_title {
+#gcoxklkwun .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1132,7 +1152,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#draqneqxkt .gt_subtitle {
+#gcoxklkwun .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1144,13 +1164,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#draqneqxkt .gt_bottom_border {
+#gcoxklkwun .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_col_headings {
+#gcoxklkwun .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1165,7 +1185,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_col_heading {
+#gcoxklkwun .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1185,7 +1205,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#draqneqxkt .gt_column_spanner_outer {
+#gcoxklkwun .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1197,15 +1217,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#draqneqxkt .gt_column_spanner_outer:first-child {
+#gcoxklkwun .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#draqneqxkt .gt_column_spanner_outer:last-child {
+#gcoxklkwun .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#draqneqxkt .gt_column_spanner {
+#gcoxklkwun .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1217,7 +1237,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#draqneqxkt .gt_group_heading {
+#gcoxklkwun .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1243,7 +1263,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#draqneqxkt .gt_empty_group_heading {
+#gcoxklkwun .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1258,15 +1278,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#draqneqxkt .gt_from_md > :first-child {
+#gcoxklkwun .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#draqneqxkt .gt_from_md > :last-child {
+#gcoxklkwun .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#draqneqxkt .gt_row {
+#gcoxklkwun .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1285,7 +1305,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#draqneqxkt .gt_stub {
+#gcoxklkwun .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1298,7 +1318,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#draqneqxkt .gt_stub_row_group {
+#gcoxklkwun .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1312,11 +1332,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#draqneqxkt .gt_row_group_first td {
+#gcoxklkwun .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#draqneqxkt .gt_summary_row {
+#gcoxklkwun .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1326,16 +1346,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#draqneqxkt .gt_first_summary_row {
+#gcoxklkwun .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_first_summary_row.thick {
+#gcoxklkwun .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#draqneqxkt .gt_last_summary_row {
+#gcoxklkwun .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1345,7 +1365,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_grand_summary_row {
+#gcoxklkwun .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1355,7 +1375,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#draqneqxkt .gt_first_grand_summary_row {
+#gcoxklkwun .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1365,11 +1385,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_striped {
+#gcoxklkwun .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#draqneqxkt .gt_table_body {
+#gcoxklkwun .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1378,7 +1398,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_footnotes {
+#gcoxklkwun .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1392,7 +1412,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_footnote {
+#gcoxklkwun .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -1401,7 +1421,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#draqneqxkt .gt_sourcenotes {
+#gcoxklkwun .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1415,7 +1435,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#draqneqxkt .gt_sourcenote {
+#gcoxklkwun .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1423,64 +1443,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#draqneqxkt .gt_left {
+#gcoxklkwun .gt_left {
   text-align: left;
 }
 
-#draqneqxkt .gt_center {
+#gcoxklkwun .gt_center {
   text-align: center;
 }
 
-#draqneqxkt .gt_right {
+#gcoxklkwun .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#draqneqxkt .gt_font_normal {
+#gcoxklkwun .gt_font_normal {
   font-weight: normal;
 }
 
-#draqneqxkt .gt_font_bold {
+#gcoxklkwun .gt_font_bold {
   font-weight: bold;
 }
 
-#draqneqxkt .gt_font_italic {
+#gcoxklkwun .gt_font_italic {
   font-style: italic;
 }
 
-#draqneqxkt .gt_super {
+#gcoxklkwun .gt_super {
   font-size: 65%;
 }
 
-#draqneqxkt .gt_footnote_marks {
+#gcoxklkwun .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#draqneqxkt .gt_asterisk {
+#gcoxklkwun .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#draqneqxkt .gt_indent_1 {
+#gcoxklkwun .gt_indent_1 {
   text-indent: 5px;
 }
 
-#draqneqxkt .gt_indent_2 {
+#gcoxklkwun .gt_indent_2 {
   text-indent: 10px;
 }
 
-#draqneqxkt .gt_indent_3 {
+#gcoxklkwun .gt_indent_3 {
   text-indent: 15px;
 }
 
-#draqneqxkt .gt_indent_4 {
+#gcoxklkwun .gt_indent_4 {
   text-indent: 20px;
 }
 
-#draqneqxkt .gt_indent_5 {
+#gcoxklkwun .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -2694,13 +2714,235 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
 
 # 10. Reconstructioin
 
+# small number of answers (38) - omit at this stage
+
 ## 10.1 Demage Evaluation
+
+
+```{.r .fold-hide}
+ds0 %>% 
+  count(region_en, is_damaged) %>% 
+  ggplot(aes(x = region_en, y = n, fill = is_damaged)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Were there any destructions in the hromada as a result of military actions?"
+    ,y = "Number of Hromadas", x = NULL, fill = NULL
+  ) +
+  theme_bw()
+```
+
+![](figure-png-iso/damage-1-1.png)<!-- -->
+
+
 
 # 11. Current Challenges
 
+
+```{.r .fold-hide}
+# ds0 %>% 
+#   count(region_en, is_damaged) %>% 
+#   ggplot(aes(x = region_en, y = n, fill = is_damaged)) +
+#   geom_bar(stat = "identity") +
+#   labs(
+#     title = "Were there any destructions in the community as a result of military actions?"
+#     ,y = "Number of Hromadas", x = NULL, fill = NULL
+#   ) +
+#   theme_bw()
+```
+
+#poor quality of answerts regarding days without schooling - consider to omit at all
+
 ## 11.1 Heating season
 
+
+```{.r .fold-hide}
+ds1_winter_prep %>% 
+  select(hromada_name, all_of(prep_for_winter)) %>% 
+  pivot_longer(
+    -hromada_name
+    ,names_to = "action"
+    ,values_to = "response"
+  ) %>% 
+  group_by(action) %>% 
+  summarise(n = sum(response, na.rm = T), .groups = "drop") %>% 
+  ggplot(aes(x = n, y = fct_reorder(action, n))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(
+    title = "Which of the following measures were implemented to prepare hromada for the heating season?"
+    ,y = NULL, x = NULL, fill = NULL
+  ) +
+  theme_bw()
+```
+
+![](figure-png-iso/heating-1-1.png)<!-- -->
+
+
+```{.r .fold-hide}
+ds1_winter_prep %>% 
+  count(winter_prep_count) %>% 
+  filter(!is.na(winter_prep_count)) %>% 
+  ggplot(aes(x = factor(winter_prep_count), y = n)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(
+    title = "Number of measures implemented to prepare hromada for the heating season"
+    ,y = "Number of hromadas", x = "Number of measures", fill = NULL
+  ) +
+  xlab("winter_prep_count")
+```
+
+![](figure-png-iso/heating-2-1.png)<!-- -->
+
+
+```{.r .fold-hide}
+m1_heating <-lm(data = ds1_winter_prep, 
+       winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 + 
+         type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m2_heating <-lm(data = ds1_winter_prep, 
+             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 + 
+               turnout_2020 + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m3_heating <-lm(data = ds1_winter_prep,
+             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda)
+
+m4_heating <-lm(data = ds1_winter_prep,
+             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda +
+               youth_councils + youth_centers + region_en * sum_osbb_2020)
+
+
+stargazer::stargazer(m1_heating, m2_heating, m3_heating, m4_heating, single.row = T, type = 'html')
+```
+
+
+<table style="text-align:center"><tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="4"><em>Dependent variable:</em></td></tr>
+<tr><td></td><td colspan="4" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="4">winter_prep_count</td></tr>
+<tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td><td>(3)</td><td>(4)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">log(income_total_2021)</td><td>-0.041 (0.608)</td><td>0.091 (0.609)</td><td>-0.155 (0.632)</td><td>1.041 (0.908)</td></tr>
+<tr><td style="text-align:left">own_income_prop_2021</td><td>-0.797 (1.098)</td><td>-1.270 (1.114)</td><td>-0.947 (1.152)</td><td>-2.188 (1.577)</td></tr>
+<tr><td style="text-align:left">turnout_2020</td><td></td><td>3.298<sup>*</sup> (1.724)</td><td>3.437<sup>*</sup> (1.771)</td><td>6.324<sup>***</sup> (2.251)</td></tr>
+<tr><td style="text-align:left">travel_time</td><td></td><td>0.002 (0.002)</td><td>0.003 (0.002)</td><td>0.005<sup>*</sup> (0.003)</td></tr>
+<tr><td style="text-align:left">typeселищна</td><td></td><td></td><td></td><td>-0.979 (0.724)</td></tr>
+<tr><td style="text-align:left">typeміська</td><td>-0.222 (0.318)</td><td>-0.243 (0.315)</td><td>-0.233 (0.325)</td><td>-1.489<sup>*</sup> (0.867)</td></tr>
+<tr><td style="text-align:left">typeсільська</td><td>0.115 (0.421)</td><td>0.251 (0.422)</td><td>0.174 (0.432)</td><td></td></tr>
+<tr><td style="text-align:left">square</td><td>0.0002 (0.001)</td><td>-0.0001 (0.001)</td><td>0.00000 (0.001)</td><td>0.0001 (0.001)</td></tr>
+<tr><td style="text-align:left">log(total_population_2022)</td><td>0.202 (0.619)</td><td>0.310 (0.619)</td><td>0.599 (0.642)</td><td>-0.240 (0.877)</td></tr>
+<tr><td style="text-align:left">urban_pct</td><td>-0.110 (0.771)</td><td>0.169 (0.774)</td><td>-0.004 (0.804)</td><td>0.514 (1.050)</td></tr>
+<tr><td style="text-align:left">n_settlements</td><td>0.001 (0.010)</td><td>0.003 (0.010)</td><td>0.0004 (0.010)</td><td>-0.010 (0.011)</td></tr>
+<tr><td style="text-align:left">region_enEast</td><td>0.206 (0.344)</td><td>0.427 (0.351)</td><td>0.442 (0.357)</td><td>-0.015 (0.648)</td></tr>
+<tr><td style="text-align:left">region_enNorth</td><td>0.372 (0.413)</td><td>0.322 (0.411)</td><td>0.298 (0.417)</td><td>1.285 (0.799)</td></tr>
+<tr><td style="text-align:left">region_enSouth</td><td>-0.521 (0.397)</td><td>-0.542 (0.396)</td><td>-0.548 (0.400)</td><td>0.508 (0.972)</td></tr>
+<tr><td style="text-align:left">region_enWest</td><td>0.176 (0.359)</td><td>0.022 (0.378)</td><td>0.072 (0.394)</td><td>-0.256 (0.503)</td></tr>
+<tr><td style="text-align:left">occupationoccupied_april</td><td>-0.296 (0.576)</td><td>-0.439 (0.572)</td><td>-0.448 (0.592)</td><td>-1.404 (1.283)</td></tr>
+<tr><td style="text-align:left">military_actioncombat_now</td><td>0.136 (0.710)</td><td>0.246 (0.701)</td><td>0.197 (0.708)</td><td>-0.709 (1.097)</td></tr>
+<tr><td style="text-align:left">military_actionno_combat</td><td>0.196 (0.612)</td><td>0.075 (0.605)</td><td>-0.006 (0.628)</td><td>-0.628 (1.525)</td></tr>
+<tr><td style="text-align:left">voluntary</td><td>-0.042 (0.209)</td><td>0.047 (0.213)</td><td>0.036 (0.217)</td><td>-0.151 (0.279)</td></tr>
+<tr><td style="text-align:left">sex_headmale</td><td></td><td></td><td>0.056 (0.230)</td><td>-0.052 (0.326)</td></tr>
+<tr><td style="text-align:left">age_head</td><td></td><td></td><td>-0.008 (0.012)</td><td>-0.011 (0.018)</td></tr>
+<tr><td style="text-align:left">education_headnon-higher</td><td></td><td></td><td>0.399 (0.418)</td><td>0.315 (0.546)</td></tr>
+<tr><td style="text-align:left">incumbent</td><td></td><td></td><td>0.191 (0.224)</td><td>0.087 (0.302)</td></tr>
+<tr><td style="text-align:left">rda</td><td></td><td></td><td>-0.489 (0.423)</td><td>0.073 (0.485)</td></tr>
+<tr><td style="text-align:left">youth_councils</td><td></td><td></td><td></td><td>-0.075 (0.488)</td></tr>
+<tr><td style="text-align:left">youth_centers</td><td></td><td></td><td></td><td>-0.103 (0.299)</td></tr>
+<tr><td style="text-align:left">sum_osbb_2020</td><td></td><td></td><td></td><td>0.009 (0.020)</td></tr>
+<tr><td style="text-align:left">region_enEast:sum_osbb_2020</td><td></td><td></td><td></td><td>0.027 (0.034)</td></tr>
+<tr><td style="text-align:left">region_enNorth:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.035 (0.024)</td></tr>
+<tr><td style="text-align:left">region_enSouth:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.211<sup>**</sup> (0.089)</td></tr>
+<tr><td style="text-align:left">region_enWest:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.006 (0.019)</td></tr>
+<tr><td style="text-align:left">Constant</td><td>2.215 (5.497)</td><td>-2.473 (5.852)</td><td>-0.619 (6.138)</td><td>-12.656 (8.927)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>130</td><td>129</td><td>129</td><td>72</td></tr>
+<tr><td style="text-align:left">R<sup>2</sup></td><td>0.089</td><td>0.136</td><td>0.168</td><td>0.546</td></tr>
+<tr><td style="text-align:left">Adjusted R<sup>2</sup></td><td>-0.040</td><td>-0.006</td><td>-0.014</td><td>0.213</td></tr>
+<tr><td style="text-align:left">Residual Std. Error</td><td>1.075 (df = 113)</td><td>1.059 (df = 110)</td><td>1.064 (df = 105)</td><td>0.916 (df = 41)</td></tr>
+<tr><td style="text-align:left">F Statistic</td><td>0.691 (df = 16; 113)</td><td>0.958 (df = 18; 110)</td><td>0.923 (df = 23; 105)</td><td>1.641<sup>*</sup> (df = 30; 41)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="4" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>
+
 ## 11.2 Problem Involvement
+
+```{.r .fold-hide}
+m1_problem <-glm(data = ds1_problem, 
+             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 + 
+             type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary,
+             family = "binomial")
+
+m2_problem  <-glm(data = ds1_problem, 
+             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 + 
+               turnout_2020 + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary,
+             family = "binomial")
+
+m3_problem  <-glm(data = ds1_problem,
+             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda,
+             family = "binomial")
+
+m4_problem  <-glm(data = ds1_problem,
+             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda +
+               youth_councils + youth_centers + region_en * sum_osbb_2020,
+             family = "binomial")
+
+stargazer::stargazer(m1_problem, m2_problem, m3_problem, m4_problem, single.row = T, type = 'html')
+```
+
+```
+
+<table style="text-align:center"><tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="4"><em>Dependent variable:</em></td></tr>
+<tr><td></td><td colspan="4" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="4">hromada_exp</td></tr>
+<tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td><td>(3)</td><td>(4)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">log(income_total_2021)</td><td>0.135 (1.503)</td><td>0.093 (1.517)</td><td>-0.736 (1.677)</td><td>-84.725 (692,099.900)</td></tr>
+<tr><td style="text-align:left">own_income_prop_2021</td><td>0.107 (2.818)</td><td>0.181 (2.838)</td><td>1.581 (2.970)</td><td>114.139 (730,084.900)</td></tr>
+<tr><td style="text-align:left">turnout_2020</td><td></td><td>-0.826 (4.510)</td><td>-2.146 (4.699)</td><td>135.893 (2,141,099.000)</td></tr>
+<tr><td style="text-align:left">travel_time</td><td></td><td>0.002 (0.005)</td><td>0.001 (0.005)</td><td>-0.343 (3,853.388)</td></tr>
+<tr><td style="text-align:left">typeселищна</td><td></td><td></td><td></td><td>-4.701 (819,133.200)</td></tr>
+<tr><td style="text-align:left">typeміська</td><td>-0.755 (0.889)</td><td>-0.845 (0.885)</td><td>-0.836 (0.949)</td><td>-27.317 (1,039,895.000)</td></tr>
+<tr><td style="text-align:left">typeсільська</td><td>-1.061 (1.127)</td><td>-1.019 (1.146)</td><td>-1.402 (1.230)</td><td></td></tr>
+<tr><td style="text-align:left">square</td><td>-0.003<sup>**</sup> (0.002)</td><td>-0.003<sup>**</sup> (0.002)</td><td>-0.003<sup>*</sup> (0.002)</td><td>-0.060 (265.870)</td></tr>
+<tr><td style="text-align:left">log(total_population_2022)</td><td>0.459 (1.513)</td><td>0.516 (1.557)</td><td>1.281 (1.709)</td><td>125.880 (495,023.100)</td></tr>
+<tr><td style="text-align:left">urban_pct</td><td>-0.679 (2.098)</td><td>-0.732 (2.123)</td><td>-1.165 (2.271)</td><td>7.480 (1,382,325.000)</td></tr>
+<tr><td style="text-align:left">n_settlements</td><td>0.048 (0.030)</td><td>0.054<sup>*</sup> (0.032)</td><td>0.050 (0.033)</td><td>0.270 (14,526.640)</td></tr>
+<tr><td style="text-align:left">region_enEast</td><td>1.519 (1.175)</td><td>1.595 (1.187)</td><td>1.294 (1.218)</td><td>29.804 (367,404.000)</td></tr>
+<tr><td style="text-align:left">region_enNorth</td><td>0.529 (1.207)</td><td>0.600 (1.224)</td><td>0.461 (1.263)</td><td>56.732 (691,508.000)</td></tr>
+<tr><td style="text-align:left">region_enSouth</td><td>0.383 (0.936)</td><td>0.486 (0.949)</td><td>0.395 (0.971)</td><td>-45.057 (371,854.300)</td></tr>
+<tr><td style="text-align:left">region_enWest</td><td>-0.103 (0.893)</td><td>0.062 (0.947)</td><td>0.187 (1.025)</td><td>32.596 (512,285.700)</td></tr>
+<tr><td style="text-align:left">occupationoccupied_april</td><td>-1.840 (1.633)</td><td>-1.811 (1.649)</td><td>-1.800 (1.712)</td><td>-25.166 (621,634.500)</td></tr>
+<tr><td style="text-align:left">occupationoccupied_august</td><td>-19.982 (3,956.181)</td><td>-20.257 (3,956.181)</td><td>-21.439 (6,522.639)</td><td></td></tr>
+<tr><td style="text-align:left">occupationoccupied_now</td><td>-1.855 (1.777)</td><td>-1.854 (1.803)</td><td>-1.905 (1.884)</td><td>-49.613 (460,278.900)</td></tr>
+<tr><td style="text-align:left">military_actioncombat_now</td><td>-16.271 (1,403.286)</td><td>-16.298 (1,402.541)</td><td>-17.289 (2,250.865)</td><td>-43.202 (606,589.200)</td></tr>
+<tr><td style="text-align:left">military_actionno_combat</td><td>-17.568 (1,403.286)</td><td>-17.583 (1,402.541)</td><td>-18.544 (2,250.864)</td><td>37.331 (652,535.300)</td></tr>
+<tr><td style="text-align:left">voluntary</td><td>0.614 (0.578)</td><td>0.691 (0.591)</td><td>0.901 (0.641)</td><td>42.242 (212,131.500)</td></tr>
+<tr><td style="text-align:left">sex_headmale</td><td></td><td></td><td>-0.026 (0.640)</td><td>-7.225 (289,236.300)</td></tr>
+<tr><td style="text-align:left">age_head</td><td></td><td></td><td>-0.036 (0.034)</td><td>-4.669 (29,066.870)</td></tr>
+<tr><td style="text-align:left">education_headnon-higher</td><td></td><td></td><td>17.630 (1,980.788)</td><td>15.497 (478,058.400)</td></tr>
+<tr><td style="text-align:left">incumbent</td><td></td><td></td><td>0.421 (0.592)</td><td>-34.180 (285,656.300)</td></tr>
+<tr><td style="text-align:left">rda</td><td></td><td></td><td>-0.308 (1.097)</td><td>-19.316 (352,081.200)</td></tr>
+<tr><td style="text-align:left">youth_councils</td><td></td><td></td><td></td><td>31.807 (358,561.700)</td></tr>
+<tr><td style="text-align:left">youth_centers</td><td></td><td></td><td></td><td>5.807 (252,011.000)</td></tr>
+<tr><td style="text-align:left">sum_osbb_2020</td><td></td><td></td><td></td><td>0.133 (9,351.328)</td></tr>
+<tr><td style="text-align:left">region_enEast:sum_osbb_2020</td><td></td><td></td><td></td><td>1.884 (20,336.010)</td></tr>
+<tr><td style="text-align:left">region_enNorth:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.734 (24,690.320)</td></tr>
+<tr><td style="text-align:left">region_enSouth:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.171 (10,036.550)</td></tr>
+<tr><td style="text-align:left">region_enWest:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.917 (9,813.355)</td></tr>
+<tr><td style="text-align:left">Constant</td><td>12.911 (1,403.351)</td><td>13.097 (1,402.612)</td><td>23.316 (2,250.921)</td><td>498.071 (7,397,994.000)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>137</td><td>136</td><td>136</td><td>75</td></tr>
+<tr><td style="text-align:left">Log Likelihood</td><td>-54.208</td><td>-53.722</td><td>-50.852</td><td>-0.000</td></tr>
+<tr><td style="text-align:left">Akaike Inf. Crit.</td><td>146.415</td><td>149.444</td><td>153.703</td><td>64.000</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="4" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>
+```
 
 
 ```r
@@ -2835,6 +3077,7 @@ For the sake of documentation and reproducibility, the current report was render
  sessioninfo     1.2.2   2021-12-06 [1] CRAN (R 4.2.2)
  shiny           1.7.3   2022-10-25 [1] CRAN (R 4.2.2)
  snakecase       0.11.0  2019-05-25 [1] CRAN (R 4.2.2)
+ stargazer       5.2.3   2022-03-04 [1] CRAN (R 4.2.0)
  stringi         1.7.8   2022-07-11 [1] CRAN (R 4.2.1)
  stringr       * 1.5.0   2022-12-02 [1] CRAN (R 4.2.2)
  survey        * 4.1-1   2021-07-19 [1] CRAN (R 4.2.2)
@@ -2870,4 +3113,4 @@ For the sake of documentation and reproducibility, the current report was render
 
 
 
-Report rendered by Valentyn Hatsko at 2022-12-21, 12:04 +0200 in 12 seconds.
+Report rendered by Valentyn Hatsko at 2022-12-21, 12:19 +0200 in 22 seconds.
