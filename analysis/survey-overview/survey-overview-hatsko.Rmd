@@ -893,6 +893,209 @@ p
 
 # 8. Economics
 
+```{r special-fund-1, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+  mutate(
+    `Special fund's expenditures were relocated` = fct_recode(
+      special_fund_relocation,
+       "Yes"      = "yes"
+      ,"No"       = "no"
+    ) %>% factor( levels = c(
+       "Yes"           
+       ,"No"     
+    )
+    )
+  ) %>% 
+  make_bi_freq_graph("military_action","Special fund's expenditures were relocated") )+
+  labs(
+    title = "Were budget expenditures from the special fund streamed to finance other, current needs?"
+    ,x = NULL
+  )
+```
+
+```{r special-fund-no-combat, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(
+    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
+                                                             special_fund_relocation=="yes"~1)
+  ) %>% 
+  ggplot(aes(x = prep_count, y = `Special fund's expenditures were relocated`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between preparation and special fund realocation for non-combat hromadas') +
+  xlab("counted preparations"))
+```
+
+```{r special-fund-urbanisation, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(
+    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
+                                                             special_fund_relocation=="yes"~1)
+  ) %>% 
+  ggplot(aes(x = urban_pct, y = `Special fund's expenditures were relocated`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between urbanisation and special fund realocation for non-combat hromadas') +
+  xlab("share of urban population"))
+```
+
+```{r special-fund-own-income, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(
+    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
+                                                             special_fund_relocation=="yes"~1)
+  ) %>% 
+  ggplot(aes(x = own_income_prop_2021, y = `Special fund's expenditures were relocated`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between financial autonomy and special fund realocation for non-combat hromadas') +
+  xlab("share of own revenue in total budget in 2021"))
+```
+
+```{r special-fund-sectors, fig.height=3, fig.width=9,class.source="fold-hide"}
+ds0 %>% 
+  filter(special_fund_relocation == "yes") %>% 
+  select(hromada_name, `special_fund_relocation_needs/state_functions`:`special_fund_relocation_needs/healthcare`) %>% 
+  pivot_longer(-c(hromada_name), names_to = "sector", values_to = "cut") %>% 
+  mutate(
+    sector = str_to_title(str_remove(sector, "sectors_"))
+  ) %>% 
+  group_by(sector) %>% 
+  summarise(`Number of Hromadas` = sum(cut), .groups = "drop") %>% 
+  filter(`Number of Hromadas` > 0)  %>% 
+ mutate(sector = case_when(sector=="Special_fund_relocation_needs/Defense"~"Defense",
+                           sector=="Special_fund_relocation_needs/Economic_activity"~"Economic Activity",
+                           sector=="Special_fund_relocation_needs/Education"~"Education",
+                           sector=="Special_fund_relocation_needs/Environment"~"Environment",
+                           sector=="Special_fund_relocation_needs/Healthcare"~"Healthcare",
+                           sector=="Special_fund_relocation_needs/Social_protection"~"Social Protection",
+                           sector=="Special_fund_relocation_needs/Spirit_development"~"Spirit Development",
+                           sector=="Special_fund_relocation_needs/State_functions"~"State Functions",
+                           sector=="Special_fund_relocation_needs/Utilities"~"Utilities",
+                           sector=="Special_fund_relocation_needs/Public_order"~"Public Order",
+                           TRUE~sector)
+ ) %>%
+  ggplot(aes(x = `Number of Hromadas`, y = fct_reorder(sector, `Number of Hromadas`))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  theme_bw()+
+  labs(
+    title = "Sectors for which the funds of the special fund were redistributed"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = "Sector"
+  )+
+  geom_col(position = position_stack()
+           , alpha = .5
+           ,data =
+  )
+```
+
+```{r relocated-bussiness, fig.height=3, fig.width=9, class.source="fold-hide"}
+ds0 %>% 
+  mutate(relocated_companies = as.numeric(relocated_companies_text)) %>%
+      group_by(region_en,  oblast_name_en ) %>% 
+      summarize(`Relocated companies` = sum(relocated_companies, na.rm = TRUE)) %>% 
+  filter(`Relocated companies`>0) %>%
+    ggplot(aes(x = `Relocated companies`, y = fct_reorder(oblast_name_en, `Relocated companies`))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  theme_bw()+
+  labs(
+    title = "Relocated businesses by destination region"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = "Oblast"
+  )+
+  geom_col(position = position_stack()
+           , alpha = .5
+           ,data =
+  )
+```
+
+```{r relocated-companies-own-income, class.source="fold-hide"}
+ds0 %>% 
+  mutate(relocated_companies = as.numeric(relocated_companies_text)) %>% 
+  filter(relocated_companies>0) %>%
+    ggplot(aes(y = relocated_companies, x = own_income_prop_2021 )) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between financial autonomy and business relocation inflow') +
+  xlab("share of own revenue in total budget in 2021")
+  
+```
+
+```{r relocated-companies-preparation, class.source="fold-hide"}
+ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(relocated_companies = as.numeric(relocated_companies_text)) %>% 
+  filter(relocated_companies>0) %>%
+    ggplot(aes(y = relocated_companies, x = prep_count )) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between preparations and business relocation inflow')
+  
+```
+
+```{r created-jobs, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+   mutate(
+    `Jobs created` = fct_recode(
+      created_jobs,
+       "Don't know" = "dk",
+      "0-50" = "0_50_jobs",
+      "51-100" = "51_100_jobs",
+      "101-250" = "101_250_jobs"
+    ) %>% factor( levels = c(
+       "Don't know"           
+       ,"0-50" ,
+       "51-100",
+       "101-250"
+    )
+    )
+  ) %>%
+   make_bi_freq_graph("Jobs created"))+
+  labs(
+    title = "How many jobs were created in the hromada thanks to the relocated enterprises?"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = NULL
+  )
+```
+
+```{r bussiness-stimules, fig.height=3, fig.width=9,class.source="fold-hide"}
+ds0 %>% filter(bussiness_stimules_none == 0) %>%
+  select(hromada_name, `bussiness_stimules/tax_benefits`:`bussiness_stimules/other`) %>% 
+  pivot_longer(-c(hromada_name), names_to = "type", values_to = "done") %>% 
+  mutate(
+    type = str_to_title(str_remove(type, "types_"))
+  ) %>% 
+  group_by(type) %>% 
+  summarise(`number of hromadas` = sum(done), .groups = "drop") %>% 
+  filter(`number of hromadas`>0) %>% 
+  mutate(type = case_when(type == "Bussiness_stimules/Education" ~ "Organized Educational Events",
+                          type == "Bussiness_stimules/Free_rooms" ~ "Provided Premises for Free",
+                          type == "Bussiness_stimules/Tax_benefits" ~ "Provided with Tax Benefits",
+                          type == "Bussiness_stimules/Other" ~ "Other Methods",
+  TRUE~type)
+  ) %>%
+  ggplot(aes(x = `number of hromadas`, y = fct_reorder(type, `number of hromadas`))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  theme_bw()+
+  geom_col(position = position_stack()
+           , alpha = .5
+           ,data =
+  )+
+  labs(
+    title = "Which incentives have been used to support business in the community since February 24?"
+    ,x = "Number of Hromadas", y = NULL, fill = NULL
+  )+
+  theme(
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "black")
+  )
+```
+
 # 9. Humanitarian
 
 # 10. Reconstructioin
