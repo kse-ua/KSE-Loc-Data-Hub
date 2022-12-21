@@ -157,7 +157,7 @@ d2 <- d1 %>%
     ,idp_real_number = as.numeric(idp_real_number)
     ,idp_child_education = as.numeric(idp_child_education)
     ,across(starts_with('idp_help/'), ~ . * idp_registration_number, .names = '{.col}_number')
-    ,idp_help_count = rowSums(across(all_of(idp_help), sum, na.rm = T))
+    ,idp_help_count = rowSums(across(all_of(idp_help), na.rm = T))
     ,prep_count= rowSums(across(all_of(preparation)), na.rm = T)
     ,comm_channels_count = rowSums(across(all_of(comm_channels)), na.rm = T)
     ,help_military_count = rowSums(across(all_of(military_help)), na.rm = T)
