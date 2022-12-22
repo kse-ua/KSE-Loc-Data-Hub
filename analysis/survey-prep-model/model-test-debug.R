@@ -50,8 +50,8 @@ d %>% plot_complex_scan()
 d <-
   ds1 %>%
   run_complex_scan(
-    dependent = 'hromada_exp_b'
-    ,depdist = "logit"
+    dependent = 'dftg_creation_b'
+    ,depdist = "binomial"
     # ,depdist = "nbinom"
     # ,depdist = "gaussian"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
