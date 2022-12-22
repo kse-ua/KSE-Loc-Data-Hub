@@ -267,6 +267,86 @@ description <- c('Hromada budget code', 'Hromada budget name', 'Hromada name',
 
 metadata <- data.frame(variables, description)
 
+
+# ----- adding-metadata-alt ----------------------------------------------------
+# the above method of pairing names and descriptions depends on the order of variables
+# it's not very transparent to inspection and will hide the error if we change the number or 
+# order of columns in ds3 or ds5. Like, for example, when we group ds4 into ds5
+# by year vs by date. I advocate for making direct links explicit.
+# there is a very helpful function to get a head start on this process:
+# run the line below and copy-paste the output from console into source and modify
+# ds3 %>% select(1:14) %>%  OuhscMunge::column_rename_headstart() 
+
+variable_labels_ds3 <- c(
+  "hromada_name"    = "Hromada name"
+  ,"hromada_code"   = "Hromada code from Codifier of administrative-territorial units (CATUTTC)"
+  ,"budget_name"    = "Hromada budget name"
+  ,"budget_code"    = "Hromada budget code"
+  ,"raion_name"     = "Raion name"
+  ,"raion_code"     = "Raion code from Codifier of administrative-territorial units (CATUTTC)"
+  ,"oblast_name"    = "Oblast name"
+  ,"oblast_name_en" = "Oblast name Eng"
+  ,"oblast_code"    = "Oblast code from Codifier of administrative-territorial units (CATUTTC)"
+  ,"region_en"      = "Region name Eng"
+  ,"region_code_en" = "Region short code"
+  ,"year"           = "Year"
+  ,"month"          = "Month"
+  ,"date"           = "Date"
+  ,"tax_code"       = "Tax code"
+) 
+ds_meta_ds3 <- 
+  tibble::tibble(
+    "variable_name"   = variable_labels_ds3 %>% names()
+    ,"variable_label" = variable_labels_ds3 %>% as.character()
+  )
+# metadata_dis <- ds_meta_ds3
+
+# ds5_long %>% OuhscMunge::column_rename_headstart() # run to get a headstart
+variable_labels_ds5_long <- c(
+  "budget_code"              = "Hromada budget code"                                                     
+  ,"budget_name"             = "Hromada budget name"                                                     
+  ,"hromada_name"            = "Hromada name"                                                            
+  ,"hromada_code"            = "Hromada code from Codifier of administrative-territorial units (CATUTTC)"
+  ,"raion_name"              = "Raion name"                                                              
+  ,"raion_code"              = "Raion code from Codifier of administrative-territorial units (CATUTTC)"  
+  ,"oblast_name"             = "Oblast name"                                                             
+  ,"oblast_name_en"          = "Oblast name Eng"                                                         
+  ,"oblast_code"             = "Oblast code from Codifier of administrative-territorial units (CATUTTC)" 
+  ,"region_en"               = "Region name Eng"                                                         
+  ,"region_code_en"          = "Region short code"                                                       
+  ,"year"                    = "Year"                                                                    
+  ,"month"                   = "Month" # turn off when aggregating over years 
+  ,"date"                    = "Date"  # turn off when aggregating over years
+  ,"income_total"            = "Total revenue amount"                                                    
+  ,"income_transfert"        = "Revenue from tranferts"                                                  
+  ,"income_military"         = "Revenue from tax on military personnel income"                           
+  ,"income_pdfo"             = "Revenue from income tax"                                                 
+  ,"income_unified_tax"      = "Revenue from unified tax"                                                
+  ,"income_property_tax"     = "Revenue from property tax"                                               
+  ,"income_excise_duty"      = "Revenue from excise duty"                                                
+  ,"income_own"              = "Own income (w/o tranferts)"                                              
+  ,"own_income_prop"         = "Share of own income"                                                     
+  ,"transfert_prop"          = "Share of tranferts"                                                      
+  ,"military_tax_prop"       = "Share of tax on military personnel income"                               
+  ,"pdfo_prop"               = "Share of income tax"                                                     
+  ,"unified_tax_prop"        = "Share of unified tax"                                                    
+  ,"property_tax_prop"       = "Share of property tax"                                                   
+  ,"excise_duty_prop"        = "Share of excise duty"                                                    
+  ,"own_income_change"       = "Percent change of own income (from 2021)"                                
+  ,"own_prop_change"         = "Change of own income share (from 2021)"                                  
+  ,"own_income_change_net"   = "Absolute change of own income (from 2021)"                               
+  ,"total_income_change_net" = "Absolute change of total income (from 2021)"                             
+  ,"total_income_change"     = "Percent change of total income (from 2021)" 
+)
+ds_meta_ds5_long <- 
+  tibble::tibble(
+    "variable_name"   = variable_labels_ds3 %>% names()
+    ,"variable_label" = variable_labels_ds3 %>% as.character()
+  )
+# metadata <- ds_meta_ds5_long
+# this approach allows for a quicker familiarization with the data set when 
+# one starts reading the code
+
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 dataset_names_dis <- list('Data' = ds3, 'Metadata' = metadata_dis)
 
