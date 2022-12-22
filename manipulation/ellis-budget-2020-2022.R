@@ -173,8 +173,8 @@ ds3_long <- ds3 %>% pivot_longer(
   , values_to = 'amount'
 )
 
-#+ ---- 
-
+#+ tweak-data-5 ---- 
+# `5` because it produces `ds5` form
 ds4_long <- 
   ds3_long %>% 
   mutate(
@@ -272,7 +272,7 @@ metadata <- data.frame(variables, description)
 # the above method of pairing names and descriptions depends on the order of variables
 # it's not very transparent to inspection and will hide the error if we change the number or 
 # order of columns in ds3 or ds5. Like, for example, when we group ds4 into ds5
-# by year vs by date. I advocate for making direct links explicit.
+# by year vs by date. I advocate for making the links within pairs explicit.
 # there is a very helpful function to get a head start on this process:
 # run the line below and copy-paste the output from console into source and modify
 # ds3 %>% select(1:14) %>%  OuhscMunge::column_rename_headstart() 
