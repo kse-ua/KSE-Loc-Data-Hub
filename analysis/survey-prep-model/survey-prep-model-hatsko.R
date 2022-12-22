@@ -320,6 +320,8 @@ outcomes_vars <- c(
   ,'finance_school_shelters_coded'
   ,'no_school_days_coded'
   ,'hromada_exp'
+  ,'dftg_creation'
+  ,'dftg_creation_date'
 )
 
 outcomes_vars_new <-  c(
@@ -527,6 +529,9 @@ ds1 <-
     ,international_projects_number = as.numeric(international_projects)
     ,no_school_days_number = as.numeric(no_school_days_coded)
     ,urban_perc_100 = urban_pct * 100
+    ,idp_reg_number_log = log(idp_registration_number)
+    ,dftg_creation_time = as.numeric(floor(difftime(dftg_creation_date, "2021-12-29", unit = "day")))
+    ,dftg_creation_time_na = ifelse(dftg_creation_time < 0, NA_integer_, dftg_creation_time)
   )  %>% 
   # zero filling NAs
   mutate(
@@ -541,6 +546,7 @@ ds1 <-
     ,youth_councils_b =ifelse(youth_councils == 0, 0, 1)
     ,city = factor(ifelse(type == 'міська', 1, 0))
     ,hromada_exp_b = ifelse(hromada_exp == 'yes', 1, 0)
+    ,dftg_creation_b = ifelse(dftg_creation == 'yes', 1, 0)
   ) %>%
   mutate(
     across(
@@ -689,15 +695,17 @@ g %>% quick_save("tester3",w=16,h=9)
 
 fit1_poisson <- 
   glm(
-    formula = prep_score_feb ~ urban_perc_100
+    formula = prep_score_feb ~ war_zone_27_04_2022
     ,data = ds2_prep
     ,family = "poisson"
   )
 
+summary(fit1_poisson)
+
 fit1_nbinom <- 
   MASS::glm.nb(
-    formula = international_projects_number ~ age_head
-    ,data = ds1
+    formula = prep_score_feb ~ region_en
+    ,data = ds2_prep
     )
 
 summary(fit1_nbinom)
@@ -708,22 +716,37 @@ summary(fit1_nbinom)
            summary(fit1_nbinom)$df.residual
 )
 
-##
+# gaussian
 
 fit1_logn <- 
   glm(
-    formula = log(idp_registration_number) ~ urban_perc_100
+    formula = dftg_creation_b ~ train_station
     ,data = ds1
-    ,family = "gaussian"
+    ,family = "binomial"
   )
+
+summary(fit1_logn)
+
+# logistic
+
+fit1_logit <- 
+  glm(
+    formula = idp_reg_number_log ~ no_party
+    ,data = ds1
+    ,family = "binomial"
+  )
+
+summary(fit1_logit)
+
 # for zero-inflated model
-fit1_zi_pois <- pscl::zeroinfl(formula = international_projects_number ~ urban_perc_100 | 1
-               ,data = ds1
+fit1_zi_pois <- pscl::zeroinfl(formula = prep_score_feb ~ war_zone_27_04_2022 | 1
+               ,data = ds2_prep
                ,dist = "pois")
 
+summary(fit1_zi_pois)
 
-fit1_zi_nbinom <- pscl::zeroinfl(formula = international_projects_number ~ urban_perc_100 | 1
-                                 ,data = ds1
+fit1_zi_nbinom <- pscl::zeroinfl(formula = prep_score_feb ~ war_zone_27_04_2022 | 1
+                                 ,data = ds2_prep
                                  ,dist = "negbin")
 
 summary(fit1_zi_nbinom)
@@ -744,7 +767,7 @@ lmtest::lrtest(fit1_zi_pois, fit1_zi_nbinom)
 
 #
 E2 <- resid(fit1_zi_nbinom, type = "pearson")
-N  <- nrow(ds1)
+N  <- nrow(ds2_prep)
 p  <- length(coef(fit1_zi_nbinom))  
 sum(E2^2) / (N - p)
 
@@ -754,14 +777,13 @@ performance::check_overdispersion(fit1_poisson)
 
 hist(ds1$international_projects_number)
 
-x <- ds1 %>% select(international_projects_number) %>% filter(!is.na(international_projects_number)) %>% pull()
-x <- ds1 %>% select(idp_registration_number) %>% filter(!is.na(idp_registration_number)) %>% pull()
-x <- ds2_prep %>% select(prep_score_oct) %>% filter(!is.na(prep_score_oct)) %>% pull()
+x <- ds1 %>% select(dftg_creation_time_na) %>% filter(!is.na(dftg_creation_time_na)) %>% pull()
+x <- ds2_prep %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %>% pull()
 
 fitur::fit_dist_addin()
 
 fitdistrplus::descdist(x, discrete = TRUE)
-normal_dist <- fitdistrplus::fitdist(x, distr = "norm")
+normal_dist <- fitdistrplus::fitdist(x, distr = "pois")
 plot(normal_dist)
 normal_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
 plot(normal_dist)
