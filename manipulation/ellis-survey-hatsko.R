@@ -163,8 +163,8 @@ d2 <- d1 %>%
     ,help_military_count = rowSums(across(all_of(military_help)), na.rm = T)
     ,help_military_count = rowSums(across(all_of(military_help)), na.rm = T)
     ,hromada_cooperation_count = rowSums(across(all_of(hromada_cooperation)), na.rm = T)
-    ,dftg_creation_time = floor(difftime(idp_registration_date, "2022-02-24", unit = "day")) #negative values - choose another date
-    ,idp_registration_time = floor(difftime(dftg_creation_date, "2022-02-24", unit = "day"))
+    ,dftg_creation_time = floor(difftime(dftg_creation_date, "2022-02-24", unit = "day")) #negative values - choose another date
+    ,idp_registration_time = floor(difftime(idp_registration_date, "2022-02-24", unit = "day"))
     ,commun_between_hromadas = case_when(commun_between_hromadas == '__' ~ 'Daily',
                                          commun_between_hromadas == '______' ~ 'Several times a week',
                                          commun_between_hromadas == '_______1' ~ 'Several times a month',
