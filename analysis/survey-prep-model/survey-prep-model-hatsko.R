@@ -696,9 +696,11 @@ fit1_poisson <-
 
 fit1_nbinom <- 
   MASS::glm.nb(
-    formula = international_projects_number ~ urban_perc_100
+    formula = international_projects_number ~ age_head
     ,data = ds1
     )
+
+summary(fit1_nbinom)
 
 ##
 
