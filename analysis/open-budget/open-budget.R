@@ -128,6 +128,8 @@ ds_budget_meta <- ls_fin$budget$Metadata
 ds_taxes <- ls_fin$taxes$Data
 ds_taxes_meta <- ls_fin$taxes$Metadata
 
+
+
 # meta_oblast <- googlesheets4::read_sheet(sheet_name,"choices",skip = 0)
 # Originally, we pulled the meta data object from Kobo front end and stored to 
 # survey_xls  <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey")
@@ -138,6 +140,11 @@ googlesheets4::gs4_deauth() # to indicate there is no need for a access token
 survey_url <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
 meta_survey <- googlesheets4::read_sheet(survey_url,"survey",skip = 0)
 meta_choices <- googlesheets4::read_sheet(survey_url,"choices",skip = 0)
+
+
+path_admin <- "./data-private/derived/ua-admin-map.csv"
+ds_admin_full <- readr::read_csv(path_admin)
+ds_admin_full %>% glimpse(70)
 
 
 
@@ -190,6 +197,19 @@ income_prop <- c(
 
 
 # ---- bird-eye-view -------------------------
+  filter(!hromada_code %in% looks_fishy) %>%  d %>% 
+looks_fishy <- 
+  ds0 %>% 
+  filter(own_income_prop > 1 | own_income_prop < 0) %>% # how can they be outside of this window?
+  # select(hromada_stem) %>%
+  pull(hromada_code)
+pivot_vars <- c(income_raw,income_prop,budget_vars) %>% unique()
+
+
+
+
+d <- 
+  ds0 %>% 
 
 looks_fishy <- 
   ds0 %>% 
@@ -203,28 +223,15 @@ pivot_vars <- c(income_raw,income_prop,budget_vars) %>% unique()
 
 d <- 
   ds0 %>% 
-  filter(!hromada_code %in% looks_fishy) %>% 
-  pivot_longer(
-    # cols = all_of(budget_vars)
-    cols = all_of(pivot_vars)
-    ,names_to = "metric"
-    ,values_to = "value"
-  ) %>% 
-  mutate(
-    metric = factor(metric, levels = pivot_vars)
-  )
-d  %>% glimpse()
 
-g <-
-  d %>% 
   {
     ggplot(.,aes(x=date, y = value, group = hromada_code))+
-      geom_line(alpha = .4)+
+      geom_line(alpha = .2)+
       scale_y_continuous(labels = scales::comma_format())+
       facet_wrap(facets = "metric",scales= "free_y")
   }
 
-g %>% quick_save("1-bird-eye-view",w=16, h=9)
+g %>% quick_save("1-bird-eye-view-without-fishy",w=16, h=9)
 
 # find the outlier
 
@@ -232,18 +239,48 @@ g %>% quick_save("1-bird-eye-view",w=16, h=9)
 
 d <- 
   ds0 %>% 
-  filter(!hromada_code %in% looks_fishy) 
+  filter(!hromada_code %in% looks_fishy) %>% 
+  left_join(
+    ds_general %>% select(hromada_code,voluntary)
+  ) %>% 
+  left_join(
+    ds_admin_full %>% distinct(hromada_code,map_position, map_position2)
+  ) %>% 
+  mutate(
+    voluntary = as.logical(voluntary)
+    # voluntary = factor(as.logical(voluntary)) %>% fct_rev()
+    ,region_en = factor(region_en)
+    ,oblast_name_en = factor(oblast_name_en) %>% fct_reorder(map_position)
+  ) 
+d %>% glimpse()
 g <-
   d %>% 
   {
-    ggplot(.,aes(x=date, y = own_income_prop, group = hromada_code))+
-      geom_line( data = . %>% filter(!survey_response),alpha = .1 )+
-      geom_line(data = . %>% filter(survey_response), color="red" )+
-      scale_y_continuous(labels = scales::comma_format())+
+    ggplot(.,aes(x=date, y = own_income_prop, color = region_en))+
+ 
+     geom_line( data = . %>% filter(!voluntary),alpha = .2 ,aes( group = hromada_code))+
+      geom_line(data = . %>% filter(voluntary),alpha=.1,aes( group = hromada_code))+
+      geom_smooth(linewidth=.6, method="loess", se=F,data = . %>% filter(!voluntary))+
+      geom_smooth(linewidth=.8, method="loess", se=F,data = . %>% filter(voluntary), linetype="dashed")+
+      # geom_line( data = . %>% filter(!survey_response),alpha = .1 )+
+      # geom_line(aes(color = voluntary), data = . %>% filter(survey_response))+
+      scale_y_continuous(labels = scales::percent_format(trim=T),
+                         breaks = seq(.25,.75,.25),minor_breaks = seq(0,1,.1))+
+      # scale_y_continuous(labels = scales::comma_format())+
+      # scale_color_viridis_d(
+      #     begin = 0, end = .8, direction = 1
+      #     ,option = "plasma",guide= guide_legend(reverse=T)
+      #   )+
+      scale_color_brewer(type="qual",palette = "Dark2")+
       facet_wrap(facets = "oblast_name_en",scales= "free_y")+
-      labs()
+      guides(color = guide_legend(override.aes = list(linewidth = 5) ) )+
+      labs(
+        title = "Share of own income"
+        # ,subtitle = "Non-Voluntary Hromadas"
+        ,caption = "Loess smoother for VOLUNTARY hromadas shown with dashed line"
+        ,color = ""
+      )
   }
-
 g %>% quick_save("2-one-outcome",w=16, h=9)
 
 
@@ -251,9 +288,7 @@ g %>% quick_save("2-one-outcome",w=16, h=9)
 
 
 
-
-
-
+  
 
 
 
