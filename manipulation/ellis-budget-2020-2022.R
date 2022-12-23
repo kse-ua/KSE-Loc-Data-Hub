@@ -173,7 +173,7 @@ ds3_long <- ds3 %>% pivot_longer(
   , values_to = 'amount'
 )
 
-#+ tweak-data-5 ---- 
+#+ tweak-data-5-old ---- 
 # `5` because it produces `ds5` form
 ds4_long <- 
   ds3_long %>% 
@@ -233,7 +233,7 @@ ds5_long <- ds4_long %>%
   arrange(oblast_name, raion_code, hromada_name, year)
 
 
-#+ ---- adding metadata ---------------------------------------------------------
+#+ ---- adding metadata-old ---------------------------------------------------------
 
 # for disaggregated on separate incomes dataset
 variables_dis <- c(colnames(ds3)[1:14], '11010100-50110000')
@@ -268,7 +268,94 @@ description <- c('Hromada budget code', 'Hromada budget name', 'Hromada name',
 metadata <- data.frame(variables, description)
 
 
-# ----- adding-metadata-alt ----------------------------------------------------
+#+ tweak-data-5  ---- 
+
+ds4_long <- 
+  ds3_long %>% 
+  mutate(
+    transfert    = str_detect(tax_code, "^4.+")
+    #,target_segment = month %in% c(3:7) & year %in% c(2021, 2022) # i think
+    # this should be done after data at the most granualar level are processed
+    ,military_tax = tax_code %in% c('11010200')
+    ,income_tax   = str_detect(tax_code, "^1101.+")
+    ,unified_tax  = str_detect(tax_code, "^1805.+")
+    ,property_tax = str_detect(tax_code, "^1801.+")
+    ,excise_duty  = str_detect(tax_code, "^140.+")
+  )
+
+ds4_long %>% glimpse(80)
+
+ds5_long_temp <- 
+  ds4_long %>%
+  group_by(budget_code, budget_name, year, month, date) %>%
+  summarize(
+    income_total         = sum(amount, na.rm = T)
+    ,income_transfert    = sum(amount*transfert, na.rm = T)
+    ,income_military     = sum(amount*military_tax, na.rm = T)
+    ,income_pdfo         = sum(amount*income_tax, na.rm = T)
+    ,income_unified_tax  = sum(amount*unified_tax, na.rm = T)
+    ,income_property_tax = sum(amount*property_tax, na.rm = T)
+    ,income_excise_duty  = sum(amount*excise_duty, na.rm = T)
+    ,.groups = "drop"
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    income_own           = income_total - income_transfert
+    ,own_income_prop     = round(income_own/income_total,2)
+    ,transfert_prop      = round(income_transfert/income_total,2)
+    ,military_tax_prop   = round(income_military/income_total,2)
+    ,pdfo_prop           = round(income_pdfo/income_total,2)
+    ,unified_tax_prop    = round(income_unified_tax/income_total,2)
+    ,property_tax_prop   = round(income_property_tax/income_total,2)
+    ,excise_duty_prop    = round(income_excise_duty/income_total,2)
+  ) %>%
+  group_by(budget_code) %>% 
+  mutate(
+    own_income_change        = round((income_own / lag(income_own)) - 1,2)
+    ,own_prop_change         = own_income_prop - lag(own_income_prop)
+    ,own_income_change_net   = income_own - lag(income_own)
+    ,total_income_change_net = income_total - lag(income_total)
+    ,total_income_change     = round((income_total / lag(income_total)) - 1,2)
+  ) %>%
+  ungroup() 
+
+ds5_long_temp %>% glimpse()
+
+ds_admin <-  
+  ds_admin_full %>% 
+  mutate(budget_code = paste0(budget_code,"0")) %>%
+  select(
+    budget_code, 
+    hromada_code, hromada_name, 
+    raion_code,   raion_name,
+    oblast_code,  oblast_name, 
+    oblast_name_en,
+    region_code_en, region_en
+  ) %>% 
+  distinct()
+ds_admin %>% glimpse()
+
+
+target_id <- "02537000000"
+ds5_long_temp %>% filter(budget_code == target_id) %>% glimpse()
+# ds5_long_temp %>% filter(budget_code == target_id) %>% View()
+ds_admin %>% filter(budget_code == target_id) %>% glimpse()
+
+ds5_long <- 
+  ds5_long_temp %>% 
+  left_join(
+    ds_admin
+    ,by = c("budget_code")
+  ) %>% 
+  relocate(budget_code, budget_name, hromada_name, hromada_code, raion_name, 
+           raion_code, oblast_name, oblast_name_en, oblast_code, region_en, region_code_en) 
+
+# arrange(oblast_name, raion_code, hromada_name, date) # this kept crashing my
+# session, so I will avoid it for now 
+
+ds5_long %>% glimpse()
+rm(ds5_long_temp)
+# ----- adding-metadata ----------------------------------------------------
 # the above method of pairing names and descriptions depends on the order of variables
 # it's not very transparent to inspection and will hide the error if we change the number or 
 # order of columns in ds3 or ds5. Like, for example, when we group ds4 into ds5
@@ -299,7 +386,7 @@ ds_meta_ds3 <-
     "variable_name"   = variable_labels_ds3 %>% names()
     ,"variable_label" = variable_labels_ds3 %>% as.character()
   )
-# metadata_dis <- ds_meta_ds3
+metadata_dis <- ds_meta_ds3 # to match old names
 
 # ds5_long %>% OuhscMunge::column_rename_headstart() # run to get a headstart
 variable_labels_ds5_long <- c(
@@ -343,9 +430,36 @@ ds_meta_ds5_long <-
     "variable_name"   = variable_labels_ds3 %>% names()
     ,"variable_label" = variable_labels_ds3 %>% as.character()
   )
-# metadata <- ds_meta_ds5_long
+metadata <- ds_meta_ds5_long # to match old names
 # this approach allows for a quicker familiarization with the data set when 
 # one starts reading the code
+
+#+ derive-the-former -------
+
+# preivous version of ds5_long focused on a specific segments of time:
+#,target_segment = month %in% c(3:7) & year %in% c(2021, 2022) 
+# I think it is more practical to have a clean data set at the highest
+# level of resolution (month), which then can be summarized into the desired form
+ds5_long %>% glimpse()
+
+metrics <- ds5_long %>% select(income_total:total_income_change) %>% names()
+grouping_stem <- ds5_long %>% select(budget_code:year) %>% names()
+ds5_former <- 
+  ds5_long %>% 
+  mutate(
+    target_segment = month %in% c(3:7) & year %in% c(2021, 2022) # i think
+  ) %>% 
+  filter(target_segment) %>% 
+  group_by_at(grouping_stem) %>% 
+  summarize(
+    across(
+      .cols = metrics
+      ,.fns  = ~sum(.,na.rm=T) 
+    )
+  ) %>% 
+  ungroup() %>% 
+  glimpse()
+
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 dataset_names_dis <- list('Data' = ds3, 'Metadata' = metadata_dis)
