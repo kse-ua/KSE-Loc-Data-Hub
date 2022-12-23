@@ -506,6 +506,40 @@ ds1 <-
 ds2_prep %>% glimpse(90)
 ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
 
+
+# ---- scan-prep ------------------
+# chunk for implementing model building
+source("./analysis/survey-prep-model/custom-model-functions.R")
+d <-
+  ds2_prep %>%
+  run_complex_scan(
+    dependent = 'prep_score_feb'
+    # dependent = 'prep_score_oct'
+    ,depdist = "poisson"
+    # ,depdist = "gaussian"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    , explanatory_categorical = predictor_vars_categorical
+    # ,confounder = c("voluntary")
+    # ,confounder = c("urban_pct")
+    # ,confounder = c("urban_pct","type","transfert_prop_2021","edem_consultations","war_zone_27_04_2022","turnout_2020")
+  )
+d
+g <- d %>% plot_complex_scan()
+g %>% quick_save("scan-prep_score_feb",w=8, h=8)
+
+dm <- 
+  ds2_prep %>% 
+  diagnose_one_model(
+    dependent = 'prep_score_feb'
+    # dependent = 'idp_registration_share'
+    # ,depdist = "gaussian"
+    ,depdist = "poisson"
+    ,explanatory = "urban_pct"
+  )
+dm$model %>% broom::tidy()
+dm$graph
+
+
 # ---- model-scan -----------------------------
 source("./analysis/survey-prep-model/custom-model-functions.R")
 d <-
