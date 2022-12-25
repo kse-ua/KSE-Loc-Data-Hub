@@ -50,10 +50,10 @@ d %>% plot_complex_scan()
 d <-
   ds1 %>%
   run_complex_scan(
-    dependent = 'dftg_creation_b'
-    ,depdist = "binomial"
+    dependent = 'head_hromada_communication_numeric'
+    # ,depdist = "binomial"
     # ,depdist = "nbinom"
-    # ,depdist = "gaussian"
+    ,depdist = "gaussian"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     # ,confounder = c("city")
     # ,confounder = c("voluntary")
