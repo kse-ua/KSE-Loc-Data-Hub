@@ -886,7 +886,7 @@ p
 ## 4.1 Transport Help
 
 # 5. Administrative Adaptation
-```{r info-score-distribution, fig.height=6, fig.width=4,class.source="fold-hide", cache=T}
+```{r admin-percent-working, fig.height=6, fig.width=4,class.source="fold-hide", cache=T}
 
 g <-  ds0 %>%
   select(starts_with("percent_working")) %>% 
@@ -905,7 +905,7 @@ g
 g %>%  quick_save("score-distribution",w=4, h=6)
 ```
 
-```{r special-fund-1, fig.height=3, fig.width=9,class.source="fold-hide"}
+```{r comm-between-hromadas-1, fig.height=3, fig.width=9,class.source="fold-hide"}
 (ds0 %>% 
    filter(!is.na(commun_between_hromadas)) %>%
   mutate(
@@ -933,7 +933,7 @@ g %>%  quick_save("score-distribution",w=4, h=6)
 ```
 
 # 6. Evacuation
-```{r special-fund-1, fig.height=3, fig.width=9,class.source="fold-hide"}
+```{r evacuation, fig.height=3, fig.width=9,class.source="fold-hide"}
 (ds0 %>% 
   mutate(
     `Need of evacuation among hromadas` = fct_recode(
