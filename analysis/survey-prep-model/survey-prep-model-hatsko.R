@@ -322,6 +322,7 @@ outcomes_vars <- c(
   ,'hromada_exp'
   ,'dftg_creation'
   ,'dftg_creation_date'
+  ,'head_hromada_communication'
 )
 
 outcomes_vars_new <-  c(
@@ -336,6 +337,7 @@ outcomes_vars_new <-  c(
   ,'finance_school_shelters_coded'
   ,'no_school_days_number'
   ,'hromada_exp_b'
+  ,'head_hromada_communication_numeric'
 )
 
 # Continuous - good for spreading out # Valentyn, please add relevant predictors here
@@ -532,6 +534,13 @@ ds1 <-
     ,idp_reg_number_log = log(idp_registration_number)
     ,dftg_creation_time = as.numeric(floor(difftime(dftg_creation_date, "2021-12-29", unit = "day")))
     ,dftg_creation_time_na = ifelse(dftg_creation_time < 0, NA_integer_, dftg_creation_time)
+    ,head_hromada_communication_numeric = fct_recode(head_hromada_communication,
+                                                       "0"  = "none"   
+                                                     , "1"  = "once_a_week"    
+                                                     , "2"  = "few_times_a_week"  
+                                                     , "3"  = "once_a_day"   
+                                                     , "4" = "2_3_times"
+                                                     ) %>% as.character() %>% as.integer()
   )  %>% 
   # zero filling NAs
   mutate(
@@ -693,6 +702,15 @@ g %>% quick_save("tester3",w=16,h=9)
 
 #+ ---- one-model --------------------------------------------------------------
 
+fit1_norm <- 
+  glm(
+    formula = head_hromada_communication_numeric ~ no_party
+    ,data = ds1
+    ,family = "gaussian"
+  )
+
+summary(fit1_norm)
+
 fit1_poisson <- 
   glm(
     formula = prep_score_feb ~ war_zone_27_04_2022
@@ -777,8 +795,7 @@ performance::check_overdispersion(fit1_poisson)
 
 hist(ds1$international_projects_number)
 
-x <- ds1 %>% select(dftg_creation_time_na) %>% filter(!is.na(dftg_creation_time_na)) %>% pull()
-x <- ds2_prep %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %>% pull()
+x <- ds1 %>% select(head_hromada_communication_numeric) %>% filter(!is.na(head_hromada_communication_numeric)) %>% pull()
 
 fitur::fit_dist_addin()
 
