@@ -196,7 +196,6 @@ meta_survey %>% filter(group=="preamble") %>% pull(label) %>% cat()
 
 <mark>1.2</mark> What regions are represented in this sample? 
 
-
 ```{r representation-region, class.source="fold-hide"}
 
 ds_survey %>% 
@@ -232,6 +231,7 @@ ds_survey %>%
   )
 
 ```
+
 
 <mark>1.3</mark> What oblasts are represented in this sample? 
 
@@ -272,7 +272,8 @@ ds_survey %>%
 
 ```
 
-<mark>1.3</mark> What type of hromadas are represented in the sample? 
+
+<mark>1.4</mark> What type of hromadas are represented in the sample? 
 
 ```{r representation-type, class.source="fold-hide"}
 
@@ -313,7 +314,8 @@ ds_survey %>%
 
 ```
 
-<mark>1.4</mark> What hromadas experienced military occupation or  military actions? 
+
+mark>1.4</mark> What hromadas experienced military occupation or  military actions? 
 ```{r fig.height=4, fig.width=8, class.source="fold-hide"}
 (ds0 %>% make_bi_freq_graph("military_action"))+
   labs(
@@ -334,6 +336,32 @@ ds0 %>% make_bi_freq_graph("occupation","military_action")
 ```
 
 
+<mark>1.5</mark> How many partherships with other hromadas in Ukraine hromadas have?
+
+```{r partnerships-count, class.source="hide", cache=T}
+
+ds_partners <- ds0 %>% 
+  mutate(partners_text = as.numeric(partners_text)) %>% 
+  summarise(median = median(partners_text, na.rm =  T),
+            mean = mean(partners_text, na.rm =  T),
+            max = max(partners_text, na.rm =  T)) 
+```
+
+> Median number of partnerships that hromada has is `r ds_partners$median`, mean - `r round(ds_partners$mean, 2)`. 
+Maximum number of partnerships that hromada has in our survey is `r ds_partners$max`.
+
+> These are hromadas that have the most partnerships:
+
+```{r partnerships-top, class.source="fold-hide", cache=T}
+ds0 %>% 
+  mutate(partners_text = as.numeric(partners_text)) %>%
+  select(hromada_full_name, partners_text) %>%
+  slice_max(partners_text, n = 5) %>%
+  rename('Hromada Name' = "hromada_full_name"
+         , "Number of hromada's partnerships in Ukraine" = "partners_text") %>%
+  neat()
+
+```
 
 # 2. Preparation
 
