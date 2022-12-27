@@ -424,7 +424,40 @@ ds1_info <-
   ) %>% 
   select(hromada_code,item_information)
 
-# ----- -------------
+# ---- testing chunks ----------------------------------------------------------
+
+ds_survey %>% 
+  group_by(region_en, oblast_name_en) %>% 
+  summarize(
+    hromada_count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>%
+  mutate(hromada_survey_prop = hromada_count / sum(hromada_count)
+         ,hromada_survey_pct = scales::percent(hromada_survey_prop, accuracy = .1)) %>% 
+  right_join(
+    ds_general %>% 
+      group_by(region_en, oblast_name_en) %>% 
+      summarize(hromada_count_total = n())
+  ) %>% 
+  filter(!is.na(region_en)) %>%
+  mutate(
+    hromada_count = replace_na(hromada_count, 0)
+    ,hromada_total_prop = hromada_count_total / sum(hromada_count_total)
+    ,hromada_total_pct = scales::percent(hromada_total_prop, accuracy = .1)
+  ) %>%
+  arrange(region_en, desc(hromada_survey_prop)) %>% 
+  select(-c(hromada_survey_prop, hromada_total_prop)) %>%
+  relocate(hromada_count_total, .after = hromada_count) %>%
+  ungroup() %>%
+  # neat_DT()
+  gt::gt() %>%
+  gt::cols_label(region_en = 'Region',
+                 oblast_name_en = 'Oblast',
+                 hromada_count_total = 'Total number \nof ATCs',
+                 hromada_count = 'ATCs in the survey',
+                 hromada_total_pct = 'Proportion of Oblast \nin the General Population',
+                 hromada_survey_pct = 'Proportion of Oblast \nin the Survey'
+  )
 
 # ---- save-to-disk ------------------------------------------------------------
 
