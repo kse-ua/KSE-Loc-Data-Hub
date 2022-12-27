@@ -313,15 +313,6 @@ ds_survey %>%
 
 ```
 
-```{r fig.height=4, fig.width=8, class.source="fold-hide"}
-(ds0 %>% make_bi_freq_graph("type"))+
-  labs(
-    title = "What types of hromadas repsonded to the survey?"
-    ,subtitle = "Data were collected during October-November of 2022"
-    ,y = NULL
-  )
-```
-
 <mark>1.4</mark> What hromadas experienced military occupation or  military actions? 
 ```{r fig.height=4, fig.width=8, class.source="fold-hide"}
 (ds0 %>% make_bi_freq_graph("military_action"))+
