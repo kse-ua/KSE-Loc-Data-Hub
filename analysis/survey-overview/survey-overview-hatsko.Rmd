@@ -350,15 +350,70 @@ ds_partners <- ds0 %>%
 > Median number of partnerships that hromada has is `r ds_partners$median`, mean - `r round(ds_partners$mean, 2)`. 
 Maximum number of partnerships that hromada has in our survey is `r ds_partners$max`.
 
+```{r partnerships-hist, fig.height=7, fig.width=8, class.source="fold-hide"}
+ds0 %>% 
+  mutate(partners_text = as.numeric(partners_text)) %>% 
+  select(hromada_full_name, partners_text) %>%
+  mutate(partners_group = cut(partners_text, 
+                              breaks = c(0, 1, 2, 3, 4, 20), 
+                              labels = c('None', '1', '2', '3', 'More than 3'),
+                              right = F)) %>%
+  na.omit() %>%
+  ggplot(aes(x=partners_group, group = 1)) +
+  geom_bar(aes(y = ..prop..), stat = 'count') +
+  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "How many partnerships hromadas have?"
+    ,y = NULL, x = NULL
+  )
+
+```
+
 > These are hromadas that have the most partnerships:
 
-```{r partnerships-top, class.source="fold-hide", cache=T}
+```{r partnerships-top, class.source="fold-hide"}
 ds0 %>% 
   mutate(partners_text = as.numeric(partners_text)) %>%
   select(hromada_full_name, partners_text) %>%
   slice_max(partners_text, n = 5) %>%
   rename('Hromada Name' = "hromada_full_name"
          , "Number of hromada's partnerships in Ukraine" = "partners_text") %>%
+  neat()
+
+```
+
+<mark>1.6</mark> How many hromadas-friends abroad hromadas have?
+
+```{r friends-hist, fig.height=7, fig.width=8, class.source="fold-hide"}
+ds0 %>% 
+  mutate(friends_text = as.numeric(friends_text)) %>% 
+  select(hromada_full_name, friends_text) %>%
+  mutate(friends_group = cut(friends_text,
+                              breaks = c(0, 1, 2, 3, 4, 5, 20), 
+                              labels = c('None', '1', '2', '3', '4', 'More than 4'),
+                              right = F)) %>%
+  na.omit() %>%
+  ggplot(aes(x=friends_group, group = 1)) +
+  geom_bar(aes(y = ..prop..), stat = 'count') +
+  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "How many hromadas-friends abroad hromadas have?"
+    ,y = NULL, x = NULL
+  )
+
+```
+
+> These are hromadas that have the most friends abroad:
+
+```{r friends-top, class.source="fold-hide"}
+ds0 %>% 
+  mutate(friends_text = as.numeric(friends_text)) %>%
+  select(hromada_full_name, friends_text) %>%
+  slice_max(friends_text, n = 10) %>%
+  rename('Hromada Name' = "hromada_full_name"
+         , "Number of hromada's friends abroad" = "friends_text") %>%
   neat()
 
 ```
