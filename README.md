@@ -26,7 +26,7 @@ The project is funded by GIZ within its project "Support to the Decentralisation
 
 # Data Products
 
-  | Data Source     |Description   | Current State / Left To Do   | Script |
+  | Data Product Name     |Description   | Current State / Left To Do   | Script |
   |---              |---|---|---|
   |Admininstrative Units | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region) | Needs to be placed in `./data-public/derived/`   |`./manipulation/ellis-ua-admin.R`|
   | Admin History | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020| ready for analysis| `./manipulation/ellis-rada-hromada.R`|
@@ -35,4 +35,5 @@ The project is funded by GIZ within its project "Support to the Decentralisation
   |Open Budget  | Tax revenues of hromadas 2020-2022   | ready for analysis at `./data-public/derived/hromada_budget_2020_2022.xlsx`   |`./manipulation/ellis-budget-2020-2022.R`|
   |Geographic     |Spatial poligons of hromadas| Demonstate graphing maps (at hromada-raion-oblast level) using a replacable quantifier (e.g. population)  |`./manipulation/ellis-geography.R`|
   |Social | No data source has been identified yet  | Need ideas what metric of social activity (at hromada level) could be correlated with economic and demographic activity  | |
+  |Hromada Mayors Bio | Information on mayor of hromadas that were elected  in 2020 local elections  | ready for analysis at `./data-public/raw/hromada_heads.xlsx`  |`./manipulation/ellis-mayors.R`|
     
