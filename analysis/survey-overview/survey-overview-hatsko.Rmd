@@ -194,16 +194,57 @@ meta_survey %>% filter(group=="preamble") %>% pull(label) %>% cat()
 
 > As of `r Sys.Date() %>% as.character()`, `r ds0 %>% summarize(response_count = n_distinct(hromada_code)) %>% pull(response_count) %>% scales::comma()` hromadas contributed valid response to the survey
 
-<mark>1.2</mark> What oblasts are represented in this sample? 
+<mark>1.2</mark> What regions are represented in this sample? 
 
 
-```{r class.source="fold-hide"}
+```{r representation-region, class.source="fold-hide"}
+
+ds_survey %>% 
+  group_by(region_en) %>% 
+  summarize(
+    hromada_count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>%
+  mutate(hromada_survey_prop = hromada_count / sum(hromada_count)
+         ,hromada_survey_pct = scales::percent(hromada_survey_prop, accuracy = .1)) %>% 
+  right_join(
+    ds_general %>% 
+      group_by(region_en) %>% 
+      summarize(hromada_count_total = n())
+  ) %>% 
+  filter(!is.na(region_en)) %>%
+  mutate(
+    hromada_count = replace_na(hromada_count, 0)
+    ,hromada_total_prop = hromada_count_total / sum(hromada_count_total)
+    ,hromada_total_pct = scales::percent(hromada_total_prop, accuracy = .1)
+  ) %>%
+  arrange(region_en, desc(hromada_survey_prop)) %>% 
+  select(-c(hromada_survey_prop, hromada_total_prop)) %>%
+  relocate(hromada_count_total, .after = hromada_count) %>%
+  ungroup() %>%
+  # neat_DT()
+  gt::gt() %>%
+  gt::cols_label(region_en = 'Region',
+                 hromada_count_total = 'Total number \nof ATCs',
+                 hromada_count = 'ATCs in the survey',
+                 hromada_total_pct = 'Proportion of Region \nin the General Population',
+                 hromada_survey_pct = 'Proportion of Region \nin the Survey'
+  )
+
+```
+
+<mark>1.3</mark> What oblasts are represented in this sample? 
+
+```{r representation-oblast, class.source="fold-hide"}
+
 ds_survey %>% 
   group_by(region_en, oblast_name_en) %>% 
   summarize(
     hromada_count = n_distinct(hromada_code)
     ,.groups = "drop"
-  ) %>% 
+  ) %>%
+  mutate(hromada_survey_prop = hromada_count / sum(hromada_count)
+         ,hromada_survey_pct = scales::percent(hromada_survey_prop, accuracy = .1)) %>% 
   right_join(
     ds_general %>% 
       group_by(region_en, oblast_name_en) %>% 
@@ -212,11 +253,12 @@ ds_survey %>%
   filter(!is.na(region_en)) %>%
   mutate(
     hromada_count = replace_na(hromada_count, 0)
-    ,prop = hromada_count/hromada_count_total
-    ,pct = scales::percent(prop, accuracy = .1)
-  ) %>% 
-  arrange(region_en, desc(prop)) %>% 
-  select(-prop) %>% 
+    ,hromada_total_prop = hromada_count_total / sum(hromada_count_total)
+    ,hromada_total_pct = scales::percent(hromada_total_prop, accuracy = .1)
+  ) %>%
+  arrange(region_en, desc(hromada_survey_prop)) %>% 
+  select(-c(hromada_survey_prop, hromada_total_prop)) %>%
+  relocate(hromada_count_total, .after = hromada_count) %>%
   ungroup() %>%
   # neat_DT()
   gt::gt() %>%
@@ -224,15 +266,52 @@ ds_survey %>%
                  oblast_name_en = 'Oblast',
                  hromada_count_total = 'Total number \nof ATCs',
                  hromada_count = 'ATCs in the survey',
-                 pct = 'Survey Coverage of ATCs'
+                 hromada_total_pct = 'Proportion of Oblast \nin the General Population',
+                 hromada_survey_pct = 'Proportion of Oblast \nin the Survey'
   )
 
 ```
 
-
-
 <mark>1.3</mark> What type of hromadas are represented in the sample? 
 
+```{r representation-type, class.source="fold-hide"}
+
+ds_survey %>% 
+  group_by(type) %>% 
+  summarize(
+    hromada_count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>%
+  mutate(hromada_survey_prop = hromada_count / sum(hromada_count)
+         ,hromada_survey_pct = scales::percent(hromada_survey_prop, accuracy = .1)) %>% 
+  right_join(
+    ds_general %>% 
+      group_by(type) %>% 
+      summarize(hromada_count_total = n())
+  ) %>% 
+  mutate(
+    hromada_count = replace_na(hromada_count, 0)
+    ,hromada_total_prop = hromada_count_total / sum(hromada_count_total)
+    ,hromada_total_pct = scales::percent(hromada_total_prop, accuracy = .1)
+    ,type = case_when(type == 'міська' ~ "urban",
+                      type == 'селищна' ~ "urban village",
+                      type == 'сільська' ~ "village"
+                      )
+  ) %>%
+  arrange(desc(hromada_survey_prop)) %>% 
+  select(-c(hromada_survey_prop, hromada_total_prop)) %>%
+  relocate(hromada_count_total, .after = hromada_count) %>%
+  ungroup() %>%
+  # neat_DT()
+  gt::gt() %>%
+  gt::cols_label(type = 'Type of Hromada',
+                 hromada_count_total = 'Total number \nof ATCs',
+                 hromada_count = 'ATCs in the survey',
+                 hromada_total_pct = 'Proportion of Hromada Type \nin the General Population',
+                 hromada_survey_pct = 'Proportion of Hromada Type \nin the Survey'
+  )
+
+```
 
 ```{r fig.height=4, fig.width=8, class.source="fold-hide"}
 (ds0 %>% make_bi_freq_graph("type"))+
