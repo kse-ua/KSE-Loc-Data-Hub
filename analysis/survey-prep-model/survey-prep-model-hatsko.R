@@ -222,7 +222,9 @@ ds0 <-
     income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
     idp_registration_share      = idp_registration_number / total_population_2022,
     idp_real_share              = idp_real_number         / total_population_2022,
-    idp_child_share             = idp_child_education     / idp_registration_number
+    idp_child_share             = idp_child_education     / idp_registration_number,
+    occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
+                                            TRUE ~ 1)
   ) %>%
   left_join(ds_general %>% select(hromada_code, train_station, passangers_2021),
             by = 'hromada_code')
@@ -323,6 +325,7 @@ outcomes_vars <- c(
   ,'dftg_creation'
   ,'dftg_creation_date'
   ,'head_hromada_communication'
+  
 )
 
 outcomes_vars_new <-  c(
