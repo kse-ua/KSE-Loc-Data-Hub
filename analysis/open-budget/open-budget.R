@@ -128,8 +128,6 @@ ds_budget_meta <- ls_fin$budget$Metadata
 ds_taxes <- ls_fin$taxes$Data
 ds_taxes_meta <- ls_fin$taxes$Metadata
 
-
-
 # meta_oblast <- googlesheets4::read_sheet(sheet_name,"choices",skip = 0)
 # Originally, we pulled the meta data object from Kobo front end and stored to 
 # survey_xls  <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey")
@@ -166,7 +164,18 @@ ds0 <-
       hromada_code %in% (ds_survey %>% pull(hromada_code) %>% unique()) ~ TRUE
       ,TRUE ~ FALSE
     )
-  )
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    income_other_2021 = income_own_2021 - 
+      sum(c_across(income_military_2021:income_excise_duty_2021), na.rm = T)
+  ) %>% 
+  ungroup() %>% 
+  select(
+    hromada_code
+    ,any_of(names(income_vars))
+  ) 
+
 ds0 %>% glimpse()
 
 
@@ -197,15 +206,15 @@ income_prop <- c(
 
 
 # ---- bird-eye-view -------------------------
-  filter(!hromada_code %in% looks_fishy) %>%  d %>% 
-looks_fishy <- 
-  ds0 %>% 
-  filter(own_income_prop > 1 | own_income_prop < 0) %>% # how can they be outside of this window?
-  # select(hromada_stem) %>%
-  pull(hromada_code)
-pivot_vars <- c(income_raw,income_prop,budget_vars) %>% unique()
-
-
+#   filter(!hromada_code %in% looks_fishy) %>%  d %>% 
+# looks_fishy <- 
+#   ds0 %>% 
+#   filter(own_income_prop > 1 | own_income_prop < 0) %>% # how can they be outside of this window?
+#   # select(hromada_stem) %>%
+#   pull(hromada_code)
+# pivot_vars <- c(income_raw,income_prop,budget_vars) %>% unique()
+# 
+# 
 
 
 d <- 
@@ -233,7 +242,25 @@ d <-
 
 g %>% quick_save("1-bird-eye-view-without-fishy",w=16, h=9)
 
-# find the outlier
+# ---- income-covar ---------------
+
+ds_general %>% glimpse()
+
+d1 <- 
+  ds_general %>% 
+  # filter(!hromada_code %in% looks_fishy) %>% 
+  filter(!hromada_code %in% (ds_general %>% filter(income_total_2021>300000) %>% pull(hromada_code))) %>% 
+  select(income_total_2021:income_own_2021)
+d1_log <-
+  d1 %>% 
+  mutate(
+    across(
+      .cols = everything()
+      ,.fns = ~log(.)
+    )
+  ) 
+
+d1 %>% GGally::ggpairs()
 
 # ---- view-one-outcome ----------------------------
 
