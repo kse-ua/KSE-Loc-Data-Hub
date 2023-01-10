@@ -33,15 +33,16 @@ d
 # run multiple models, separating continuous and categorical predictors
 # source("./analysis/survey-prep-model/custom-model-functions.R") # for testing adjustments
 d <-
-  # ds1 %>%
-  ds2_prep %>%
+  ds1 %>%
+  # ds2_prep %>%
   run_complex_scan(
-    dependent = 'prep_score_oct'
-    ,depdist = "gaussian"
+    dependent = 'dftg_creation_b'
+    # ,depdist = "gaussian"
     # ,depdist = "poisson"
+    ,depdist = "binomial"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     # ,confounder = c("region_en")
-    ,confounder = c("voluntary")
+    # ,confounder = c("voluntary")
     , explanatory_categorical = predictor_vars_categorical_new
   )
 d %>% neat_DT()
