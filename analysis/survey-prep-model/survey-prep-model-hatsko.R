@@ -173,7 +173,8 @@ idp_help <-
 military_help <- 
   ds_survey %>% 
   select(starts_with('help_for_military/')) %>% 
-  colnames() %>% 
+  select(-c('help_for_military/other', 'help_for_military/none')) %>%
+  colnames() %>%
   print()
 
 # only for occupied hromadas - few cases
@@ -217,6 +218,8 @@ ds0 <-
   ds_survey %>% 
   mutate(
     idp_help_count              = rowSums(across(all_of(idp_help), na.rm = T)), # idp_help_count fix
+    help_military_count         = rowSums(across(all_of(military_help)), na.rm = T),
+    help_military_count_neg     = 4 - help_military_count,
     income_own_per_capita       = income_own_2021         / total_population_2022,
     income_total_per_capita     = income_total_2021       / total_population_2022,
     income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
@@ -224,10 +227,14 @@ ds0 <-
     idp_real_share              = idp_real_number         / total_population_2022,
     idp_child_share             = idp_child_education     / idp_registration_number,
     occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
-                                            TRUE ~ 1)
+                                            TRUE ~ 1),
+    info_channels_count_long    = rowSums(across(all_of(comm_channels)) == 2, na.rm = T),
+    info_channels_count_short    = rowSums(across(c('telegram', 'viber', 'facebook')) == 2, na.rm = T),
   ) %>%
   left_join(ds_general %>% select(hromada_code, train_station, passangers_2021),
             by = 'hromada_code')
+
+ds0 %>% select(all_of(military_help), help_military_count) %>% neat_DT()
 
 ds0 %>% glimpse(80)
 # ---- inspect-data-0 ------------------------------------------------------------
@@ -325,7 +332,11 @@ outcomes_vars <- c(
   ,'dftg_creation'
   ,'dftg_creation_date'
   ,'head_hromada_communication'
-  
+  ,'info_channels_count_long'
+  ,'info_channels_count_short'
+  ,'prep_winter_count'
+  ,'help_military_count'
+  ,'help_military_count_neg'
 )
 
 outcomes_vars_new <-  c(
@@ -341,6 +352,11 @@ outcomes_vars_new <-  c(
   ,'no_school_days_number'
   ,'hromada_exp_b'
   ,'head_hromada_communication_numeric'
+  ,'info_channels_count_long'
+  ,'info_channels_count_short'
+  ,'prep_winter_count'
+  ,'help_military_count'
+  ,'help_military_count_neg'
 )
 
 # Continuous - good for spreading out # Valentyn, please add relevant predictors here
@@ -771,6 +787,132 @@ d <-
   )
 d %>% plot_complex_scan()
 
+##+ Frequency of Head of Hromada Communication ---------------------------------
+
+# check distribution
+x <- ds1 %>% select(head_hromada_communication_numeric) %>% 
+  filter(!is.na(head_hromada_communication_numeric)) %>% pull()
+norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+plot(norm_dist)
+
+fit1_norm <- 
+  glm(
+    formula = head_hromada_communication_numeric ~ urban_perc_100
+    ,data = ds1
+    ,family = "gaussian"
+  )
+
+summary(fit1_norm)
+
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'head_hromada_communication_numeric'
+    ,depdist = "gaussian"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    , explanatory_categorical = predictor_vars_categorical_new
+  )
+d %>% plot_complex_scan()
+
+##+ Information Channels Count ---------------------------------
+
+# long version - including all listed channels
+# check distribution
+x <- ds1 %>% select(info_channels_count_short) %>% 
+  filter(!is.na(info_channels_count_short)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
+# looks like poisson, moreover its count data
+
+fit1_pois <- 
+  glm(
+    formula = info_channels_count_short ~ edem_petitions
+    ,data = ds1
+    ,family = "poisson"
+  )
+
+summary(fit1_pois)
+
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'info_channels_count_short'
+    ,depdist = "poisson"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    , explanatory_categorical = predictor_vars_categorical_new
+  )
+d %>% plot_complex_scan()
+
+# short version - including only social media
+
+# check distribution
+x <- ds1 %>% select(info_channels_count_long) %>% 
+  filter(!is.na(info_channels_count_long)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
+# looks like poisson, moreover its count data
+
+fit1_pois <- 
+  glm(
+    formula = info_channels_count_long ~ edem_petitions
+    ,data = ds1
+    ,family = "poisson"
+  )
+
+summary(fit1_pois)
+
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'info_channels_count_long'
+    ,depdist = "poisson"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    , explanatory_categorical = predictor_vars_categorical_new
+  )
+d %>% plot_complex_scan()
+
+##+ VFTC creation --------------------------------------------------------------
+
+fit1_logistic <- 
+  glm(
+    formula = dftg_creation_b ~ region_en
+    ,data = ds1
+    ,family = "binomial"
+  )
+
+summary(fit1_logistic)
+
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'dftg_creation_b'
+    ,depdist = "binomial"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    , explanatory_categorical = predictor_vars_categorical_new
+  )
+d %>% plot_complex_scan()
+
+##+ IDP Registered Number --------------------------------------------------
+
+# check distribution
+x <- ds1 %>% select(idp_registration_number) %>% filter(!is.na(idp_registration_number)) %>% 
+  pull() %>% log()
+norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+plot(norm_dist)
+
+fit1_norm <- 
+  glm(
+    formula = log(idp_registration_number) ~ no_party
+    ,data = ds1
+    ,family = "gaussian"
+  )
+
+summary(fit1_norm)
+
 ##+ International Projects Number --------------------------------------------------
 
 # check distribution
@@ -800,74 +942,61 @@ fit1_nbinom <-
 
 summary(fit1_nbinom)
 
-##+ IDP Registered Number --------------------------------------------------
+##+ Winter Preparation ---------------------------------------------------------
 
 # check distribution
-x <- ds1 %>% select(idp_registration_number) %>% filter(!is.na(idp_registration_number)) %>% 
-  pull() %>% log()
-norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
-plot(norm_dist)
+x <- ds1 %>% select(prep_winter_count) %>% filter(!is.na(prep_winter_count)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
 
-fit1_norm <- 
+ggplot(reshape2::melt(ds0[prep_for_winter]),aes(x=as.factor(value))) + geom_histogram(stat = 'count') + facet_wrap(~variable, scales = 'free')
+
+fit1_pois <- 
   glm(
-    formula = log(idp_registration_number) ~ no_party
+    formula = prep_winter_count ~ turnout_2020
     ,data = ds1
-    ,family = "gaussian"
+    ,family = "poisson"
   )
 
-summary(fit1_norm)
-
-##+ VFTC creation --------------------------------------------------
-
-fit1_logistic <- 
-  glm(
-    formula = dftg_creation_b ~ region_en
-    ,data = ds1
-    ,family = "binomial"
-  )
-
-summary(fit1_logistic)
+summary(fit1_pois)
 
 # plot
 d <-
   ds1 %>%
   run_complex_scan(
-    dependent = 'dftg_creation_b'
-    ,depdist = "binomial"
+    dependent = 'prep_winter_count'
+    ,depdist = "poisson"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     , explanatory_categorical = predictor_vars_categorical_new
   )
 d %>% plot_complex_scan()
 
-##+ Frequency of Head of Hromada Communication --------------------------------------------------
+##+ Military Help Count --------------------------------------------------------
 
-# check distribution
-x <- ds1 %>% select(head_hromada_communication_numeric) %>% 
-  filter(!is.na(head_hromada_communication_numeric)) %>% pull()
-norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
-plot(norm_dist)
+x <- ds1 %>% select(help_military_count) %>% filter(!is.na(help_military_count)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
 
-fit1_norm <- 
-  glm(
-    formula = head_hromada_communication_numeric ~ urban_perc_100
+# try with negative
+x <- ds1 %>% select(help_military_count_neg) %>% filter(!is.na(help_military_count_neg)) %>% pull()
+nbinom_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+plot(nbinom_dist)
+
+ggplot(reshape2::melt(ds0[military_help]),aes(x=as.factor(value))) + geom_histogram(stat = 'count') + facet_wrap(~variable)
+
+fit1_nbinom <- 
+  MASS::glm.nb(
+    formula = help_military_count_neg ~ income_tranfert_per_capita
     ,data = ds1
-    ,family = "gaussian"
   )
 
-summary(fit1_norm)
+summary(fit1_nbinom)
 
-# plot
-d <-
-  ds1 %>%
-  run_complex_scan(
-    dependent = 'head_hromada_communication_numeric'
-    ,depdist = "gaussian"
-    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
-    , explanatory_categorical = predictor_vars_categorical_new
-  )
-d %>% plot_complex_scan()
 
-###
+
+
+
+#+ ##
 
 fit2_poisson <- 
   glm(
