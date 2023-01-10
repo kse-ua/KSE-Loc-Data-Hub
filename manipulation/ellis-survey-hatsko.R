@@ -125,7 +125,8 @@ comm_channels <- d1 %>% select(telegram:hotline) %>% colnames()
 idp_help <- d1 %>% select(starts_with('idp_help/')) %>% colnames()
 military_help <- d1 %>% select(starts_with('help_for_military/')) %>% colnames()
 # only for occupied hromadas - few cases
-hromada_cooperation <- d1 %>% select(starts_with('hromada_cooperation/')) %>% colnames()
+hromada_cooperation <- d1 %>% select(starts_with('hromada_cooperation/')) %>% 
+  colnames() %>% select(-c('help_for_military/other', 'help_for_military/none'))
 prep_for_winter <- c('info_campaign', 'reserves', 'count_power_sources', 
                      'count_heaters_need', 'solid_fuel_boiler')
 
@@ -160,7 +161,6 @@ d2 <- d1 %>%
     ,idp_help_count = rowSums(across(all_of(idp_help), na.rm = T))
     ,prep_count= rowSums(across(all_of(preparation)), na.rm = T)
     ,comm_channels_count = rowSums(across(all_of(comm_channels)), na.rm = T)
-    ,help_military_count = rowSums(across(all_of(military_help)), na.rm = T)
     ,help_military_count = rowSums(across(all_of(military_help)), na.rm = T)
     ,hromada_cooperation_count = rowSums(across(all_of(hromada_cooperation)), na.rm = T)
     ,dftg_creation_time = floor(difftime(dftg_creation_date, "2022-02-24", unit = "day")) #negative values - choose another date
