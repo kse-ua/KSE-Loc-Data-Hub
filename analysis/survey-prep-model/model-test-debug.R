@@ -36,12 +36,12 @@ d <-
   # ds1 %>%
   ds2_prep %>%
   run_complex_scan(
-    dependent = 'prep_score_feb'
-    # ,depdist = "gaussian"
-    ,depdist = "poisson"
+    dependent = 'prep_score_oct'
+    ,depdist = "gaussian"
+    # ,depdist = "poisson"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     # ,confounder = c("region_en")
-    # ,confounder = c("urban_pct")
+    ,confounder = c("voluntary")
     , explanatory_categorical = predictor_vars_categorical_new
   )
 d %>% neat_DT()
