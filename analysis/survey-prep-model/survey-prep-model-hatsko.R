@@ -445,6 +445,7 @@ predictor_vars_categorical <- c(
   # ,'youth_centers_b' # наявність молодіжних центрів
   # ,'youth_councils_b' # наявність молодіжних рад
   # ,'business_support_centers_b' # наявність центру підтримки бізнесу
+  ,'occupation_and_combat'
   )
 
 predictor_vars_categorical_new <- c(
@@ -471,6 +472,7 @@ predictor_vars_categorical_new <- c(
   ,'youth_centers_b' # наявність молодіжних центрів
   ,'youth_councils_b' # наявність молодіжних рад
   ,'business_support_centers_b' # наявність центру підтримки бізнесу
+  ,'occupation_and_combat'
 )
 
 predictor_vars <- c(
@@ -569,17 +571,10 @@ ds1 <-
   mutate(country = "Ukraine") 
 
 
+# inspect outcomes
 ds1 %>% select(all_of(outcomes_vars_new)) %>% explore::describe_all() %>%neat_DT()
-
-ds1 %>% select(all_of(outcomes_vars_new)) %>% GGally::ggpairs()
-hist(ds1$no_school_days_coded)
-ds1 %>% sapply(outcomes_vars_new, plot)
-
-par(mfrow = c(4, 3))
-
-lapply(ds1[outcomes_vars_new], FUN=hist)
-
 ggplot(reshape2::melt(ds1[outcomes_vars_new]),aes(x=value)) + geom_histogram() + facet_wrap(~variable, scales = 'free')
+
 #+ - plot-linear-models-1 ------------------------------------------------------
 
 d <- 
@@ -703,132 +698,174 @@ g <-
 g %>% quick_save("tester3",w=16,h=9)
 
 
-#+ ---- one-model --------------------------------------------------------------
+#+ one-model -------------------------------------------------------------------
+
+##+ Preparation Score February -------------------------------------------------
+
+# check distribution
+x <- ds2_prep %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
+# too left-skewed for poisson 
+nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+plot(nbin_dist)
+# seems like negative binomial
+
+fit1_poisson <- 
+  glm(
+    formula = prep_score_feb ~ occupation_and_combat
+    ,data = ds2_prep
+    ,family = "poisson"
+  )
+
+performance::check_overdispersion(fit1_poisson)
+# overdispersed data - so negative binomial
+
+fit1_nbinom <- 
+  MASS::glm.nb(
+    formula = prep_score_feb ~ income_tranfert_per_capita
+    ,data = ds2_prep
+  )
+
+summary(fit1_nbinom)
+
+# for zero-inflated model
+
+# fit1_zi_pois <- pscl::zeroinfl(formula = prep_score_feb ~ occupation_and_combat | 1
+#                                ,data = ds2_prep
+#                                ,dist = "pois")
+# 
+# summary(fit1_zi_pois)
+
+fit1_zi_nbinom <- pscl::zeroinfl(formula = prep_score_feb ~ train_station | 1
+                                 ,data = ds2_prep
+                                 ,dist = "negbin")
+
+summary(fit1_zi_nbinom)
+
+##+ Preparation Score October --------------------------------------------------
+
+# check distribution
+x <- ds2_prep %>% select(prep_score_oct) %>% filter(!is.na(prep_score_oct)) %>% pull()
+norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+plot(norm_dist)
+# seems like normal
 
 fit1_norm <- 
   glm(
-    formula = head_hromada_communication_numeric ~ no_party
+    formula = prep_score_oct ~ occupation_and_combat 
+    ,data = ds2_prep
+    ,family = "gaussian"
+  )
+
+summary(fit1_norm)
+
+# plot
+d <-
+  ds2_prep %>%
+  run_complex_scan(
+    dependent = 'prep_score_oct'
+    ,depdist = "gaussian"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    , explanatory_categorical = predictor_vars_categorical_new
+  )
+d %>% plot_complex_scan()
+
+##+ International Projects Number --------------------------------------------------
+
+# check distribution
+x <- ds1 %>% select(international_projects_number) %>% filter(!is.na(international_projects_number)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
+# too left-skewed for poisson 
+nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+plot(nbin_dist)
+# seems like negative binomial
+
+fit1_poisson <- 
+  glm(
+    formula = international_projects_number ~ occupation_and_combat
+    ,data = ds1
+    ,family = "poisson"
+  )
+
+performance::check_overdispersion(fit1_poisson)
+# overdispersed data - so negative binomial
+
+fit1_nbinom <- 
+  MASS::glm.nb(
+    formula = international_projects_number ~ region_en
+    ,data = ds1
+  )
+
+summary(fit1_nbinom)
+
+##+ IDP Registered Number --------------------------------------------------
+
+# check distribution
+x <- ds1 %>% select(idp_registration_number) %>% filter(!is.na(idp_registration_number)) %>% 
+  pull() %>% log()
+norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+plot(norm_dist)
+
+fit1_norm <- 
+  glm(
+    formula = log(idp_registration_number) ~ no_party
     ,data = ds1
     ,family = "gaussian"
   )
 
 summary(fit1_norm)
 
-fit1_poisson <- 
+##+ VFTC creation --------------------------------------------------
+
+fit1_logistic <- 
   glm(
-    formula = prep_score_feb ~ war_zone_27_04_2022
-    ,data = ds2_prep
-    ,family = "poisson"
-  )
-
-summary(fit1_poisson)
-
-fit1_nbinom <- 
-  MASS::glm.nb(
-    formula = prep_score_feb ~ region_en
-    ,data = ds2_prep
-    )
-
-summary(fit1_nbinom)
-
-##
-
-1 - pchisq(summary(fit1_nbinom)$deviance,
-           summary(fit1_nbinom)$df.residual
-)
-
-# gaussian
-
-fit1_logn <- 
-  glm(
-    formula = dftg_creation_b ~ train_station
+    formula = dftg_creation_b ~ region_en
     ,data = ds1
     ,family = "binomial"
   )
 
-summary(fit1_logn)
+summary(fit1_logistic)
 
-# logistic
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'dftg_creation_b'
+    ,depdist = "binomial"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    , explanatory_categorical = predictor_vars_categorical_new
+  )
+d %>% plot_complex_scan()
 
-fit1_logit <- 
+##+ Frequency of Head of Hromada Communication --------------------------------------------------
+
+# check distribution
+x <- ds1 %>% select(head_hromada_communication_numeric) %>% 
+  filter(!is.na(head_hromada_communication_numeric)) %>% pull()
+norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+plot(norm_dist)
+
+fit1_norm <- 
   glm(
-    formula = idp_reg_number_log ~ no_party
+    formula = head_hromada_communication_numeric ~ urban_perc_100
     ,data = ds1
-    ,family = "binomial"
+    ,family = "gaussian"
   )
 
-summary(fit1_logit)
+summary(fit1_norm)
 
-# for zero-inflated model
-fit1_zi_pois <- pscl::zeroinfl(formula = prep_score_feb ~ war_zone_27_04_2022 | 1
-               ,data = ds2_prep
-               ,dist = "pois")
-
-summary(fit1_zi_pois)
-
-fit1_zi_nbinom <- pscl::zeroinfl(formula = prep_score_feb ~ war_zone_27_04_2022 | 1
-                                 ,data = ds2_prep
-                                 ,dist = "negbin")
-
-summary(fit1_zi_nbinom)
-
-
-fit1_poisson %>% broom::glance() # model properties
-fit1_nbinom %>% broom::glance() # model properties
-fit1_logn %>% broom::glance() # model properties
-
-fit1_poisson %>% broom::tidy() # coefficients
-
-summary(fit1_poisson)
-summary(fit1_nbinom)
-summary(fit1_zi_pois)
-summary(fit1_zi_nbinom)
-
-lmtest::lrtest(fit1_zi_pois, fit1_zi_nbinom)
-
-#
-E2 <- resid(fit1_zi_nbinom, type = "pearson")
-N  <- nrow(ds2_prep)
-p  <- length(coef(fit1_zi_nbinom))  
-sum(E2^2) / (N - p)
-
-#
-
-performance::check_overdispersion(fit1_poisson)
-
-hist(ds1$international_projects_number)
-
-x <- ds1 %>% select(head_hromada_communication_numeric) %>% filter(!is.na(head_hromada_communication_numeric)) %>% pull()
-
-fitur::fit_dist_addin()
-
-fitdistrplus::descdist(x, discrete = TRUE)
-normal_dist <- fitdistrplus::fitdist(x, distr = "pois")
-plot(normal_dist)
-normal_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
-plot(normal_dist)
-
-###
-
-pois_data <-x
-lambda_est <- mean(pois_data)
-
-p0_tilde <- exp(-lambda_est)
-p0_tilde
-n0 <- sum(1*(!(x >0)))
-n <- length(x)
-
-# number of observtions 'expected' to be zero
-n*p0_tilde
-
-#now lets perform the JVDB score test 
-numerator <- (n0 -n*p0_tilde)^2
-denominator <- n*p0_tilde*(1-p0_tilde) - n*lambda_est*(p0_tilde^2)
-
-test_stat <- numerator/denominator
-
-pvalue <- pchisq(test_stat,df=1, ncp=0, lower.tail=FALSE)
-pvalue 
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'head_hromada_communication_numeric'
+    ,depdist = "gaussian"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    , explanatory_categorical = predictor_vars_categorical_new
+  )
+d %>% plot_complex_scan()
 
 ###
 
