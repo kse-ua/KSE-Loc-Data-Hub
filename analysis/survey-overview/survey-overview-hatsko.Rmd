@@ -1,9 +1,9 @@
 ---
 title: "Resilience Survey Overview"
-author: 
-- "Valentyn Hatsko"
-- "Andriy Koval"  
-date: "Last updated: `r Sys.Date()`"
+author:
+- Valentyn Hatsko
+- Andriy Koval
+date: 'Last updated: `r Sys.Date()`'
 output:
   html_document:
     keep_md: yes
@@ -12,7 +12,9 @@ output:
     code_folding: show
     theme: cerulean
     highlight: zenburn
-editor_options: 
+  pdf_document:
+    toc: yes
+editor_options:
   chunk_output_type: console
 ---
 
@@ -260,6 +262,9 @@ ds_survey %>%
   select(-c(hromada_survey_prop, hromada_total_prop)) %>%
   relocate(hromada_count_total, .after = hromada_count) %>%
   ungroup() %>%
+  mutate(oblast_name_en = case_when(oblast_name_en == "Vonyn" ~ "Volyn",
+                                    oblast_name_en == "Driproptrovska" ~ "Dnipro",
+                                    TRUE ~ oblast_name_en)) %>%
   # neat_DT()
   gt::gt() %>%
   gt::cols_label(region_en = 'Region',
@@ -268,11 +273,33 @@ ds_survey %>%
                  hromada_count = 'ATCs in the survey',
                  hromada_total_pct = 'Proportion of Oblast \nin the General Population',
                  hromada_survey_pct = 'Proportion of Oblast \nin the Survey'
-  )
+  ) %>%
+  tab_row_group(
+    label = "Center"
+    ,rows = region_en == "Center"
+  ) %>%
+  tab_row_group(
+    label = "East"
+    ,rows = region_en == "East"
+  ) %>%
+    tab_row_group(
+    label = "North"
+    ,rows = region_en == "North"
+  ) %>%
+    tab_row_group(
+    label = "South"
+    ,rows = region_en == "South"
+  ) %>%
+    tab_row_group(
+    label = "West"
+    ,rows = region_en == "West"
+    ) %>%
+  cols_hide(region_en)
 
 ```
 
-
+\
+\
 <mark>1.4</mark> What type of hromadas are represented in the sample? 
 
 ```{r representation-type, class.source="fold-hide"}
@@ -299,7 +326,7 @@ ds_survey %>%
                       type == 'сільська' ~ "village"
                       )
   ) %>%
-  arrange(desc(hromada_survey_prop)) %>% 
+  arrange(factor(type, levels = c('urban', "urban village", "village"))) %>% 
   select(-c(hromada_survey_prop, hromada_total_prop)) %>%
   relocate(hromada_count_total, .after = hromada_count) %>%
   ungroup() %>%
@@ -314,31 +341,57 @@ ds_survey %>%
 
 ```
 
+\
+\
+<mark>1.5</mark> What hromadas experienced military occupation or  military actions? 
 
-mark>1.4</mark> What hromadas experienced military occupation or  military actions? 
 ```{r fig.height=4, fig.width=8, class.source="fold-hide"}
-(ds0 %>% make_bi_freq_graph("military_action"))+
+(ds0 %>% make_bi_freq_graph("military_action")) +
   labs(
     title = "How many respondent hromadas have experienced military action at the time of the interview?"
     ,subtitle = "Data were collected during October-November of 2022"
+    ,x = NULL
     ,y = NULL
-  )
+    ,fill = NULL
+  ) +  
+  scale_x_discrete(labels=c('no_combat' = 'No military actions', 'combat_now' = 'Experiencing military actions now', "combat_ended" = "Experienced military actions in the past")) +
+  guides(fill = "none") +
+  theme_bw()
 
 (ds0 %>% make_bi_freq_graph("occupation"))+
   labs(
     title = "How many respondent hromadas have experienced occupation at the time of the interview?"
     ,subtitle = "Data were collected during October-November of 2022"
     ,y=NULL
+    ,x=NULL
+  ) +  
+  scale_x_discrete(labels=c('occupied_now' = 'Occupied now', 'occupied_august' = 'Occupied until August-October', "occupied_april" = "Occupied until April", "not_occupied" = "Wasn't occupied")) +
+  guides(fill = "none") +
+  theme_bw()
+
+x <- as.data.frame(table(ds0$occupation, ds0$military_action)) %>% 
+  mutate(Var2 = case_when(Var2 == "combat_ended" ~ "Experienced military actions in the past",
+                          Var2 == "combat_now" ~ "Experiencing military actions now",
+                          Var2 == "no_combat" ~ "No military actions")) %>%
+  pivot_wider(names_from = "Var1", values_from = Freq)
+  
+gt::gt(x) %>%
+       gt::tab_header(
+         title = "Crosstable of Hromadas that experienced occupation and/or military actions") %>%
+  gt::cols_label(Var2 = '',
+                 not_occupied = "Wasn't occupied",
+                 occupied_april = 'Occupied until April',
+                 occupied_august = 'Occupied until August-October',
+                 occupied_now = 'Occupied now'
   )
-ds0 %>% make_bi_freq_graph("military_action","occupation")
-ds0 %>% make_bi_freq_graph("occupation","military_action")
 
 ```
 
+\
+\
+<mark>1.6</mark> How many partherships with other hromadas in Ukraine hromadas have?
 
-<mark>1.5</mark> How many partherships with other hromadas in Ukraine hromadas have?
-
-```{r partnerships-count, class.source="hide", cache=T}
+```{r partnerships-count, cache=T, echo = FALSE}
 
 ds_partners <- ds0 %>% 
   mutate(partners_text = as.numeric(partners_text)) %>% 
@@ -350,7 +403,7 @@ ds_partners <- ds0 %>%
 > Median number of partnerships that hromada has is `r ds_partners$median`, mean - `r round(ds_partners$mean, 2)`. 
 Maximum number of partnerships that hromada has in our survey is `r ds_partners$max`.
 
-```{r partnerships-hist, fig.height=7, fig.width=8, class.source="fold-hide"}
+```{r partnerships-hist, fig.height=7, fig.width=8, echo = FALSE}
 ds0 %>% 
   mutate(partners_text = as.numeric(partners_text)) %>% 
   select(hromada_full_name, partners_text) %>%
@@ -370,9 +423,9 @@ ds0 %>%
 
 ```
 
-> These are hromadas that have the most partnerships:
+> These are hromadas in our survey that have the most partnerships:
 
-```{r partnerships-top, class.source="fold-hide"}
+```{r partnerships-top, echo=FALSE}
 ds0 %>% 
   mutate(partners_text = as.numeric(partners_text)) %>%
   select(hromada_full_name, partners_text) %>%
@@ -405,9 +458,9 @@ ds0 %>%
 
 ```
 
-> These are hromadas that have the most friends abroad:
+> These are hromadas in our survey that have the most friends abroad:
 
-```{r friends-top, class.source="fold-hide"}
+```{r friends-top, class.source="fold-hide", echo=FALSE}
 ds0 %>% 
   mutate(friends_text = as.numeric(friends_text)) %>%
   select(hromada_full_name, friends_text) %>%
@@ -806,6 +859,8 @@ g <- d %>% make_plot_prep_change_bw(order_by = c("prep_score_oct","prep_score_fe
 g + labs(color = "Percentile\nGroup\n(Combo)")
 ```
 
+\
+\
 or as of February
 
 ```{r prep-change-segment-3, eval=T,fig.width=5.5, fig.height=8,class.source="fold-hide"}
@@ -1031,7 +1086,12 @@ return(g)
 meta_survey %>% filter(group=="information_hat") %>% pull(label) %>% cat()
 ```
 
-```{r information-summary-1, fig.height=3, fig.width=12,class.source="fold-hide"}
+\
+The most popular channel of communication for hromadas before February 24th and still is Facebook.
+Before February 24th, only about a quarter of hromadas in our sample had accounts on Viber and Telegram. \
+After February, hromadas doubled their use of alternative channels for communicating with their hromada: Viber, Telegram, Chat for getting help, hotline - now about half of hromadas have official groups on Viber and a hotline.
+
+```{r information-summary-1, fig.height=3, fig.width=12,class.source="fold-hide", echo=FALSE}
 
 d1 <- 
   ds1_info %>% 
@@ -1158,6 +1218,9 @@ g <-
 g
 ```
 
+\
+Most hromadas had at least one account in social networks before the invasion.
+
 ```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
 
 d <- 
@@ -1216,6 +1279,8 @@ d <-
 meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
 ```
 
+\
+Almost all hromada heads actively communicated with their hromada during the first month of the invasion: 95% addressed the hromada once a week or more, and 37% did it daily.
 
 ```{r info-1 , fig.height=3, fig.width=9,class.source="fold-hide"}
 (ds0 %>% 
@@ -1244,6 +1309,9 @@ meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
   )
 
 ```
+
+\
+Mayors of hromadas that had any social account before February 24th on average adressed hromada about the state of affairs significantly more during first month of invasion than those that didn't have.
 
 ```{r info-3 , fig.height=3, fig.width=9,class.source="fold-hide"}
 
@@ -1300,12 +1368,14 @@ meta_survey %>% filter(name=="dftg_creation") %>% pull(label) %>% cat()
 
 ```
 
+\
+About a third of hromadas in our survey had not yet created a volunteer defense force of territorial communities (VDF) as of October.
+
 ```{r dftg-1, fig.height=3, fig.width=9,class.source="fold-hide"}
 
 d <- ds0 %>% 
   select(hromada_code, dftg_creation, type) %>%
   mutate(dftg_creation = factor(dftg_creation, levels = c('not_able', 'still_not', 'yes')),
-         type = factor(type, levels = c('сільська', "селищна", "міська")),
          dftg_creation = fct_recode(dftg_creation,
              'Yes' = 'yes'
             ,"Didn't due to quick occupation" = 'not_able'
@@ -1319,7 +1389,8 @@ d <- ds0 %>%
   )
 ```
 
-Many village communities didn't have a voluntary formation of a territorial community at the time of the survey
+\
+Among village and urban village communities, a higher proportion of hromadas had not yet created a volunteer defense force of territorial communities (VDF).
 
 ```{r dftg-2, fig.height=3, fig.width=9,class.source="fold-hide"}
 d %>%
@@ -1341,6 +1412,10 @@ d %>%
   )
 ```
 
+\
+Here you can see the timeline of creation of these forces for our sample.\
+  
+
 ```{r dftg-date, fig.height=5, fig.width=9,class.source="fold-hide"}
 d <- ds0 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>% 
   summarise(n = n()) %>%
@@ -1349,7 +1424,7 @@ d <- ds0 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>%
 
 p <- d %>%
   ggplot(aes(x = dftg_creation_date, y = cum)) +
-  geom_point() +
+  geom_line() +
   geom_vline(aes(xintercept = as.POSIXct('2022-02-24')), 
              color = 'red', linetype = 'dashed') +
   geom_vline(aes(xintercept = as.POSIXct('2021-12-29')), 
@@ -1362,17 +1437,75 @@ p <- d %>%
         axis.title.x = element_blank()) +
   scale_x_datetime(limits = c(as.POSIXct('2021-12-01'), as.POSIXct('2022-10-15')), date_breaks = '1 month') +
   annotate(geom = 'label', x = as.POSIXct('2021-12-31'), y = 80, size = 3,
-           label = 'December 29th: \nThe order of formation and \nactivity of the voluntary \nformations of ATC was defined') +
+           label = 'December 29th: \nThe order of formation and \nactivity of the VDF was defined') +
   annotate(geom = 'label', x = as.POSIXct('2022-02-28'), y = 70, size = 3,
            label = 'Full-scale \nrussian invasion') +
   annotate(geom = 'text', x = as.POSIXct('2022-03-26'), y = 90, hjust = 0, size = 3,
-           label = '59 voluntary formations of ATC \nafter a first month', fontface = 'italic') +
-  labs(title = 'Number of DFTG created by ATCs')
+           label = '59 VDFs created after a \nfirst month of invasion in our sample', fontface = 'italic') +
+  labs(title = 'Number of VDFs created by ATCs')
 p
 
 ```
 
-```{r dftg-date-1, fig.height=5, fig.width=9,class.source="fold-hide"}
+```{r dftg-date-1, fig.height=5, fig.width=9,class.source="fold-hide", eval = FALSE}
+d <- ds0 %>% select(dftg_creation_date, type) %>% group_by(dftg_creation_date, type) %>% 
+  filter(!is.na(dftg_creation_date) & dftg_creation_date > '2021-12-28') %>%
+  summarise(n = n()) %>%
+  pivot_wider(values_from = n, names_from = type) %>%
+  rename(c = 'міська', v = 'сільська', s = 'селищна') %>%
+  ungroup() %>% 
+  mutate(c = replace_na(c, 0),
+         v = replace_na(v, 0),
+         s = replace_na(s, 0),
+         c_cum = cumsum(c),
+         s_cum = cumsum(s),
+         v_cum = cumsum(v)) %>% 
+  select(-c(c,v,s)) %>%
+  pivot_longer(-dftg_creation_date, values_to = 'n', names_to = 'type')
+
+p <- d %>%
+  ggplot(aes(x = dftg_creation_date, y = n, color = type)) +
+  geom_point() +
+  geom_vline(aes(xintercept = as.POSIXct('2022-02-24')), 
+             color = 'red', linetype = 'dashed') +
+  geom_vline(aes(xintercept = as.POSIXct('2021-12-29')), 
+             color = 'red', linetype = 'dashed') +
+  geom_rect(aes(xmin = as.POSIXct('2022-02-24'), xmax = as.POSIXct('2022-03-24'), 
+                ymin = -Inf, ymax = Inf),
+            color = 'coral1', fill = 'coral1', alpha = 0.007) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position = 'top') +
+  scale_x_datetime(limits = c(as.POSIXct('2021-12-01'), as.POSIXct('2022-10-15')), date_breaks = '1 month') +
+  scale_y_continuous(limits = c(0,40)) +
+  scale_color_discrete(labels = c('c_cum' = 'City', 's_cum' = 'Urban Village', 'v_cum' = 'Village')) +
+  annotate(geom = 'label', x = as.POSIXct('2021-12-31'), y = 36, size = 3,
+           label = 'December 29th: \nThe order of formation and \nactivity of the voluntary \nformations of ATC was defined') +
+  annotate(geom = 'label', x = as.POSIXct('2022-02-28'), y = 37, size = 3,
+           label = 'Full-scale \nrussian invasion') +
+  annotate(geom = 'text', x = as.POSIXct('2022-03-26'), y = 37, hjust = 0, size = 3,
+           label = '59 voluntary formations of ATC \nafter a first month', fontface = 'italic') +
+  labs(title = 'Number of DFTG created by ATCs', color = NULL)
+p
+
+```
+
+```{r dftg-date-1, fig.height=5, fig.width=9,class.source="fold-hide", eval = FALSE}
+
+before <- interval(start = "2021-12-28", end = "2022-02-23")
+first_month <- interval(start = "2022-02-24", end = "2022-03-23")
+second_month <- interval(start = "2022-03-24", end = "2022-04-23")
+third_and_more <- interval(start = "2022-04-24", end = "2022-11-30")
+
+
+d <- ds0 %>% filter(!is.na(dftg_creation_date) & dftg_creation_date > '2021-12-28') %>%
+  mutate(
+    invasion_duration = case_when(dftg_creation_date %within% before ~ "before the invasion",
+                                  dftg_creation_date %within% first_month ~ "first month of invasion",
+                                  dftg_creation_date %within% second_month ~ "second month of invasion",
+                                  dftg_creation_date %within% third_and_more ~ "after second month of invasion"))
+
 d <- ds0 %>% select(dftg_creation_date, type) %>% group_by(dftg_creation_date, type) %>% 
   filter(!is.na(dftg_creation_date) & dftg_creation_date > '2021-12-28') %>%
   summarise(n = n()) %>%
