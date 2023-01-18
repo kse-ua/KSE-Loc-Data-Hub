@@ -150,7 +150,7 @@ mcq <-
   dplyr::select(type,name)%>%
   dplyr::filter(str_detect(type, "select_multiple"))%>%
   dplyr::select(name)%>%
-  pull() %>%  
+  pull() %>%
   print()
 
 #vectors of mcq names
@@ -175,8 +175,10 @@ idp_help <-
 military_help <- 
   ds_survey %>% 
   select(starts_with('help_for_military/')) %>% 
-  colnames() %>% 
+  colnames() %>%
   print()
+
+military_help_short <- military_help[1:4]
 
 # only for occupied hromadas - few cases
 hromada_cooperation <- 
@@ -231,7 +233,8 @@ ds0 <-
     type = case_when(type == 'сільська' ~ 'village',
                      type == 'селищна' ~ 'urban village',
                      type == 'міська' ~ 'urban'),
-    type = factor(type, levels = c("village", "urban village", "urban"))
+    type = factor(type, levels = c("village", "urban village", "urban")),
+    help_military_count = rowSums(across(all_of(military_help_short)), na.rm = T)
     ) 
 
 ds1_winter_prep <- ds0 %>% 
