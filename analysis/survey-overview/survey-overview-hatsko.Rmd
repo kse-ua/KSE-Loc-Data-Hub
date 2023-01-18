@@ -1491,7 +1491,12 @@ p
 
 ```
 
-```{r dftg-date-1, fig.height=5, fig.width=9,class.source="fold-hide", eval = FALSE}
+\
+Only a few hromadas have created VDF before the invasion. \
+However, more than a half quickly reacted and managed to create VDF in the first month of the invasion. \
+Moreover, there are differences in speed of reaction by hromada type.
+
+```{r dftg-time-type, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
 
 before <- interval(start = "2021-12-28", end = "2022-02-23")
 first_month <- interval(start = "2022-02-24", end = "2022-03-23")
@@ -1504,49 +1509,96 @@ d <- ds0 %>% filter(!is.na(dftg_creation_date) & dftg_creation_date > '2021-12-2
     invasion_duration = case_when(dftg_creation_date %within% before ~ "before the invasion",
                                   dftg_creation_date %within% first_month ~ "first month of invasion",
                                   dftg_creation_date %within% second_month ~ "second month of invasion",
-                                  dftg_creation_date %within% third_and_more ~ "after second month of invasion"))
-
-d <- ds0 %>% select(dftg_creation_date, type) %>% group_by(dftg_creation_date, type) %>% 
-  filter(!is.na(dftg_creation_date) & dftg_creation_date > '2021-12-28') %>%
-  summarise(n = n()) %>%
-  pivot_wider(values_from = n, names_from = type) %>%
-  rename(c = 'міська', v = 'сільська', s = 'селищна') %>%
-  ungroup() %>% 
-  mutate(c = replace_na(c, 0),
-         v = replace_na(v, 0),
-         s = replace_na(s, 0),
-         c_cum = cumsum(c),
-         s_cum = cumsum(s),
-         v_cum = cumsum(v)) %>% 
-  select(-c(c,v,s)) %>%
-  pivot_longer(-dftg_creation_date, values_to = 'n', names_to = 'type')
+                                  dftg_creation_date %within% third_and_more ~ "after second month of invasion"),
+    invasion_duration = factor(invasion_duration, levels = c("before the invasion", "first month of invasion",
+                                                             "second month of invasion", "after second month of invasion")))
 
 p <- d %>%
-  ggplot(aes(x = dftg_creation_date, y = n, color = type)) +
-  geom_point() +
-  geom_vline(aes(xintercept = as.POSIXct('2022-02-24')), 
-             color = 'red', linetype = 'dashed') +
-  geom_vline(aes(xintercept = as.POSIXct('2021-12-29')), 
-             color = 'red', linetype = 'dashed') +
-  geom_rect(aes(xmin = as.POSIXct('2022-02-24'), xmax = as.POSIXct('2022-03-24'), 
-                ymin = -Inf, ymax = Inf),
-            color = 'coral1', fill = 'coral1', alpha = 0.007) +
-  theme_bw() +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        legend.position = 'top') +
-  scale_x_datetime(limits = c(as.POSIXct('2021-12-01'), as.POSIXct('2022-10-15')), date_breaks = '1 month') +
-  scale_y_continuous(limits = c(0,40)) +
-  scale_color_discrete(labels = c('c_cum' = 'City', 's_cum' = 'Urban Village', 'v_cum' = 'Village')) +
-  annotate(geom = 'label', x = as.POSIXct('2021-12-31'), y = 36, size = 3,
-           label = 'December 29th: \nThe order of formation and \nactivity of the voluntary \nformations of ATC was defined') +
-  annotate(geom = 'label', x = as.POSIXct('2022-02-28'), y = 37, size = 3,
-           label = 'Full-scale \nrussian invasion') +
-  annotate(geom = 'text', x = as.POSIXct('2022-03-26'), y = 37, hjust = 0, size = 3,
-           label = '59 voluntary formations of ATC \nafter a first month', fontface = 'italic') +
-  labs(title = 'Number of DFTG created by ATCs', color = NULL)
+  select(invasion_duration) %>% 
+  count(invasion_duration) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1)) %>% 
+  ggplot(aes(y=prop, x = invasion_duration))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), position = position_dodge(width = 1), vjust = -0.5)+
+  scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma")+
+  labs(
+    title = "When VDF was created?"
+    ,x = NULL
+    ,y = NULL
+  )
 p
 
+p <- d %>%
+  select(invasion_duration, type) %>% 
+  group_by(type) %>%
+  count(invasion_duration) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1)) %>% 
+  ggplot(aes(y=prop, x = invasion_duration, fill = type))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), position = position_dodge(width = 1), vjust = -0.5)+
+  scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma")+
+  labs(
+    title = "When VDF was created?"
+    ,fill = "Hromada Type"
+    ,x = "Percent of respondents in each group"
+    , y = NULL
+  )
+
+p
+
+```
+
+\
+Almost all communities provided at least products for military, significant majority allocated rooms and provided money and transport. 
+
+```{r help-military, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+
+help_military_levels <- c('rooms', 'transport', 'money', 'products', 'other', "none")
+
+d <- ds0 %>% select(hromada_code, starts_with('help_for_military/')) %>% 
+  pivot_longer(-hromada_code, names_to = 'help', values_to = 'count') %>%
+  count(help, count) %>% group_by(help) %>% 
+  mutate(freq = n/sum(n),
+         help = str_remove(help, 'help_for_military/')) %>%
+  filter(count == 1)
+
+p <- d %>% 
+  ggplot(aes(x = factor(help, levels = help_military_levels), y = freq)) +
+  geom_col() +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(title = 'Provided aid for military', subtitle = "excluding occupied hromadas") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(labels=c('rooms' = 'Allocated rooms', 'transport' = 'Provided transport',
+                            "money" = "Provided money", "products" = "Provided products \n(food, medicine, fuel)",
+                            "other" = "Other types of assistance", "none" = "Nothing"))
+
+p
+```
+
+\
+
+
+```{r help-military-number, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+
+d <- ds0 %>%
+  mutate(help_military_count = factor(help_military_count))
+
+(d %>% make_bi_freq_graph('help_military_count')) +
+    labs(
+    title = "Number of types of aid provided for the army"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y=NULL
+    ,x=NULL
+  ) +
+  guides(fill = "none") +
+  theme_bw()
 ```
 
 ## 4.1 Transport Help
