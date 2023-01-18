@@ -227,8 +227,12 @@ ds0 <-
     income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
     idp_registration_share      = idp_registration_number / total_population_2022,
     idp_real_share              = idp_real_number         / total_population_2022,
-    idp_child_share             = idp_child_education     / idp_registration_number
-  ) 
+    idp_child_share             = idp_child_education     / idp_registration_number,
+    type = case_when(type == 'сільська' ~ 'village',
+                     type == 'селищна' ~ 'urban village',
+                     type == 'міська' ~ 'urban'),
+    type = factor(type, levels = c("village", "urban village", "urban"))
+    ) 
 
 ds1_winter_prep <- ds0 %>% 
   mutate(
