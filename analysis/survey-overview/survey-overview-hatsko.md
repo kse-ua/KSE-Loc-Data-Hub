@@ -1,9 +1,9 @@
 ---
 title: "Resilience Survey Overview"
-author: 
-- "Valentyn Hatsko"
-- "Andriy Koval"  
-date: "Last updated: 2022-12-27"
+author:
+- Valentyn Hatsko
+- Andriy Koval
+date: 'Last updated: 2023-01-18'
 output:
   html_document:
     keep_md: yes
@@ -12,7 +12,9 @@ output:
     code_folding: show
     theme: cerulean
     highlight: zenburn
-editor_options: 
+  pdf_document:
+    toc: yes
+editor_options:
   chunk_output_type: console
 ---
 
@@ -967,8 +969,8 @@ ds0 %>% explore::describe_all() %>%neat_DT()
 ```
 
 ```{=html}
-<div id="htmlwidget-1f823241a6b5a04f660a" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1f823241a6b5a04f660a">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_now_text","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military_text","transport_help_communal","transport_help_bought","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,0,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,83,46,46,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,26,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,0,0,0,0,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,0,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,18.8,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,0,0,0,0,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,106,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,56,23,32,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,38,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,1,22,11,6,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,null,null,null,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,627,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.01,0],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,null,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,null,null,null,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,627,13.72,4.29,3.39,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,0.1,0.05],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,null,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,null,null,null,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,627,29,10,5,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,0.63,0.33]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-05ed776aeb945b871c5c" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-05ed776aeb945b871c5c">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_now_text","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military_text","transport_help_communal","transport_help_bought","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,0,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,83,46,46,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,26,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,0,0,0,0,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,0,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,18.8,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,0,0,0,0,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,106,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,56,23,32,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,38,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,1,22,11,6,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,null,null,null,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,627,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.01,0],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,null,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,null,null,null,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,627,13.72,4.29,3.39,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,0.1,0.05],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,null,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,null,null,null,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,627,29,10,5,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,0.63,0.33]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
 ```
 
 # 0. Introduction
@@ -994,7 +996,7 @@ meta_survey %>% filter(group=="preamble") %>% pull(label) %>% cat()
 
 <mark>1.1</mark> How many hromadas contributed responses to so far?
 
-> As of 2022-12-27, 138 hromadas contributed valid response to the survey
+> As of 2023-01-18, 138 hromadas contributed valid response to the survey
 
 <mark>1.2</mark> What regions are represented in this sample? 
 
@@ -1034,12 +1036,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="csbgvapgkp" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="fnxkluhvxg" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#csbgvapgkp .gt_table {
+#fnxkluhvxg .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -1064,7 +1066,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_heading {
+#fnxkluhvxg .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1076,12 +1078,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_caption {
+#fnxkluhvxg .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#csbgvapgkp .gt_title {
+#fnxkluhvxg .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1093,7 +1095,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#csbgvapgkp .gt_subtitle {
+#fnxkluhvxg .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1105,13 +1107,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#csbgvapgkp .gt_bottom_border {
+#fnxkluhvxg .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_col_headings {
+#fnxkluhvxg .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1126,7 +1128,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_col_heading {
+#fnxkluhvxg .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1146,7 +1148,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#csbgvapgkp .gt_column_spanner_outer {
+#fnxkluhvxg .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1158,15 +1160,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#csbgvapgkp .gt_column_spanner_outer:first-child {
+#fnxkluhvxg .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#csbgvapgkp .gt_column_spanner_outer:last-child {
+#fnxkluhvxg .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#csbgvapgkp .gt_column_spanner {
+#fnxkluhvxg .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1178,7 +1180,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#csbgvapgkp .gt_group_heading {
+#fnxkluhvxg .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1204,7 +1206,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#csbgvapgkp .gt_empty_group_heading {
+#fnxkluhvxg .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1219,15 +1221,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#csbgvapgkp .gt_from_md > :first-child {
+#fnxkluhvxg .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#csbgvapgkp .gt_from_md > :last-child {
+#fnxkluhvxg .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#csbgvapgkp .gt_row {
+#fnxkluhvxg .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1246,7 +1248,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#csbgvapgkp .gt_stub {
+#fnxkluhvxg .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1259,7 +1261,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#csbgvapgkp .gt_stub_row_group {
+#fnxkluhvxg .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1273,11 +1275,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#csbgvapgkp .gt_row_group_first td {
+#fnxkluhvxg .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#csbgvapgkp .gt_summary_row {
+#fnxkluhvxg .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1287,16 +1289,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#csbgvapgkp .gt_first_summary_row {
+#fnxkluhvxg .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_first_summary_row.thick {
+#fnxkluhvxg .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#csbgvapgkp .gt_last_summary_row {
+#fnxkluhvxg .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1306,7 +1308,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_grand_summary_row {
+#fnxkluhvxg .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1316,7 +1318,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#csbgvapgkp .gt_first_grand_summary_row {
+#fnxkluhvxg .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1326,11 +1328,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_striped {
+#fnxkluhvxg .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#csbgvapgkp .gt_table_body {
+#fnxkluhvxg .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1339,7 +1341,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_footnotes {
+#fnxkluhvxg .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1353,7 +1355,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_footnote {
+#fnxkluhvxg .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -1362,7 +1364,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#csbgvapgkp .gt_sourcenotes {
+#fnxkluhvxg .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1376,7 +1378,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#csbgvapgkp .gt_sourcenote {
+#fnxkluhvxg .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1384,64 +1386,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#csbgvapgkp .gt_left {
+#fnxkluhvxg .gt_left {
   text-align: left;
 }
 
-#csbgvapgkp .gt_center {
+#fnxkluhvxg .gt_center {
   text-align: center;
 }
 
-#csbgvapgkp .gt_right {
+#fnxkluhvxg .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#csbgvapgkp .gt_font_normal {
+#fnxkluhvxg .gt_font_normal {
   font-weight: normal;
 }
 
-#csbgvapgkp .gt_font_bold {
+#fnxkluhvxg .gt_font_bold {
   font-weight: bold;
 }
 
-#csbgvapgkp .gt_font_italic {
+#fnxkluhvxg .gt_font_italic {
   font-style: italic;
 }
 
-#csbgvapgkp .gt_super {
+#fnxkluhvxg .gt_super {
   font-size: 65%;
 }
 
-#csbgvapgkp .gt_footnote_marks {
+#fnxkluhvxg .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#csbgvapgkp .gt_asterisk {
+#fnxkluhvxg .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#csbgvapgkp .gt_indent_1 {
+#fnxkluhvxg .gt_indent_1 {
   text-indent: 5px;
 }
 
-#csbgvapgkp .gt_indent_2 {
+#fnxkluhvxg .gt_indent_2 {
   text-indent: 10px;
 }
 
-#csbgvapgkp .gt_indent_3 {
+#fnxkluhvxg .gt_indent_3 {
   text-indent: 15px;
 }
 
-#csbgvapgkp .gt_indent_4 {
+#fnxkluhvxg .gt_indent_4 {
   text-indent: 20px;
 }
 
-#csbgvapgkp .gt_indent_5 {
+#fnxkluhvxg .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -1520,6 +1522,9 @@ ds_survey %>%
   select(-c(hromada_survey_prop, hromada_total_prop)) %>%
   relocate(hromada_count_total, .after = hromada_count) %>%
   ungroup() %>%
+  mutate(oblast_name_en = case_when(oblast_name_en == "Vonyn" ~ "Volyn",
+                                    oblast_name_en == "Driproptrovska" ~ "Dnipro",
+                                    TRUE ~ oblast_name_en)) %>%
   # neat_DT()
   gt::gt() %>%
   gt::cols_label(region_en = 'Region',
@@ -1528,16 +1533,37 @@ ds_survey %>%
                  hromada_count = 'ATCs in the survey',
                  hromada_total_pct = 'Proportion of Oblast \nin the General Population',
                  hromada_survey_pct = 'Proportion of Oblast \nin the Survey'
-  )
+  ) %>%
+  tab_row_group(
+    label = "Center"
+    ,rows = region_en == "Center"
+  ) %>%
+  tab_row_group(
+    label = "East"
+    ,rows = region_en == "East"
+  ) %>%
+    tab_row_group(
+    label = "North"
+    ,rows = region_en == "North"
+  ) %>%
+    tab_row_group(
+    label = "South"
+    ,rows = region_en == "South"
+  ) %>%
+    tab_row_group(
+    label = "West"
+    ,rows = region_en == "West"
+    ) %>%
+  cols_hide(region_en)
 ```
 
 ```{=html}
-<div id="jjjyyglbmz" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="smampvkrsh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#jjjyyglbmz .gt_table {
+#smampvkrsh .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -1562,7 +1588,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_heading {
+#smampvkrsh .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1574,12 +1600,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_caption {
+#smampvkrsh .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#jjjyyglbmz .gt_title {
+#smampvkrsh .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1591,7 +1617,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#jjjyyglbmz .gt_subtitle {
+#smampvkrsh .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1603,13 +1629,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#jjjyyglbmz .gt_bottom_border {
+#smampvkrsh .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_col_headings {
+#smampvkrsh .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1624,7 +1650,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_col_heading {
+#smampvkrsh .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1644,7 +1670,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#jjjyyglbmz .gt_column_spanner_outer {
+#smampvkrsh .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1656,15 +1682,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#jjjyyglbmz .gt_column_spanner_outer:first-child {
+#smampvkrsh .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#jjjyyglbmz .gt_column_spanner_outer:last-child {
+#smampvkrsh .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#jjjyyglbmz .gt_column_spanner {
+#smampvkrsh .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1676,7 +1702,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#jjjyyglbmz .gt_group_heading {
+#smampvkrsh .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1702,7 +1728,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#jjjyyglbmz .gt_empty_group_heading {
+#smampvkrsh .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1717,15 +1743,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#jjjyyglbmz .gt_from_md > :first-child {
+#smampvkrsh .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#jjjyyglbmz .gt_from_md > :last-child {
+#smampvkrsh .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#jjjyyglbmz .gt_row {
+#smampvkrsh .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1744,7 +1770,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#jjjyyglbmz .gt_stub {
+#smampvkrsh .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1757,7 +1783,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjjyyglbmz .gt_stub_row_group {
+#smampvkrsh .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1771,11 +1797,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#jjjyyglbmz .gt_row_group_first td {
+#smampvkrsh .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#jjjyyglbmz .gt_summary_row {
+#smampvkrsh .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1785,16 +1811,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjjyyglbmz .gt_first_summary_row {
+#smampvkrsh .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_first_summary_row.thick {
+#smampvkrsh .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#jjjyyglbmz .gt_last_summary_row {
+#smampvkrsh .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1804,7 +1830,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_grand_summary_row {
+#smampvkrsh .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1814,7 +1840,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjjyyglbmz .gt_first_grand_summary_row {
+#smampvkrsh .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1824,11 +1850,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_striped {
+#smampvkrsh .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#jjjyyglbmz .gt_table_body {
+#smampvkrsh .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1837,7 +1863,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_footnotes {
+#smampvkrsh .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1851,7 +1877,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_footnote {
+#smampvkrsh .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -1860,7 +1886,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjjyyglbmz .gt_sourcenotes {
+#smampvkrsh .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1874,7 +1900,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#jjjyyglbmz .gt_sourcenote {
+#smampvkrsh .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1882,64 +1908,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjjyyglbmz .gt_left {
+#smampvkrsh .gt_left {
   text-align: left;
 }
 
-#jjjyyglbmz .gt_center {
+#smampvkrsh .gt_center {
   text-align: center;
 }
 
-#jjjyyglbmz .gt_right {
+#smampvkrsh .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#jjjyyglbmz .gt_font_normal {
+#smampvkrsh .gt_font_normal {
   font-weight: normal;
 }
 
-#jjjyyglbmz .gt_font_bold {
+#smampvkrsh .gt_font_bold {
   font-weight: bold;
 }
 
-#jjjyyglbmz .gt_font_italic {
+#smampvkrsh .gt_font_italic {
   font-style: italic;
 }
 
-#jjjyyglbmz .gt_super {
+#smampvkrsh .gt_super {
   font-size: 65%;
 }
 
-#jjjyyglbmz .gt_footnote_marks {
+#smampvkrsh .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#jjjyyglbmz .gt_asterisk {
+#smampvkrsh .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#jjjyyglbmz .gt_indent_1 {
+#smampvkrsh .gt_indent_1 {
   text-indent: 5px;
 }
 
-#jjjyyglbmz .gt_indent_2 {
+#smampvkrsh .gt_indent_2 {
   text-indent: 10px;
 }
 
-#jjjyyglbmz .gt_indent_3 {
+#smampvkrsh .gt_indent_3 {
   text-indent: 15px;
 }
 
-#jjjyyglbmz .gt_indent_4 {
+#smampvkrsh .gt_indent_4 {
   text-indent: 20px;
 }
 
-#jjjyyglbmz .gt_indent_5 {
+#smampvkrsh .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -1947,7 +1973,6 @@ ds_survey %>%
   
   <thead class="gt_col_headings">
     <tr>
-      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Region">Region</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Oblast">Oblast</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="ATCs in the survey">ATCs in the survey</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Total number &#10;of ATCs">Total number 
@@ -1959,150 +1984,141 @@ in the General Population</th>
     </tr>
   </thead>
   <tbody class="gt_table_body">
-    <tr><td headers="region_en" class="gt_row gt_left">Center</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Poltava</td>
-<td headers="hromada_count" class="gt_row gt_right">8</td>
-<td headers="hromada_count_total" class="gt_row gt_right">60</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">5.8%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.2%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">Center</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Cherkassy</td>
-<td headers="hromada_count" class="gt_row gt_right">5</td>
-<td headers="hromada_count_total" class="gt_row gt_right">66</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">3.6%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.6%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">Center</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Kirovograd</td>
-<td headers="hromada_count" class="gt_row gt_right">5</td>
-<td headers="hromada_count_total" class="gt_row gt_right">49</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">3.6%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">3.4%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">Center</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Vinnytsia</td>
-<td headers="hromada_count" class="gt_row gt_right">5</td>
-<td headers="hromada_count_total" class="gt_row gt_right">63</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">3.6%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.4%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">Center</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Khmelnitsk</td>
-<td headers="hromada_count" class="gt_row gt_right">1</td>
-<td headers="hromada_count_total" class="gt_row gt_right">60</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">0.7%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.2%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">East</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Driproptrovska</td>
-<td headers="hromada_count" class="gt_row gt_right">12</td>
-<td headers="hromada_count_total" class="gt_row gt_right">86</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">8.7%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">6.0%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">East</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Kharkiv</td>
-<td headers="hromada_count" class="gt_row gt_right">4</td>
-<td headers="hromada_count_total" class="gt_row gt_right">56</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">2.9%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">3.9%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">East</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Zaporizka</td>
-<td headers="hromada_count" class="gt_row gt_right">3</td>
-<td headers="hromada_count_total" class="gt_row gt_right">67</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">2.2%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.7%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">East</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Donetks</td>
-<td headers="hromada_count" class="gt_row gt_right">0</td>
-<td headers="hromada_count_total" class="gt_row gt_right">46</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">NA</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">3.2%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">East</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Luhansk</td>
-<td headers="hromada_count" class="gt_row gt_right">0</td>
-<td headers="hromada_count_total" class="gt_row gt_right">26</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">NA</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">1.8%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">North</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Sumska</td>
-<td headers="hromada_count" class="gt_row gt_right">8</td>
-<td headers="hromada_count_total" class="gt_row gt_right">51</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">5.8%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">3.5%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">North</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Chernigiv</td>
-<td headers="hromada_count" class="gt_row gt_right">7</td>
-<td headers="hromada_count_total" class="gt_row gt_right">57</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">5.1%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.0%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">North</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Kyiv-oblast</td>
-<td headers="hromada_count" class="gt_row gt_right">5</td>
-<td headers="hromada_count_total" class="gt_row gt_right">69</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">3.6%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.8%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">North</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Zhytomir</td>
-<td headers="hromada_count" class="gt_row gt_right">3</td>
-<td headers="hromada_count_total" class="gt_row gt_right">66</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">2.2%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.6%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">South</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Odesa</td>
-<td headers="hromada_count" class="gt_row gt_right">12</td>
-<td headers="hromada_count_total" class="gt_row gt_right">91</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">8.7%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">6.3%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">South</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Kherson</td>
-<td headers="hromada_count" class="gt_row gt_right">7</td>
-<td headers="hromada_count_total" class="gt_row gt_right">49</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">5.1%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">3.4%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">South</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Mykolayiv</td>
-<td headers="hromada_count" class="gt_row gt_right">1</td>
-<td headers="hromada_count_total" class="gt_row gt_right">52</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">0.7%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">3.6%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">West</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Ivano-Frankivsk</td>
-<td headers="hromada_count" class="gt_row gt_right">16</td>
-<td headers="hromada_count_total" class="gt_row gt_right">62</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">11.6%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.3%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">West</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Zakarpatska</td>
-<td headers="hromada_count" class="gt_row gt_right">11</td>
-<td headers="hromada_count_total" class="gt_row gt_right">64</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">8.0%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.5%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">West</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Lviv</td>
-<td headers="hromada_count" class="gt_row gt_right">9</td>
-<td headers="hromada_count_total" class="gt_row gt_right">73</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">6.5%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">5.1%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">West</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Vonyn</td>
-<td headers="hromada_count" class="gt_row gt_right">5</td>
-<td headers="hromada_count_total" class="gt_row gt_right">54</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">3.6%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">3.8%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">West</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Rivenska</td>
-<td headers="hromada_count" class="gt_row gt_right">4</td>
-<td headers="hromada_count_total" class="gt_row gt_right">64</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">2.9%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">4.5%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">West</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Ternopilska</td>
-<td headers="hromada_count" class="gt_row gt_right">4</td>
-<td headers="hromada_count_total" class="gt_row gt_right">55</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">2.9%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">3.8%</td></tr>
-    <tr><td headers="region_en" class="gt_row gt_left">West</td>
-<td headers="oblast_name_en" class="gt_row gt_left">Cherniveska</td>
-<td headers="hromada_count" class="gt_row gt_right">3</td>
-<td headers="hromada_count_total" class="gt_row gt_right">52</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">2.2%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">3.6%</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="5" class="gt_group_heading" scope="colgroup" id="West">West</th>
+    </tr>
+    <tr class="gt_row_group_first"><td headers="West  oblast_name_en" class="gt_row gt_left">Ivano-Frankivsk</td>
+<td headers="West  hromada_count" class="gt_row gt_right">16</td>
+<td headers="West  hromada_count_total" class="gt_row gt_right">62</td>
+<td headers="West  hromada_survey_pct" class="gt_row gt_right">11.6%</td>
+<td headers="West  hromada_total_pct" class="gt_row gt_right">4.3%</td></tr>
+    <tr><td headers="West  oblast_name_en" class="gt_row gt_left">Zakarpatska</td>
+<td headers="West  hromada_count" class="gt_row gt_right">11</td>
+<td headers="West  hromada_count_total" class="gt_row gt_right">64</td>
+<td headers="West  hromada_survey_pct" class="gt_row gt_right">8.0%</td>
+<td headers="West  hromada_total_pct" class="gt_row gt_right">4.5%</td></tr>
+    <tr><td headers="West  oblast_name_en" class="gt_row gt_left">Lviv</td>
+<td headers="West  hromada_count" class="gt_row gt_right">9</td>
+<td headers="West  hromada_count_total" class="gt_row gt_right">73</td>
+<td headers="West  hromada_survey_pct" class="gt_row gt_right">6.5%</td>
+<td headers="West  hromada_total_pct" class="gt_row gt_right">5.1%</td></tr>
+    <tr><td headers="West  oblast_name_en" class="gt_row gt_left">Volyn</td>
+<td headers="West  hromada_count" class="gt_row gt_right">5</td>
+<td headers="West  hromada_count_total" class="gt_row gt_right">54</td>
+<td headers="West  hromada_survey_pct" class="gt_row gt_right">3.6%</td>
+<td headers="West  hromada_total_pct" class="gt_row gt_right">3.8%</td></tr>
+    <tr><td headers="West  oblast_name_en" class="gt_row gt_left">Rivenska</td>
+<td headers="West  hromada_count" class="gt_row gt_right">4</td>
+<td headers="West  hromada_count_total" class="gt_row gt_right">64</td>
+<td headers="West  hromada_survey_pct" class="gt_row gt_right">2.9%</td>
+<td headers="West  hromada_total_pct" class="gt_row gt_right">4.5%</td></tr>
+    <tr><td headers="West  oblast_name_en" class="gt_row gt_left">Ternopilska</td>
+<td headers="West  hromada_count" class="gt_row gt_right">4</td>
+<td headers="West  hromada_count_total" class="gt_row gt_right">55</td>
+<td headers="West  hromada_survey_pct" class="gt_row gt_right">2.9%</td>
+<td headers="West  hromada_total_pct" class="gt_row gt_right">3.8%</td></tr>
+    <tr><td headers="West  oblast_name_en" class="gt_row gt_left">Cherniveska</td>
+<td headers="West  hromada_count" class="gt_row gt_right">3</td>
+<td headers="West  hromada_count_total" class="gt_row gt_right">52</td>
+<td headers="West  hromada_survey_pct" class="gt_row gt_right">2.2%</td>
+<td headers="West  hromada_total_pct" class="gt_row gt_right">3.6%</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="5" class="gt_group_heading" scope="colgroup" id="South">South</th>
+    </tr>
+    <tr class="gt_row_group_first"><td headers="South  oblast_name_en" class="gt_row gt_left">Odesa</td>
+<td headers="South  hromada_count" class="gt_row gt_right">12</td>
+<td headers="South  hromada_count_total" class="gt_row gt_right">91</td>
+<td headers="South  hromada_survey_pct" class="gt_row gt_right">8.7%</td>
+<td headers="South  hromada_total_pct" class="gt_row gt_right">6.3%</td></tr>
+    <tr><td headers="South  oblast_name_en" class="gt_row gt_left">Kherson</td>
+<td headers="South  hromada_count" class="gt_row gt_right">7</td>
+<td headers="South  hromada_count_total" class="gt_row gt_right">49</td>
+<td headers="South  hromada_survey_pct" class="gt_row gt_right">5.1%</td>
+<td headers="South  hromada_total_pct" class="gt_row gt_right">3.4%</td></tr>
+    <tr><td headers="South  oblast_name_en" class="gt_row gt_left">Mykolayiv</td>
+<td headers="South  hromada_count" class="gt_row gt_right">1</td>
+<td headers="South  hromada_count_total" class="gt_row gt_right">52</td>
+<td headers="South  hromada_survey_pct" class="gt_row gt_right">0.7%</td>
+<td headers="South  hromada_total_pct" class="gt_row gt_right">3.6%</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="5" class="gt_group_heading" scope="colgroup" id="North">North</th>
+    </tr>
+    <tr class="gt_row_group_first"><td headers="North  oblast_name_en" class="gt_row gt_left">Sumska</td>
+<td headers="North  hromada_count" class="gt_row gt_right">8</td>
+<td headers="North  hromada_count_total" class="gt_row gt_right">51</td>
+<td headers="North  hromada_survey_pct" class="gt_row gt_right">5.8%</td>
+<td headers="North  hromada_total_pct" class="gt_row gt_right">3.5%</td></tr>
+    <tr><td headers="North  oblast_name_en" class="gt_row gt_left">Chernigiv</td>
+<td headers="North  hromada_count" class="gt_row gt_right">7</td>
+<td headers="North  hromada_count_total" class="gt_row gt_right">57</td>
+<td headers="North  hromada_survey_pct" class="gt_row gt_right">5.1%</td>
+<td headers="North  hromada_total_pct" class="gt_row gt_right">4.0%</td></tr>
+    <tr><td headers="North  oblast_name_en" class="gt_row gt_left">Kyiv-oblast</td>
+<td headers="North  hromada_count" class="gt_row gt_right">5</td>
+<td headers="North  hromada_count_total" class="gt_row gt_right">69</td>
+<td headers="North  hromada_survey_pct" class="gt_row gt_right">3.6%</td>
+<td headers="North  hromada_total_pct" class="gt_row gt_right">4.8%</td></tr>
+    <tr><td headers="North  oblast_name_en" class="gt_row gt_left">Zhytomir</td>
+<td headers="North  hromada_count" class="gt_row gt_right">3</td>
+<td headers="North  hromada_count_total" class="gt_row gt_right">66</td>
+<td headers="North  hromada_survey_pct" class="gt_row gt_right">2.2%</td>
+<td headers="North  hromada_total_pct" class="gt_row gt_right">4.6%</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="5" class="gt_group_heading" scope="colgroup" id="East">East</th>
+    </tr>
+    <tr class="gt_row_group_first"><td headers="East  oblast_name_en" class="gt_row gt_left">Dnipro</td>
+<td headers="East  hromada_count" class="gt_row gt_right">12</td>
+<td headers="East  hromada_count_total" class="gt_row gt_right">86</td>
+<td headers="East  hromada_survey_pct" class="gt_row gt_right">8.7%</td>
+<td headers="East  hromada_total_pct" class="gt_row gt_right">6.0%</td></tr>
+    <tr><td headers="East  oblast_name_en" class="gt_row gt_left">Kharkiv</td>
+<td headers="East  hromada_count" class="gt_row gt_right">4</td>
+<td headers="East  hromada_count_total" class="gt_row gt_right">56</td>
+<td headers="East  hromada_survey_pct" class="gt_row gt_right">2.9%</td>
+<td headers="East  hromada_total_pct" class="gt_row gt_right">3.9%</td></tr>
+    <tr><td headers="East  oblast_name_en" class="gt_row gt_left">Zaporizka</td>
+<td headers="East  hromada_count" class="gt_row gt_right">3</td>
+<td headers="East  hromada_count_total" class="gt_row gt_right">67</td>
+<td headers="East  hromada_survey_pct" class="gt_row gt_right">2.2%</td>
+<td headers="East  hromada_total_pct" class="gt_row gt_right">4.7%</td></tr>
+    <tr><td headers="East  oblast_name_en" class="gt_row gt_left">Donetks</td>
+<td headers="East  hromada_count" class="gt_row gt_right">0</td>
+<td headers="East  hromada_count_total" class="gt_row gt_right">46</td>
+<td headers="East  hromada_survey_pct" class="gt_row gt_right">NA</td>
+<td headers="East  hromada_total_pct" class="gt_row gt_right">3.2%</td></tr>
+    <tr><td headers="East  oblast_name_en" class="gt_row gt_left">Luhansk</td>
+<td headers="East  hromada_count" class="gt_row gt_right">0</td>
+<td headers="East  hromada_count_total" class="gt_row gt_right">26</td>
+<td headers="East  hromada_survey_pct" class="gt_row gt_right">NA</td>
+<td headers="East  hromada_total_pct" class="gt_row gt_right">1.8%</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="5" class="gt_group_heading" scope="colgroup" id="Center">Center</th>
+    </tr>
+    <tr class="gt_row_group_first"><td headers="Center  oblast_name_en" class="gt_row gt_left">Poltava</td>
+<td headers="Center  hromada_count" class="gt_row gt_right">8</td>
+<td headers="Center  hromada_count_total" class="gt_row gt_right">60</td>
+<td headers="Center  hromada_survey_pct" class="gt_row gt_right">5.8%</td>
+<td headers="Center  hromada_total_pct" class="gt_row gt_right">4.2%</td></tr>
+    <tr><td headers="Center  oblast_name_en" class="gt_row gt_left">Cherkassy</td>
+<td headers="Center  hromada_count" class="gt_row gt_right">5</td>
+<td headers="Center  hromada_count_total" class="gt_row gt_right">66</td>
+<td headers="Center  hromada_survey_pct" class="gt_row gt_right">3.6%</td>
+<td headers="Center  hromada_total_pct" class="gt_row gt_right">4.6%</td></tr>
+    <tr><td headers="Center  oblast_name_en" class="gt_row gt_left">Kirovograd</td>
+<td headers="Center  hromada_count" class="gt_row gt_right">5</td>
+<td headers="Center  hromada_count_total" class="gt_row gt_right">49</td>
+<td headers="Center  hromada_survey_pct" class="gt_row gt_right">3.6%</td>
+<td headers="Center  hromada_total_pct" class="gt_row gt_right">3.4%</td></tr>
+    <tr><td headers="Center  oblast_name_en" class="gt_row gt_left">Vinnytsia</td>
+<td headers="Center  hromada_count" class="gt_row gt_right">5</td>
+<td headers="Center  hromada_count_total" class="gt_row gt_right">63</td>
+<td headers="Center  hromada_survey_pct" class="gt_row gt_right">3.6%</td>
+<td headers="Center  hromada_total_pct" class="gt_row gt_right">4.4%</td></tr>
+    <tr><td headers="Center  oblast_name_en" class="gt_row gt_left">Khmelnitsk</td>
+<td headers="Center  hromada_count" class="gt_row gt_right">1</td>
+<td headers="Center  hromada_count_total" class="gt_row gt_right">60</td>
+<td headers="Center  hromada_survey_pct" class="gt_row gt_right">0.7%</td>
+<td headers="Center  hromada_total_pct" class="gt_row gt_right">4.2%</td></tr>
   </tbody>
   
   
@@ -2110,7 +2126,8 @@ in the General Population</th>
 </div>
 ```
 
-
+\
+\
 <mark>1.4</mark> What type of hromadas are represented in the sample? 
 
 
@@ -2137,7 +2154,7 @@ ds_survey %>%
                       type == 'сільська' ~ "village"
                       )
   ) %>%
-  arrange(desc(hromada_survey_prop)) %>% 
+  arrange(factor(type, levels = c('urban', "urban village", "village"))) %>% 
   select(-c(hromada_survey_prop, hromada_total_prop)) %>%
   relocate(hromada_count_total, .after = hromada_count) %>%
   ungroup() %>%
@@ -2152,12 +2169,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="zraqsmezfu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="zqtjpebwpt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#zraqsmezfu .gt_table {
+#zqtjpebwpt .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -2182,7 +2199,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_heading {
+#zqtjpebwpt .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2194,12 +2211,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_caption {
+#zqtjpebwpt .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#zraqsmezfu .gt_title {
+#zqtjpebwpt .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2211,7 +2228,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#zraqsmezfu .gt_subtitle {
+#zqtjpebwpt .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2223,13 +2240,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#zraqsmezfu .gt_bottom_border {
+#zqtjpebwpt .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_col_headings {
+#zqtjpebwpt .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2244,7 +2261,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_col_heading {
+#zqtjpebwpt .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2264,7 +2281,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#zraqsmezfu .gt_column_spanner_outer {
+#zqtjpebwpt .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2276,15 +2293,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#zraqsmezfu .gt_column_spanner_outer:first-child {
+#zqtjpebwpt .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#zraqsmezfu .gt_column_spanner_outer:last-child {
+#zqtjpebwpt .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#zraqsmezfu .gt_column_spanner {
+#zqtjpebwpt .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2296,7 +2313,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#zraqsmezfu .gt_group_heading {
+#zqtjpebwpt .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2322,7 +2339,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#zraqsmezfu .gt_empty_group_heading {
+#zqtjpebwpt .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2337,15 +2354,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#zraqsmezfu .gt_from_md > :first-child {
+#zqtjpebwpt .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#zraqsmezfu .gt_from_md > :last-child {
+#zqtjpebwpt .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#zraqsmezfu .gt_row {
+#zqtjpebwpt .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2364,7 +2381,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#zraqsmezfu .gt_stub {
+#zqtjpebwpt .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2377,7 +2394,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zraqsmezfu .gt_stub_row_group {
+#zqtjpebwpt .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2391,11 +2408,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#zraqsmezfu .gt_row_group_first td {
+#zqtjpebwpt .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#zraqsmezfu .gt_summary_row {
+#zqtjpebwpt .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2405,16 +2422,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zraqsmezfu .gt_first_summary_row {
+#zqtjpebwpt .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_first_summary_row.thick {
+#zqtjpebwpt .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#zraqsmezfu .gt_last_summary_row {
+#zqtjpebwpt .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2424,7 +2441,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_grand_summary_row {
+#zqtjpebwpt .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2434,7 +2451,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zraqsmezfu .gt_first_grand_summary_row {
+#zqtjpebwpt .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2444,11 +2461,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_striped {
+#zqtjpebwpt .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#zraqsmezfu .gt_table_body {
+#zqtjpebwpt .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2457,7 +2474,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_footnotes {
+#zqtjpebwpt .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2471,7 +2488,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_footnote {
+#zqtjpebwpt .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -2480,7 +2497,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zraqsmezfu .gt_sourcenotes {
+#zqtjpebwpt .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2494,7 +2511,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#zraqsmezfu .gt_sourcenote {
+#zqtjpebwpt .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2502,64 +2519,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zraqsmezfu .gt_left {
+#zqtjpebwpt .gt_left {
   text-align: left;
 }
 
-#zraqsmezfu .gt_center {
+#zqtjpebwpt .gt_center {
   text-align: center;
 }
 
-#zraqsmezfu .gt_right {
+#zqtjpebwpt .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#zraqsmezfu .gt_font_normal {
+#zqtjpebwpt .gt_font_normal {
   font-weight: normal;
 }
 
-#zraqsmezfu .gt_font_bold {
+#zqtjpebwpt .gt_font_bold {
   font-weight: bold;
 }
 
-#zraqsmezfu .gt_font_italic {
+#zqtjpebwpt .gt_font_italic {
   font-style: italic;
 }
 
-#zraqsmezfu .gt_super {
+#zqtjpebwpt .gt_super {
   font-size: 65%;
 }
 
-#zraqsmezfu .gt_footnote_marks {
+#zqtjpebwpt .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#zraqsmezfu .gt_asterisk {
+#zqtjpebwpt .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#zraqsmezfu .gt_indent_1 {
+#zqtjpebwpt .gt_indent_1 {
   text-indent: 5px;
 }
 
-#zraqsmezfu .gt_indent_2 {
+#zqtjpebwpt .gt_indent_2 {
   text-indent: 10px;
 }
 
-#zraqsmezfu .gt_indent_3 {
+#zqtjpebwpt .gt_indent_3 {
   text-indent: 15px;
 }
 
-#zraqsmezfu .gt_indent_4 {
+#zqtjpebwpt .gt_indent_4 {
   text-indent: 20px;
 }
 
-#zraqsmezfu .gt_indent_5 {
+#zqtjpebwpt .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -2578,16 +2595,16 @@ in the General Population</th>
     </tr>
   </thead>
   <tbody class="gt_table_body">
-    <tr><td headers="type" class="gt_row gt_left">urban village</td>
-<td headers="hromada_count" class="gt_row gt_right">46</td>
-<td headers="hromada_count_total" class="gt_row gt_right">435</td>
-<td headers="hromada_survey_pct" class="gt_row gt_right">33.3%</td>
-<td headers="hromada_total_pct" class="gt_row gt_right">29.6%</td></tr>
     <tr><td headers="type" class="gt_row gt_left">urban</td>
 <td headers="hromada_count" class="gt_row gt_right">46</td>
 <td headers="hromada_count_total" class="gt_row gt_right">409</td>
 <td headers="hromada_survey_pct" class="gt_row gt_right">33.3%</td>
 <td headers="hromada_total_pct" class="gt_row gt_right">27.8%</td></tr>
+    <tr><td headers="type" class="gt_row gt_left">urban village</td>
+<td headers="hromada_count" class="gt_row gt_right">46</td>
+<td headers="hromada_count_total" class="gt_row gt_right">435</td>
+<td headers="hromada_survey_pct" class="gt_row gt_right">33.3%</td>
+<td headers="hromada_total_pct" class="gt_row gt_right">29.6%</td></tr>
     <tr><td headers="type" class="gt_row gt_left">village</td>
 <td headers="hromada_count" class="gt_row gt_right">46</td>
 <td headers="hromada_count_total" class="gt_row gt_right">625</td>
@@ -2600,16 +2617,23 @@ in the General Population</th>
 </div>
 ```
 
+\
+\
+<mark>1.5</mark> What hromadas experienced military occupation or  military actions? 
 
-mark>1.4</mark> What hromadas experienced military occupation or  military actions? 
 
 ```{.r .fold-hide}
-(ds0 %>% make_bi_freq_graph("military_action"))+
+(ds0 %>% make_bi_freq_graph("military_action")) +
   labs(
     title = "How many respondent hromadas have experienced military action at the time of the interview?"
     ,subtitle = "Data were collected during October-November of 2022"
+    ,x = NULL
     ,y = NULL
-  )
+    ,fill = NULL
+  ) +  
+  scale_x_discrete(labels=c('no_combat' = 'No military actions', 'combat_now' = 'Experiencing military actions now', "combat_ended" = "Experienced military actions in the past")) +
+  guides(fill = "none") +
+  theme_bw()
 ```
 
 ![](figure-png-iso/unnamed-chunk-4-1.png)<!-- -->
@@ -2620,72 +2644,496 @@ mark>1.4</mark> What hromadas experienced military occupation or  military actio
     title = "How many respondent hromadas have experienced occupation at the time of the interview?"
     ,subtitle = "Data were collected during October-November of 2022"
     ,y=NULL
-  )
+    ,x=NULL
+  ) +  
+  scale_x_discrete(labels=c('occupied_now' = 'Occupied now', 'occupied_august' = 'Occupied until August-October', "occupied_april" = "Occupied until April", "not_occupied" = "Wasn't occupied")) +
+  guides(fill = "none") +
+  theme_bw()
 ```
 
 ![](figure-png-iso/unnamed-chunk-4-2.png)<!-- -->
 
 ```{.r .fold-hide}
-ds0 %>% make_bi_freq_graph("military_action","occupation")
+x <- as.data.frame(table(ds0$occupation, ds0$military_action)) %>% 
+  mutate(Var2 = case_when(Var2 == "combat_ended" ~ "Experienced military actions in the past",
+                          Var2 == "combat_now" ~ "Experiencing military actions now",
+                          Var2 == "no_combat" ~ "No military actions")) %>%
+  pivot_wider(names_from = "Var1", values_from = Freq)
+  
+gt::gt(x) %>%
+       gt::tab_header(
+         title = "Crosstable of Hromadas that experienced occupation and/or military actions") %>%
+  gt::cols_label(Var2 = '',
+                 not_occupied = "Wasn't occupied",
+                 occupied_april = 'Occupied until April',
+                 occupied_august = 'Occupied until August-October',
+                 occupied_now = 'Occupied now'
+  )
 ```
 
-![](figure-png-iso/unnamed-chunk-4-3.png)<!-- -->
+```{=html}
+<div id="axnsmhnuvo" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
 
-```{.r .fold-hide}
-ds0 %>% make_bi_freq_graph("occupation","military_action")
+#axnsmhnuvo .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#axnsmhnuvo .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#axnsmhnuvo .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#axnsmhnuvo .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#axnsmhnuvo .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#axnsmhnuvo .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#axnsmhnuvo .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#axnsmhnuvo .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#axnsmhnuvo .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#axnsmhnuvo .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#axnsmhnuvo .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#axnsmhnuvo .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#axnsmhnuvo .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#axnsmhnuvo .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#axnsmhnuvo .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#axnsmhnuvo .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#axnsmhnuvo .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#axnsmhnuvo .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#axnsmhnuvo .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#axnsmhnuvo .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#axnsmhnuvo .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#axnsmhnuvo .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#axnsmhnuvo .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#axnsmhnuvo .gt_left {
+  text-align: left;
+}
+
+#axnsmhnuvo .gt_center {
+  text-align: center;
+}
+
+#axnsmhnuvo .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#axnsmhnuvo .gt_font_normal {
+  font-weight: normal;
+}
+
+#axnsmhnuvo .gt_font_bold {
+  font-weight: bold;
+}
+
+#axnsmhnuvo .gt_font_italic {
+  font-style: italic;
+}
+
+#axnsmhnuvo .gt_super {
+  font-size: 65%;
+}
+
+#axnsmhnuvo .gt_footnote_marks {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 75%;
+  vertical-align: 0.4em;
+}
+
+#axnsmhnuvo .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#axnsmhnuvo .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#axnsmhnuvo .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#axnsmhnuvo .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#axnsmhnuvo .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#axnsmhnuvo .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table">
+  <thead class="gt_header">
+    <tr>
+      <td colspan="5" class="gt_heading gt_title gt_font_normal gt_bottom_border" style>Crosstable of Hromadas that experienced occupation and/or military actions</td>
+    </tr>
+    
+  </thead>
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=""></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Wasn't occupied">Wasn't occupied</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Occupied until April">Occupied until April</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Occupied until August-October">Occupied until August-October</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Occupied now">Occupied now</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="Var2" class="gt_row gt_left">Experienced military actions in the past</td>
+<td headers="not_occupied" class="gt_row gt_right">1</td>
+<td headers="occupied_april" class="gt_row gt_right">6</td>
+<td headers="occupied_august" class="gt_row gt_right">0</td>
+<td headers="occupied_now" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="Var2" class="gt_row gt_left">Experiencing military actions now</td>
+<td headers="not_occupied" class="gt_row gt_right">1</td>
+<td headers="occupied_april" class="gt_row gt_right">3</td>
+<td headers="occupied_august" class="gt_row gt_right">1</td>
+<td headers="occupied_now" class="gt_row gt_right">4</td></tr>
+    <tr><td headers="Var2" class="gt_row gt_left">No military actions</td>
+<td headers="not_occupied" class="gt_row gt_right">116</td>
+<td headers="occupied_april" class="gt_row gt_right">3</td>
+<td headers="occupied_august" class="gt_row gt_right">0</td>
+<td headers="occupied_now" class="gt_row gt_right">2</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
 ```
 
-![](figure-png-iso/unnamed-chunk-4-4.png)<!-- -->
+\
+\
+<mark>1.6</mark> How many partherships with other hromadas in Ukraine hromadas have?
 
 
-<mark>1.5</mark> How many partherships with other hromadas in Ukraine hromadas have?
-
-
-```{.r .hide}
-ds_partners <- ds0 %>% 
-  mutate(partners_text = as.numeric(partners_text)) %>% 
-  summarise(median = median(partners_text, na.rm =  T),
-            mean = mean(partners_text, na.rm =  T),
-            max = max(partners_text, na.rm =  T)) 
-```
 
 > Median number of partnerships that hromada has is 0, mean - 1.34. 
 Maximum number of partnerships that hromada has in our survey is 20.
 
-
-```{.r .fold-hide}
-ds0 %>% 
-  mutate(partners_text = as.numeric(partners_text)) %>% 
-  select(hromada_full_name, partners_text) %>%
-  mutate(partners_group = cut(partners_text, 
-                              breaks = c(0, 1, 2, 3, 4, 20), 
-                              labels = c('None', '1', '2', '3', 'More than 3'),
-                              right = F)) %>%
-  na.omit() %>%
-  ggplot(aes(x=partners_group, group = 1)) +
-  geom_bar(aes(y = ..prop..), stat = 'count') +
-  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
-  scale_y_continuous(labels = scales::percent_format()) +
-  labs(
-    title = "How many partnerships hromadas have?"
-    ,y = NULL, x = NULL
-  )
-```
-
 ![](figure-png-iso/partnerships-hist-1.png)<!-- -->
 
-> These are hromadas that have the most partnerships:
-
-
-```{.r .fold-hide}
-ds0 %>% 
-  mutate(partners_text = as.numeric(partners_text)) %>%
-  select(hromada_full_name, partners_text) %>%
-  slice_max(partners_text, n = 5) %>%
-  rename('Hromada Name' = "hromada_full_name"
-         , "Number of hromada's partnerships in Ukraine" = "partners_text") %>%
-  neat()
-```
+> These are hromadas in our survey that have the most partnerships:
 
 <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
  <thead>
@@ -2742,18 +3190,7 @@ ds0 %>%
 
 ![](figure-png-iso/friends-hist-1.png)<!-- -->
 
-> These are hromadas that have the most friends abroad:
-
-
-```{.r .fold-hide}
-ds0 %>% 
-  mutate(friends_text = as.numeric(friends_text)) %>%
-  select(hromada_full_name, friends_text) %>%
-  slice_max(friends_text, n = 10) %>%
-  rename('Hromada Name' = "hromada_full_name"
-         , "Number of hromada's friends abroad" = "friends_text") %>%
-  neat()
-```
+> These are hromadas in our survey that have the most friends abroad:
 
 <table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
  <thead>
@@ -3334,6 +3771,8 @@ g + labs(color = "Percentile\nGroup\n(Combo)")
 
 ![](figure-png-iso/prep-change-segment-2-1.png)<!-- -->
 
+\
+\
 or as of February
 
 
@@ -3371,134 +3810,15 @@ meta_survey %>% filter(group=="information_hat") %>% pull(label) %>% cat()
 Який з перелічених нижче засобів використовується громадою для інформування населення...
 ```
 
-
-```{.r .fold-hide}
-d1 <- 
-  ds1_info %>% 
-  pivot_longer(
-    cols = item_information
-    ,names_to = "item_name"
-    ,values_to = "item_response"
-  ) %>% 
-  group_by(item_name,item_response) %>% 
-  summarize(
-    count = n_distinct(hromada_code)
-    ,.groups = "drop"
-  ) %>% 
-  group_by(item_name) %>% 
-  mutate(
-    prop = count/sum(count, rm.na = T)
-    ,pct = scales::percent(prop, accuracy = 1)
-  ) %>% 
-  ungroup()
-
-d2 <- 
-  ds1_info %>% 
-   pivot_longer(
-    cols = item_information
-    ,names_to = "item_name"
-    ,values_to = "item_response"
-  ) %>% 
-  mutate(
-    item_response = case_when(
-      item_response != "No" ~ "Yes"
-    )
-  ) %>%
-  group_by(item_name,item_response) %>% 
-  summarize(
-    count = n_distinct(hromada_code)
-    ,.groups = "drop"
-  ) %>% 
-  group_by(item_name) %>% 
-  mutate(
-    prop = count/sum(count, rm.na = T)
-    ,pct = scales::percent(prop, accuracy = 1)
-  ) %>% 
-  ungroup()
-
-d12 <- 
-  bind_rows(
-    d1
-    ,d2 %>% filter(item_response == "Yes")
-  ) %>% 
-  left_join(
-    d_meta_info
-  ) %>% 
-  arrange(item_name, item_response) 
-
-d_in <- 
-  d12 %>% 
-    mutate(
-    display_name = label_en
-    ,display_name = factor(
-      display_name
-      ,levels =  d12 %>%
-        left_join(d_meta_info) %>%
-        filter(item_response == "Yes") %>%
-        # filter(value == "Before Feb 24") %>%
-        arrange(prop) %>%
-        # arrange(desc(item_number)) %>%
-        pull(label_en)
-    ) # display_name
-    ,item_response = fct_relevel(
-      item_response
-      , "Before Feb 24", "After Feb 24","Yes", "No", "Not Applicable",
-    ) %>% fct_rev()
-  ) 
-
-g <- 
-  d_in %>% 
-  { 
-  ggplot(
-    data = (.) %>% filter(item_response !="Yes") %>% mutate(item_response=factor(item_response))
-    ,aes(x=prop, y = display_name, fill=item_response)
-  )+
-  geom_col(position = position_stack()
-           , alpha = .7
-           ,data =
-  )+
-  geom_text(aes(label = str_remove(pct,"\\%"))
-            ,hjust = 1
-            , size = 4
-            ,color="white"
-            ,position = position_stack()
-            ,data = . %>% filter(item_response !="Yes")
-            )+
-  geom_text(aes(label = str_remove(pct,"\\%"))
-            ,hjust = -.5
-            ,vjust = .5
-            , size = 2
-            ,color="black"
-            ,position = position_stack()
-            ,data = (.) %>% filter(item_response=="Yes") %>% mutate(item_response=NA)
-
-            )+
-  scale_x_continuous(
-    breaks = seq(.1,1,.1)
-    ,labels = scales::percent_format()
-    ,expand = expansion(add=c(-.000,-.0))
-  )+
-  scale_fill_viridis_d(
-    begin = .8, end = .0, direction = -1
-    , option = "plasma", guide= guide_legend(reverse=T)
-  )+
-  labs(
-    title = "What channels of communication are used to dissiminate information?"
-    ,x = "Percent of respondents", y = NULL, fill = NULL
-    ,caption = "Cummulative percent shown in black"
-  )+
-  theme(
-    # panel.grid = element_blank()
-    panel.grid.major.y  = element_blank()
-    ,panel.border = element_blank()
-    ,panel.grid.major.x = element_line(color = "black")
-  )
-  }
-
-g
-```
+\
+The most popular channel of communication for hromadas before February 24th and still is Facebook.
+Before February 24th, only about a quarter of hromadas in our sample had accounts on Viber and Telegram. \
+After February, hromadas doubled their use of alternative channels for communicating with their hromada: Viber, Telegram, Chat for getting help, hotline - now about half of hromadas have official groups on Viber and a hotline.
 
 ![](figure-png-iso/information-summary-1-1.png)<!-- -->
+
+\
+Most hromadas had at least one account in social networks before the invasion.
 
 
 ```{.r .fold-hide}
@@ -3565,6 +3885,8 @@ meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
 Як часто в середньому голова громади звертався (відео чи повідомлення) до населення громади стосовно стану справ у перший місяць від повномасштабного вторгнення?
 ```
 
+\
+Almost all hromada heads actively communicated with their hromada during the first month of the invasion: 95% addressed the hromada once a week or more, and 37% did it daily.
 
 
 ```{.r .fold-hide}
@@ -3595,6 +3917,9 @@ meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
 ```
 
 ![](figure-png-iso/info-1 -1.png)<!-- -->
+
+\
+Mayors of hromadas that had any social account before February 24th on average adressed hromada about the state of affairs significantly more during first month of invasion than those that didn't have.
 
 
 ```{.r .fold-hide}
@@ -3658,12 +3983,14 @@ meta_survey %>% filter(name=="dftg_creation") %>% pull(label) %>% cat()
 Чи було у вашій громаді офіційно сформоване добровольче формування територіальної громади?
 ```
 
+\
+About a third of hromadas in our survey had not yet created a volunteer defense force of territorial communities (VDF) as of October.
+
 
 ```{.r .fold-hide}
 d <- ds0 %>% 
   select(hromada_code, dftg_creation, type) %>%
   mutate(dftg_creation = factor(dftg_creation, levels = c('not_able', 'still_not', 'yes')),
-         type = factor(type, levels = c('сільська', "селищна", "міська")),
          dftg_creation = fct_recode(dftg_creation,
              'Yes' = 'yes'
             ,"Didn't due to quick occupation" = 'not_able'
@@ -3679,7 +4006,8 @@ d <- ds0 %>%
 
 ![](figure-png-iso/dftg-1-1.png)<!-- -->
 
-Many village communities didn't have a voluntary formation of a territorial community at the time of the survey
+\
+Among village and urban village communities, a higher proportion of hromadas had not yet created a volunteer defense force of territorial communities (VDF).
 
 
 ```{.r .fold-hide}
@@ -3704,6 +4032,10 @@ d %>%
 
 ![](figure-png-iso/dftg-2-1.png)<!-- -->
 
+\
+Here you can see the timeline of creation of these forces for our sample.\
+  
+
 
 ```{.r .fold-hide}
 d <- ds0 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>% 
@@ -3713,7 +4045,7 @@ d <- ds0 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>%
 
 p <- d %>%
   ggplot(aes(x = dftg_creation_date, y = cum)) +
-  geom_point() +
+  geom_line() +
   geom_vline(aes(xintercept = as.POSIXct('2022-02-24')), 
              color = 'red', linetype = 'dashed') +
   geom_vline(aes(xintercept = as.POSIXct('2021-12-29')), 
@@ -3726,12 +4058,12 @@ p <- d %>%
         axis.title.x = element_blank()) +
   scale_x_datetime(limits = c(as.POSIXct('2021-12-01'), as.POSIXct('2022-10-15')), date_breaks = '1 month') +
   annotate(geom = 'label', x = as.POSIXct('2021-12-31'), y = 80, size = 3,
-           label = 'December 29th: \nThe order of formation and \nactivity of the voluntary \nformations of ATC was defined') +
+           label = 'December 29th: \nThe order of formation and \nactivity of the VDF was defined') +
   annotate(geom = 'label', x = as.POSIXct('2022-02-28'), y = 70, size = 3,
            label = 'Full-scale \nrussian invasion') +
   annotate(geom = 'text', x = as.POSIXct('2022-03-26'), y = 90, hjust = 0, size = 3,
-           label = '59 voluntary formations of ATC \nafter a first month', fontface = 'italic') +
-  labs(title = 'Number of DFTG created by ATCs')
+           label = '59 VDFs created after a \nfirst month of invasion in our sample', fontface = 'italic') +
+  labs(title = 'Number of VDFs created by ATCs')
 p
 ```
 
@@ -4363,14 +4695,14 @@ For the sake of documentation and reproducibility, the current report was render
 - Session info -----------------------------------------------------------------------------------
  setting  value
  version  R version 4.2.2 (2022-10-31 ucrt)
- os       Windows 10 x64 (build 19045)
+ os       Windows 10 x64 (build 22621)
  system   x86_64, mingw32
  ui       RTerm
  language (EN)
  collate  Ukrainian_Ukraine.utf8
  ctype    Ukrainian_Ukraine.1251
  tz       Europe/Helsinki
- date     2022-12-27
+ date     2023-01-18
  pandoc   2.19.2 @ C:/Program Files/RStudio/bin/quarto/bin/tools/ (via rmarkdown)
 
 - Packages ---------------------------------------------------------------------------------------
@@ -4503,4 +4835,4 @@ For the sake of documentation and reproducibility, the current report was render
 
 
 
-Report rendered by Valentyn Hatsko at 2022-12-27, 18:14 +0200 in 21 seconds.
+Report rendered by Valentyn Hatsko at 2023-01-18, 15:07 +0200 in 16 seconds.
