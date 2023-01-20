@@ -257,7 +257,6 @@ ds1_problem <- ds0 %>%
     ,problem_execution_index = rowSums(across(contains("hromada_problem_execution/")))
   )
 
-
 # ---- inspect-data-0 ------------------------------------------------------------
 
 # --- -----
