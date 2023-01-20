@@ -4,7 +4,12 @@ author:
 - Valentyn Hatsko
 - Andriy Koval
 date: 'Last updated: `r Sys.Date()`'
+always_allow_html: true
 output:
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: yes
   html_document:
     keep_md: yes
     toc: yes
@@ -12,8 +17,6 @@ output:
     code_folding: show
     theme: cerulean
     highlight: zenburn
-  pdf_document:
-    toc: yes
 editor_options:
   chunk_output_type: console
 ---
@@ -1583,7 +1586,8 @@ p
 ```
 
 \
-
+Most communities provided several types of aid: 42% provided transport, money and products, and allocated rooms for military; 72% provided three and more of those \
+Only 5% of communities haven't provided anything from our list to military.
 
 ```{r help-military-number, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
 
@@ -1601,10 +1605,16 @@ d <- ds0 %>%
   theme_bw()
 ```
 
-## 4.1 Transport Help
-
 # 5. Administrative Adaptation
-```{r admin-percent-working, fig.height=6, fig.width=4,class.source="fold-hide", cache=T}
+```{r results="show", class.source="fold-hide"}
+meta_survey %>% filter(name=="percent_working_march") %>% pull(label) %>% cat()
+meta_survey %>% filter(name=="percent_working_now") %>% pull(label) %>% cat()
+
+```
+
+\
+
+```{r admin-percent-working, fig.height=6, fig.width=8,class.source="fold-hide", cache=T}
 
 g <-  ds0 %>%
   select(starts_with("percent_working")) %>% 
@@ -1618,7 +1628,11 @@ g <-  ds0 %>%
   ) %>% 
   ggplot(aes(x=value))+
   geom_histogram(binwidth = 100, alpha = .5, breaks=c(10,20,30,40,50,60,70,80,90,100))+
-  facet_wrap("measure",ncol =5)
+  facet_wrap("measure",ncol =5) +
+  labs(
+    y='number of hromadas'
+    ,x=NULL
+  )
 g
 g %>%  quick_save("score-distribution",w=4, h=6)
 ```
@@ -1696,7 +1710,7 @@ g %>%  quick_save("score-distribution",w=4, h=6)
   )
 ```
 
-```{r special-fund-no-combat, fig.height=3, fig.width=9,class.source="fold-hide"}
+```{r special-fund-no-combat, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
 (ds0 %>% filter(military_action=="no_combat") %>%
   mutate(
     `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
@@ -1710,7 +1724,7 @@ g %>%  quick_save("score-distribution",w=4, h=6)
   xlab("counted preparations"))
 ```
 
-```{r special-fund-urbanisation, fig.height=3, fig.width=9,class.source="fold-hide"}
+```{r special-fund-urbanisation, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
 (ds0 %>% filter(military_action=="no_combat") %>%
   mutate(
     `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
@@ -1724,7 +1738,7 @@ g %>%  quick_save("score-distribution",w=4, h=6)
   xlab("share of urban population"))
 ```
 
-```{r special-fund-own-income, fig.height=3, fig.width=9,class.source="fold-hide"}
+```{r special-fund-own-income, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
 (ds0 %>% filter(military_action=="no_combat") %>%
   mutate(
     `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
@@ -1883,9 +1897,10 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
 
 # 10. Reconstructioin
 
-# small number of answers (38) - omit at this stage
+\ 
+small number of answers (38) - omit at this stage
 
-## 10.1 Demage Evaluation
+## 10.1 Damage Evaluation
 
 ```{r damage-1, fig.height=3, fig.width=9, class.source="fold-hide"}
 ds0 %>% 
@@ -1983,7 +1998,7 @@ stargazer::stargazer(m1_heating, m2_heating, m3_heating, m4_heating, single.row 
 ```
 
 ## 11.2 Problem Involvement
-```{r problem-models, fig.height=3, fig.width=9, class.source="fold-hide"}
+```{r problem-models, results = "asis", class.source="fold-hide"}
 m1_problem <-glm(data = ds1_problem, 
              hromada_exp ~ log(income_total_2021) + own_income_prop_2021 + 
              type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary,
