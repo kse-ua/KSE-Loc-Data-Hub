@@ -28,6 +28,7 @@ library(readxl)
 library(survey)
 library(fastDummies)
 library(gt)
+library(beeswarm)
 
 # ---- load-sources ------------------------------------------------------------
 base::source("./scripts/common-functions.R")             # basics
@@ -366,24 +367,6 @@ ds1_info <-
   select(hromada_code,item_information)
 
 # ---- testing chunks ----------------------------------------------------------
-
-ds0 %>% 
-  mutate(friends_text = as.numeric(friends_text)) %>% 
-  select(hromada_full_name, friends_text) %>%
-  mutate(friends_group = cut(friends_text,
-                              breaks = c(0, 1, 2, 3, 4, 5, 20), 
-                              labels = c('None', '1', '2', '3', '4', 'More than 4'),
-                              right = F)) %>%
-  na.omit() %>%
-  ggplot(aes(x=friends_group, group = 1)) +
-  geom_bar(aes(y = ..prop..), stat = 'count') +
-  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
-  scale_y_continuous(labels = scales::percent_format()) +
-  labs(
-    title = "How many hromadas-friends abroad hromadas have?"
-    ,y = NULL, x = NULL
-  )
-
 
 # ---- save-to-disk ------------------------------------------------------------
 
