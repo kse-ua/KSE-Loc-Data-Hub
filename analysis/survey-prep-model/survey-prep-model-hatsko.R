@@ -229,7 +229,7 @@ ds0 <-
     occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
                                             TRUE ~ 1),
     info_channels_count_long    = rowSums(across(all_of(comm_channels)) == 2, na.rm = T),
-    info_channels_count_short    = rowSums(across(c('telegram', 'viber', 'facebook')) == 2, na.rm = T),
+    info_channels_count_short   = rowSums(across(c('telegram', 'viber', 'facebook')) == 2, na.rm = T),
   ) %>%
   left_join(ds_general %>% select(hromada_code, train_station, passangers_2021),
             by = 'hromada_code')
