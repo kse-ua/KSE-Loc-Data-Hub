@@ -3,16 +3,20 @@ title: "Resilience Survey Overview"
 author:
 - Valentyn Hatsko
 - Andriy Koval
-date: 'Last updated: 2023-01-19'
+date: 'Last updated: 2023-01-20'
+always_allow_html: true
 output:
   html_document:
     keep_md: yes
     toc: yes
     toc_float: yes
-    code_folding: show
+    code_folding: hide
     theme: cerulean
     highlight: zenburn
   pdf_document:
+    toc: yes
+    latex_engine: xelatex
+  word_document:
     toc: yes
 editor_options:
   chunk_output_type: console
@@ -30,6 +34,8 @@ editor_options:
 
 
 
+
+
 # Environment
 
 > Reviews the components of the working environment of the report. Non-technical readers are welcomed to skip. Come back if you need to understand the origins of custom functions, scripts, or data objects.
@@ -41,34 +47,6 @@ editor_options:
 Packages used in current report
 
 
-```r
-# Choose to be greedy: load only what's needed
-# Three ways, from least (1) to most(3) greedy:
-# -- 1.Attach these packages so their functions don't need to be qualified: 
-# http://r-pkgs.had.co.nz/namespace.html#search-path
-library(ggplot2)   # graphs
-library(forcats)   # factors
-library(stringr)   # strings
-library(lubridate) # dates
-library(labelled)  # labels
-library(dplyr)     # data wrangling
-library(tidyr)     # data wrangling
-# -- 2.Import only certain functions of a package into the search path.
-import::from("magrittr", "%>%")
-# -- 3. Verify these packages are available on the machine, but their functions need to be qualified
-requireNamespace("readr"    )# data import/export
-requireNamespace("readxl"   )# data import/export
-requireNamespace("janitor"  )# tidy data
-requireNamespace("testit"   )# For asserting conditions meet expected patterns.
-
-pacman::p_load(tidyr,dplyr, ggplot2)
-library(tidyverse)
-library(readr)
-library(readxl)
-library(survey)
-library(fastDummies)
-library(gt)
-```
 
 </details>
 
@@ -79,12 +57,6 @@ library(gt)
 Collection of custom functions used in current repository (`sda-information-requests`)
 
 
-```r
-base::source("./scripts/common-functions.R")             # basics
-base::source("./scripts/graphing/graph-presets.R")       # font size, colors etc
-base::source("./scripts/operational-functions.R")        # quick specific functions
-base::source("./scripts/binary-categorical-functions.R") # graphing and modeling
-```
 
 </details>
 
@@ -95,13 +67,6 @@ base::source("./scripts/binary-categorical-functions.R") # graphing and modeling
 Values used throughout the report.
 
 
-```r
-# printed figures will go here:
-prints_folder <- paste0("./analysis/survey-overview/prints")
-if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
-
-data_cache_folder <- prints_folder # to sink modeling steps
-```
 
 </details>
 
@@ -112,80 +77,6 @@ data_cache_folder <- prints_folder # to sink modeling steps
 Custom functions defined for use in this report.
 
 
-```r
-'%ni%' <- Negate(`%in%`)
-
-
-make_corr_matrix <- function(d,na_action="remove", method="pearson"){
-  
-  item_names <- names(d)
-  # browser()
-  d1 <- 
-    d %>% 
-    select(all_of(item_names)) %>% 
-    mutate(
-      across(
-        .cols = everything()
-        ,.fns = ~as.numeric(.)
-      )
-    ) 
-  
-  if(na_action == "remove"){
-    d2 <- d1 %>% drop_na()
-  }
-  
-  if(na_action == "replace"){
-    d2 <-
-      d1 %>%
-      mutate(
-        across(
-          .cols = everything()
-          ,.fns = ~replace_na(.,0L)
-        )
-      )
-  }
-  cormat <- cor(d2,method = method)
-  # row.names(cormat) <- item_names
-  return(cormat)
-}
-
-
-make_corr_plot <- function (
-    corr,
-    lower="number",
-    upper="number",
-    bg="white",
-    addgrid.col="gray"
-    ,title 
-    , ...
-){
-  corrplot::corrplot(
-    corr
-    , add=F
-    , type   = "lower"
-    , method = lower
-    , diag   = TRUE
-    , tl.pos = "lt"
-    , cl.pos = "n"
-    # ,order = "hclust"
-    # ,addrect = 3
-    ,...
-  )
-  corrplot::corrplot(
-    corr
-    ,add=T
-    , type="upper"
-    , method=upper
-    , diag=TRUE
-    , tl.pos="n"
-    # ,order = "hclust"
-    # ,addrect = 3
-    ,title = title  
-    , ...
-  )
-  
-}
-```
 
 </details>
 
@@ -551,34 +442,12 @@ Next, we define useful sets of variable names to be used throughout the report
 <summary>click to see the groups </summary>
 
 
-```{.r .fold-show}
-# create supporting objects for convenient reference of variable groups
-
-# multiple choice questions
-mcq <-
-  meta_survey%>%
-  dplyr::select(type,name)%>%
-  dplyr::filter(str_detect(type, "select_multiple"))%>%
-  dplyr::select(name)%>%
-  pull() %>%
-  print()
-```
-
 ```
  [1] "help_for_military"             "evacuation_actions"            "idp_help"                     
  [4] "special_fund_relocation_needs" "bussiness_stimules"            "hromada_cooperation"          
  [7] "hromada_problem_inv_labels"    "hromada_problem_info"          "hromada_problem_consultation" 
 [10] "hromada_problem_proposition"   "hromada_problem_system"        "hromada_problem_feedback"     
 [13] "hromada_problem_execution"     "skills_needed"                
-```
-
-```{.r .fold-show}
-#vectors of mcq names
-preparation <- 
-  ds_survey %>% 
-  select(starts_with("prep_"), -prep_winter_count, -prep_count) %>% 
-  colnames() %>% 
-  print()
 ```
 
 ```
@@ -592,24 +461,8 @@ preparation <-
 [15] "prep_partly_backup"             
 ```
 
-```{.r .fold-show}
-comm_channels <- 
-  ds_survey %>% 
-  select(telegram:hotline) %>% 
-  colnames() %>% 
-  print()
-```
-
 ```
 [1] "telegram"  "viber"     "facebook"  "chat_help" "hotline"  
-```
-
-```{.r .fold-show}
-idp_help <- 
-  ds_survey %>%
-  select(starts_with('idp_help/'), -ends_with('number')) %>% 
-  colnames() %>% 
-  print()
 ```
 
 ```
@@ -618,45 +471,15 @@ idp_help <-
 [7] "idp_help/psych_help"         "idp_help/law_help"           "idp_help/transit_center"    
 ```
 
-```{.r .fold-show}
-military_help <- 
-  ds_survey %>% 
-  select(starts_with('help_for_military/')) %>% 
-  colnames() %>%
-  print()
-```
-
 ```
 [1] "help_for_military/rooms"     "help_for_military/transport" "help_for_military/money"    
 [4] "help_for_military/products"  "help_for_military/other"    
-```
-
-```{.r .fold-show}
-military_help_short <- military_help[1:4]
-
-# only for occupied hromadas - few cases
-hromada_cooperation <- 
-  ds_survey %>% 
-  select(starts_with('hromada_cooperation/')) %>% 
-  colnames() %>% 
-  print()
 ```
 
 ```
 [1] "hromada_cooperation/medicine"   "hromada_cooperation/food"      
 [3] "hromada_cooperation/pensions"   "hromada_cooperation/evacuation"
 [5] "hromada_cooperation/other"      "hromada_cooperation/none"      
-```
-
-```{.r .fold-show}
-prep_for_winter <- c('info_campaign', 'reserves', 'count_power_sources', 
-                     'count_heaters_need', 'solid_fuel_boiler')
-# vector of income variables 
-income <- 
-  ds_survey %>%
-  select(ends_with('capita'), ends_with('prop_2021')) %>%
-  colnames() %>% 
-  print()
 ```
 
 ```
@@ -976,8 +799,8 @@ ds0 %>% explore::describe_all() %>%neat_DT()
 ```
 
 ```{=html}
-<div id="htmlwidget-a5b296ac35e65818ba7e" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-a5b296ac35e65818ba7e">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_now_text","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military_text","transport_help_communal","transport_help_bought","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","fct","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,0,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,83,46,46,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,26,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,0,0,0,0,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,0,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,18.8,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,0,0,0,0,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,106,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,56,23,32,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,38,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,1,22,11,5,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,null,null,null,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,627,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.01,0],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,null,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,null,null,null,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,627,13.72,4.29,2.99,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,0.1,0.05],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,null,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,null,null,null,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,627,29,10,4,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,0.63,0.33]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-12fd50ec1ca5096637ed" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-12fd50ec1ca5096637ed">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_now_text","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military_text","transport_help_communal","transport_help_bought","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","fct","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,0,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,83,46,46,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,26,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,0,0,0,0,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,0,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,18.8,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,0,0,0,0,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,106,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,56,23,32,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,38,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,1,22,11,5,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,null,null,null,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,627,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.01,0],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,null,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,null,null,null,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,627,13.72,4.29,2.99,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,0.1,0.05],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,null,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,null,null,null,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,627,29,10,4,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,0.63,0.33]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
 ```
 
 # 0. Introduction
@@ -1003,7 +826,7 @@ meta_survey %>% filter(group=="preamble") %>% pull(label) %>% cat()
 
 <mark>1.1</mark> How many hromadas contributed responses to so far?
 
-> As of 2023-01-19, 138 hromadas contributed valid response to the survey
+> As of 2023-01-20, 138 hromadas contributed valid response to the survey
 
 <mark>1.2</mark> What regions are represented in this sample? 
 
@@ -1043,12 +866,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="fswmvgyypl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="sqmfjgxnnw" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#fswmvgyypl .gt_table {
+#sqmfjgxnnw .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -1073,7 +896,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_heading {
+#sqmfjgxnnw .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1085,12 +908,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_caption {
+#sqmfjgxnnw .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#fswmvgyypl .gt_title {
+#sqmfjgxnnw .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1102,7 +925,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#fswmvgyypl .gt_subtitle {
+#sqmfjgxnnw .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1114,13 +937,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#fswmvgyypl .gt_bottom_border {
+#sqmfjgxnnw .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_col_headings {
+#sqmfjgxnnw .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1135,7 +958,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_col_heading {
+#sqmfjgxnnw .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1155,7 +978,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#fswmvgyypl .gt_column_spanner_outer {
+#sqmfjgxnnw .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1167,15 +990,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#fswmvgyypl .gt_column_spanner_outer:first-child {
+#sqmfjgxnnw .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#fswmvgyypl .gt_column_spanner_outer:last-child {
+#sqmfjgxnnw .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#fswmvgyypl .gt_column_spanner {
+#sqmfjgxnnw .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1187,7 +1010,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#fswmvgyypl .gt_group_heading {
+#sqmfjgxnnw .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1213,7 +1036,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#fswmvgyypl .gt_empty_group_heading {
+#sqmfjgxnnw .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1228,15 +1051,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#fswmvgyypl .gt_from_md > :first-child {
+#sqmfjgxnnw .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#fswmvgyypl .gt_from_md > :last-child {
+#sqmfjgxnnw .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#fswmvgyypl .gt_row {
+#sqmfjgxnnw .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1255,7 +1078,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#fswmvgyypl .gt_stub {
+#sqmfjgxnnw .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1268,7 +1091,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#fswmvgyypl .gt_stub_row_group {
+#sqmfjgxnnw .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1282,11 +1105,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#fswmvgyypl .gt_row_group_first td {
+#sqmfjgxnnw .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#fswmvgyypl .gt_summary_row {
+#sqmfjgxnnw .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1296,16 +1119,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#fswmvgyypl .gt_first_summary_row {
+#sqmfjgxnnw .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_first_summary_row.thick {
+#sqmfjgxnnw .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#fswmvgyypl .gt_last_summary_row {
+#sqmfjgxnnw .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1315,7 +1138,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_grand_summary_row {
+#sqmfjgxnnw .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1325,7 +1148,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#fswmvgyypl .gt_first_grand_summary_row {
+#sqmfjgxnnw .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1335,11 +1158,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_striped {
+#sqmfjgxnnw .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#fswmvgyypl .gt_table_body {
+#sqmfjgxnnw .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1348,7 +1171,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_footnotes {
+#sqmfjgxnnw .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1362,7 +1185,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_footnote {
+#sqmfjgxnnw .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -1371,7 +1194,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#fswmvgyypl .gt_sourcenotes {
+#sqmfjgxnnw .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1385,7 +1208,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#fswmvgyypl .gt_sourcenote {
+#sqmfjgxnnw .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1393,64 +1216,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#fswmvgyypl .gt_left {
+#sqmfjgxnnw .gt_left {
   text-align: left;
 }
 
-#fswmvgyypl .gt_center {
+#sqmfjgxnnw .gt_center {
   text-align: center;
 }
 
-#fswmvgyypl .gt_right {
+#sqmfjgxnnw .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#fswmvgyypl .gt_font_normal {
+#sqmfjgxnnw .gt_font_normal {
   font-weight: normal;
 }
 
-#fswmvgyypl .gt_font_bold {
+#sqmfjgxnnw .gt_font_bold {
   font-weight: bold;
 }
 
-#fswmvgyypl .gt_font_italic {
+#sqmfjgxnnw .gt_font_italic {
   font-style: italic;
 }
 
-#fswmvgyypl .gt_super {
+#sqmfjgxnnw .gt_super {
   font-size: 65%;
 }
 
-#fswmvgyypl .gt_footnote_marks {
+#sqmfjgxnnw .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#fswmvgyypl .gt_asterisk {
+#sqmfjgxnnw .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#fswmvgyypl .gt_indent_1 {
+#sqmfjgxnnw .gt_indent_1 {
   text-indent: 5px;
 }
 
-#fswmvgyypl .gt_indent_2 {
+#sqmfjgxnnw .gt_indent_2 {
   text-indent: 10px;
 }
 
-#fswmvgyypl .gt_indent_3 {
+#sqmfjgxnnw .gt_indent_3 {
   text-indent: 15px;
 }
 
-#fswmvgyypl .gt_indent_4 {
+#sqmfjgxnnw .gt_indent_4 {
   text-indent: 20px;
 }
 
-#fswmvgyypl .gt_indent_5 {
+#sqmfjgxnnw .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -1565,12 +1388,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="jjaynjvzni" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="jqpyicgrmw" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#jjaynjvzni .gt_table {
+#jqpyicgrmw .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -1595,7 +1418,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_heading {
+#jqpyicgrmw .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1607,12 +1430,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_caption {
+#jqpyicgrmw .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#jjaynjvzni .gt_title {
+#jqpyicgrmw .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1624,7 +1447,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#jjaynjvzni .gt_subtitle {
+#jqpyicgrmw .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1636,13 +1459,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#jjaynjvzni .gt_bottom_border {
+#jqpyicgrmw .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_col_headings {
+#jqpyicgrmw .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1657,7 +1480,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_col_heading {
+#jqpyicgrmw .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1677,7 +1500,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#jjaynjvzni .gt_column_spanner_outer {
+#jqpyicgrmw .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1689,15 +1512,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#jjaynjvzni .gt_column_spanner_outer:first-child {
+#jqpyicgrmw .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#jjaynjvzni .gt_column_spanner_outer:last-child {
+#jqpyicgrmw .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#jjaynjvzni .gt_column_spanner {
+#jqpyicgrmw .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1709,7 +1532,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#jjaynjvzni .gt_group_heading {
+#jqpyicgrmw .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1735,7 +1558,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#jjaynjvzni .gt_empty_group_heading {
+#jqpyicgrmw .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1750,15 +1573,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#jjaynjvzni .gt_from_md > :first-child {
+#jqpyicgrmw .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#jjaynjvzni .gt_from_md > :last-child {
+#jqpyicgrmw .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#jjaynjvzni .gt_row {
+#jqpyicgrmw .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1777,7 +1600,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#jjaynjvzni .gt_stub {
+#jqpyicgrmw .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1790,7 +1613,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjaynjvzni .gt_stub_row_group {
+#jqpyicgrmw .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1804,11 +1627,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#jjaynjvzni .gt_row_group_first td {
+#jqpyicgrmw .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#jjaynjvzni .gt_summary_row {
+#jqpyicgrmw .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1818,16 +1641,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjaynjvzni .gt_first_summary_row {
+#jqpyicgrmw .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_first_summary_row.thick {
+#jqpyicgrmw .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#jjaynjvzni .gt_last_summary_row {
+#jqpyicgrmw .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1837,7 +1660,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_grand_summary_row {
+#jqpyicgrmw .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1847,7 +1670,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjaynjvzni .gt_first_grand_summary_row {
+#jqpyicgrmw .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1857,11 +1680,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_striped {
+#jqpyicgrmw .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#jjaynjvzni .gt_table_body {
+#jqpyicgrmw .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1870,7 +1693,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_footnotes {
+#jqpyicgrmw .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1884,7 +1707,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_footnote {
+#jqpyicgrmw .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -1893,7 +1716,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjaynjvzni .gt_sourcenotes {
+#jqpyicgrmw .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1907,7 +1730,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#jjaynjvzni .gt_sourcenote {
+#jqpyicgrmw .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1915,64 +1738,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#jjaynjvzni .gt_left {
+#jqpyicgrmw .gt_left {
   text-align: left;
 }
 
-#jjaynjvzni .gt_center {
+#jqpyicgrmw .gt_center {
   text-align: center;
 }
 
-#jjaynjvzni .gt_right {
+#jqpyicgrmw .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#jjaynjvzni .gt_font_normal {
+#jqpyicgrmw .gt_font_normal {
   font-weight: normal;
 }
 
-#jjaynjvzni .gt_font_bold {
+#jqpyicgrmw .gt_font_bold {
   font-weight: bold;
 }
 
-#jjaynjvzni .gt_font_italic {
+#jqpyicgrmw .gt_font_italic {
   font-style: italic;
 }
 
-#jjaynjvzni .gt_super {
+#jqpyicgrmw .gt_super {
   font-size: 65%;
 }
 
-#jjaynjvzni .gt_footnote_marks {
+#jqpyicgrmw .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#jjaynjvzni .gt_asterisk {
+#jqpyicgrmw .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#jjaynjvzni .gt_indent_1 {
+#jqpyicgrmw .gt_indent_1 {
   text-indent: 5px;
 }
 
-#jjaynjvzni .gt_indent_2 {
+#jqpyicgrmw .gt_indent_2 {
   text-indent: 10px;
 }
 
-#jjaynjvzni .gt_indent_3 {
+#jqpyicgrmw .gt_indent_3 {
   text-indent: 15px;
 }
 
-#jjaynjvzni .gt_indent_4 {
+#jqpyicgrmw .gt_indent_4 {
   text-indent: 20px;
 }
 
-#jjaynjvzni .gt_indent_5 {
+#jqpyicgrmw .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -2176,12 +1999,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="dezyllfgpp" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="wyspduyfxt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#dezyllfgpp .gt_table {
+#wyspduyfxt .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -2206,7 +2029,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_heading {
+#wyspduyfxt .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2218,12 +2041,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_caption {
+#wyspduyfxt .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#dezyllfgpp .gt_title {
+#wyspduyfxt .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2235,7 +2058,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#dezyllfgpp .gt_subtitle {
+#wyspduyfxt .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2247,13 +2070,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#dezyllfgpp .gt_bottom_border {
+#wyspduyfxt .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_col_headings {
+#wyspduyfxt .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2268,7 +2091,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_col_heading {
+#wyspduyfxt .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2288,7 +2111,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#dezyllfgpp .gt_column_spanner_outer {
+#wyspduyfxt .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2300,15 +2123,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#dezyllfgpp .gt_column_spanner_outer:first-child {
+#wyspduyfxt .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#dezyllfgpp .gt_column_spanner_outer:last-child {
+#wyspduyfxt .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#dezyllfgpp .gt_column_spanner {
+#wyspduyfxt .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2320,7 +2143,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#dezyllfgpp .gt_group_heading {
+#wyspduyfxt .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2346,7 +2169,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#dezyllfgpp .gt_empty_group_heading {
+#wyspduyfxt .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2361,15 +2184,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#dezyllfgpp .gt_from_md > :first-child {
+#wyspduyfxt .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#dezyllfgpp .gt_from_md > :last-child {
+#wyspduyfxt .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#dezyllfgpp .gt_row {
+#wyspduyfxt .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2388,7 +2211,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#dezyllfgpp .gt_stub {
+#wyspduyfxt .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2401,7 +2224,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#dezyllfgpp .gt_stub_row_group {
+#wyspduyfxt .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2415,11 +2238,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#dezyllfgpp .gt_row_group_first td {
+#wyspduyfxt .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#dezyllfgpp .gt_summary_row {
+#wyspduyfxt .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2429,16 +2252,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#dezyllfgpp .gt_first_summary_row {
+#wyspduyfxt .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_first_summary_row.thick {
+#wyspduyfxt .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#dezyllfgpp .gt_last_summary_row {
+#wyspduyfxt .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2448,7 +2271,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_grand_summary_row {
+#wyspduyfxt .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2458,7 +2281,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#dezyllfgpp .gt_first_grand_summary_row {
+#wyspduyfxt .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2468,11 +2291,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_striped {
+#wyspduyfxt .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#dezyllfgpp .gt_table_body {
+#wyspduyfxt .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2481,7 +2304,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_footnotes {
+#wyspduyfxt .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2495,7 +2318,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_footnote {
+#wyspduyfxt .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -2504,7 +2327,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#dezyllfgpp .gt_sourcenotes {
+#wyspduyfxt .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2518,7 +2341,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#dezyllfgpp .gt_sourcenote {
+#wyspduyfxt .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2526,64 +2349,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#dezyllfgpp .gt_left {
+#wyspduyfxt .gt_left {
   text-align: left;
 }
 
-#dezyllfgpp .gt_center {
+#wyspduyfxt .gt_center {
   text-align: center;
 }
 
-#dezyllfgpp .gt_right {
+#wyspduyfxt .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#dezyllfgpp .gt_font_normal {
+#wyspduyfxt .gt_font_normal {
   font-weight: normal;
 }
 
-#dezyllfgpp .gt_font_bold {
+#wyspduyfxt .gt_font_bold {
   font-weight: bold;
 }
 
-#dezyllfgpp .gt_font_italic {
+#wyspduyfxt .gt_font_italic {
   font-style: italic;
 }
 
-#dezyllfgpp .gt_super {
+#wyspduyfxt .gt_super {
   font-size: 65%;
 }
 
-#dezyllfgpp .gt_footnote_marks {
+#wyspduyfxt .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#dezyllfgpp .gt_asterisk {
+#wyspduyfxt .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#dezyllfgpp .gt_indent_1 {
+#wyspduyfxt .gt_indent_1 {
   text-indent: 5px;
 }
 
-#dezyllfgpp .gt_indent_2 {
+#wyspduyfxt .gt_indent_2 {
   text-indent: 10px;
 }
 
-#dezyllfgpp .gt_indent_3 {
+#wyspduyfxt .gt_indent_3 {
   text-indent: 15px;
 }
 
-#dezyllfgpp .gt_indent_4 {
+#wyspduyfxt .gt_indent_4 {
   text-indent: 20px;
 }
 
-#dezyllfgpp .gt_indent_5 {
+#wyspduyfxt .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -2643,7 +2466,7 @@ in the General Population</th>
   theme_bw()
 ```
 
-![](figure-png-iso/unnamed-chunk-4-1.png)<!-- -->
+![](figure-png-iso/unnamed-chunk-5-1.png)<!-- -->
 
 ```{.r .fold-hide}
 (ds0 %>% make_bi_freq_graph("occupation"))+
@@ -2658,33 +2481,16 @@ in the General Population</th>
   theme_bw()
 ```
 
-![](figure-png-iso/unnamed-chunk-4-2.png)<!-- -->
+![](figure-png-iso/unnamed-chunk-5-2.png)<!-- -->
 
-```{.r .fold-hide}
-x <- as.data.frame(table(ds0$occupation, ds0$military_action)) %>% 
-  mutate(Var2 = case_when(Var2 == "combat_ended" ~ "Experienced military actions in the past",
-                          Var2 == "combat_now" ~ "Experiencing military actions now",
-                          Var2 == "no_combat" ~ "No military actions")) %>%
-  pivot_wider(names_from = "Var1", values_from = Freq)
-  
-gt::gt(x) %>%
-       gt::tab_header(
-         title = "Crosstable of Hromadas that experienced occupation and/or military actions") %>%
-  gt::cols_label(Var2 = '',
-                 not_occupied = "Wasn't occupied",
-                 occupied_april = 'Occupied until April',
-                 occupied_august = 'Occupied until August-October',
-                 occupied_now = 'Occupied now'
-  )
-```
 
 ```{=html}
-<div id="bwjhulorvi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="wvgbodcapr" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#bwjhulorvi .gt_table {
+#wvgbodcapr .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -2709,7 +2515,7 @@ gt::gt(x) %>%
   border-left-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_heading {
+#wvgbodcapr .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2721,12 +2527,12 @@ gt::gt(x) %>%
   border-right-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_caption {
+#wvgbodcapr .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#bwjhulorvi .gt_title {
+#wvgbodcapr .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2738,7 +2544,7 @@ gt::gt(x) %>%
   border-bottom-width: 0;
 }
 
-#bwjhulorvi .gt_subtitle {
+#wvgbodcapr .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2750,13 +2556,13 @@ gt::gt(x) %>%
   border-top-width: 0;
 }
 
-#bwjhulorvi .gt_bottom_border {
+#wvgbodcapr .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_col_headings {
+#wvgbodcapr .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2771,7 +2577,7 @@ gt::gt(x) %>%
   border-right-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_col_heading {
+#wvgbodcapr .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2791,7 +2597,7 @@ gt::gt(x) %>%
   overflow-x: hidden;
 }
 
-#bwjhulorvi .gt_column_spanner_outer {
+#wvgbodcapr .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2803,15 +2609,15 @@ gt::gt(x) %>%
   padding-right: 4px;
 }
 
-#bwjhulorvi .gt_column_spanner_outer:first-child {
+#wvgbodcapr .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#bwjhulorvi .gt_column_spanner_outer:last-child {
+#wvgbodcapr .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#bwjhulorvi .gt_column_spanner {
+#wvgbodcapr .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2823,7 +2629,7 @@ gt::gt(x) %>%
   width: 100%;
 }
 
-#bwjhulorvi .gt_group_heading {
+#wvgbodcapr .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2849,7 +2655,7 @@ gt::gt(x) %>%
   text-align: left;
 }
 
-#bwjhulorvi .gt_empty_group_heading {
+#wvgbodcapr .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2864,15 +2670,15 @@ gt::gt(x) %>%
   vertical-align: middle;
 }
 
-#bwjhulorvi .gt_from_md > :first-child {
+#wvgbodcapr .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#bwjhulorvi .gt_from_md > :last-child {
+#wvgbodcapr .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#bwjhulorvi .gt_row {
+#wvgbodcapr .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2891,7 +2697,7 @@ gt::gt(x) %>%
   overflow-x: hidden;
 }
 
-#bwjhulorvi .gt_stub {
+#wvgbodcapr .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2904,7 +2710,7 @@ gt::gt(x) %>%
   padding-right: 5px;
 }
 
-#bwjhulorvi .gt_stub_row_group {
+#wvgbodcapr .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2918,11 +2724,11 @@ gt::gt(x) %>%
   vertical-align: top;
 }
 
-#bwjhulorvi .gt_row_group_first td {
+#wvgbodcapr .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#bwjhulorvi .gt_summary_row {
+#wvgbodcapr .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2932,16 +2738,16 @@ gt::gt(x) %>%
   padding-right: 5px;
 }
 
-#bwjhulorvi .gt_first_summary_row {
+#wvgbodcapr .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_first_summary_row.thick {
+#wvgbodcapr .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#bwjhulorvi .gt_last_summary_row {
+#wvgbodcapr .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2951,7 +2757,7 @@ gt::gt(x) %>%
   border-bottom-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_grand_summary_row {
+#wvgbodcapr .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2961,7 +2767,7 @@ gt::gt(x) %>%
   padding-right: 5px;
 }
 
-#bwjhulorvi .gt_first_grand_summary_row {
+#wvgbodcapr .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2971,11 +2777,11 @@ gt::gt(x) %>%
   border-top-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_striped {
+#wvgbodcapr .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#bwjhulorvi .gt_table_body {
+#wvgbodcapr .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2984,7 +2790,7 @@ gt::gt(x) %>%
   border-bottom-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_footnotes {
+#wvgbodcapr .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2998,7 +2804,7 @@ gt::gt(x) %>%
   border-right-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_footnote {
+#wvgbodcapr .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -3007,7 +2813,7 @@ gt::gt(x) %>%
   padding-right: 5px;
 }
 
-#bwjhulorvi .gt_sourcenotes {
+#wvgbodcapr .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -3021,7 +2827,7 @@ gt::gt(x) %>%
   border-right-color: #D3D3D3;
 }
 
-#bwjhulorvi .gt_sourcenote {
+#wvgbodcapr .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -3029,64 +2835,64 @@ gt::gt(x) %>%
   padding-right: 5px;
 }
 
-#bwjhulorvi .gt_left {
+#wvgbodcapr .gt_left {
   text-align: left;
 }
 
-#bwjhulorvi .gt_center {
+#wvgbodcapr .gt_center {
   text-align: center;
 }
 
-#bwjhulorvi .gt_right {
+#wvgbodcapr .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#bwjhulorvi .gt_font_normal {
+#wvgbodcapr .gt_font_normal {
   font-weight: normal;
 }
 
-#bwjhulorvi .gt_font_bold {
+#wvgbodcapr .gt_font_bold {
   font-weight: bold;
 }
 
-#bwjhulorvi .gt_font_italic {
+#wvgbodcapr .gt_font_italic {
   font-style: italic;
 }
 
-#bwjhulorvi .gt_super {
+#wvgbodcapr .gt_super {
   font-size: 65%;
 }
 
-#bwjhulorvi .gt_footnote_marks {
+#wvgbodcapr .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#bwjhulorvi .gt_asterisk {
+#wvgbodcapr .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#bwjhulorvi .gt_indent_1 {
+#wvgbodcapr .gt_indent_1 {
   text-indent: 5px;
 }
 
-#bwjhulorvi .gt_indent_2 {
+#wvgbodcapr .gt_indent_2 {
   text-indent: 10px;
 }
 
-#bwjhulorvi .gt_indent_3 {
+#wvgbodcapr .gt_indent_3 {
   text-indent: 15px;
 }
 
-#bwjhulorvi .gt_indent_4 {
+#wvgbodcapr .gt_indent_4 {
   text-indent: 20px;
 }
 
-#bwjhulorvi .gt_indent_5 {
+#wvgbodcapr .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -3142,36 +2948,444 @@ Maximum number of partnerships that hromada has in our survey is 20.
 
 > These are hromadas in our survey that have the most partnerships:
 
-<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
- <thead>
-  <tr>
-   <th style="text-align:left;"> Hromada Name </th>
-   <th style="text-align:right;"> Number of hromada's partnerships in Ukraine </th>
-  </tr>
- </thead>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> Ясінянська селищна громада </td>
-   <td style="text-align:right;"> 20 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Кутська селищна громада </td>
-   <td style="text-align:right;"> 20 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Коломийська міська громада </td>
-   <td style="text-align:right;"> 10 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Бориславська міська громада </td>
-   <td style="text-align:right;"> 7 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Брошнів-Осадська селищна громада </td>
-   <td style="text-align:right;"> 6 </td>
-  </tr>
-</tbody>
+
+```{=html}
+<div id="eisbdgitda" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#eisbdgitda .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#eisbdgitda .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#eisbdgitda .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#eisbdgitda .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#eisbdgitda .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#eisbdgitda .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#eisbdgitda .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#eisbdgitda .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#eisbdgitda .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#eisbdgitda .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#eisbdgitda .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#eisbdgitda .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#eisbdgitda .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#eisbdgitda .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#eisbdgitda .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#eisbdgitda .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#eisbdgitda .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#eisbdgitda .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#eisbdgitda .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#eisbdgitda .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#eisbdgitda .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#eisbdgitda .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#eisbdgitda .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#eisbdgitda .gt_left {
+  text-align: left;
+}
+
+#eisbdgitda .gt_center {
+  text-align: center;
+}
+
+#eisbdgitda .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#eisbdgitda .gt_font_normal {
+  font-weight: normal;
+}
+
+#eisbdgitda .gt_font_bold {
+  font-weight: bold;
+}
+
+#eisbdgitda .gt_font_italic {
+  font-style: italic;
+}
+
+#eisbdgitda .gt_super {
+  font-size: 65%;
+}
+
+#eisbdgitda .gt_footnote_marks {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 75%;
+  vertical-align: 0.4em;
+}
+
+#eisbdgitda .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#eisbdgitda .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#eisbdgitda .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#eisbdgitda .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#eisbdgitda .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#eisbdgitda .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Hromada Name">Hromada Name</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Number of hromada's partnerships in Ukraine">Number of hromada's partnerships in Ukraine</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Ясінянська селищна громада</td>
+<td headers="Number of hromada's partnerships in Ukraine" class="gt_row gt_right">20</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Кутська селищна громада</td>
+<td headers="Number of hromada's partnerships in Ukraine" class="gt_row gt_right">20</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Коломийська міська громада</td>
+<td headers="Number of hromada's partnerships in Ukraine" class="gt_row gt_right">10</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Бориславська міська громада</td>
+<td headers="Number of hromada's partnerships in Ukraine" class="gt_row gt_right">7</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Брошнів-Осадська селищна громада</td>
+<td headers="Number of hromada's partnerships in Ukraine" class="gt_row gt_right">6</td></tr>
+  </tbody>
+  
+  
 </table>
+</div>
+```
 
 <mark>1.6</mark> How many hromadas-friends abroad hromadas have?
 
@@ -3199,60 +3413,456 @@ ds0 %>%
 
 > These are hromadas in our survey that have the most friends abroad:
 
-<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; ">
- <thead>
-  <tr>
-   <th style="text-align:left;"> Hromada Name </th>
-   <th style="text-align:right;"> Number of hromada's friends abroad </th>
-  </tr>
- </thead>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> Луцька міська громада </td>
-   <td style="text-align:right;"> 17 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Тячівська міська громада </td>
-   <td style="text-align:right;"> 13 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Перечинська міська громада </td>
-   <td style="text-align:right;"> 12 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Самбірська міська громада </td>
-   <td style="text-align:right;"> 11 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Коломийська міська громада </td>
-   <td style="text-align:right;"> 11 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Нововолинська міська громада </td>
-   <td style="text-align:right;"> 10 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Великобийганська сільська громада </td>
-   <td style="text-align:right;"> 9 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Миргородська міська громада </td>
-   <td style="text-align:right;"> 7 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Долинська міська громада </td>
-   <td style="text-align:right;"> 7 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Бориславська міська громада </td>
-   <td style="text-align:right;"> 6 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Болградська міська громада </td>
-   <td style="text-align:right;"> 6 </td>
-  </tr>
-</tbody>
+
+```{=html}
+<div id="etmsgookjh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#etmsgookjh .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#etmsgookjh .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#etmsgookjh .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#etmsgookjh .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#etmsgookjh .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#etmsgookjh .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#etmsgookjh .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#etmsgookjh .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#etmsgookjh .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#etmsgookjh .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#etmsgookjh .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#etmsgookjh .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#etmsgookjh .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#etmsgookjh .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etmsgookjh .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#etmsgookjh .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#etmsgookjh .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etmsgookjh .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#etmsgookjh .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etmsgookjh .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#etmsgookjh .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etmsgookjh .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#etmsgookjh .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etmsgookjh .gt_left {
+  text-align: left;
+}
+
+#etmsgookjh .gt_center {
+  text-align: center;
+}
+
+#etmsgookjh .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#etmsgookjh .gt_font_normal {
+  font-weight: normal;
+}
+
+#etmsgookjh .gt_font_bold {
+  font-weight: bold;
+}
+
+#etmsgookjh .gt_font_italic {
+  font-style: italic;
+}
+
+#etmsgookjh .gt_super {
+  font-size: 65%;
+}
+
+#etmsgookjh .gt_footnote_marks {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 75%;
+  vertical-align: 0.4em;
+}
+
+#etmsgookjh .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#etmsgookjh .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#etmsgookjh .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#etmsgookjh .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#etmsgookjh .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#etmsgookjh .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Hromada Name">Hromada Name</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Number of hromada's friends abroad">Number of hromada's friends abroad</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Луцька міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">17</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Тячівська міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">13</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Перечинська міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">12</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Самбірська міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">11</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Коломийська міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">11</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Нововолинська міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">10</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Великобийганська сільська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">9</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Миргородська міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">7</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Долинська міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">7</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Бориславська міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">6</td></tr>
+    <tr><td headers="Hromada Name" class="gt_row gt_left">Болградська міська громада</td>
+<td headers="Number of hromada's friends abroad" class="gt_row gt_right">6</td></tr>
+  </tbody>
+  
+  
 </table>
+</div>
+```
 
 # 2. Preparation
 
@@ -3545,7 +4155,7 @@ g
 ds1_prep %>% select(starts_with("prep_score")) %>% GGally::ggpairs()
 ```
 
-![](figure-png-iso/unnamed-chunk-7-1.png)<!-- -->
+![](figure-png-iso/unnamed-chunk-9-1.png)<!-- -->
 
 ```{.r .fold-hide}
 # Note that correlation coefficient is Pearson
@@ -4242,6 +4852,23 @@ d <- ds0 %>%
 
 # 5. Administrative Adaptation
 
+```{.r .fold-hide}
+meta_survey %>% filter(name=="percent_working_march") %>% pull(label) %>% cat()
+```
+
+```
+Який відсоток працівників виконавчих органів влади (від усіх працівників станом на 23 лютого) фактично працювали станом на 1 березня (в тому числі віддалено)?
+```
+
+```{.r .fold-hide}
+meta_survey %>% filter(name=="percent_working_now") %>% pull(label) %>% cat()
+```
+
+```
+Який відсоток працівників виконавчих органів влади (від усіх працівників станом на 23 лютого) фактично працюють станом на сьогоднішній день (в тому числі віддалено)?
+```
+
+\
 
 
 ```{.r .fold-hide}
@@ -4257,7 +4884,11 @@ g <-  ds0 %>%
   ) %>% 
   ggplot(aes(x=value))+
   geom_histogram(binwidth = 100, alpha = .5, breaks=c(10,20,30,40,50,60,70,80,90,100))+
-  facet_wrap("measure",ncol =5)
+  facet_wrap("measure",ncol =5) +
+  labs(
+    y='number of hromadas'
+    ,x=NULL
+  )
 g
 ```
 
@@ -4561,9 +5192,10 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
 
 # 10. Reconstructioin
 
-# small number of answers (38) - omit at this stage
+\ 
+small number of answers (38) - omit at this stage
 
-## 10.1 Demage Evaluation
+## 10.1 Damage Evaluation
 
 
 ```{.r .fold-hide}
@@ -4823,7 +5455,7 @@ For the sake of documentation and reproducibility, the current report was render
  collate  Ukrainian_Ukraine.utf8
  ctype    Ukrainian_Ukraine.1251
  tz       Europe/Helsinki
- date     2023-01-19
+ date     2023-01-20
  pandoc   2.19.2 @ C:/Program Files/RStudio/bin/quarto/bin/tools/ (via rmarkdown)
 
 - Packages ---------------------------------------------------------------------------------------
@@ -4858,6 +5490,7 @@ For the sake of documentation and reproducibility, the current report was render
  fs              1.5.2   2021-12-08 [1] CRAN (R 4.2.2)
  gargle          1.2.1   2022-09-08 [1] CRAN (R 4.2.2)
  generics        0.1.3   2022-07-05 [1] CRAN (R 4.2.2)
+ GGally          2.1.2   2021-06-21 [1] CRAN (R 4.2.2)
  ggplot2       * 3.4.0   2022-11-04 [1] CRAN (R 4.2.2)
  glue            1.6.2   2022-02-24 [1] CRAN (R 4.2.2)
  googledrive     2.0.0   2021-07-08 [1] CRAN (R 4.2.2)
@@ -4899,6 +5532,7 @@ For the sake of documentation and reproducibility, the current report was render
  pkgbuild        1.4.0   2022-11-27 [1] CRAN (R 4.2.2)
  pkgconfig       2.0.3   2019-09-22 [1] CRAN (R 4.2.2)
  pkgload         1.3.2   2022-11-16 [1] CRAN (R 4.2.2)
+ plyr            1.8.8   2022-11-11 [1] CRAN (R 4.2.2)
  prettyunits     1.1.1   2020-01-24 [1] CRAN (R 4.2.2)
  processx        3.8.0   2022-10-26 [1] CRAN (R 4.2.2)
  profvis         0.3.7   2020-11-02 [1] CRAN (R 4.2.2)
@@ -4913,6 +5547,7 @@ For the sake of documentation and reproducibility, the current report was render
  readxl        * 1.4.1   2022-08-17 [1] CRAN (R 4.2.2)
  remotes         2.4.2   2021-11-30 [1] CRAN (R 4.2.2)
  reprex          2.0.2   2022-08-17 [1] CRAN (R 4.2.2)
+ reshape         0.8.9   2022-04-12 [1] CRAN (R 4.2.2)
  rlang           1.0.6   2022-09-24 [1] CRAN (R 4.2.2)
  rmarkdown       2.18    2022-11-09 [1] CRAN (R 4.2.2)
  rstudioapi      0.14    2022-08-22 [1] CRAN (R 4.2.2)
@@ -4959,4 +5594,4 @@ For the sake of documentation and reproducibility, the current report was render
 
 
 
-Report rendered by Valentyn Hatsko at 2023-01-19, 19:45 +0200 in 22 seconds.
+Report rendered by Valentyn Hatsko at 2023-01-20, 12:04 +0200 in 18 seconds.
