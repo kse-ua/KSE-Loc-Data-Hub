@@ -231,12 +231,15 @@ ds0 <-
     idp_registration_share      = idp_registration_number / total_population_2022,
     idp_real_share              = idp_real_number         / total_population_2022,
     idp_child_share             = idp_child_education     / idp_registration_number,
-    type = case_when(type == 'сільська' ~ 'village',
-                     type == 'селищна' ~ 'urban village',
-                     type == 'міська' ~ 'urban'),
-    type = factor(type, levels = c("village", "urban village", "urban")),
-    help_military_count = rowSums(across(all_of(military_help_short)), na.rm = T)
-    ) 
+    type                        = case_when(type == 'сільська' ~ 'village',
+                                            type == 'селищна' ~ 'urban village',
+                                            type == 'міська' ~ 'urban'),
+    type = factor(type, levels  = c("village", "urban village", "urban")),
+    help_military_count         = rowSums(across(all_of(military_help_short)), na.rm = T),
+    occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
+                                            TRUE ~ 1),
+    occupation_and_combat_fct   = factor(occupation_and_combat, labels = c('Rear communities', 'Communities exposed to war'))
+    )
 
 ds1_winter_prep <- ds0 %>% 
   mutate(
