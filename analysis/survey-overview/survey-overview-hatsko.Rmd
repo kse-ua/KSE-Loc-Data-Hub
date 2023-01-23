@@ -1640,10 +1640,9 @@ meta_survey %>% filter(name=="percent_working_now") %>% pull(label) %>% cat()
 ```
 
 \
-Questions about share of working administrative staff didn't work: most hromadas write that 90-100% percent of staff was working both on March and October, \ 
-and there is no difference between these numbers that would indicate administrative adaptation
+Questions regarding the percentage of working administrative staff were not effective: Most hromadas reported \ that 90-100% of staff were working both in March and October, and there was no difference between these numbers that would indicate administrative adaptation. \ 
 
-```{r admin-percent-working, fig.height=6, fig.width=8,class.source="fold-hide", cache=T}
+```{r admin-percent-working, fig.height=4, fig.width=8,class.source="fold-hide", cache=T}
 
 g <-  ds0 %>%
   select(starts_with("percent_working")) %>% 
@@ -1723,7 +1722,7 @@ d %>%
 # 6. Evacuation
 
 \
-
+In most rear communities, evacuation of citizens was not necessary. However, of the communities affected by war, 63% required evacuation and 36% were successful in doing so. \ 
 
 ```{r evacuation, fig.height=3, fig.width=9,class.source="fold-hide"}
 
