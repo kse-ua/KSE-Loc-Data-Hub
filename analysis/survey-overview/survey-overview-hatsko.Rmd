@@ -1612,7 +1612,7 @@ d <- ds0 %>%
   theme_bw()
 ```
 
-```{r fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+```{r fig.height=5, fig.width=9,class.source="fold-hide", eval = FALSE}
 
 d <- ds0 %>% filter(`help_for_military/transport` == 1) %>%
   select(hromada_code, transport_help_communal_coded, transport_help_bought_coded) %>%
@@ -1640,6 +1640,8 @@ meta_survey %>% filter(name=="percent_working_now") %>% pull(label) %>% cat()
 ```
 
 \
+Questions about share of working administrative staff didn't work: most hromadas write that 90-100% percent of staff was working both on March and October, \ 
+and there is no difference between these numbers that would indicate administrative adaptation
 
 ```{r admin-percent-working, fig.height=6, fig.width=8,class.source="fold-hide", cache=T}
 
@@ -1649,8 +1651,8 @@ g <-  ds0 %>%
   mutate( 
     measure = factor(measure,
                         levels = c("percent_working_march","percent_working_now")
-                        ,labels = c("Pecent of stuff working in March 2022",
-                                    "Pecent of stuff working as of now")
+                        ,labels = c("Percent of staff working in March 2022",
+                                    "Percent of staff working as of now")
                         )
   ) %>% 
   ggplot(aes(x=value))+
@@ -1664,11 +1666,16 @@ g
 g %>%  quick_save("score-distribution",w=4, h=6)
 ```
 
+\
+73% of communities regularly coordinate actions, typically several times a week or more. \
+Communities affected by war differ from those in peaceful regions; they were more likely to both have daily meetings with other communities and also have no meetings at all. \
+
+
 ```{r comm-between-hromadas-1, fig.height=3, fig.width=9,class.source="fold-hide"}
-(ds0 %>% 
+d <- ds0 %>% 
    filter(!is.na(commun_between_hromadas)) %>%
   mutate(
-    `Frequency of communication with other hromadas` = fct_recode(
+    freq_hromadas_com = fct_recode(
       commun_between_hromadas,
        "Daily"      = "Daily"
       ,"Several times a week"       = "Several times a week"
@@ -1683,19 +1690,46 @@ g %>%  quick_save("score-distribution",w=4, h=6)
        ,"No meetings/calls"
     )
     )
+  ) %>%
+  select(freq_hromadas_com, occupation_and_combat_fct, hromada_code)
+
+d %>% 
+  group_by(freq_hromadas_com,occupation_and_combat_fct) %>% 
+  summarize(
+    hromada_count = n_distinct(hromada_code)
+    ,.groups = "drop"
   ) %>% 
-  make_bi_freq_graph("military_action","Frequency of communication with other hromadas") )+
+  group_by(occupation_and_combat_fct) %>% 
+  mutate(
+    prop = hromada_count/sum(hromada_count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ggplot(aes(y=prop, x = freq_hromadas_com, fill = occupation_and_combat_fct))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), hjust = .3, vjust = -.2, position = position_dodge(width = .9))+
+  scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
+                                ,labels = c('TRUE' = 'Had account', 'FALSE' = 'No account')
+    )+
   labs(
-    title = "Frequency of communication with representatives of other hromadas"
+    title = "How often were there meetings/calls with other communities to coordinate actions in the first 3 months of invasion"
+    ,fill = "War exposure"
+    ,y = "Percent of respondents in each group"
     ,x = NULL
   )
+
 ```
 
 # 6. Evacuation
+
+\
+
+
 ```{r evacuation, fig.height=3, fig.width=9,class.source="fold-hide"}
-(ds0 %>% 
+
+d <- ds0 %>% 
   mutate(
-    `Need of evacuation among hromadas` = fct_recode(
+    evacuation_fct = fct_recode(
       evacuation,
        "No need"      = "no"
       ,"Yes, and executed the evacuation"       = "yes_executed"
@@ -1704,14 +1738,33 @@ g %>%  quick_save("score-distribution",w=4, h=6)
        "No need"           
        ,"Yes, and executed the evacuation"
        ,"Yes, but did not manage to execute the evacuation"
-    )
-    )
+    )))
+    
+d %>%
+  group_by(evacuation_fct,occupation_and_combat_fct) %>% 
+  summarize(
+    hromada_count = n_distinct(hromada_code)
+    ,.groups = "drop"
   ) %>% 
-  make_bi_freq_graph("military_action","Need of evacuation among hromadas") )+
+  group_by(occupation_and_combat_fct) %>% 
+  mutate(
+    prop = hromada_count/sum(hromada_count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ggplot(aes(y=prop, x = evacuation_fct, fill = occupation_and_combat_fct))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), hjust = .3, vjust = -.2, position = position_dodge(width = .9))+
+  scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
+                                ,labels = c('TRUE' = 'Had account', 'FALSE' = 'No account')
+    )+
   labs(
-    title = "Need of evacuation among hromadas"
+    title = "Was there a need for an evacuation in your community?"
+    ,fill = "War exposure"
+    ,y = "Percent of respondents in each group"
     ,x = NULL
   )
+
 ```
 # 7. IDP
 
