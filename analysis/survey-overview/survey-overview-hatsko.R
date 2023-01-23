@@ -238,7 +238,7 @@ ds0 <-
     help_military_count         = rowSums(across(all_of(military_help_short)), na.rm = T),
     occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
                                             TRUE ~ 1),
-    occupation_and_combat_fct   = factor(occupation_and_combat, labels = c('Rear communities', 'Communities exposed to war'))
+    occupation_and_combat_fct   = factor(occupation_and_combat, labels = c('Rear communities', 'Communities exposed to war (n = 22)'))
     )
 
 ds1_winter_prep <- ds0 %>% 
