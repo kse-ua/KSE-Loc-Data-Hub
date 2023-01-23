@@ -6,17 +6,18 @@ author:
 date: 'Last updated: `r Sys.Date()`'
 always_allow_html: true
 output:
-  pdf_document:
-    toc: yes
-  word_document:
-    toc: yes
   html_document:
     keep_md: yes
     toc: yes
     toc_float: yes
-    code_folding: show
+    code_folding: hide
     theme: cerulean
     highlight: zenburn
+  pdf_document:
+    toc: yes
+    latex_engine: xelatex
+  word_document:
+    toc: yes
 editor_options:
   chunk_output_type: console
 ---
@@ -33,6 +34,10 @@ editor_options:
 # cat("Working directory: ", getwd())
 library(knitr)
 opts_knit$set(root.dir='../../')  #Don't combine this call with any other chunk -especially one that uses file paths.
+```
+
+```{r include=FALSE, echo=F}
+if (!knitr::is_html_output()) knitr::opts_chunk$set(echo=FALSE)
 ```
 
 ```{r set_options, echo=F, message=FALSE, warning=FALSE, results = 'hide'}
@@ -69,7 +74,7 @@ Sys.setlocale("LC_CTYPE", "ukr")
 
 Packages used in current report
 
-```{r load-packages, message=message_chunks, echo=T, results="hide"}
+```{r load-packages, message=message_chunks, echo=F, results="hide"}
 ```
 
 </details>
@@ -80,7 +85,7 @@ Packages used in current report
 
 Collection of custom functions used in current repository (`sda-information-requests`)
 
-```{r load-sources, message=message_chunks, echo=T, results="hide"}
+```{r load-sources, message=message_chunks, echo=F, results="hide"}
 ```
 
 </details>
@@ -91,7 +96,7 @@ Collection of custom functions used in current repository (`sda-information-requ
 
 Values used throughout the report.
 
-```{r declare-globals, message=message_chunks, echo=T, results="hide"}
+```{r declare-globals, message=message_chunks, echo=F, results="hide"}
 ```
 
 </details>
@@ -102,7 +107,7 @@ Values used throughout the report.
 
 Custom functions defined for use in this report.
 
-```{r declare-functions, message=message_chunks, echo=T, results="hide"}
+```{r declare-functions, message=message_chunks, echo=F, results="hide"}
 ```
 
 </details>
@@ -129,7 +134,7 @@ Next, we define useful sets of variable names to be used throughout the report
 
 <summary>click to see the groups </summary>
 
-```{r variable-groups, results='show', message=message_chunks,cache=F, class.source = "fold-show"}
+```{r variable-groups, results='show', message=message_chunks,cache=F, class.source = "fold-show", echo=F}
 ```
 
 </details>
@@ -371,7 +376,9 @@ ds_survey %>%
   scale_x_discrete(labels=c('occupied_now' = 'Occupied now', 'occupied_august' = 'Occupied until August-October', "occupied_april" = "Occupied until April", "not_occupied" = "Wasn't occupied")) +
   guides(fill = "none") +
   theme_bw()
+```
 
+```{r class.source="fold-hide", echo=F}
 x <- as.data.frame(table(ds0$occupation, ds0$military_action)) %>% 
   mutate(Var2 = case_when(Var2 == "combat_ended" ~ "Experienced military actions in the past",
                           Var2 == "combat_now" ~ "Experiencing military actions now",
@@ -435,7 +442,7 @@ ds0 %>%
   slice_max(partners_text, n = 5) %>%
   rename('Hromada Name' = "hromada_full_name"
          , "Number of hromada's partnerships in Ukraine" = "partners_text") %>%
-  neat()
+  gt()
 
 ```
 
@@ -470,7 +477,7 @@ ds0 %>%
   slice_max(friends_text, n = 10) %>%
   rename('Hromada Name' = "hromada_full_name"
          , "Number of hromada's friends abroad" = "friends_text") %>%
-  neat()
+  gt()
 
 ```
 
@@ -1603,6 +1610,26 @@ d <- ds0 %>%
   ) +
   guides(fill = "none") +
   theme_bw()
+```
+
+```{r fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+
+d <- ds0 %>% filter(`help_for_military/transport` == 1) %>%
+  select(hromada_code, transport_help_communal_coded, transport_help_bought_coded) %>%
+  pivot_longer(-hromada_code, names_to = 'transport_type', values_to = 'number_transport') %>%
+  mutate(transport_type = case_when(
+  transport_type == 'transport_help_bought_coded' ~ 'Bought by community',
+  transport_type == 'transport_help_communal_coded' ~ 'From communal enterprises'),
+  number_transport = case_when(number_transport == 0 ~ NA_real_, 
+                               TRUE ~ number_transport)
+  )
+
+beeswarm(d$number_transport ~ d$transport_type,  method='swarm', 
+         main = 'Number of vehicles provided for military', xlab = NA, ylab = NA,
+         col=c(1, 2), pch = 19, cex = 0.7, 
+         horizontal = TRUE, corral = 'random', xaxt="n")
+axis(1, at=seq(0, 200, by = 10), las=2)
+bxplot(d$number_transport ~ d$transport_type, horizontal = TRUE, add = TRUE, lwd = 1.2)
 ```
 
 # 5. Administrative Adaptation
