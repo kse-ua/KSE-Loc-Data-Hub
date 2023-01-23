@@ -1669,7 +1669,6 @@ g %>%  quick_save("score-distribution",w=4, h=6)
 73% of communities regularly coordinate actions, typically several times a week or more. \
 Communities affected by war differ from those in peaceful regions; they were more likely to both have daily meetings with other communities and also have no meetings at all. \
 
-
 ```{r comm-between-hromadas-1, fig.height=3, fig.width=9,class.source="fold-hide"}
 d <- ds0 %>% 
    filter(!is.na(commun_between_hromadas)) %>%
@@ -1754,9 +1753,7 @@ d %>%
   geom_col(position = position_dodge())+
   geom_text(aes(label = pct), hjust = .3, vjust = -.2, position = position_dodge(width = .9))+
   scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
-  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
-                                ,labels = c('TRUE' = 'Had account', 'FALSE' = 'No account')
-    )+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T))+
   labs(
     title = "Was there a need for an evacuation in your community?"
     ,fill = "War exposure"
@@ -1767,12 +1764,43 @@ d %>%
 ```
 # 7. IDP
 
+```{r idp-number-reg, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+
+d <- ds0 %>% filter(idp_accept == 'yes') %>%
+  select(hromada_code, idp_registration_number, type)
+
+beeswarm(d$idp_registration_number ~ d$type,  method='swarm', 
+         main = 'Number of registered IDPs in community', xlab = NA, ylab = NA,
+         pwcol= d$type, pch = 19, cex = 0.7, 
+         horizontal = TRUE, corral = 'random')
+# axis(1, at=seq(0, 200, by = 10), las=2)
+bxplot(d$idp_registration_number ~ d$type, horizontal = TRUE, add = TRUE, lwd = 1.2)
+```
+
+```{r idp-number-real, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+
+d <- ds0 %>% filter(idp_accept == 'yes') %>%
+  select(hromada_code, idp_real_number, type)
+
+beeswarm(d$idp_real_number ~ d$type,  method='swarm', 
+         main = 'Number of all IDPs in community', xlab = NA, ylab = NA,
+         pwcol= d$type, pch = 19, cex = 0.7, 
+         xlim = c(0, 20000),
+         horizontal = TRUE, corral = 'random', xaxt="n")
+axis(1, at=seq(0, 20000, by = 2000), las=2)
+bxplot(d$idp_real_number ~ d$type, horizontal = TRUE, add = TRUE, lwd = 1.2)
+```
+
 # 8. Economics
 
+\
+It has been observed that communities, both rear and war affected, mostly have not redirected their special fund expenditures to other needs. \ 
+However, it was found that redirection of special fund was more frequent in rear communities, as opposed to war-exposed communities.
+
 ```{r special-fund-1, fig.height=3, fig.width=9,class.source="fold-hide"}
-(ds0 %>% 
+d <- ds0 %>% 
   mutate(
-    `Special fund's expenditures were relocated` = fct_recode(
+    spec_fund_relocation_fct = fct_recode(
       special_fund_relocation,
        "Yes"      = "yes"
       ,"No"       = "no"
@@ -1781,12 +1809,31 @@ d %>%
        ,"No"     
     )
     )
+  )
+
+d %>%
+  group_by(spec_fund_relocation_fct,occupation_and_combat_fct) %>% 
+  summarize(
+    hromada_count = n_distinct(hromada_code)
+    ,.groups = "drop"
   ) %>% 
-  make_bi_freq_graph("military_action","Special fund's expenditures were relocated") )+
+  group_by(occupation_and_combat_fct) %>% 
+  mutate(
+    prop = hromada_count/sum(hromada_count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ggplot(aes(y=prop, x = spec_fund_relocation_fct, fill = occupation_and_combat_fct))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), hjust = .3, vjust = -.2, position = position_dodge(width = .9))+
+  scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T))+
   labs(
-    title = "Were budget expenditures from the special fund streamed to finance other, current needs?"
+    title = "Were expenditures from the special fund directed to other, current needs?"
+    ,fill = "War exposure"
+    ,y = "Percent of respondents in each group"
     ,x = NULL
   )
+
 ```
 
 ```{r special-fund-no-combat, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
