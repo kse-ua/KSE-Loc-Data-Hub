@@ -1791,6 +1791,34 @@ axis(1, at=seq(0, 20000, by = 2000), las=2)
 bxplot(d$idp_real_number ~ d$type, horizontal = TRUE, add = TRUE, lwd = 1.2)
 ```
 
+```{r help-idp, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+
+help_idp_levels <- c('communal_placement', 'private_placement', 'regular_meal', 'humanitar_help', 
+                     'fundraising', "employ", "psych_help", "law_help", "transit_center")
+
+d <- ds0 %>% select(hromada_code, starts_with('idp_help/'), -ends_with('number')) %>% 
+  pivot_longer(-hromada_code, names_to = 'help', values_to = 'count') %>%
+  count(help, count) %>% group_by(help) %>% 
+  mutate(freq = n/sum(n),
+         help = str_remove(help, 'idp_help/')) %>%
+  filter(count == 1)
+
+p <- d %>% 
+  ggplot(aes(x = fct_reorder(factor(help), freq, .desc = TRUE), y = freq)) +
+  geom_col() +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(title = 'Which actions or resources were effectively provided by the community for internally displaced persons (IDPs)?', subtitle = "excluding occupied hromadas") +
+  scale_y_continuous(labels = scales::percent) 
+  # # scale_x_discrete(labels=c('rooms' = 'Allocated rooms', 'transport' = 'Provided transport',
+  #                           "money" = "Provided money", "products" = "Provided products \n(food, medicine, fuel)",
+  #                           "other" = "Other types of assistance", "none" = "Nothing"))
+
+p
+```
+
 # 8. Economics
 
 \
