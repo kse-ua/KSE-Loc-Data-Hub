@@ -1812,9 +1812,15 @@ p <- d %>%
         axis.title.x = element_blank()) +
   labs(title = 'Which actions or resources were effectively provided by the community for internally displaced persons (IDPs)?', subtitle = "excluding occupied hromadas") +
   scale_y_continuous(labels = scales::percent) 
-  # # scale_x_discrete(labels=c('rooms' = 'Allocated rooms', 'transport' = 'Provided transport',
-  #                           "money" = "Provided money", "products" = "Provided products \n(food, medicine, fuel)",
-  #                           "other" = "Other types of assistance", "none" = "Nothing"))
+  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in communal or state-owned premises",
+                            'private_placement' = "Placement of IDPs in private premises", 
+                            'regular_meal' = "Regular meal", 
+                            'humanitar_help' = "Issuance of humanitarian aid", 
+                            'fundraising' = "Fundraising for the needs of IDPs", 
+                            "employ" = "Employment programs in the community", 
+                            "psych_help" = "Psychological support for IDPs", 
+                            "law_help" = "Legal support for IDPs", 
+                            "transit_center" = "Organization of a transit center"))
 
 p
 ```
