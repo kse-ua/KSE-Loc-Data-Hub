@@ -1791,7 +1791,7 @@ axis(1, at=seq(0, 20000, by = 2000), las=2)
 bxplot(d$idp_real_number ~ d$type, horizontal = TRUE, add = TRUE, lwd = 1.2)
 ```
 
-```{r help-idp, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+```{r help-idp, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
 
 help_idp_levels <- c('communal_placement', 'private_placement', 'regular_meal', 'humanitar_help', 
                      'fundraising', "employ", "psych_help", "law_help", "transit_center")
@@ -1810,19 +1810,118 @@ p <- d %>%
   theme_bw() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank()) +
-  labs(title = 'Which actions or resources were effectively provided by the community for internally displaced persons (IDPs)?', subtitle = "excluding occupied hromadas") +
-  scale_y_continuous(labels = scales::percent) 
-  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in communal or state-owned premises",
-                            'private_placement' = "Placement of IDPs in private premises", 
-                            'regular_meal' = "Regular meal", 
-                            'humanitar_help' = "Issuance of humanitarian aid", 
-                            'fundraising' = "Fundraising for the needs of IDPs", 
-                            "employ" = "Employment programs in the community", 
-                            "psych_help" = "Psychological support for IDPs", 
-                            "law_help" = "Legal support for IDPs", 
-                            "transit_center" = "Organization of a transit center"))
+  labs(title = 'Which actions or resources were effectively provided by the community \nfor internally displaced persons (IDPs)?', 
+       subtitle = "excluding occupied hromadas",) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in \ncommunal or state-owned \npremises",
+                            'private_placement' = "Placement of IDPs in \nprivate premises", 
+                            'regular_meal' = "Regular \nmeal", 
+                            'humanitar_help' = "Issuance of \nhumanitarian aid", 
+                            'fundraising' = "Fundraising for \nthe needs of IDPs", 
+                            "employ" = "Employment programs \nin the community", 
+                            "psych_help" = "Psychological \nsupport for IDPs", 
+                            "law_help" = "Legal \nsupport for IDPs", 
+                            "transit_center" = "Organization of \na transit center"))
 
 p
+
+```
+
+```{r help-idp-voluntary, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+help_idp_levels <- c('communal_placement', 'private_placement', 'regular_meal', 'humanitar_help', 
+                     'fundraising', "employ", "psych_help", "law_help", "transit_center")
+
+d <- ds0 %>% select(hromada_code, voluntary_fct, starts_with('idp_help/'), -ends_with('number')) %>% 
+  pivot_longer(-c(hromada_code, voluntary_fct), names_to = 'help', values_to = 'count') %>%
+  count(help, voluntary_fct, count) %>% 
+  group_by(help, voluntary_fct) %>% 
+  mutate(freq = n/sum(n),
+         help = str_remove(help, 'idp_help/')) %>%
+  filter(count == 1)
+
+p <- d %>% 
+  ggplot(aes(x = fct_reorder(factor(help), freq, .desc = TRUE), y = freq, fill = voluntary_fct)) +
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = scales::percent(freq, 1)), hjust = .4, 
+             vjust = -.3, position = position_dodge(width = .9), size = 3.2) + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 9)) +
+  labs(title = 'Which actions or resources were effectively provided by the community \nfor internally displaced persons (IDPs)?', 
+       subtitle = "excluding occupied hromadas",
+       fill = NULL) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in \ncommunal or \nstate-owned \npremises",
+                            'private_placement' = "Placement of IDPs in \nprivate premises", 
+                            'regular_meal' = "Regular \nmeal", 
+                            'humanitar_help' = "Issuance of \nhumanitarian \naid", 
+                            'fundraising' = "Fundraising for \nthe needs of IDPs", 
+                            "employ" = "Employment \nprograms \nin the community", 
+                            "psych_help" = "Psychological \nsupport for IDPs", 
+                            "law_help" = "Legal \nsupport for IDPs", 
+                            "transit_center" = "Organization of \na transit center")) +
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",
+                                guide= guide_legend(reverse=T))
+
+p
+
+```
+
+```{r idp-place-rooms, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+d <- ds0 %>% select(idp_place_rooms)
+
+(d %>% make_bi_freq_graph('idp_place_rooms')) +
+  labs(
+    title = "Premises for how many beds were provided for IDPs?",
+    subtitle = "For those hromadas that provided premises (n = 92)"
+    ,y = NULL, x = NULL, fill = NULL
+  ) +
+  scale_x_discrete(labels=c('0_100_beds' = "0 - 100 beds",
+                            '101_250_beds' = "101 - 250 beds", 
+                            '251_500_beds' = "251 - 500 beds", 
+                            '501_1000_beds' = "501 - 1000 beds", 
+                            'over1000_beds' = "> 1000 beds")) +
+  guides(fill = "none")
+
+```
+
+```{r idp-place-rooms-registered, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+d <- ds0 %>% filter(idp_accept == 'yes' & !is.na(idp_place_rooms)) %>%
+  select(hromada_code, idp_registration_number, idp_place_rooms)
+
+d %>% 
+  ggplot(aes(y = idp_place_rooms, x = idp_registration_number, color = idp_place_rooms)) +
+  ggbeeswarm::geom_beeswarm() +
+  scale_y_discrete(labels=c('0_100_beds' = "0 - 100 beds",
+                            '101_250_beds' = "101 - 250 beds", 
+                            '251_500_beds' = "251 - 500 beds", 
+                            '501_1000_beds' = "501 - 1000 beds", 
+                            'over1000_beds' = "> 1000 beds")) +
+  labs(title = "Premises for how many beds were provided for IDPs?",
+       subtitle = "For those hromadas that provided premises (n = 92)",
+       x = "Registered IDPs", y = NULL, color = NULL) +
+  guides(color = "none")
+
+```
+
+```{r idp-child, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+d <- ds0 %>% filter(idp_accept == 'yes') %>%
+  select(hromada_code, idp_registration_number, idp_child_education)
+
+d %>% 
+  ggplot(aes(x = idp_registration_number, y = idp_child_education)) +
+  geom_point() +
+  ggpmisc::stat_poly_eq() +
+  geom_smooth(method = 'lm') +
+  labs(title = NULL,
+       subtitle = NULL,
+       x = "Registered IDPs", y = "IDP children that went to school in hromada", color = NULL)
+
 ```
 
 # 8. Economics
