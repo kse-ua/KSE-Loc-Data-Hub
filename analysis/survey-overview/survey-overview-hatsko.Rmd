@@ -2154,14 +2154,14 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
 
 # 9. Humanitarian
 
-# 10. Reconstructioin
+# 10. Reconstruction
 
-\ 
-small number of answers (38) - omit at this stage
+\
+There are  only 38 communities that had any destruction from the hostilities.
 
 ## 10.1 Damage Evaluation
 
-```{r damage-1, fig.height=3, fig.width=9, class.source="fold-hide"}
+```{r damage-region, fig.height=3, fig.width=9, class.source="fold-hide"}
 ds0 %>% 
   count(region_en, is_damaged) %>% 
   ggplot(aes(x = region_en, y = n, fill = is_damaged)) +
@@ -2174,6 +2174,318 @@ ds0 %>%
 
 ```
 
+```{r damage-war-affected, fig.height=3, fig.width=9, class.source="fold-hide"}
+ds0 %>% 
+  count(occupation_and_combat_fct, is_damaged) %>% 
+  ggplot() +
+  aes(x = occupation_and_combat_fct, y=n,
+             fill = is_damaged) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(
+    title = "Were there any destructions in the hromada as a result of military actions?"
+    ,y = "Share of Hromadas", x = NULL, fill = NULL
+  ) +
+  theme_bw()
+
+```
+
+```{r damage-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+(ds0 %>% 
+   mutate(
+    `Share of Housing Damaged` = as.factor(case_when(
+       is_damaged == "no" ~ "No Damages",
+      percent_damaged== "0_10_percent" ~ "0-10%",
+      percent_damaged== "10_25_percent" ~ "10-25%",
+      percent_damaged== "26_50_percent" ~ "26-50%",
+      percent_damaged== "50_75_percent" ~ "50-75%",
+      percent_damaged== "76_100_percent" ~ "76-100%"
+    )) %>% factor( levels = c(
+       "No Damages"           
+       ,"0-10%" ,
+       "10-25%",
+       "26-50%",
+       "50-75%",
+       "76-100%"
+    )
+    )
+  ) %>%
+   make_bi_freq_graph("Share of Housing Damaged"))+
+  labs(
+    title = "What percentage of housing was damaged in your hromada?"
+    ,subtitle = "Data was collected during October-November of 2022"
+    ,y = "Number of communities", fill = NULL
+  ) +
+  guides(fill = "none")
+
+```
+
+```{r damage-3, fig.height=3, fig.width=9,class.source="fold-hide"}
+d10 <- 
+  ds0 %>% filter(is_damaged == "yes") %>%
+  pivot_longer(
+    cols = c(damage_evaluation_persons, damage_evaluation_communal, damage_evaluation_bussiness)
+    ,names_to = "type_of"
+    ,values_to = "response"
+  ) %>% 
+  group_by(type_of,response) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(type_of) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()  %>% mutate(type_of = case_when(type_of == "damage_evaluation_persons" ~ "For Individuals",
+                                            type_of == "damage_evaluation_communal" ~ "For Communal Entities",
+                                            type_of == "damage_evaluation_bussiness" ~ "For Businesses"))
+
+g <- 
+  d10 %>% 
+  { 
+  ggplot(
+    data = (.) %>% mutate(response=factor(response))
+    ,aes(x=prop, y = type_of, fill=response)
+  )+
+  geom_col(position = position_stack()
+           , alpha = .7
+           ,data =
+  )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = 1
+            , size = 4
+            ,color="black"
+            ,position = position_stack()
+            ,data = .
+            )+
+  scale_x_continuous(
+    breaks = seq(.1,1,.1)
+    ,labels = scales::percent_format()
+    ,expand = expansion(add=c(-.000,-.0))
+  )+
+  labs(
+    title = "Has your hromada performed damage assessment for?"
+    ,x = "Percent of communities", y = NULL, fill = NULL
+    
+  )+
+  theme(
+    # panel.grid = element_blank()
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "grey")
+  )
+  }
+
+g
+```
+
+```{r damage-4, fig.height=3, fig.width=9,class.source="fold-hide"}
+
+(ds0 %>% mutate(`Does hromada have a Recovery plan?` = as.factor(case_when(reconstruction_plan=="yes"~"Yes",
+                                                                reconstruction_plan=="no"~"No"
+                                                                ))) %>% filter(is_damaged=="yes") %>% make_bi_freq_graph("Does hromada have a Recovery plan?")) +
+  labs(
+    title = "Does your hromada have a Recovery plan?"
+    ,subtitle = "among those who reported damages and were not occupied (n = 33)"
+    ,y = "Number of communities", x = NULL
+  ) +
+  scale_x_discrete(labels=c('TRUE' = 'Yes', 'FALSE' = 'No')) +
+  scale_fill_discrete(labels=c('TRUE' = 'Yes', 'FALSE' = 'No')) +
+  guides(fill = "none")
+
+```
+
+
+```{r damage-5, fig.height=3, fig.width=9,class.source="fold-hide"}
+ds13 <- ds0 %>% filter(!is.na(reconstruction_plan)) %>%
+   mutate(
+    `Share of Housing Damaged` = as.factor(case_when(
+       is_damaged == "no" ~ "No Damages",
+      percent_damaged== "0_10_percent" ~ "0-10%",
+      percent_damaged== "10_25_percent" ~ "10-25%",
+      percent_damaged== "26_50_percent" ~ "26-50%",
+      percent_damaged== "50_75_percent" ~ "50-75%",
+      percent_damaged== "76_100_percent" ~ "76-100%"
+    )) %>% factor( levels = c(
+       "No Damages"           
+       ,"0-10%" ,
+       "10-25%",
+       "26-50%",
+       "50-75%",
+       "76-100%"
+    )
+    )
+  ) %>% filter(is_damaged == "yes") %>%
+  group_by(`Share of Housing Damaged`, reconstruction_plan) %>% 
+  summarize(
+    count = n()
+    ,.groups = "drop"
+  ) %>%
+  ungroup() %>% group_by(`Share of Housing Damaged`) %>% mutate(
+    prop = count/sum(count)
+    ,pct = scales::percent(prop, accuracy = 1)
+    )
+
+
+g1 <- 
+  ds13 %>% 
+  { 
+  ggplot(
+    data = (.)
+    ,aes(x=prop, y = `Share of Housing Damaged`, fill=reconstruction_plan)
+  )+
+  geom_col(position = position_stack()
+           , alpha = .7
+           ,data =
+  )+
+  geom_text(aes(label = count)
+            ,hjust = 1
+            , size = 3
+            ,color="black"
+            ,position = position_stack()
+            ,data = .
+            )+
+  scale_x_continuous(
+    breaks = seq(.1,1,.1)
+    ,labels = scales::percent_format()
+    ,expand = expansion(add=c(-.000,-.0))
+  )+
+  labs(
+    title = "Does your hromada have a Recovery plan? (depending on the housing damage level)"
+    ,subtitle = "among those who reported damages and were not occupied (n = 33)"
+    ,x = "Percent of respondents", y = NULL, fill = NULL
+    
+  )+
+  theme(
+    # panel.grid = element_blank()
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "grey")
+  )
+  }
+
+g1
+```
+
+```{r damage-repaired-housing, fig.height=4, fig.width=9,class.source="fold-hide"}
+
+p <- ds0 %>%
+  select(percent_reconstructed) %>%
+  na.omit() %>%
+  ggplot(aes(x=percent_reconstructed, group = 1)) +
+  geom_bar(aes(y = ..prop..), stat = 'count') +
+  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4, size = 3.4) +
+  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.55)) +
+  scale_x_discrete(labels=c('0_10_percent' = "0-10%",
+                            '10_25_percent' = "10-25%", 
+                            '26_50_percent' = "26-50%", 
+                            '51_75_percent' = "51-75%", 
+                            '76_100_percent' = "76-100%")) +
+  labs(
+    title = "What part of the damaged housing stock has been repaired? (as of October 2022)",
+    subtitle = "among those who reported damages and were not occupied (n = 33)"
+    ,y = NULL, x = NULL
+  )
+
+p
+
+```
+
+```{r}
+ds_projects_type <- ds0 %>% 
+  mutate(international_projects_number = as.numeric(international_projects)) %>% 
+  group_by(type) %>%
+  summarise(median = median(international_projects_number, na.rm =  T),
+            mean = mean(international_projects_number, na.rm =  T),
+            max = max(international_projects_number, na.rm =  T)) 
+
+ds_projects_war <- ds0 %>% 
+  mutate(international_projects_number = as.numeric(international_projects)) %>% 
+  group_by(occupation_and_combat_fct) %>%
+  summarise(median = median(international_projects_number, na.rm =  T),
+            mean = mean(international_projects_number, na.rm =  T),
+            max = max(international_projects_number, na.rm =  T)) 
+```
+
+```{r international-projects, fig.height=4, fig.width=9,class.source="fold-hide"}
+d <- ds0 %>% 
+  mutate(international_projects_number = as.numeric(international_projects)) %>% 
+  select(hromada_full_name, international_projects_number, type, occupation_and_combat_fct) %>%
+  mutate(international_projects_group = cut(international_projects_number,
+                              breaks = c(0, 1, 2, 3, 4, 20),
+                              labels = c('None', '1', '2', '3', 'More than 3'),
+                              right = F)) %>%
+  na.omit() 
+
+p <- d %>%
+  ggplot(aes(x=international_projects_group, group = 1)) +
+  geom_bar(aes(y = ..prop..), stat = 'count') +
+  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
+  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.55)) +
+  labs(
+    title = "How many projects involving funds from international donors communities has implemented / is implementing since Feb 24?"
+    ,y = NULL, x = NULL
+  )
+
+p
+
+```
+
+> These are hromadas in our survey that have the most implemented projects:
+
+```{r international-projects-top, class.source="fold-hide", echo=FALSE}
+d %>% 
+  filter(international_projects_group == "More than 3") %>%
+  select(hromada_full_name, international_projects_number) %>%
+  slice_max(international_projects_number, n = 10) %>%
+  rename('Hromada Name' = "hromada_full_name"
+         , "Number of projects" = "international_projects_number") %>%
+  gt()
+
+```
+
+```{r international-projects-type, fig.height=4, fig.width=9,class.source="fold-hide"}
+d1 <- d %>% count(international_projects_group, type) %>%
+  group_by(type) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1))
+
+p <- d1 %>%
+  ggplot() +
+  aes(y = prop, x=type, fill = international_projects_group, label = pct) +
+  geom_bar(stat = 'identity') +
+  geom_text(position = position_fill(vjust = .4), size = 4) +
+  scale_fill_viridis_d(option = "plasma") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "How many projects involving funds from international donors communities has implemented / is implementing since Feb 24?"
+    ,y = NULL, x = NULL, fill = "Number of projects"
+  )
+
+p
+```
+
+```{r international-projects-war, fig.height=4, fig.width=9,class.source="fold-hide"}
+d1 <- d %>% count(international_projects_group, occupation_and_combat_fct) %>%
+  group_by(occupation_and_combat_fct) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1))
+
+p <- d1 %>%
+  ggplot() +
+  aes(y = prop, x=occupation_and_combat_fct, fill = international_projects_group, label = pct) +
+  geom_bar(stat = 'identity') +
+  geom_text(position = position_fill(vjust = .4), size = 4) +
+  scale_fill_viridis_d(option = "plasma") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "How many projects involving funds from international donors communities has implemented / is implementing since Feb 24?"
+    ,y = NULL, x = NULL, fill = "Number of projects"
+  )
+
+p
+```
 
 
 # 11. Current Challenges
