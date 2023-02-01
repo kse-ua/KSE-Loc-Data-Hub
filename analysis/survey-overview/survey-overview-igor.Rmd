@@ -2179,7 +2179,7 @@ g
 ```
 
 
-```{r damage-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+```{r damage-5, fig.height=3, fig.width=9,class.source="fold-hide"}
 ds13 <- ds0 %>% filter(!is.na(reconstruction_plan)) %>%
    mutate(
     `Share of Housing Damaged` = as.factor(case_when(
