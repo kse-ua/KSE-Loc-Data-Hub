@@ -229,8 +229,8 @@ ds0 <-
     income_total_per_capita     = income_total_2021       / total_population_2022,
     income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
     idp_registration_share      = idp_registration_number / total_population_2022,
-    idp_real_share              = idp_real_number         / total_population_2022,
-    idp_child_share             = idp_child_education     / idp_registration_number,
+    idp_real_share              = idp_real_number         / total_population_2022 * 100,
+    idp_child_share             = idp_child_education     / idp_registration_number * 100,
     type                        = case_when(type == 'сільська' ~ 'village',
                                             type == 'селищна' ~ 'urban village',
                                             type == 'міська' ~ 'urban'),
@@ -241,8 +241,11 @@ ds0 <-
     occupation_and_combat_fct   = factor(occupation_and_combat, 
                                          labels = c('Rear communities', 'Communities exposed to war (n = 22)')),
     voluntary_fct               = factor(voluntary,
-                                         labels = c('Top-down amalgamated', 'Voluntary amalgamated'))
-    )
+                                         labels = c('Top-down amalgamated', 'Voluntary amalgamated')),
+    oblast_name_en              = case_when(oblast_name_en == 'Vonyn' ~ "Volyn",
+                                            oblast_name_en == 'Driproptrovska' ~ "Dnipropetrovska",
+                                            TRUE ~ oblast_name_en)
+     )
 
 ds1_winter_prep <- ds0 %>% 
   mutate(
