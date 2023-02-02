@@ -1578,7 +1578,7 @@ d <- ds0 %>% select(hromada_code, starts_with('help_for_military/')) %>%
 
 p <- d %>% 
   ggplot(aes(x = factor(help, levels = help_military_levels), y = freq)) +
-  geom_col() +
+  geom_col(fill = "dodgerblue") +
   geom_label(aes(label = scales::percent(freq)))  + 
   theme_bw() +
   theme(axis.title.y = element_blank(),
@@ -1655,7 +1655,7 @@ g <-  ds0 %>%
                         )
   ) %>% 
   ggplot(aes(x=value))+
-  geom_histogram(binwidth = 100, alpha = .5, breaks=c(10,20,30,40,50,60,70,80,90,100))+
+  geom_histogram(binwidth = 100, alpha = .5, breaks=c(10,20,30,40,50,60,70,80,90,100), fill = "dodgerblue")+
   facet_wrap("measure",ncol =5) +
   labs(
     y='number of hromadas'
@@ -1762,6 +1762,8 @@ d %>%
   )
 
 ```
+
+
 # 7. IDP
 
 ```{r idp-number-reg, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
@@ -1805,7 +1807,7 @@ d <- ds0 %>% select(hromada_code, starts_with('idp_help/'), -ends_with('number')
 
 p <- d %>% 
   ggplot(aes(x = fct_reorder(factor(help), freq, .desc = TRUE), y = freq)) +
-  geom_col() +
+  geom_col(fill = "dodgerblue") +
   geom_label(aes(label = scales::percent(freq)))  + 
   theme_bw() +
   theme(axis.title.y = element_blank(),
@@ -1848,7 +1850,7 @@ p <- d %>%
   theme_bw() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 9)) +
+        axis.text.x = element_text(size = 7)) +
   labs(title = 'Which actions or resources were effectively provided by the community \nfor internally displaced persons (IDPs)?', 
        subtitle = "excluding occupied hromadas",
        fill = NULL) +
@@ -1908,19 +1910,35 @@ d %>%
 
 ```
 
-```{r idp-child, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+```{r idp-child-share-type, fig.height=5, fig.width=7, class.source="hide", eval = TRUE}
 
 d <- ds0 %>% filter(idp_accept == 'yes') %>%
-  select(hromada_code, idp_registration_number, idp_child_education)
+  select(hromada_code, idp_child_share, type, occupation_and_combat_fct)
 
 d %>% 
-  ggplot(aes(x = idp_registration_number, y = idp_child_education)) +
-  geom_point() +
-  ggpmisc::stat_poly_eq() +
-  geom_smooth(method = 'lm') +
-  labs(title = NULL,
-       subtitle = NULL,
-       x = "Registered IDPs", y = "IDP children that went to school in hromada", color = NULL)
+  ggplot(aes(x = idp_child_share, y = type, col = type)) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+  geom_jitter(height = .1) +
+  labs(title = "Share of IDPs children gone to school to registered IDPs in the community",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none")
+
+
+```
+
+```{r idp-child-share-war, fig.height=5, fig.width=7, class.source="hide", eval = TRUE}
+
+d <- ds0 %>% filter(idp_accept == 'yes') %>%
+  select(hromada_code, idp_child_share, type, occupation_and_combat_fct)
+
+d %>% 
+  ggplot(aes(x = idp_child_share, y = occupation_and_combat_fct, col = occupation_and_combat_fct)) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+  geom_jitter(height = .1) +
+  labs(title = "Share of IDPs children gone to school to registered IDPs in the community",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none")
+
 
 ```
 
@@ -1969,34 +1987,6 @@ d %>%
 
 ```
 
-```{r special-fund-no-combat, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
-(ds0 %>% filter(military_action=="no_combat") %>%
-  mutate(
-    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
-                                                             special_fund_relocation=="yes"~1)
-  ) %>% 
-  ggplot(aes(x = prep_count, y = `Special fund's expenditures were relocated`)) +
-  geom_point() +
-  geom_smooth(method = "lm", se=F) +
-  theme_bw() +
-  labs(title = 'Relation between preparation and special fund realocation for non-combat hromadas') +
-  xlab("counted preparations"))
-```
-
-```{r special-fund-urbanisation, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
-(ds0 %>% filter(military_action=="no_combat") %>%
-  mutate(
-    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
-                                                             special_fund_relocation=="yes"~1)
-  ) %>% 
-  ggplot(aes(x = urban_pct, y = `Special fund's expenditures were relocated`)) +
-  geom_point() +
-  geom_smooth(method = "lm", se=F) +
-  theme_bw() +
-  labs(title = 'Relation between urbanisation and special fund realocation for non-combat hromadas') +
-  xlab("share of urban population"))
-```
-
 ```{r special-fund-own-income, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
 (ds0 %>% filter(military_action=="no_combat") %>%
   mutate(
@@ -2035,36 +2025,57 @@ ds0 %>%
                            TRUE~sector)
  ) %>%
   ggplot(aes(x = `Number of Hromadas`, y = fct_reorder(sector, `Number of Hromadas`))) +
-  geom_bar(stat = "identity", fill = "blue") +
+  geom_bar(stat = "identity") +
   theme_bw()+
   labs(
     title = "Sectors for which the funds of the special fund were redistributed"
     ,subtitle = "Data were collected during October-November of 2022"
-    ,y = "Sector"
+    ,y = NULL
   )+
   geom_col(position = position_stack()
-           , alpha = .5
-           ,data =
+           , fill = "dodgerblue"
   )
 ```
 
 ```{r relocated-bussiness, fig.height=3, fig.width=9, class.source="fold-hide"}
+d <- ds0 %>% 
+  select(relocated_companies_text) %>%
+  mutate(relocated_companies = as.numeric(relocated_companies_text),
+         relocated_companies_group = cut(relocated_companies,
+                              breaks = c(0, 1, 2, 3, 4, 5, 6, 7, 100),
+                              labels = c('None', '1', '2', '3', "4", "5", "6", "More than 6"),
+                              right = T)) %>%
+  na.omit()
+
+d %>%
+  ggplot(aes(x=relocated_companies_group, group = 1)) +
+  geom_bar(aes(y = ..prop..), stat = 'count', fill = "dodgerblue") +
+  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
+  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.4)) +
+  labs(
+    title = "How many enterprises were  relocated from other regions to the community as of October 2022?"
+    ,y = NULL, x = NULL
+  )
+
+
+```
+
+```{r relocated-bussiness-oblast, fig.height=3, fig.width=9, class.source="fold-hide"}
 ds0 %>% 
   mutate(relocated_companies = as.numeric(relocated_companies_text)) %>%
-      group_by(region_en,  oblast_name_en ) %>% 
+      group_by(region_en,  oblast_name_en) %>% 
       summarize(`Relocated companies` = sum(relocated_companies, na.rm = TRUE)) %>% 
   filter(`Relocated companies`>0) %>%
     ggplot(aes(x = `Relocated companies`, y = fct_reorder(oblast_name_en, `Relocated companies`))) +
-  geom_bar(stat = "identity", fill = "blue") +
+  geom_bar(stat = "identity") +
   theme_bw()+
   labs(
     title = "Relocated businesses by destination region"
     ,subtitle = "Data were collected during October-November of 2022"
-    ,y = "Oblast"
+    ,y = NULL
   )+
   geom_col(position = position_stack()
-           , alpha = .5
-           ,data =
+           , fill = "dodgerblue"
   )
 ```
 
@@ -2135,7 +2146,7 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
   TRUE~type)
   ) %>%
   ggplot(aes(x = `number of hromadas`, y = fct_reorder(type, `number of hromadas`))) +
-  geom_bar(stat = "identity", fill = "blue") +
+  geom_bar(stat = "identity", fill = "dodgerblue") +
   theme_bw()+
   geom_col(position = position_stack()
            , alpha = .5
@@ -2157,9 +2168,7 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
 # 10. Reconstruction
 
 \
-There are  only 38 communities that had any destruction from the hostilities.
-
-## 10.1 Damage Evaluation
+> There are  only 38 communities that had any destruction from the hostilities.
 
 ```{r damage-region, fig.height=3, fig.width=9, class.source="fold-hide"}
 ds0 %>% 
@@ -2374,7 +2383,7 @@ p <- ds0 %>%
   select(percent_reconstructed) %>%
   na.omit() %>%
   ggplot(aes(x=percent_reconstructed, group = 1)) +
-  geom_bar(aes(y = ..prop..), stat = 'count') +
+  geom_bar(aes(y = ..prop..), stat = 'count', fill = "dodgerblue") +
   geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4, size = 3.4) +
   scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.55)) +
   scale_x_discrete(labels=c('0_10_percent' = "0-10%",
@@ -2420,7 +2429,7 @@ d <- ds0 %>%
 
 p <- d %>%
   ggplot(aes(x=international_projects_group, group = 1)) +
-  geom_bar(aes(y = ..prop..), stat = 'count') +
+  geom_bar(aes(y = ..prop..), stat = 'count', fill = "dodgerblue") +
   geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
   scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.55)) +
   labs(
