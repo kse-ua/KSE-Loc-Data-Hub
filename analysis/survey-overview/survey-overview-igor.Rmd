@@ -1945,8 +1945,8 @@ d %>%
 # 8. Economics
 
 \
-It has been observed that communities, both rear and war affected, mostly have not redirected their special fund expenditures to other needs. \ 
-However, it was found that redirection of special fund was more frequent in rear communities, as opposed to war-exposed communities.
+> It has been observed that communities, both rear and war affected, mostly have not redirected their special fund expenditures to other needs. \ 
+> However, it was found that redirection of special fund was more frequent in rear communities, as opposed to war-exposed communities.
 
 ```{r special-fund-1, fig.height=3, fig.width=9,class.source="fold-hide"}
 d <- ds0 %>% 
