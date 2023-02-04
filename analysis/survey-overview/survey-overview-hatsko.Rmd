@@ -1944,9 +1944,10 @@ d %>%
 
 # 8. Economics
 
-\
-It has been observed that communities, both rear and war affected, mostly have not redirected their special fund expenditures to other needs. \ 
-However, it was found that redirection of special fund was more frequent in rear communities, as opposed to war-exposed communities.
+
+> It has been observed that communities, both rear and war affected, mostly have not redirected their special fund expenditures to other needs. 
+
+> However, it was found that redirection of special fund was more frequent in rear communities, as opposed to war-exposed communities.
 
 ```{r special-fund-1, fig.height=3, fig.width=9,class.source="fold-hide"}
 d <- ds0 %>% 
@@ -1987,6 +1988,9 @@ d %>%
 
 ```
 
+
+> Hromadas with higher level of fiscal self-sufficiency were less likely to redirect special funds for urgent needs.
+
 ```{r special-fund-own-income, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
 (ds0 %>% filter(military_action=="no_combat") %>%
   mutate(
@@ -2000,6 +2004,9 @@ d %>%
   labs(title = 'Relation between financial autonomy and special fund realocation for non-combat hromadas') +
   xlab("share of own revenue in total budget in 2021"))
 ```
+
+
+> The most frequently mentioned sectors for the fund to be redirected to were Defense, Utilities, Social protection and Education - these are the most likely to challenge local authorities due to war shocks.
 
 ```{r special-fund-sectors, fig.height=3, fig.width=9,class.source="fold-hide"}
 ds0 %>% 
@@ -2036,6 +2043,9 @@ ds0 %>%
            , fill = "dodgerblue"
   )
 ```
+
+
+> Hromadas did not report mass business relocation (every third mentioned no relocated companies at all). However, the most frequent destinations for relocation were naturally Western regions - Volyn, Invano-Frankivsk, Lviv, and Zakarpattia regions.
 
 ```{r relocated-bussiness, fig.height=3, fig.width=9, class.source="fold-hide"}
 d <- ds0 %>% 
@@ -2078,6 +2088,8 @@ ds0 %>%
            , fill = "dodgerblue"
   )
 ```
+
+> There is also a positive relation between fiscal autonomy and the number of relocated businesses.
 
 ```{r relocated-companies-own-income, class.source="fold-hide"}
 ds0 %>% 
@@ -2165,10 +2177,11 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
 
 # 9. Humanitarian
 
+> Too few answers to analyze - only 6
+
 # 10. Reconstruction
 
-\
-> There are  only 38 communities that had any destruction from the hostilities.
+> There are  38 communities (28% of all respondents) that had destructions from the hostilities.
 
 ```{r damage-region, fig.height=3, fig.width=9, class.source="fold-hide"}
 ds0 %>% 
@@ -2183,20 +2196,8 @@ ds0 %>%
 
 ```
 
-```{r damage-war-affected, fig.height=3, fig.width=9, class.source="fold-hide"}
-ds0 %>% 
-  count(occupation_and_combat_fct, is_damaged) %>% 
-  ggplot() +
-  aes(x = occupation_and_combat_fct, y=n,
-             fill = is_damaged) +
-  geom_bar(position = "fill", stat = "identity") +
-  labs(
-    title = "Were there any destructions in the hromada as a result of military actions?"
-    ,y = "Share of Hromadas", x = NULL, fill = NULL
-  ) +
-  theme_bw()
 
-```
+> However, most of damaged hromadas report not mass destruction of housing of up to 10%  - 20% of all respondents.
 
 ```{r damage-2, fig.height=3, fig.width=9,class.source="fold-hide"}
 (ds0 %>% 
@@ -2227,6 +2228,27 @@ ds0 %>%
   guides(fill = "none")
 
 ```
+
+
+> Some rear communities (nearly 15% of all rear communities-respondents) were also damaged - most likely due to the missile strikes.
+
+```{r damage-war-affected, fig.height=3, fig.width=9, class.source="fold-hide"}
+ds0 %>% 
+  count(occupation_and_combat_fct, is_damaged) %>% 
+  ggplot() +
+  aes(x = occupation_and_combat_fct, y=n,
+             fill = is_damaged) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(
+    title = "Were there any destructions in the hromada as a result of military actions?"
+    ,y = "Share of Hromadas", x = NULL, fill = NULL
+  ) +
+  theme_bw()
+
+```
+
+
+> On average, only half of hromadas with reported damages performed damage assesment for indivuduals and businesses. Less have done so for communal entities - only 38%.
 
 ```{r damage-3, fig.height=3, fig.width=9,class.source="fold-hide"}
 d10 <- 
@@ -2288,6 +2310,9 @@ g <-
 
 g
 ```
+
+
+> Moreover, out of hromadas with damages (and which were not occupied), only every fourth has a Recovery plan.
 
 ```{r damage-4, fig.height=3, fig.width=9,class.source="fold-hide"}
 
@@ -2376,6 +2401,8 @@ g1 <-
 
 g1
 ```
+
+> Housing reconstruction is being most actively performed in hromadas with relatively slight damages (50% of damaged housing has been rebuilt on average) and among those with the most mass destructions (30% of damaged housing has been rebuilt on average).
 
 ```{r damage-repaired-housing, fig.height=4, fig.width=9,class.source="fold-hide"}
 
@@ -2499,16 +2526,19 @@ p
 
 # 11. Current Challenges
 
-```{r school-shelters, fig.height=3, fig.width=9, class.source="fold-hide"}
-# ds0 %>% 
-#   count(region_en, is_damaged) %>% 
-#   ggplot(aes(x = region_en, y = n, fill = is_damaged)) +
-#   geom_bar(stat = "identity") +
-#   labs(
-#     title = "Were there any destructions in the community as a result of military actions?"
-#     ,y = "Number of Hromadas", x = NULL, fill = NULL
-#   ) +
-#   theme_bw()
+```{r school-shelters, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+d <- ds0 %>%
+  select(hromada_code, finance_school_shelters_coded, type, occupation_and_combat_fct)
+
+d %>%
+  ggplot(aes(x = finance_school_shelters_coded, y = type, col = type)) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+  geom_jitter(height = .1) +
+  scale_x_continuous(labels = scales::label_number(suffix = "K", scale = 1e-3)) +
+  labs(title = "Money spent on the equipment/refurbishing of shelters for schools from the community budget",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none")
 
 ```
 
@@ -2516,8 +2546,12 @@ p
 
 ## 11.1 Heating season
 
+
+
+
 ```{r heating-1, fig.height=3, fig.width=9, class.source="fold-hide"}
-ds1_winter_prep %>% 
+
+d <- ds1_winter_prep %>% 
   select(hromada_name, all_of(prep_for_winter)) %>% 
   pivot_longer(
     -hromada_name
@@ -2525,14 +2559,27 @@ ds1_winter_prep %>%
     ,values_to = "response"
   ) %>% 
   group_by(action) %>% 
-  summarise(n = sum(response, na.rm = T), .groups = "drop") %>% 
-  ggplot(aes(x = n, y = fct_reorder(action, n))) +
-  geom_bar(stat = "identity", fill = "blue") +
-  labs(
-    title = "Which of the following measures were implemented to prepare hromada for the heating season?"
-    ,y = NULL, x = NULL, fill = NULL
-  ) +
-  theme_bw()
+  summarise(n = sum(response, na.rm = T), .groups = "drop", na = sum(!is.na(response))) %>%
+  mutate(freq = n/na)
+  
+d %>%
+  ggplot(aes(y = freq, x = fct_reorder(action, freq, .desc = T))) +
+  geom_col(fill = "dodgerblue") +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8)) +
+  labs(title = 'Which of the following measures were implemented to prepare the community for the heating season?', 
+       subtitle = "excluding occupied hromadas",) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(labels=c('reserves' = "Stocks and sources of \nsolid fuel for the operation of \nboiler houses have been created",
+                            'info_campaign' = "An information campaign on preparation \nof residents for the heating season \nhas been created",
+                            'count_power_sources' = "Backup/autonomous power sources \nhave been counted and evaluated, \nand locations for new energy-generating \nequipment have been identified",
+                            'count_heaters_need' = "The required number of electric \nheaters for low-income and vulnerable \npeople has been determined",
+                            'solid_fuel_boiler' = "A plan for buying a modular solid-fuel boiler \nroom has been developed")
+                   )
+
 ```
 
 ```{r heating-2, fig.height=3, fig.width=9, class.source="fold-hide"}
