@@ -2542,7 +2542,24 @@ d %>%
 
 ```
 
-#poor quality of answerts regarding days without schooling - consider to omit at all
+> The quality of answers for question about missed school days(including virtual learning) since February 24th was poor. However, 
+
+```{r school-days-without, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+d <- ds0 %>%
+  select(hromada_code, no_school_days_coded, type) %>%
+  mutate(no_school_days_coded = as.numeric(no_school_days_coded))
+
+d %>%
+  ggplot(aes(x = no_school_days_coded, y = type, color = type)) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+  geom_jitter(height = .1) +
+  labs(title = "Money spent on the equipment/refurbishing of shelters for schools from the community budget",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none")
+
+```
+
 
 ## 11.1 Heating season
 
@@ -2586,16 +2603,19 @@ d %>%
 ds1_winter_prep %>% 
   count(winter_prep_count) %>% 
   filter(!is.na(winter_prep_count)) %>% 
-  ggplot(aes(x = factor(winter_prep_count), y = n)) +
+  mutate(freq = n/sum(n)) %>%
+  ggplot(aes(x = factor(winter_prep_count), y = freq)) +
   geom_bar(stat = "identity", fill = "blue") +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  scale_y_continuous(labels = scales::percent) +
   labs(
     title = "Number of measures implemented to prepare hromada for the heating season"
-    ,y = "Number of hromadas", x = "Number of measures", fill = NULL
+    ,y = "Share of hromadas", x = "Number of measures", fill = NULL
   ) +
   xlab("winter_prep_count")
 ```
 
-```{r heating-models, results = "asis", class.source="fold-hide"}
+```{r heating-models, results = "asis", class.source="fold-hide", eval = F}
 
 m1_heating <-lm(data = ds1_winter_prep, 
        winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 + 
@@ -2625,7 +2645,7 @@ stargazer::stargazer(m1_heating, m2_heating, m3_heating, m4_heating, single.row 
 ```
 
 ## 11.2 Problem Involvement
-```{r problem-models, results = "asis", class.source="fold-hide"}
+```{r problem-models, results = "asis", class.source="fold-hide", eval = F}
 m1_problem <-glm(data = ds1_problem, 
              hromada_exp ~ log(income_total_2021) + own_income_prop_2021 + 
              type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary,
