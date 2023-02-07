@@ -6,6 +6,11 @@ author:
 date: 'Last updated: `r Sys.Date()`'
 always_allow_html: true
 output:
+  word_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+    latex_engine: xelatex
   html_document:
     keep_md: yes
     toc: yes
@@ -13,11 +18,6 @@ output:
     code_folding: hide
     theme: cerulean
     highlight: zenburn
-  pdf_document:
-    toc: yes
-    latex_engine: xelatex
-  word_document:
-    toc: yes
 editor_options:
   chunk_output_type: console
 ---
@@ -601,6 +601,90 @@ g
 # g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
 ```
 
+```{r preparation-summary-2, fig.height=5, fig.width=12,class.source="fold-hide", cache=T}
+
+
+d1 <- 
+  ds1_prep_binary_factors_feb %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>% 
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d2 <- 
+  d1 %>% 
+  left_join(
+    d_meta_prep
+  ) %>% 
+  arrange(item_name, value) 
+
+d_in <- 
+  d2 %>% 
+    mutate(
+    display_name = label_en
+    ,display_name = factor(
+      display_name
+      ,levels =  d2 %>%
+        left_join(d_meta_prep) %>%
+        filter(value == "Yes") %>%
+        # filter(value == "Before Feb 24") %>%
+        arrange(prop) %>%
+        # arrange(desc(item_number)) %>%
+        pull(label_en)
+    ) # display_name
+    ,value = fct_relevel(
+      value
+      ,"Yes", "No"
+    ) %>% fct_rev()
+  ) 
+
+g <- 
+  d_in %>% 
+  { 
+  ggplot(data = .,
+    aes(x=prop, y = display_name, fill=value)
+  )+
+  geom_col(position = position_stack()
+           , alpha = .7
+  )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = -.5
+            , size = 4
+            ,color="white"
+            ,position = position_stack()
+            ,data = . %>% filter(value == "Yes")
+            )+
+  scale_x_continuous(
+    breaks = seq(.1,1,.1)
+    ,labels = scales::percent_format()
+    ,expand = expansion(add=c(-.000,-.0))
+  )+
+  scale_fill_manual(
+    values = c("#cc4778", "#0d0887")
+  )+
+  labs(
+    title = "Have your hromada made the following preparations? (before Feb 24)"
+    ,x = "Percent of respondents", y = NULL, fill = NULL
+  )+
+  theme(
+    # panel.grid = element_blank()
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "black")
+  )
+  }
+
+g
+```
+
 <mark>2.1</mark> What questions were asked about preparations hromadas made? 
 
 ```{r class.source = "fold-hide"}
@@ -618,16 +702,18 @@ ds0 %>%
 ## Item-total correlations 
 
 
-We can conceptualize hromadas' the preparation for invasion as two quantities:  
+> We can conceptualize hromadas' the preparation for invasion as two quantities:  
 - `prep_score_feb` - the number of security measures implemented as of February 2022   
 - `prep_score_oct` - the number of security measures implemented as of October 2022
 
 ```{r}
 ds1_prep %>% select(1:4) # + individual preparation items
 ```
-We  also compute `prep_score_combo`, which is a sum of `prep_score_feb` and `prep_score_oct`, the quantity equivalent to weighting the implementation of security measures  prior to Feb 24, 2022 **twice as important**.
 
-These three scores are distributed as follows:  
+> We  also compute `prep_score_combo`, which is a sum of `prep_score_feb` and `prep_score_oct`, the quantity equivalent to weighting the implementation of security measures  prior to Feb 24, 2022 **twice as important**.
+
+> These three scores are distributed as follows:
+
 ```{r info-score-distribution, fig.height=6, fig.width=5,class.source="fold-hide", cache=F}
 g <-  
   ds1_prep %>%
@@ -656,7 +742,7 @@ ds1_prep %>% select(starts_with("prep_score")) %>% GGally::ggpairs()
 # Note that correlation coefficient is Pearson
 ```
 
-The item-total correlations indicates that all three preparedness scores are adequate unidimensional measures.
+> The item-total correlations indicates that all three preparedness scores are adequate unidimensional measures.
 
 ```{r prep-item-total, fig.height=4, fig.width=8,class.source="fold-hide", cache=T}
 
@@ -781,11 +867,12 @@ g_item_total
 g_item_total %>% quick_save("item-total",w=8,h=4)
 ```
 
-While all three metrics should be considered during modeling, the next section demonstrates why and how the interpreations of these scores will differ
+> While all three metrics should be considered during modeling, the next section demonstrates why and how the interpreations of these scores will differ
 
 ## Prep score change
  
-Let's us visualize individual scores of invasion preparedness
+> Let's us visualize individual scores of invasion preparedness
+
 ```{r prep-change-segment-1, eval=T,fig.width=5.5, fig.height=8,class.source="fold-hide"}
 d <- 
   ds1_prep %>% 
@@ -862,16 +949,14 @@ g + labs(color = "Percentile\nGroup\n(Combo)")
 # g %>% quick_save("prep-change-segment-bw",w=5.5,h=9)
 ```
 
-However,this scoring method may not work for operationalizing preparedness as of October
+> However,this scoring method may not work for operationalizing preparedness as of October
 
 ```{r prep-change-segment-2, eval=T,fig.width=5.5, fig.height=8,class.source="fold-hide"}
 g <- d %>% make_plot_prep_change_bw(order_by = c("prep_score_oct","prep_score_feb"), color_by = "prep_score_combo_ntile")
 g + labs(color = "Percentile\nGroup\n(Combo)")
 ```
 
-\
-\
-or as of February
+> or as of February
 
 ```{r prep-change-segment-3, eval=T,fig.width=5.5, fig.height=8,class.source="fold-hide"}
 g <- d %>% make_plot_prep_change_bw(order_by = c("prep_score_feb","prep_score_oct"), color_by = "prep_score_combo_ntile")
@@ -885,8 +970,6 @@ g + labs(color = "Percentile\nGroup\n(Combo)")
 > Both `prep_score_feb` and `prep_score_oct` are meaningful, adequate unidimensional measures with a straightforward interpretation: *Number of security measures implemented as of a given date*. 
 
 > The measure `prep_score_combo` is also an adequate unidimensional measure, but it does not have a clear interpretation of its value.
-
- 
  
 ```{r prep-vs-scatter, eval=F, echo=F}
 # Continuous - good for spreading out
@@ -1096,8 +1179,7 @@ return(g)
 meta_survey %>% filter(group=="information_hat") %>% pull(label) %>% cat()
 ```
 
-\
-The most popular channel of communication for hromadas before February 24th and still is Facebook.
+> The most popular channel of communication for hromadas before February 24th and still is Facebook.
 Before February 24th, only about a quarter of hromadas in our sample had accounts on Viber and Telegram. \
 After February, hromadas doubled their use of alternative channels for communicating with their hromada: Viber, Telegram, Chat for getting help, hotline - now about half of hromadas have official groups on Viber and a hotline.
 
@@ -1228,8 +1310,7 @@ g <-
 g
 ```
 
-\
-Most hromadas had at least one account in social networks before the invasion.
+> Most hromadas had at least one account in social networks before the invasion.
 
 ```{r info-2, fig.height=3, fig.width=9,class.source="fold-hide"}
 
@@ -1289,8 +1370,8 @@ d <-
 meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
 ```
 
-\
-Almost all hromada heads actively communicated with their hromada during the first month of the invasion: 95% addressed the hromada once a week or more, and 37% did it daily.
+
+> Almost all hromada heads actively communicated with their hromada during the first month of the invasion: 95% addressed the hromada once a week or more, and 37% did it daily.
 
 ```{r info-1 , fig.height=3, fig.width=9,class.source="fold-hide"}
 (ds0 %>% 
@@ -1320,8 +1401,7 @@ Almost all hromada heads actively communicated with their hromada during the fir
 
 ```
 
-\
-Mayors of hromadas that had any social account before February 24th on average adressed hromada about the state of affairs significantly more during first month of invasion than those that didn't have.
+> Mayors of hromadas that had any social account before February 24th on average adressed hromada about the state of affairs significantly more during first month of invasion than those that didn't have.
 
 ```{r info-3 , fig.height=3, fig.width=9,class.source="fold-hide"}
 
@@ -1378,8 +1458,7 @@ meta_survey %>% filter(name=="dftg_creation") %>% pull(label) %>% cat()
 
 ```
 
-\
-About a third of hromadas in our survey had not yet created a volunteer defense force of territorial communities (VDF) as of October.
+> About a third of hromadas in our survey had not yet created a volunteer defense force of territorial communities (VDF) as of October.
 
 ```{r dftg-1, fig.height=3, fig.width=9,class.source="fold-hide"}
 
@@ -1399,8 +1478,7 @@ d <- ds0 %>%
   )
 ```
 
-\
-Among village and urban village communities, a higher proportion of hromadas had not yet created a volunteer defense force of territorial communities (VDF).
+> Among village and urban village communities, a higher proportion of hromadas had not yet created a volunteer defense force of territorial communities (VDF).
 
 ```{r dftg-2, fig.height=3, fig.width=9,class.source="fold-hide"}
 d %>%
@@ -1422,9 +1500,8 @@ d %>%
   )
 ```
 
-\
-Here you can see the timeline of creation of these forces for our sample.\
-  
+
+> Here you can see the timeline of creation of these forces for our sample.
 
 ```{r dftg-date, fig.height=5, fig.width=9,class.source="fold-hide"}
 d <- ds0 %>% select(dftg_creation_date) %>% group_by(dftg_creation_date) %>% 
@@ -1501,8 +1578,8 @@ p
 
 ```
 
-\
-Only a few hromadas have created VDF before the invasion. \
+
+> Only a few hromadas have created VDF before the invasion. \
 However, more than a half quickly reacted and managed to create VDF in the first month of the invasion. \
 Moreover, there are differences in speed of reaction by hromada type.
 
@@ -1529,10 +1606,9 @@ p <- d %>%
   mutate(prop = n/sum(n)
          ,pct = scales::percent(prop, accuracy = 1)) %>% 
   ggplot(aes(y=prop, x = invasion_duration))+
-  geom_col(position = position_dodge())+
+  geom_col(position = position_dodge(), fill = "dodgerblue")+
   geom_text(aes(label = pct), position = position_dodge(width = 1), vjust = -0.5)+
   scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
-  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma")+
   labs(
     title = "When VDF was created?"
     ,x = NULL
@@ -1562,8 +1638,7 @@ p
 
 ```
 
-\
-Almost all communities provided at least products for military, significant majority allocated rooms and provided money and transport. 
+> Almost all communities provided at least products for military, significant majority allocated rooms and provided money and transport. 
 
 ```{r help-military, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
 
@@ -1592,25 +1667,26 @@ p <- d %>%
 p
 ```
 
-\
-Most communities provided several types of aid: 42% provided transport, money and products, and allocated rooms for military; 72% provided three and more of those \
-Only 5% of communities haven't provided anything from our list to military.
+> Most communities provided several types of aid: 42% provided transport, money and products, and allocated rooms for military; 72% provided three and more of those \
+>  5% of communities haven't provided anything from our list to military.
 
-```{r help-military-number, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
-
-d <- ds0 %>%
-  mutate(help_military_count = factor(help_military_count))
-
-(d %>% make_bi_freq_graph('help_military_count')) +
-    labs(
-    title = "Number of types of aid provided for the army"
+```{r help-military-number, fig.height=3, fig.width=9, class.source="fold-hide"}
+ds0 %>% 
+  count(help_military_count) %>% 
+  filter(!is.na(help_military_count)) %>% 
+  mutate(freq = n/sum(n)) %>%
+  ggplot(aes(x = factor(help_military_count), y = freq)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Number of types of aid provided for the military"
     ,subtitle = "Data were collected during October-November of 2022"
-    ,y=NULL
-    ,x=NULL
-  ) +
-  guides(fill = "none") +
-  theme_bw()
+    ,y = "Share of hromadas", x = NULL, fill = NULL
+  ) 
+
 ```
+
 
 ```{r fig.height=5, fig.width=9,class.source="fold-hide", eval = FALSE}
 
@@ -1639,8 +1715,7 @@ meta_survey %>% filter(name=="percent_working_now") %>% pull(label) %>% cat()
 
 ```
 
-\
-Questions regarding the percentage of working administrative staff were not effective: Most hromadas reported \ that 90-100% of staff were working both in March and October, and there was no difference between these numbers that would indicate administrative adaptation. \ 
+> Questions regarding the percentage of working administrative staff were not effective: Most hromadas reported \ that 90-100% of staff were working both in March and October, and there was no difference between these numbers that would indicate administrative adaptation.
 
 ```{r admin-percent-working, fig.height=4, fig.width=8,class.source="fold-hide", cache=T}
 
@@ -1665,8 +1740,7 @@ g
 g %>%  quick_save("score-distribution",w=4, h=6)
 ```
 
-\
-73% of communities regularly coordinate actions, typically several times a week or more. \
+> 73% of communities regularly coordinate actions, typically several times a week or more. \
 Communities affected by war differ from those in peaceful regions; they were more likely to both have daily meetings with other communities and also have no meetings at all. \
 
 ```{r comm-between-hromadas-1, fig.height=3, fig.width=9,class.source="fold-hide"}
@@ -1720,8 +1794,7 @@ d %>%
 
 # 6. Evacuation
 
-\
-In most rear communities, evacuation of citizens was not necessary. However, of the communities affected by war, 63% required evacuation and 36% were successful in doing so. \ 
+> In most rear communities, evacuation of citizens was not necessary. However, of the communities affected by war, 63% required evacuation and 36% were successful in doing so. 
 
 ```{r evacuation, fig.height=3, fig.width=9,class.source="fold-hide"}
 
@@ -1811,16 +1884,17 @@ p <- d %>%
   geom_label(aes(label = scales::percent(freq)))  + 
   theme_bw() +
   theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank()) +
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 8)) +
   labs(title = 'Which actions or resources were effectively provided by the community \nfor internally displaced persons (IDPs)?', 
-       subtitle = "excluding occupied hromadas",) +
+       subtitle = "among communities that hosted IDPs",) +
   scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in \ncommunal or state-owned \npremises",
+  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in \ncommunal or \nstate-owned \npremises",
                             'private_placement' = "Placement of IDPs in \nprivate premises", 
                             'regular_meal' = "Regular \nmeal", 
                             'humanitar_help' = "Issuance of \nhumanitarian aid", 
                             'fundraising' = "Fundraising for \nthe needs of IDPs", 
-                            "employ" = "Employment programs \nin the community", 
+                            "employ" = "Employment \nprograms \nin the community", 
                             "psych_help" = "Psychological \nsupport for IDPs", 
                             "law_help" = "Legal \nsupport for IDPs", 
                             "transit_center" = "Organization of \na transit center"))
@@ -1829,7 +1903,24 @@ p
 
 ```
 
-```{r help-idp-voluntary, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+```{r help-idp-number-1, fig.height=5, fig.width=9, class.source="fold-hide"}
+ds0 %>% 
+  count(idp_help_count) %>% 
+  filter(!is.na(idp_help_count)) %>% 
+  mutate(freq = n/sum(n)) %>%
+  ggplot(aes(x = factor(idp_help_count), y = freq)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  geom_label(aes(label = scales::percent(freq)))  + 
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Number of types of aid provided for the internally displaced persons (IDPs)"
+    ,subtitle = "among communities that hosted IDPs"
+    ,y = "Share of hromadas", x = NULL, fill = NULL
+  ) 
+
+```
+
+```{r help-idp-voluntary, fig.height=5, fig.width=9, class.source="hide", eval = F}
 
 help_idp_levels <- c('communal_placement', 'private_placement', 'regular_meal', 'humanitar_help', 
                      'fundraising', "employ", "psych_help", "law_help", "transit_center")
@@ -1935,7 +2026,7 @@ d %>%
   ggplot(aes(x = idp_child_share, y = occupation_and_combat_fct, col = occupation_and_combat_fct)) +
   geom_boxplot(width = .3, outlier.shape = NA) +
   geom_jitter(height = .1) +
-  labs(title = "Share of IDPs children gone to school to registered IDPs in the community",
+  labs(title = "Share of IDPs children gone to school to registered IDPs \nin the community",
        x = NULL, y = NULL, color = NULL) +
   guides(color = "none")
 
@@ -2526,6 +2617,8 @@ p
 
 # 11. Current Challenges
 
+> Only 19% communities have no spending on equipment/refurbishment of shelters for schools from the community budget.
+
 ```{r school-shelters, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
 
 d <- ds0 %>%
@@ -2542,7 +2635,7 @@ d %>%
 
 ```
 
-> The quality of answers for question about missed school days(including virtual learning) since February 24th was poor. However, 
+> The quality of answers for questions about missed school days since February 24th, including virtual learning, has been poor . However, half of the sample, 50.5%, haven't missed any school days due to the switch to virtual learning.
 
 ```{r school-days-without, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
 
@@ -2554,7 +2647,7 @@ d %>%
   ggplot(aes(x = no_school_days_coded, y = type, color = type)) +
   geom_boxplot(width = .3, outlier.shape = NA) +
   geom_jitter(height = .1) +
-  labs(title = "Money spent on the equipment/refurbishing of shelters for schools from the community budget",
+  labs(title = "Missed school days since Feb 24",
        x = NULL, y = NULL, color = NULL) +
   guides(color = "none")
 
@@ -2564,9 +2657,7 @@ d %>%
 ## 11.1 Heating season
 
 
-
-
-```{r heating-1, fig.height=3, fig.width=9, class.source="fold-hide"}
+```{r heating-1, fig.height=4, fig.width=9, class.source="fold-hide"}
 
 d <- ds1_winter_prep %>% 
   select(hromada_name, all_of(prep_for_winter)) %>% 
@@ -2586,7 +2677,7 @@ d %>%
   theme_bw() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 8)) +
+        axis.text.x = element_text(size = 7)) +
   labs(title = 'Which of the following measures were implemented to prepare the community for the heating season?', 
        subtitle = "excluding occupied hromadas",) +
   scale_y_continuous(labels = scales::percent) +
@@ -2599,7 +2690,7 @@ d %>%
 
 ```
 
-```{r heating-2, fig.height=3, fig.width=9, class.source="fold-hide"}
+```{r heating-2, fig.height=4, fig.width=9, class.source="fold-hide"}
 ds1_winter_prep %>% 
   count(winter_prep_count) %>% 
   filter(!is.na(winter_prep_count)) %>% 
@@ -2610,70 +2701,38 @@ ds1_winter_prep %>%
   scale_y_continuous(labels = scales::percent) +
   labs(
     title = "Number of measures implemented to prepare hromada for the heating season"
-    ,y = "Share of hromadas", x = "Number of measures", fill = NULL
-  ) +
-  xlab("winter_prep_count")
-```
-
-```{r heating-models, results = "asis", class.source="fold-hide", eval = F}
-
-m1_heating <-lm(data = ds1_winter_prep, 
-       winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 + 
-         type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
-
-m2_heating <-lm(data = ds1_winter_prep, 
-             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 + 
-               turnout_2020 + travel_time +
-               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
-
-m3_heating <-lm(data = ds1_winter_prep,
-             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 +
-               turnout_2020 + + travel_time +
-               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
-               sex_head + age_head + education_head + incumbent + rda)
-
-m4_heating <-lm(data = ds1_winter_prep,
-             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 +
-               turnout_2020 + + travel_time +
-               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
-               sex_head + age_head + education_head + incumbent + rda +
-               youth_councils + youth_centers + region_en * sum_osbb_2020)
-
-
-stargazer::stargazer(m1_heating, m2_heating, m3_heating, m4_heating, single.row = T, type = 'html')
+    ,y = "Share of hromadas", x = NULL, fill = NULL
+  ) 
 
 ```
 
 ## 11.2 Problem Involvement
-```{r problem-models, results = "asis", class.source="fold-hide", eval = F}
-m1_problem <-glm(data = ds1_problem, 
-             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 + 
-             type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary,
-             family = "binomial")
+```{r problem-models, results = "asis", class.source="fold-hide", eval = T}
+d <- ds1_problem %>%
+  select(hromada_code, problem_additive_index, type)
 
-m2_problem  <-glm(data = ds1_problem, 
-             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 + 
-               turnout_2020 + travel_time +
-               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary,
-             family = "binomial")
+d_mean <- ds1_problem %>%
+  group_by(type) %>%
+  summarise(mean = mean(problem_additive_index, na.rm = T))
 
-m3_problem  <-glm(data = ds1_problem,
-             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 +
-               turnout_2020 + + travel_time +
-               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
-               sex_head + age_head + education_head + incumbent + rda,
-             family = "binomial")
 
-m4_problem  <-glm(data = ds1_problem,
-             hromada_exp ~ log(income_total_2021) + own_income_prop_2021 +
-               turnout_2020 + + travel_time +
-               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
-               sex_head + age_head + education_head + incumbent + rda +
-               youth_councils + youth_centers + region_en * sum_osbb_2020,
-             family = "binomial")
+d %>%
+  ggplot(aes(x = problem_additive_index)) +
+  geom_density(fill="dodgerblue") +
+  facet_wrap(type ~ ., nrow = 3) +
+  geom_vline(data = d_mean, aes(xintercept = mean), color = "red", lwd = 1.2) +
+  labs(title = "Problem Involvement Index",
+       subtitle = "Red lines show mean value for community type",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none")
 
-stargazer::stargazer(m1_problem, m2_problem, m3_problem, m4_problem, single.row = T, type = 'html')
-
+d %>%
+  ggplot(aes(x = problem_additive_index, y = type, color = type)) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+  geom_jitter(height = .1) +
+  labs(title = "Problem Involvement Index",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none")
 
 ```
 
