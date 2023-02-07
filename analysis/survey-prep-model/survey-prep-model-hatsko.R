@@ -807,6 +807,33 @@ d <-
   )
 d %>% plot_complex_scan()
 
+##+ Revenue -----------------------------------------------------------
+
+x <- ds1 %>% select(idp_child_share) %>% filter(!is.na(idp_child_share)) %>% pull()
+norm_dist <- fitdistrplus::fitdist(x, distr = "lnorm")
+plot(norm_dist)
+
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'idp_child_share'
+    ,depdist = "poisson"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    ,explanatory_categorical = predictor_vars_categorical_new
+    ,confounder = 'occupation_and_combat'
+  )
+d %>% plot_complex_scan()
+
+fit1_norm <- 
+  glm(
+    formula = problem_additive_index ~ occupation_and_combat + 
+      ,data = ds1
+    ,family = "gaussian"
+  )
+
+summary(fit1_norm)
+
 ##+ Frequency of Head of Hromada Communication ---------------------------------
 
 # check distribution
@@ -964,15 +991,15 @@ summary(fit1_norm)
 ##+ IDP Share Children -----------------------------------------------------------
 
 x <- ds1 %>% select(idp_child_share) %>% filter(!is.na(idp_child_share)) %>% pull()
-norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+norm_dist <- fitdistrplus::fitdist(x, distr = "lnorm")
 plot(norm_dist)
 
 # plot
 d <-
   ds1 %>%
   run_complex_scan(
-    dependent = 'problem_additive_index'
-    ,depdist = "uniform"
+    dependent = 'idp_child_share'
+    ,depdist = "poisson"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     ,explanatory_categorical = predictor_vars_categorical_new
     ,confounder = 'occupation_and_combat'
