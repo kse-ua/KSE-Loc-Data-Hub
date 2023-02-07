@@ -230,6 +230,22 @@ ds0 <-
                                             TRUE ~ 1),
     info_channels_count_long    = rowSums(across(all_of(comm_channels)) == 2, na.rm = T),
     info_channels_count_short   = rowSums(across(c('telegram', 'viber', 'facebook')) == 2, na.rm = T),
+    hromada_exp = ifelse(hromada_exp == "yes", 1, 0)
+    ,problem_info_index         =           ifelse(`hromada_problem_info/nobody`==1, 0, 
+                                                   rowSums(across(contains("hromada_problem_info/"))))
+    ,problem_consultation_index =   ifelse(`hromada_problem_consultation/nobody`==1, 0, 
+                                           rowSums(across(contains("hromada_problem_consultation/"))))
+    ,problem_proposition_index  =   ifelse(`hromada_problem_proposition/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_proposition/"))))
+    ,problem_system_index       =   ifelse(`hromada_problem_system/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_system/"))))
+    ,problem_feedback_index     =   ifelse(`hromada_problem_feedback/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_feedback/"))))
+    ,problem_execution_index    =   ifelse(`hromada_problem_execution/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_execution/"))))
+    ,problem_additive_index     =   .4*problem_info_index + .6*problem_consultation_index + 
+      .6*problem_proposition_index + .8*problem_system_index + .8*problem_feedback_index +
+      problem_execution_index
   ) %>%
   left_join(ds_general %>% select(hromada_code, train_station, passangers_2021),
             by = 'hromada_code')
@@ -320,10 +336,11 @@ outcomes_vars <- c(
   # ,"prep_score_combo"
   "idp_registration_number" # внутрішньо переміщені особи - кількість ВПО
   ,"idp_registration_share" # внутрішньо переміщені особи - кількість ВПО \ загальне населення до вторгнення
-  ,"idp_real_number" # corrected index above 
-  ,"idp_real_share" # corrected index above 
+  ,"idp_real_number" # corrected index above
+  ,"idp_real_share" # corrected index above
   ,"idp_child_education" # кількість ВПО дітей
   ,"idp_child_share" # відсоток ВПО дітей від популяціі громади до вторгнення
+  ,"idp_help_count"
   ,'relocated_companies_text' # к-сть релокованих компаній
   ,'international_projects' # к-сть проєктів з міжнародними донорами
   ,'finance_school_shelters_coded'
@@ -337,6 +354,7 @@ outcomes_vars <- c(
   ,'prep_winter_count'
   ,'help_military_count'
   ,'help_military_count_neg'
+  ,'problem_additive_index'
 )
 
 outcomes_vars_new <-  c(
@@ -346,6 +364,7 @@ outcomes_vars_new <-  c(
   ,"idp_real_share" # corrected index above 
   ,"idp_child_education" # кількість ВПО дітей
   ,"idp_child_share" # відсоток ВПО дітей від популяціі громади до вторгнення
+  ,"idp_help_count"
   ,'relocated_companies_number' # к-сть релокованих компаній
   ,'international_projects_number' # к-сть проєктів з міжнародними донорами
   ,'finance_school_shelters_coded'
@@ -357,6 +376,7 @@ outcomes_vars_new <-  c(
   ,'prep_winter_count'
   ,'help_military_count'
   ,'help_military_count_neg'
+  ,'problem_additive_index'
 )
 
 # Continuous - good for spreading out # Valentyn, please add relevant predictors here
@@ -739,7 +759,7 @@ performance::check_overdispersion(fit1_poisson)
 
 fit1_nbinom <- 
   MASS::glm.nb(
-    formula = prep_score_feb ~ income_tranfert_per_capita
+    formula = prep_score_feb ~ occupation_and_combat + city + edem_open_hromada
     ,data = ds2_prep
   )
 
@@ -878,7 +898,7 @@ d %>% plot_complex_scan()
 
 fit1_logistic <- 
   glm(
-    formula = dftg_creation_b ~ region_en
+    formula = dftg_creation_b ~ occupation_and_combat
     ,data = ds1
     ,family = "binomial"
   )
@@ -890,6 +910,7 @@ d <-
   ds1 %>%
   run_complex_scan(
     dependent = 'dftg_creation_b'
+    ,confounder = 'occupation_and_combat'
     ,depdist = "binomial"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     , explanatory_categorical = predictor_vars_categorical_new
@@ -908,6 +929,60 @@ fit1_norm <-
   glm(
     formula = log(idp_registration_number) ~ no_party
     ,data = ds1
+    ,family = "gaussian"
+  )
+
+summary(fit1_norm)
+
+##+ IDP Help Count -----------------------------------------------------------
+
+x <- ds1 %>% select(idp_help_count) %>% filter(!is.na(idp_help_count)) %>% pull()
+norm_dist <- fitdistrplus::fitdist(x, distr = "unif")
+plot(norm_dist)
+
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'problem_additive_index'
+    ,depdist = "uniform"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    ,explanatory_categorical = predictor_vars_categorical_new
+    ,confounder = 'occupation_and_combat'
+  )
+d %>% plot_complex_scan()
+
+fit1_norm <- 
+  glm(
+    formula = problem_additive_index ~ occupation_and_combat + 
+      ,data = ds1
+    ,family = "gaussian"
+  )
+
+summary(fit1_norm)
+
+##+ IDP Share Children -----------------------------------------------------------
+
+x <- ds1 %>% select(idp_child_share) %>% filter(!is.na(idp_child_share)) %>% pull()
+norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+plot(norm_dist)
+
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'problem_additive_index'
+    ,depdist = "uniform"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    ,explanatory_categorical = predictor_vars_categorical_new
+    ,confounder = 'occupation_and_combat'
+  )
+d %>% plot_complex_scan()
+
+fit1_norm <- 
+  glm(
+    formula = problem_additive_index ~ occupation_and_combat + 
+      ,data = ds1
     ,family = "gaussian"
   )
 
@@ -953,7 +1028,7 @@ ggplot(reshape2::melt(ds0[prep_for_winter]),aes(x=as.factor(value))) + geom_hist
 
 fit1_pois <- 
   glm(
-    formula = prep_winter_count ~ turnout_2020
+    formula = prep_winter_count ~ occupation_and_combat + region_en
     ,data = ds1
     ,family = "poisson"
   )
@@ -966,6 +1041,7 @@ d <-
   run_complex_scan(
     dependent = 'prep_winter_count'
     ,depdist = "poisson"
+    ,confounder = 'occupation_and_combat'
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     , explanatory_categorical = predictor_vars_categorical_new
   )
@@ -992,9 +1068,32 @@ fit1_nbinom <-
 
 summary(fit1_nbinom)
 
+##+ Engagement Index -----------------------------------------------------------
 
+x <- ds1 %>% select(problem_additive_index) %>% filter(!is.na(problem_additive_index)) %>% pull()
+norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+plot(norm_dist)
 
+# plot
+d <-
+  ds1 %>%
+  run_complex_scan(
+    dependent = 'problem_additive_index'
+    ,depdist = "gaussian"
+    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
+    ,explanatory_categorical = predictor_vars_categorical_new
+    ,confounder = 'occupation_and_combat'
+  )
+d %>% plot_complex_scan()
 
+fit1_norm <- 
+  glm(
+    formula = problem_additive_index ~ occupation_and_combat + 
+    ,data = ds1
+    ,family = "gaussian"
+  )
+
+summary(fit1_norm)
 
 #+ ##
 
