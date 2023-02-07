@@ -236,6 +236,7 @@ ds0 <-
                                             type == 'міська' ~ 'urban'),
     type = factor(type, levels  = c("village", "urban village", "urban")),
     help_military_count         = rowSums(across(all_of(military_help_short)), na.rm = T),
+    idp_help_count              = rowSums(across(all_of(idp_help), na.rm = T)),
     occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
                                             TRUE ~ 1),
     occupation_and_combat_fct   = factor(occupation_and_combat, 
@@ -259,13 +260,25 @@ ds1_winter_prep <- ds0 %>%
 ds1_problem <- ds0 %>% 
   mutate(
     hromada_exp = ifelse(hromada_exp == "yes", 1, 0)
-    ,problem_info_index = rowSums(across(contains("hromada_problem_info/")))
-    ,problem_consultation_index = rowSums(across(contains("hromada_problem_consultation/")))
-    ,problem_proposition_index = rowSums(across(contains("hromada_problem_proposition/")))
-    ,problem_system_index = rowSums(across(contains("hromada_problem_system/")))
-    ,problem_feedback_index = rowSums(across(contains("hromada_problem_feedback/")))
-    ,problem_execution_index = rowSums(across(contains("hromada_problem_execution/")))
+    ,problem_info_index         =           ifelse(`hromada_problem_info/nobody`==1, 0, 
+                                           rowSums(across(contains("hromada_problem_info/"))))
+    ,problem_consultation_index =   ifelse(`hromada_problem_consultation/nobody`==1, 0, 
+                                           rowSums(across(contains("hromada_problem_consultation/"))))
+    ,problem_proposition_index  =   ifelse(`hromada_problem_proposition/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_proposition/"))))
+    ,problem_system_index       =   ifelse(`hromada_problem_system/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_system/"))))
+    ,problem_feedback_index     =   ifelse(`hromada_problem_feedback/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_feedback/"))))
+    ,problem_execution_index    =   ifelse(`hromada_problem_execution/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_execution/"))))
+    ,problem_additive_index     =   .4*problem_info_index + .6*problem_consultation_index + 
+      .6*problem_proposition_index + .8*problem_system_index + .8*problem_feedback_index +
+      problem_execution_index
   )
+
+
+
 
 # ---- inspect-data-0 ------------------------------------------------------------
 
@@ -340,6 +353,22 @@ ds1_prep_binary_factors <-
         ,. == 2 ~ "Yes"
         ,TRUE   ~ "Not Applicable"
       ) %>% factor(levels=c("No","Yes","Not Applicable"))
+    )
+  ) %>% 
+  select(hromada_code, starts_with("prep_score"),preparation)
+
+# Binary scale (0,1) with factors
+ds1_prep_binary_factors_feb <- 
+  ds1_prep %>% 
+  mutate(
+    across(
+      .cols = preparation
+      ,.fns = ~case_when(
+        .  == 0  ~ "No"
+        ,. == 1 ~ "No"
+        ,. == 2 ~ "Yes"
+        ,TRUE   ~ "No"
+      ) %>% factor(levels=c("No","Yes"))
     )
   ) %>% 
   select(hromada_code, starts_with("prep_score"),preparation)
