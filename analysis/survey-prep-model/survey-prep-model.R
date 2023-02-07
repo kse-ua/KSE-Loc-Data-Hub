@@ -506,6 +506,9 @@ ds1 <-
 ds2_prep %>% glimpse(90)
 ds2_prep %>% select(predictor_vars_categorical) %>% look_for()
 
+ds2_prep %>% select(-hromada_code, -hromada_name) %>% tableone::CreateTableOne(data=.)
+
+ds2_prep %>% readr::write_rds("./data-private/derived/survey-prep-model-ds2_prep.rds")
 
 # ---- scan-prep ------------------
 # chunk for implementing model building
@@ -521,6 +524,7 @@ d <-
     , explanatory_categorical = predictor_vars_categorical
     # ,confounder = c("voluntary")
     # ,confounder = c("urban_pct")
+    # ,confounder = c("urban_pct","type","transfert_prop_2021","edem_consultations","war_zone_27_04_2022","turnout_2020")
     # ,confounder = c("urban_pct","type","transfert_prop_2021","edem_consultations","war_zone_27_04_2022","turnout_2020")
   )
 d
