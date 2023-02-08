@@ -3,7 +3,7 @@ title: "Resilience Survey Overview"
 author:
 - Valentyn Hatsko
 - Andriy Koval
-date: 'Last updated: 2023-02-07'
+date: 'Last updated: 2023-02-01'
 always_allow_html: true
 output:
   html_document:
@@ -97,7 +97,7 @@ ds_survey %>% glimpse()
 
 ```
 Rows: 138
-Columns: 277
+Columns: 282
 $ index                                              <dbl> 2, 3, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15~
 $ today                                              <dttm> 2022-10-12, 2022-10-12, 2022-10-19, 20~
 $ `_id`                                              <dbl> 191541757, 191560222, 193449048, 193452~
@@ -131,7 +131,9 @@ $ prep_notification_check                            <dbl> 2, 2, 1, 1, 0, 0, 1, 
 $ prep_backup                                        <dbl> 2, 0, 1, 0, 2, 0, 0, NA, 0, 0, 0, 0, 1,~
 $ prep_partly_backup                                 <dbl> NA, NA, 1, 1, 2, 0, 0, 1, 1, 0, 0, 0, 2~
 $ shelter_capacity_before_text                       <chr> "близько 1600 осіб", "1518 - місткість ~
+$ shelter_capacity_before_coded                      <dbl> 1600, 1518, 2000, 20, 2000, 600, 1000, ~
 $ shelter_capacity_now_text                          <chr> "близько 1600 осіб (+найпростіші)", "15~
+$ shelter_capacity_now_coded                         <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,~
 $ telegram                                           <dbl> 2, 0, 1, 1, 2, 0, 0, 0, 0, 2, 0, 0, 2, ~
 $ viber                                              <dbl> 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, ~
 $ facebook                                           <dbl> 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, ~
@@ -148,9 +150,12 @@ $ `help_for_military/transport`                      <dbl> 1, 0, 1, 1, 0, NA, 1,
 $ `help_for_military/money`                          <dbl> 1, 1, 1, 1, 1, NA, 1, 0, 1, 0, NA, 1, N~
 $ `help_for_military/products`                       <dbl> 1, 1, 1, 1, 1, NA, 1, 1, 1, 1, NA, 1, N~
 $ `help_for_military/other`                          <dbl> 1, 0, 0, 0, 0, NA, 1, 1, 0, 1, NA, 1, N~
+$ `help_for_military/none`                           <dbl> 0, 0, 0, 0, 0, NA, 0, 0, 0, 0, NA, 1, N~
 $ help_for_military_text                             <chr> "Амуніція, різні пристрої та апаратура"~
 $ transport_help_communal                            <chr> "5", NA, "4", "-", NA, NA, "1", NA, "1"~
 $ transport_help_bought                              <chr> "0", NA, "0", "3-4", NA, NA, "0", NA, "~
+$ transport_help_communal_coded                      <dbl> 5, NA, 4, 0, NA, NA, 1, NA, 1, 0, NA, N~
+$ transport_help_bought_coded                        <dbl> 0, NA, 0, 4, NA, NA, 0, NA, 2, 0, NA, N~
 $ percent_working_march                              <dbl> 95.0, 98.0, 100.0, 100.0, 100.0, 90.0, ~
 $ percent_working_now                                <dbl> 95.0, 100.0, 100.0, 100.0, 100.0, 85.0,~
 $ commun_between_hromadas                            <chr> "Daily", "Daily", "Several times a mont~
@@ -473,7 +478,7 @@ Next, we define useful sets of variable names to be used throughout the report
 
 ```
 [1] "help_for_military/rooms"     "help_for_military/transport" "help_for_military/money"    
-[4] "help_for_military/products"  "help_for_military/other"    
+[4] "help_for_military/products"  "help_for_military/other"     "help_for_military/none"     
 ```
 
 ```
@@ -613,24 +618,20 @@ ds0 <-
     income_total_per_capita     = income_total_2021       / total_population_2022,
     income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
     idp_registration_share      = idp_registration_number / total_population_2022,
-    idp_real_share              = idp_real_number         / total_population_2022 * 100,
-    idp_child_share             = idp_child_education     / idp_registration_number * 100,
+    idp_real_share              = idp_real_number         / total_population_2022,
+    idp_child_share             = idp_child_education     / idp_registration_number,
     type                        = case_when(type == 'сільська' ~ 'village',
                                             type == 'селищна' ~ 'urban village',
                                             type == 'міська' ~ 'urban'),
     type = factor(type, levels  = c("village", "urban village", "urban")),
     help_military_count         = rowSums(across(all_of(military_help_short)), na.rm = T),
-    idp_help_count              = rowSums(across(all_of(idp_help), na.rm = T)),
     occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
                                             TRUE ~ 1),
     occupation_and_combat_fct   = factor(occupation_and_combat, 
                                          labels = c('Rear communities', 'Communities exposed to war (n = 22)')),
     voluntary_fct               = factor(voluntary,
-                                         labels = c('Top-down amalgamated', 'Voluntary amalgamated')),
-    oblast_name_en              = case_when(oblast_name_en == 'Vonyn' ~ "Volyn",
-                                            oblast_name_en == 'Driproptrovska' ~ "Dnipropetrovska",
-                                            TRUE ~ oblast_name_en)
-     )
+                                         labels = c('Top-down amalgamated', 'Voluntary amalgamated'))
+    )
 
 ds1_winter_prep <- ds0 %>% 
   mutate(
@@ -644,21 +645,12 @@ ds1_winter_prep <- ds0 %>%
 ds1_problem <- ds0 %>% 
   mutate(
     hromada_exp = ifelse(hromada_exp == "yes", 1, 0)
-    ,problem_info_index         =           ifelse(`hromada_problem_info/nobody`==1, 0, 
-                                           rowSums(across(contains("hromada_problem_info/"))))
-    ,problem_consultation_index =   ifelse(`hromada_problem_consultation/nobody`==1, 0, 
-                                           rowSums(across(contains("hromada_problem_consultation/"))))
-    ,problem_proposition_index  =   ifelse(`hromada_problem_proposition/nobody`==1, 0,
-                                           rowSums(across(contains("hromada_problem_proposition/"))))
-    ,problem_system_index       =   ifelse(`hromada_problem_system/nobody`==1, 0,
-                                           rowSums(across(contains("hromada_problem_system/"))))
-    ,problem_feedback_index     =   ifelse(`hromada_problem_feedback/nobody`==1, 0,
-                                           rowSums(across(contains("hromada_problem_feedback/"))))
-    ,problem_execution_index    =   ifelse(`hromada_problem_execution/nobody`==1, 0,
-                                           rowSums(across(contains("hromada_problem_execution/"))))
-    ,problem_additive_index     =   .4*problem_info_index + .6*problem_consultation_index + 
-      .6*problem_proposition_index + .8*problem_system_index + .8*problem_feedback_index +
-      problem_execution_index
+    ,problem_info_index = rowSums(across(contains("hromada_problem_info/")))
+    ,problem_consultation_index = rowSums(across(contains("hromada_problem_consultation/")))
+    ,problem_proposition_index = rowSums(across(contains("hromada_problem_proposition/")))
+    ,problem_system_index = rowSums(across(contains("hromada_problem_system/")))
+    ,problem_feedback_index = rowSums(across(contains("hromada_problem_feedback/")))
+    ,problem_execution_index = rowSums(across(contains("hromada_problem_execution/")))
   )
 ```
 
@@ -758,22 +750,6 @@ ds1_prep_binary_factors <-
     )
   ) %>% 
   select(hromada_code, starts_with("prep_score"),preparation)
-
-# Binary scale (0,1) with factors
-ds1_prep_binary_factors_feb <- 
-  ds1_prep %>% 
-  mutate(
-    across(
-      .cols = preparation
-      ,.fns = ~case_when(
-        .  == 0  ~ "No"
-        ,. == 1 ~ "No"
-        ,. == 2 ~ "Yes"
-        ,TRUE   ~ "No"
-      ) %>% factor(levels=c("No","Yes"))
-    )
-  ) %>% 
-  select(hromada_code, starts_with("prep_score"),preparation)
 ```
 
 
@@ -786,12 +762,12 @@ meta_choices %>% filter(list_name=="commun_prep")
 ```
 
 ```
-# A tibble: 3 x 3
-  list_name   name      label                        
-  <chr>       <chr>     <chr>                        
-1 commun_prep before_24 Було створено до 24 лютого   
-2 commun_prep after_24  Було створено після 24 лютого
-3 commun_prep none      Немає                        
+# A tibble: 3 x 4
+  list_name   name      label                         label_en
+  <chr>       <chr>     <chr>                         <chr>   
+1 commun_prep before_24 Було створено до 24 лютого    <NA>    
+2 commun_prep after_24  Було створено після 24 лютого <NA>    
+3 commun_prep none      Немає                         <NA>    
 ```
 
 ```{.r .fold-show}
@@ -834,8 +810,8 @@ ds0 %>% explore::describe_all() %>%neat_DT()
 ```
 
 ```{=html}
-<div id="htmlwidget-06fb95567ca840c136fd" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-06fb95567ca840c136fd">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283","284","285","286"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_now_text","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military_text","transport_help_communal","transport_help_bought","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share","occupation_and_combat","occupation_and_combat_fct","voluntary_fct"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","fct","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","fct","fct"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,0,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,83,46,46,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,26,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,8,0,0,0,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,0,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,18.8,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,5.8,0,0,0,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6,0,0,0],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,106,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,56,23,32,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,38,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,10,22,11,5,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117,2,2,2],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,null,null,null,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,1,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.62,0,0,null,null],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,null,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,null,null,null,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,4.82,13.72,4.29,2.99,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,10.03,4.66,0.16,null,null],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,null,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,null,null,null,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,9,29,10,4,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,62.72,33.43,1,null,null]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-a8f0336dc4fa6ab8781f" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a8f0336dc4fa6ab8781f">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283","284","285","286","287","288","289","290","291"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_before_coded","shelter_capacity_now_text","shelter_capacity_now_coded","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military/none","help_for_military_text","transport_help_communal","transport_help_bought","transport_help_communal_coded","transport_help_bought_coded","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share","occupation_and_combat","occupation_and_combat_fct","voluntary_fct"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","fct","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","fct","fct"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,12,0,136,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,6,83,46,46,50,50,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,33,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,0,0,0,0,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,8.7,0,98.6,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,36.2,36.2,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,23.9,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,0,0,0,0,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6,0,0,0],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,78,106,3,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,3,56,23,32,14,22,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,37,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,1,22,11,5,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117,2,2,2],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,0,null,410,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,0,0,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,627,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.01,0,0,null,null],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,2809.67,null,5405,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,0.05,null,null,null,2.28,7.69,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,627,13.72,4.29,2.99,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,0.1,0.05,0.16,null,null],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,67520,null,10400,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,1,null,null,null,18,156,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,627,29,10,4,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,0.63,0.33,1,null,null]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
 ```
 
 # 0. Introduction
@@ -861,7 +837,7 @@ meta_survey %>% filter(group=="preamble") %>% pull(label) %>% cat()
 
 <mark>1.1</mark> How many hromadas contributed responses to so far?
 
-> As of 2023-02-07, 138 hromadas contributed valid response to the survey
+> As of 2023-02-01, 138 hromadas contributed valid response to the survey
 
 <mark>1.2</mark> What regions are represented in this sample? 
 
@@ -901,12 +877,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="gvwiabwzaf" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="iqtnekyyim" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#gvwiabwzaf .gt_table {
+#iqtnekyyim .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -931,7 +907,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_heading {
+#iqtnekyyim .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -943,12 +919,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_caption {
+#iqtnekyyim .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#gvwiabwzaf .gt_title {
+#iqtnekyyim .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -960,7 +936,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#gvwiabwzaf .gt_subtitle {
+#iqtnekyyim .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -972,13 +948,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#gvwiabwzaf .gt_bottom_border {
+#iqtnekyyim .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_col_headings {
+#iqtnekyyim .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -993,7 +969,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_col_heading {
+#iqtnekyyim .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1013,7 +989,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#gvwiabwzaf .gt_column_spanner_outer {
+#iqtnekyyim .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1025,15 +1001,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#gvwiabwzaf .gt_column_spanner_outer:first-child {
+#iqtnekyyim .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#gvwiabwzaf .gt_column_spanner_outer:last-child {
+#iqtnekyyim .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#gvwiabwzaf .gt_column_spanner {
+#iqtnekyyim .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1045,7 +1021,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#gvwiabwzaf .gt_group_heading {
+#iqtnekyyim .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1071,7 +1047,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#gvwiabwzaf .gt_empty_group_heading {
+#iqtnekyyim .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1086,15 +1062,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#gvwiabwzaf .gt_from_md > :first-child {
+#iqtnekyyim .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#gvwiabwzaf .gt_from_md > :last-child {
+#iqtnekyyim .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#gvwiabwzaf .gt_row {
+#iqtnekyyim .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1113,7 +1089,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#gvwiabwzaf .gt_stub {
+#iqtnekyyim .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1126,7 +1102,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#gvwiabwzaf .gt_stub_row_group {
+#iqtnekyyim .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1140,11 +1116,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#gvwiabwzaf .gt_row_group_first td {
+#iqtnekyyim .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#gvwiabwzaf .gt_summary_row {
+#iqtnekyyim .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1154,16 +1130,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#gvwiabwzaf .gt_first_summary_row {
+#iqtnekyyim .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_first_summary_row.thick {
+#iqtnekyyim .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#gvwiabwzaf .gt_last_summary_row {
+#iqtnekyyim .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1173,7 +1149,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_grand_summary_row {
+#iqtnekyyim .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1183,7 +1159,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#gvwiabwzaf .gt_first_grand_summary_row {
+#iqtnekyyim .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1193,11 +1169,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_striped {
+#iqtnekyyim .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#gvwiabwzaf .gt_table_body {
+#iqtnekyyim .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1206,7 +1182,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_footnotes {
+#iqtnekyyim .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1220,7 +1196,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_footnote {
+#iqtnekyyim .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -1229,7 +1205,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#gvwiabwzaf .gt_sourcenotes {
+#iqtnekyyim .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1243,7 +1219,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#gvwiabwzaf .gt_sourcenote {
+#iqtnekyyim .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1251,64 +1227,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#gvwiabwzaf .gt_left {
+#iqtnekyyim .gt_left {
   text-align: left;
 }
 
-#gvwiabwzaf .gt_center {
+#iqtnekyyim .gt_center {
   text-align: center;
 }
 
-#gvwiabwzaf .gt_right {
+#iqtnekyyim .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#gvwiabwzaf .gt_font_normal {
+#iqtnekyyim .gt_font_normal {
   font-weight: normal;
 }
 
-#gvwiabwzaf .gt_font_bold {
+#iqtnekyyim .gt_font_bold {
   font-weight: bold;
 }
 
-#gvwiabwzaf .gt_font_italic {
+#iqtnekyyim .gt_font_italic {
   font-style: italic;
 }
 
-#gvwiabwzaf .gt_super {
+#iqtnekyyim .gt_super {
   font-size: 65%;
 }
 
-#gvwiabwzaf .gt_footnote_marks {
+#iqtnekyyim .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#gvwiabwzaf .gt_asterisk {
+#iqtnekyyim .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#gvwiabwzaf .gt_indent_1 {
+#iqtnekyyim .gt_indent_1 {
   text-indent: 5px;
 }
 
-#gvwiabwzaf .gt_indent_2 {
+#iqtnekyyim .gt_indent_2 {
   text-indent: 10px;
 }
 
-#gvwiabwzaf .gt_indent_3 {
+#iqtnekyyim .gt_indent_3 {
   text-indent: 15px;
 }
 
-#gvwiabwzaf .gt_indent_4 {
+#iqtnekyyim .gt_indent_4 {
   text-indent: 20px;
 }
 
-#gvwiabwzaf .gt_indent_5 {
+#iqtnekyyim .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -1423,12 +1399,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="zioqjyripp" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="ihceaodlfw" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#zioqjyripp .gt_table {
+#ihceaodlfw .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -1453,7 +1429,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_heading {
+#ihceaodlfw .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1465,12 +1441,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_caption {
+#ihceaodlfw .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#zioqjyripp .gt_title {
+#ihceaodlfw .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1482,7 +1458,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#zioqjyripp .gt_subtitle {
+#ihceaodlfw .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1494,13 +1470,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#zioqjyripp .gt_bottom_border {
+#ihceaodlfw .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_col_headings {
+#ihceaodlfw .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1515,7 +1491,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_col_heading {
+#ihceaodlfw .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1535,7 +1511,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#zioqjyripp .gt_column_spanner_outer {
+#ihceaodlfw .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1547,15 +1523,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#zioqjyripp .gt_column_spanner_outer:first-child {
+#ihceaodlfw .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#zioqjyripp .gt_column_spanner_outer:last-child {
+#ihceaodlfw .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#zioqjyripp .gt_column_spanner {
+#ihceaodlfw .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1567,7 +1543,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#zioqjyripp .gt_group_heading {
+#ihceaodlfw .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1593,7 +1569,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#zioqjyripp .gt_empty_group_heading {
+#ihceaodlfw .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1608,15 +1584,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#zioqjyripp .gt_from_md > :first-child {
+#ihceaodlfw .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#zioqjyripp .gt_from_md > :last-child {
+#ihceaodlfw .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#zioqjyripp .gt_row {
+#ihceaodlfw .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1635,7 +1611,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#zioqjyripp .gt_stub {
+#ihceaodlfw .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1648,7 +1624,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zioqjyripp .gt_stub_row_group {
+#ihceaodlfw .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1662,11 +1638,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#zioqjyripp .gt_row_group_first td {
+#ihceaodlfw .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#zioqjyripp .gt_summary_row {
+#ihceaodlfw .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1676,16 +1652,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zioqjyripp .gt_first_summary_row {
+#ihceaodlfw .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_first_summary_row.thick {
+#ihceaodlfw .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#zioqjyripp .gt_last_summary_row {
+#ihceaodlfw .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1695,7 +1671,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_grand_summary_row {
+#ihceaodlfw .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1705,7 +1681,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zioqjyripp .gt_first_grand_summary_row {
+#ihceaodlfw .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1715,11 +1691,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_striped {
+#ihceaodlfw .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#zioqjyripp .gt_table_body {
+#ihceaodlfw .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1728,7 +1704,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_footnotes {
+#ihceaodlfw .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1742,7 +1718,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_footnote {
+#ihceaodlfw .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -1751,7 +1727,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zioqjyripp .gt_sourcenotes {
+#ihceaodlfw .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1765,7 +1741,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#zioqjyripp .gt_sourcenote {
+#ihceaodlfw .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1773,64 +1749,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#zioqjyripp .gt_left {
+#ihceaodlfw .gt_left {
   text-align: left;
 }
 
-#zioqjyripp .gt_center {
+#ihceaodlfw .gt_center {
   text-align: center;
 }
 
-#zioqjyripp .gt_right {
+#ihceaodlfw .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#zioqjyripp .gt_font_normal {
+#ihceaodlfw .gt_font_normal {
   font-weight: normal;
 }
 
-#zioqjyripp .gt_font_bold {
+#ihceaodlfw .gt_font_bold {
   font-weight: bold;
 }
 
-#zioqjyripp .gt_font_italic {
+#ihceaodlfw .gt_font_italic {
   font-style: italic;
 }
 
-#zioqjyripp .gt_super {
+#ihceaodlfw .gt_super {
   font-size: 65%;
 }
 
-#zioqjyripp .gt_footnote_marks {
+#ihceaodlfw .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#zioqjyripp .gt_asterisk {
+#ihceaodlfw .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#zioqjyripp .gt_indent_1 {
+#ihceaodlfw .gt_indent_1 {
   text-indent: 5px;
 }
 
-#zioqjyripp .gt_indent_2 {
+#ihceaodlfw .gt_indent_2 {
   text-indent: 10px;
 }
 
-#zioqjyripp .gt_indent_3 {
+#ihceaodlfw .gt_indent_3 {
   text-indent: 15px;
 }
 
-#zioqjyripp .gt_indent_4 {
+#ihceaodlfw .gt_indent_4 {
   text-indent: 20px;
 }
 
-#zioqjyripp .gt_indent_5 {
+#ihceaodlfw .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -2034,12 +2010,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="pluzjhfjrz" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="pyuvnzsfxx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#pluzjhfjrz .gt_table {
+#pyuvnzsfxx .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -2064,7 +2040,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_heading {
+#pyuvnzsfxx .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2076,12 +2052,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_caption {
+#pyuvnzsfxx .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#pluzjhfjrz .gt_title {
+#pyuvnzsfxx .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2093,7 +2069,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#pluzjhfjrz .gt_subtitle {
+#pyuvnzsfxx .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2105,13 +2081,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#pluzjhfjrz .gt_bottom_border {
+#pyuvnzsfxx .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_col_headings {
+#pyuvnzsfxx .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2126,7 +2102,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_col_heading {
+#pyuvnzsfxx .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2146,7 +2122,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#pluzjhfjrz .gt_column_spanner_outer {
+#pyuvnzsfxx .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2158,15 +2134,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#pluzjhfjrz .gt_column_spanner_outer:first-child {
+#pyuvnzsfxx .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#pluzjhfjrz .gt_column_spanner_outer:last-child {
+#pyuvnzsfxx .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#pluzjhfjrz .gt_column_spanner {
+#pyuvnzsfxx .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2178,7 +2154,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#pluzjhfjrz .gt_group_heading {
+#pyuvnzsfxx .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2204,7 +2180,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#pluzjhfjrz .gt_empty_group_heading {
+#pyuvnzsfxx .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2219,15 +2195,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#pluzjhfjrz .gt_from_md > :first-child {
+#pyuvnzsfxx .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#pluzjhfjrz .gt_from_md > :last-child {
+#pyuvnzsfxx .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#pluzjhfjrz .gt_row {
+#pyuvnzsfxx .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2246,7 +2222,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#pluzjhfjrz .gt_stub {
+#pyuvnzsfxx .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2259,7 +2235,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#pluzjhfjrz .gt_stub_row_group {
+#pyuvnzsfxx .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2273,11 +2249,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#pluzjhfjrz .gt_row_group_first td {
+#pyuvnzsfxx .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#pluzjhfjrz .gt_summary_row {
+#pyuvnzsfxx .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2287,16 +2263,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#pluzjhfjrz .gt_first_summary_row {
+#pyuvnzsfxx .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_first_summary_row.thick {
+#pyuvnzsfxx .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#pluzjhfjrz .gt_last_summary_row {
+#pyuvnzsfxx .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2306,7 +2282,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_grand_summary_row {
+#pyuvnzsfxx .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2316,7 +2292,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#pluzjhfjrz .gt_first_grand_summary_row {
+#pyuvnzsfxx .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2326,11 +2302,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_striped {
+#pyuvnzsfxx .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#pluzjhfjrz .gt_table_body {
+#pyuvnzsfxx .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2339,7 +2315,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_footnotes {
+#pyuvnzsfxx .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2353,7 +2329,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_footnote {
+#pyuvnzsfxx .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -2362,7 +2338,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#pluzjhfjrz .gt_sourcenotes {
+#pyuvnzsfxx .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2376,7 +2352,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#pluzjhfjrz .gt_sourcenote {
+#pyuvnzsfxx .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2384,64 +2360,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#pluzjhfjrz .gt_left {
+#pyuvnzsfxx .gt_left {
   text-align: left;
 }
 
-#pluzjhfjrz .gt_center {
+#pyuvnzsfxx .gt_center {
   text-align: center;
 }
 
-#pluzjhfjrz .gt_right {
+#pyuvnzsfxx .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#pluzjhfjrz .gt_font_normal {
+#pyuvnzsfxx .gt_font_normal {
   font-weight: normal;
 }
 
-#pluzjhfjrz .gt_font_bold {
+#pyuvnzsfxx .gt_font_bold {
   font-weight: bold;
 }
 
-#pluzjhfjrz .gt_font_italic {
+#pyuvnzsfxx .gt_font_italic {
   font-style: italic;
 }
 
-#pluzjhfjrz .gt_super {
+#pyuvnzsfxx .gt_super {
   font-size: 65%;
 }
 
-#pluzjhfjrz .gt_footnote_marks {
+#pyuvnzsfxx .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#pluzjhfjrz .gt_asterisk {
+#pyuvnzsfxx .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#pluzjhfjrz .gt_indent_1 {
+#pyuvnzsfxx .gt_indent_1 {
   text-indent: 5px;
 }
 
-#pluzjhfjrz .gt_indent_2 {
+#pyuvnzsfxx .gt_indent_2 {
   text-indent: 10px;
 }
 
-#pluzjhfjrz .gt_indent_3 {
+#pyuvnzsfxx .gt_indent_3 {
   text-indent: 15px;
 }
 
-#pluzjhfjrz .gt_indent_4 {
+#pyuvnzsfxx .gt_indent_4 {
   text-indent: 20px;
 }
 
-#pluzjhfjrz .gt_indent_5 {
+#pyuvnzsfxx .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -2520,12 +2496,12 @@ in the General Population</th>
 
 
 ```{=html}
-<div id="ysgblxrbyx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="vvsczvpjla" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#ysgblxrbyx .gt_table {
+#vvsczvpjla .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -2550,7 +2526,7 @@ in the General Population</th>
   border-left-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_heading {
+#vvsczvpjla .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2562,12 +2538,12 @@ in the General Population</th>
   border-right-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_caption {
+#vvsczvpjla .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#ysgblxrbyx .gt_title {
+#vvsczvpjla .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2579,7 +2555,7 @@ in the General Population</th>
   border-bottom-width: 0;
 }
 
-#ysgblxrbyx .gt_subtitle {
+#vvsczvpjla .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2591,13 +2567,13 @@ in the General Population</th>
   border-top-width: 0;
 }
 
-#ysgblxrbyx .gt_bottom_border {
+#vvsczvpjla .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_col_headings {
+#vvsczvpjla .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2612,7 +2588,7 @@ in the General Population</th>
   border-right-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_col_heading {
+#vvsczvpjla .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2632,7 +2608,7 @@ in the General Population</th>
   overflow-x: hidden;
 }
 
-#ysgblxrbyx .gt_column_spanner_outer {
+#vvsczvpjla .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2644,15 +2620,15 @@ in the General Population</th>
   padding-right: 4px;
 }
 
-#ysgblxrbyx .gt_column_spanner_outer:first-child {
+#vvsczvpjla .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#ysgblxrbyx .gt_column_spanner_outer:last-child {
+#vvsczvpjla .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#ysgblxrbyx .gt_column_spanner {
+#vvsczvpjla .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2664,7 +2640,7 @@ in the General Population</th>
   width: 100%;
 }
 
-#ysgblxrbyx .gt_group_heading {
+#vvsczvpjla .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2690,7 +2666,7 @@ in the General Population</th>
   text-align: left;
 }
 
-#ysgblxrbyx .gt_empty_group_heading {
+#vvsczvpjla .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2705,15 +2681,15 @@ in the General Population</th>
   vertical-align: middle;
 }
 
-#ysgblxrbyx .gt_from_md > :first-child {
+#vvsczvpjla .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#ysgblxrbyx .gt_from_md > :last-child {
+#vvsczvpjla .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#ysgblxrbyx .gt_row {
+#vvsczvpjla .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2732,7 +2708,7 @@ in the General Population</th>
   overflow-x: hidden;
 }
 
-#ysgblxrbyx .gt_stub {
+#vvsczvpjla .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2745,7 +2721,7 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#ysgblxrbyx .gt_stub_row_group {
+#vvsczvpjla .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2759,11 +2735,11 @@ in the General Population</th>
   vertical-align: top;
 }
 
-#ysgblxrbyx .gt_row_group_first td {
+#vvsczvpjla .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#ysgblxrbyx .gt_summary_row {
+#vvsczvpjla .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2773,16 +2749,16 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#ysgblxrbyx .gt_first_summary_row {
+#vvsczvpjla .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_first_summary_row.thick {
+#vvsczvpjla .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#ysgblxrbyx .gt_last_summary_row {
+#vvsczvpjla .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2792,7 +2768,7 @@ in the General Population</th>
   border-bottom-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_grand_summary_row {
+#vvsczvpjla .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2802,7 +2778,7 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#ysgblxrbyx .gt_first_grand_summary_row {
+#vvsczvpjla .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2812,11 +2788,11 @@ in the General Population</th>
   border-top-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_striped {
+#vvsczvpjla .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#ysgblxrbyx .gt_table_body {
+#vvsczvpjla .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2825,7 +2801,7 @@ in the General Population</th>
   border-bottom-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_footnotes {
+#vvsczvpjla .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2839,7 +2815,7 @@ in the General Population</th>
   border-right-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_footnote {
+#vvsczvpjla .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -2848,7 +2824,7 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#ysgblxrbyx .gt_sourcenotes {
+#vvsczvpjla .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2862,7 +2838,7 @@ in the General Population</th>
   border-right-color: #D3D3D3;
 }
 
-#ysgblxrbyx .gt_sourcenote {
+#vvsczvpjla .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2870,64 +2846,64 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#ysgblxrbyx .gt_left {
+#vvsczvpjla .gt_left {
   text-align: left;
 }
 
-#ysgblxrbyx .gt_center {
+#vvsczvpjla .gt_center {
   text-align: center;
 }
 
-#ysgblxrbyx .gt_right {
+#vvsczvpjla .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#ysgblxrbyx .gt_font_normal {
+#vvsczvpjla .gt_font_normal {
   font-weight: normal;
 }
 
-#ysgblxrbyx .gt_font_bold {
+#vvsczvpjla .gt_font_bold {
   font-weight: bold;
 }
 
-#ysgblxrbyx .gt_font_italic {
+#vvsczvpjla .gt_font_italic {
   font-style: italic;
 }
 
-#ysgblxrbyx .gt_super {
+#vvsczvpjla .gt_super {
   font-size: 65%;
 }
 
-#ysgblxrbyx .gt_footnote_marks {
+#vvsczvpjla .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#ysgblxrbyx .gt_asterisk {
+#vvsczvpjla .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#ysgblxrbyx .gt_indent_1 {
+#vvsczvpjla .gt_indent_1 {
   text-indent: 5px;
 }
 
-#ysgblxrbyx .gt_indent_2 {
+#vvsczvpjla .gt_indent_2 {
   text-indent: 10px;
 }
 
-#ysgblxrbyx .gt_indent_3 {
+#vvsczvpjla .gt_indent_3 {
   text-indent: 15px;
 }
 
-#ysgblxrbyx .gt_indent_4 {
+#vvsczvpjla .gt_indent_4 {
   text-indent: 20px;
 }
 
-#ysgblxrbyx .gt_indent_5 {
+#vvsczvpjla .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -2985,12 +2961,12 @@ Maximum number of partnerships that hromada has in our survey is 20.
 
 
 ```{=html}
-<div id="eisbdgitda" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="lewclgfzie" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#eisbdgitda .gt_table {
+#lewclgfzie .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -3015,7 +2991,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-left-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_heading {
+#lewclgfzie .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -3027,12 +3003,12 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-right-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_caption {
+#lewclgfzie .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#eisbdgitda .gt_title {
+#lewclgfzie .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -3044,7 +3020,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-bottom-width: 0;
 }
 
-#eisbdgitda .gt_subtitle {
+#lewclgfzie .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -3056,13 +3032,13 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-top-width: 0;
 }
 
-#eisbdgitda .gt_bottom_border {
+#lewclgfzie .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_col_headings {
+#lewclgfzie .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -3077,7 +3053,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-right-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_col_heading {
+#lewclgfzie .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -3097,7 +3073,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   overflow-x: hidden;
 }
 
-#eisbdgitda .gt_column_spanner_outer {
+#lewclgfzie .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -3109,15 +3085,15 @@ Maximum number of partnerships that hromada has in our survey is 20.
   padding-right: 4px;
 }
 
-#eisbdgitda .gt_column_spanner_outer:first-child {
+#lewclgfzie .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#eisbdgitda .gt_column_spanner_outer:last-child {
+#lewclgfzie .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#eisbdgitda .gt_column_spanner {
+#lewclgfzie .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -3129,7 +3105,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   width: 100%;
 }
 
-#eisbdgitda .gt_group_heading {
+#lewclgfzie .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -3155,7 +3131,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   text-align: left;
 }
 
-#eisbdgitda .gt_empty_group_heading {
+#lewclgfzie .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -3170,15 +3146,15 @@ Maximum number of partnerships that hromada has in our survey is 20.
   vertical-align: middle;
 }
 
-#eisbdgitda .gt_from_md > :first-child {
+#lewclgfzie .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#eisbdgitda .gt_from_md > :last-child {
+#lewclgfzie .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#eisbdgitda .gt_row {
+#lewclgfzie .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -3197,7 +3173,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   overflow-x: hidden;
 }
 
-#eisbdgitda .gt_stub {
+#lewclgfzie .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -3210,7 +3186,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   padding-right: 5px;
 }
 
-#eisbdgitda .gt_stub_row_group {
+#lewclgfzie .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -3224,11 +3200,11 @@ Maximum number of partnerships that hromada has in our survey is 20.
   vertical-align: top;
 }
 
-#eisbdgitda .gt_row_group_first td {
+#lewclgfzie .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#eisbdgitda .gt_summary_row {
+#lewclgfzie .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -3238,16 +3214,16 @@ Maximum number of partnerships that hromada has in our survey is 20.
   padding-right: 5px;
 }
 
-#eisbdgitda .gt_first_summary_row {
+#lewclgfzie .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_first_summary_row.thick {
+#lewclgfzie .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#eisbdgitda .gt_last_summary_row {
+#lewclgfzie .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -3257,7 +3233,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-bottom-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_grand_summary_row {
+#lewclgfzie .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -3267,7 +3243,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   padding-right: 5px;
 }
 
-#eisbdgitda .gt_first_grand_summary_row {
+#lewclgfzie .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -3277,11 +3253,11 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-top-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_striped {
+#lewclgfzie .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#eisbdgitda .gt_table_body {
+#lewclgfzie .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -3290,7 +3266,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-bottom-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_footnotes {
+#lewclgfzie .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -3304,7 +3280,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-right-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_footnote {
+#lewclgfzie .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -3313,7 +3289,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   padding-right: 5px;
 }
 
-#eisbdgitda .gt_sourcenotes {
+#lewclgfzie .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -3327,7 +3303,7 @@ Maximum number of partnerships that hromada has in our survey is 20.
   border-right-color: #D3D3D3;
 }
 
-#eisbdgitda .gt_sourcenote {
+#lewclgfzie .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -3335,64 +3311,64 @@ Maximum number of partnerships that hromada has in our survey is 20.
   padding-right: 5px;
 }
 
-#eisbdgitda .gt_left {
+#lewclgfzie .gt_left {
   text-align: left;
 }
 
-#eisbdgitda .gt_center {
+#lewclgfzie .gt_center {
   text-align: center;
 }
 
-#eisbdgitda .gt_right {
+#lewclgfzie .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#eisbdgitda .gt_font_normal {
+#lewclgfzie .gt_font_normal {
   font-weight: normal;
 }
 
-#eisbdgitda .gt_font_bold {
+#lewclgfzie .gt_font_bold {
   font-weight: bold;
 }
 
-#eisbdgitda .gt_font_italic {
+#lewclgfzie .gt_font_italic {
   font-style: italic;
 }
 
-#eisbdgitda .gt_super {
+#lewclgfzie .gt_super {
   font-size: 65%;
 }
 
-#eisbdgitda .gt_footnote_marks {
+#lewclgfzie .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#eisbdgitda .gt_asterisk {
+#lewclgfzie .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#eisbdgitda .gt_indent_1 {
+#lewclgfzie .gt_indent_1 {
   text-indent: 5px;
 }
 
-#eisbdgitda .gt_indent_2 {
+#lewclgfzie .gt_indent_2 {
   text-indent: 10px;
 }
 
-#eisbdgitda .gt_indent_3 {
+#lewclgfzie .gt_indent_3 {
   text-indent: 15px;
 }
 
-#eisbdgitda .gt_indent_4 {
+#lewclgfzie .gt_indent_4 {
   text-indent: 20px;
 }
 
-#eisbdgitda .gt_indent_5 {
+#lewclgfzie .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -3450,12 +3426,12 @@ ds0 %>%
 
 
 ```{=html}
-<div id="etmsgookjh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="exlceaaque" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#etmsgookjh .gt_table {
+#exlceaaque .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -3480,7 +3456,7 @@ ds0 %>%
   border-left-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_heading {
+#exlceaaque .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -3492,12 +3468,12 @@ ds0 %>%
   border-right-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_caption {
+#exlceaaque .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#etmsgookjh .gt_title {
+#exlceaaque .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -3509,7 +3485,7 @@ ds0 %>%
   border-bottom-width: 0;
 }
 
-#etmsgookjh .gt_subtitle {
+#exlceaaque .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -3521,13 +3497,13 @@ ds0 %>%
   border-top-width: 0;
 }
 
-#etmsgookjh .gt_bottom_border {
+#exlceaaque .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_col_headings {
+#exlceaaque .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -3542,7 +3518,7 @@ ds0 %>%
   border-right-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_col_heading {
+#exlceaaque .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -3562,7 +3538,7 @@ ds0 %>%
   overflow-x: hidden;
 }
 
-#etmsgookjh .gt_column_spanner_outer {
+#exlceaaque .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -3574,15 +3550,15 @@ ds0 %>%
   padding-right: 4px;
 }
 
-#etmsgookjh .gt_column_spanner_outer:first-child {
+#exlceaaque .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#etmsgookjh .gt_column_spanner_outer:last-child {
+#exlceaaque .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#etmsgookjh .gt_column_spanner {
+#exlceaaque .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -3594,7 +3570,7 @@ ds0 %>%
   width: 100%;
 }
 
-#etmsgookjh .gt_group_heading {
+#exlceaaque .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -3620,7 +3596,7 @@ ds0 %>%
   text-align: left;
 }
 
-#etmsgookjh .gt_empty_group_heading {
+#exlceaaque .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -3635,15 +3611,15 @@ ds0 %>%
   vertical-align: middle;
 }
 
-#etmsgookjh .gt_from_md > :first-child {
+#exlceaaque .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#etmsgookjh .gt_from_md > :last-child {
+#exlceaaque .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#etmsgookjh .gt_row {
+#exlceaaque .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -3662,7 +3638,7 @@ ds0 %>%
   overflow-x: hidden;
 }
 
-#etmsgookjh .gt_stub {
+#exlceaaque .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -3675,7 +3651,7 @@ ds0 %>%
   padding-right: 5px;
 }
 
-#etmsgookjh .gt_stub_row_group {
+#exlceaaque .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -3689,11 +3665,11 @@ ds0 %>%
   vertical-align: top;
 }
 
-#etmsgookjh .gt_row_group_first td {
+#exlceaaque .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#etmsgookjh .gt_summary_row {
+#exlceaaque .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -3703,16 +3679,16 @@ ds0 %>%
   padding-right: 5px;
 }
 
-#etmsgookjh .gt_first_summary_row {
+#exlceaaque .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_first_summary_row.thick {
+#exlceaaque .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#etmsgookjh .gt_last_summary_row {
+#exlceaaque .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -3722,7 +3698,7 @@ ds0 %>%
   border-bottom-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_grand_summary_row {
+#exlceaaque .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -3732,7 +3708,7 @@ ds0 %>%
   padding-right: 5px;
 }
 
-#etmsgookjh .gt_first_grand_summary_row {
+#exlceaaque .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -3742,11 +3718,11 @@ ds0 %>%
   border-top-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_striped {
+#exlceaaque .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#etmsgookjh .gt_table_body {
+#exlceaaque .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -3755,7 +3731,7 @@ ds0 %>%
   border-bottom-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_footnotes {
+#exlceaaque .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -3769,7 +3745,7 @@ ds0 %>%
   border-right-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_footnote {
+#exlceaaque .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -3778,7 +3754,7 @@ ds0 %>%
   padding-right: 5px;
 }
 
-#etmsgookjh .gt_sourcenotes {
+#exlceaaque .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -3792,7 +3768,7 @@ ds0 %>%
   border-right-color: #D3D3D3;
 }
 
-#etmsgookjh .gt_sourcenote {
+#exlceaaque .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -3800,64 +3776,64 @@ ds0 %>%
   padding-right: 5px;
 }
 
-#etmsgookjh .gt_left {
+#exlceaaque .gt_left {
   text-align: left;
 }
 
-#etmsgookjh .gt_center {
+#exlceaaque .gt_center {
   text-align: center;
 }
 
-#etmsgookjh .gt_right {
+#exlceaaque .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#etmsgookjh .gt_font_normal {
+#exlceaaque .gt_font_normal {
   font-weight: normal;
 }
 
-#etmsgookjh .gt_font_bold {
+#exlceaaque .gt_font_bold {
   font-weight: bold;
 }
 
-#etmsgookjh .gt_font_italic {
+#exlceaaque .gt_font_italic {
   font-style: italic;
 }
 
-#etmsgookjh .gt_super {
+#exlceaaque .gt_super {
   font-size: 65%;
 }
 
-#etmsgookjh .gt_footnote_marks {
+#exlceaaque .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#etmsgookjh .gt_asterisk {
+#exlceaaque .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#etmsgookjh .gt_indent_1 {
+#exlceaaque .gt_indent_1 {
   text-indent: 5px;
 }
 
-#etmsgookjh .gt_indent_2 {
+#exlceaaque .gt_indent_2 {
   text-indent: 10px;
 }
 
-#etmsgookjh .gt_indent_3 {
+#exlceaaque .gt_indent_3 {
   text-indent: 15px;
 }
 
-#etmsgookjh .gt_indent_4 {
+#exlceaaque .gt_indent_4 {
   text-indent: 20px;
 }
 
-#etmsgookjh .gt_indent_5 {
+#exlceaaque .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -4023,91 +3999,6 @@ g
 # g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
 ```
 
-
-```{.r .fold-hide}
-d1 <- 
-  ds1_prep_binary_factors_feb %>% 
-  pivot_longer(cols = preparation, names_to = "item_name") %>% 
-  group_by(item_name,value) %>% 
-  summarize(
-    count = n_distinct(hromada_code)
-    ,.groups = "drop"
-  ) %>% 
-  group_by(item_name) %>% 
-  mutate(
-    prop = count/sum(count, rm.na = T)
-    ,pct = scales::percent(prop, accuracy = 1)
-  ) %>% 
-  ungroup()
-
-d2 <- 
-  d1 %>% 
-  left_join(
-    d_meta_prep
-  ) %>% 
-  arrange(item_name, value) 
-
-d_in <- 
-  d2 %>% 
-    mutate(
-    display_name = label_en
-    ,display_name = factor(
-      display_name
-      ,levels =  d2 %>%
-        left_join(d_meta_prep) %>%
-        filter(value == "Yes") %>%
-        # filter(value == "Before Feb 24") %>%
-        arrange(prop) %>%
-        # arrange(desc(item_number)) %>%
-        pull(label_en)
-    ) # display_name
-    ,value = fct_relevel(
-      value
-      ,"Yes", "No"
-    ) %>% fct_rev()
-  ) 
-
-g <- 
-  d_in %>% 
-  { 
-  ggplot(data = .,
-    aes(x=prop, y = display_name, fill=value)
-  )+
-  geom_col(position = position_stack()
-           , alpha = .7
-  )+
-  geom_text(aes(label = str_remove(pct,"\\%"))
-            ,hjust = -.5
-            , size = 4
-            ,color="white"
-            ,position = position_stack()
-            ,data = . %>% filter(value == "Yes")
-            )+
-  scale_x_continuous(
-    breaks = seq(.1,1,.1)
-    ,labels = scales::percent_format()
-    ,expand = expansion(add=c(-.000,-.0))
-  )+
-  scale_fill_manual(
-    values = c("#cc4778", "#0d0887")
-  )+
-  labs(
-    title = "Have your hromada made the following preparations? (before Feb 24)"
-    ,x = "Percent of respondents", y = NULL, fill = NULL
-  )+
-  theme(
-    # panel.grid = element_blank()
-    panel.grid.major.y  = element_blank()
-    ,panel.border = element_blank()
-    ,panel.grid.major.x = element_line(color = "black")
-  )
-  }
-
-g
-```
-
-![](figure-png-iso/preparation-summary-2-1.png)<!-- -->
-
 <mark>2.1</mark> What questions were asked about preparations hromadas made? 
 
 
@@ -4213,7 +4104,7 @@ ds0 %>%
 ## Item-total correlations 
 
 
-> We can conceptualize hromadas' the preparation for invasion as two quantities:  
+We can conceptualize hromadas' the preparation for invasion as two quantities:  
 - `prep_score_feb` - the number of security measures implemented as of February 2022   
 - `prep_score_oct` - the number of security measures implemented as of October 2022
 
@@ -4238,11 +4129,9 @@ ds1_prep %>% select(1:4) # + individual preparation items
 10 UA51100250000055079               10              0             10
 # ... with 128 more rows
 ```
+We  also compute `prep_score_combo`, which is a sum of `prep_score_feb` and `prep_score_oct`, the quantity equivalent to weighting the implementation of security measures  prior to Feb 24, 2022 **twice as important**.
 
-> We  also compute `prep_score_combo`, which is a sum of `prep_score_feb` and `prep_score_oct`, the quantity equivalent to weighting the implementation of security measures  prior to Feb 24, 2022 **twice as important**.
-
-> These three scores are distributed as follows:
-
+These three scores are distributed as follows:  
 
 ```{.r .fold-hide}
 g <-  
@@ -4283,7 +4172,7 @@ ds1_prep %>% select(starts_with("prep_score")) %>% GGally::ggpairs()
 # Note that correlation coefficient is Pearson
 ```
 
-> The item-total correlations indicates that all three preparedness scores are adequate unidimensional measures.
+The item-total correlations indicates that all three preparedness scores are adequate unidimensional measures.
 
 
 ```{.r .fold-hide}
@@ -4413,12 +4302,11 @@ g_item_total
 g_item_total %>% quick_save("item-total",w=8,h=4)
 ```
 
-> While all three metrics should be considered during modeling, the next section demonstrates why and how the interpreations of these scores will differ
+While all three metrics should be considered during modeling, the next section demonstrates why and how the interpreations of these scores will differ
 
 ## Prep score change
  
-> Let's us visualize individual scores of invasion preparedness
-
+Let's us visualize individual scores of invasion preparedness
 
 ```{.r .fold-hide}
 d <- 
@@ -4501,7 +4389,7 @@ g + labs(color = "Percentile\nGroup\n(Combo)")
 # g %>% quick_save("prep-change-segment-bw",w=5.5,h=9)
 ```
 
-> However,this scoring method may not work for operationalizing preparedness as of October
+However,this scoring method may not work for operationalizing preparedness as of October
 
 
 ```{.r .fold-hide}
@@ -4511,7 +4399,9 @@ g + labs(color = "Percentile\nGroup\n(Combo)")
 
 ![](figure-png-iso/prep-change-segment-2-1.png)<!-- -->
 
-> or as of February
+\
+\
+or as of February
 
 
 ```{.r .fold-hide}
@@ -4528,6 +4418,8 @@ g + labs(color = "Percentile\nGroup\n(Combo)")
 > Both `prep_score_feb` and `prep_score_oct` are meaningful, adequate unidimensional measures with a straightforward interpretation: *Number of security measures implemented as of a given date*. 
 
 > The measure `prep_score_combo` is also an adequate unidimensional measure, but it does not have a clear interpretation of its value.
+
+ 
  
 
 
@@ -4546,13 +4438,15 @@ meta_survey %>% filter(group=="information_hat") %>% pull(label) %>% cat()
 Який з перелічених нижче засобів використовується громадою для інформування населення...
 ```
 
-> The most popular channel of communication for hromadas before February 24th and still is Facebook.
+\
+The most popular channel of communication for hromadas before February 24th and still is Facebook.
 Before February 24th, only about a quarter of hromadas in our sample had accounts on Viber and Telegram. \
 After February, hromadas doubled their use of alternative channels for communicating with their hromada: Viber, Telegram, Chat for getting help, hotline - now about half of hromadas have official groups on Viber and a hotline.
 
 ![](figure-png-iso/information-summary-1-1.png)<!-- -->
 
-> Most hromadas had at least one account in social networks before the invasion.
+\
+Most hromadas had at least one account in social networks before the invasion.
 
 
 ```{.r .fold-hide}
@@ -4619,8 +4513,8 @@ meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
 Як часто в середньому голова громади звертався (відео чи повідомлення) до населення громади стосовно стану справ у перший місяць від повномасштабного вторгнення?
 ```
 
-
-> Almost all hromada heads actively communicated with their hromada during the first month of the invasion: 95% addressed the hromada once a week or more, and 37% did it daily.
+\
+Almost all hromada heads actively communicated with their hromada during the first month of the invasion: 95% addressed the hromada once a week or more, and 37% did it daily.
 
 
 ```{.r .fold-hide}
@@ -4652,7 +4546,8 @@ meta_survey %>% filter(group=="information_freq") %>% pull(label) %>% cat()
 
 ![](figure-png-iso/info-1 -1.png)<!-- -->
 
-> Mayors of hromadas that had any social account before February 24th on average adressed hromada about the state of affairs significantly more during first month of invasion than those that didn't have.
+\
+Mayors of hromadas that had any social account before February 24th on average adressed hromada about the state of affairs significantly more during first month of invasion than those that didn't have.
 
 
 ```{.r .fold-hide}
@@ -4716,7 +4611,8 @@ meta_survey %>% filter(name=="dftg_creation") %>% pull(label) %>% cat()
 Чи було у вашій громаді офіційно сформоване добровольче формування територіальної громади?
 ```
 
-> About a third of hromadas in our survey had not yet created a volunteer defense force of territorial communities (VDF) as of October.
+\
+About a third of hromadas in our survey had not yet created a volunteer defense force of territorial communities (VDF) as of October.
 
 
 ```{.r .fold-hide}
@@ -4738,7 +4634,8 @@ d <- ds0 %>%
 
 ![](figure-png-iso/dftg-1-1.png)<!-- -->
 
-> Among village and urban village communities, a higher proportion of hromadas had not yet created a volunteer defense force of territorial communities (VDF).
+\
+Among village and urban village communities, a higher proportion of hromadas had not yet created a volunteer defense force of territorial communities (VDF).
 
 
 ```{.r .fold-hide}
@@ -4763,8 +4660,9 @@ d %>%
 
 ![](figure-png-iso/dftg-2-1.png)<!-- -->
 
-
-> Here you can see the timeline of creation of these forces for our sample.
+\
+Here you can see the timeline of creation of these forces for our sample.\
+  
 
 
 ```{.r .fold-hide}
@@ -4843,8 +4741,8 @@ p <- d %>%
 p
 ```
 
-
-> Only a few hromadas have created VDF before the invasion. \
+\
+Only a few hromadas have created VDF before the invasion. \
 However, more than a half quickly reacted and managed to create VDF in the first month of the invasion. \
 Moreover, there are differences in speed of reaction by hromada type.
 
@@ -4871,9 +4769,10 @@ p <- d %>%
   mutate(prop = n/sum(n)
          ,pct = scales::percent(prop, accuracy = 1)) %>% 
   ggplot(aes(y=prop, x = invasion_duration))+
-  geom_col(position = position_dodge(), fill = "dodgerblue")+
+  geom_col(position = position_dodge())+
   geom_text(aes(label = pct), position = position_dodge(width = 1), vjust = -0.5)+
   scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma")+
   labs(
     title = "When VDF was created?"
     ,x = NULL
@@ -4908,7 +4807,8 @@ p
 
 ![](figure-png-iso/dftg-time-type-2.png)<!-- -->
 
-> Almost all communities provided at least products for military, significant majority allocated rooms and provided money and transport. 
+\
+Almost all communities provided at least products for military, significant majority allocated rooms and provided money and transport. 
 
 
 ```{.r .fold-hide}
@@ -4923,7 +4823,7 @@ d <- ds0 %>% select(hromada_code, starts_with('help_for_military/')) %>%
 
 p <- d %>% 
   ggplot(aes(x = factor(help, levels = help_military_levels), y = freq)) +
-  geom_col(fill = "dodgerblue") +
+  geom_col() +
   geom_label(aes(label = scales::percent(freq)))  + 
   theme_bw() +
   theme(axis.title.y = element_blank(),
@@ -4939,28 +4839,27 @@ p
 
 ![](figure-png-iso/help-military-1.png)<!-- -->
 
-> Most communities provided several types of aid: 42% provided transport, money and products, and allocated rooms for military; 72% provided three and more of those \
->  5% of communities haven't provided anything from our list to military.
+\
+Most communities provided several types of aid: 42% provided transport, money and products, and allocated rooms for military; 72% provided three and more of those \
+Only 5% of communities haven't provided anything from our list to military.
 
 
 ```{.r .fold-hide}
-ds0 %>% 
-  count(help_military_count) %>% 
-  filter(!is.na(help_military_count)) %>% 
-  mutate(freq = n/sum(n)) %>%
-  ggplot(aes(x = factor(help_military_count), y = freq)) +
-  geom_bar(stat = "identity", fill = "blue") +
-  geom_label(aes(label = scales::percent(freq)))  + 
-  scale_y_continuous(labels = scales::percent) +
-  labs(
-    title = "Number of types of aid provided for the military"
+d <- ds0 %>%
+  mutate(help_military_count = factor(help_military_count))
+
+(d %>% make_bi_freq_graph('help_military_count')) +
+    labs(
+    title = "Number of types of aid provided for the army"
     ,subtitle = "Data were collected during October-November of 2022"
-    ,y = "Share of hromadas", x = NULL, fill = NULL
-  ) 
+    ,y=NULL
+    ,x=NULL
+  ) +
+  guides(fill = "none") +
+  theme_bw()
 ```
 
 ![](figure-png-iso/help-military-number-1.png)<!-- -->
-
 
 
 ```{.r .fold-hide}
@@ -5000,7 +4899,8 @@ meta_survey %>% filter(name=="percent_working_now") %>% pull(label) %>% cat()
 Який відсоток працівників виконавчих органів влади (від усіх працівників станом на 23 лютого) фактично працюють станом на сьогоднішній день (в тому числі віддалено)?
 ```
 
-> Questions regarding the percentage of working administrative staff were not effective: Most hromadas reported \ that 90-100% of staff were working both in March and October, and there was no difference between these numbers that would indicate administrative adaptation.
+\
+Questions regarding the percentage of working administrative staff were not effective: Most hromadas reported \ that 90-100% of staff were working both in March and October, and there was no difference between these numbers that would indicate administrative adaptation. \ 
 
 
 ```{.r .fold-hide}
@@ -5015,7 +4915,7 @@ g <-  ds0 %>%
                         )
   ) %>% 
   ggplot(aes(x=value))+
-  geom_histogram(binwidth = 100, alpha = .5, breaks=c(10,20,30,40,50,60,70,80,90,100), fill = "dodgerblue")+
+  geom_histogram(binwidth = 100, alpha = .5, breaks=c(10,20,30,40,50,60,70,80,90,100))+
   facet_wrap("measure",ncol =5) +
   labs(
     y='number of hromadas'
@@ -5030,7 +4930,8 @@ g
 g %>%  quick_save("score-distribution",w=4, h=6)
 ```
 
-> 73% of communities regularly coordinate actions, typically several times a week or more. \
+\
+73% of communities regularly coordinate actions, typically several times a week or more. \
 Communities affected by war differ from those in peaceful regions; they were more likely to both have daily meetings with other communities and also have no meetings at all. \
 
 
@@ -5086,7 +4987,8 @@ d %>%
 
 # 6. Evacuation
 
-> In most rear communities, evacuation of citizens was not necessary. However, of the communities affected by war, 63% required evacuation and 36% were successful in doing so. 
+\
+In most rear communities, evacuation of citizens was not necessary. However, of the communities affected by war, 63% required evacuation and 36% were successful in doing so. \ 
 
 
 ```{.r .fold-hide}
@@ -5128,8 +5030,6 @@ d %>%
 ```
 
 ![](figure-png-iso/evacuation-1.png)<!-- -->
-
-
 # 7. IDP
 
 
@@ -5164,7 +5064,7 @@ bxplot(d$idp_real_number ~ d$type, horizontal = TRUE, add = TRUE, lwd = 1.2)
 ![](figure-png-iso/idp-number-real-1.png)<!-- -->
 
 
-```{.r .hide}
+```{.r .fold-hide}
 help_idp_levels <- c('communal_placement', 'private_placement', 'regular_meal', 'humanitar_help', 
                      'fundraising', "employ", "psych_help", "law_help", "transit_center")
 
@@ -5177,169 +5077,87 @@ d <- ds0 %>% select(hromada_code, starts_with('idp_help/'), -ends_with('number')
 
 p <- d %>% 
   ggplot(aes(x = fct_reorder(factor(help), freq, .desc = TRUE), y = freq)) +
-  geom_col(fill = "dodgerblue") +
+  geom_col() +
   geom_label(aes(label = scales::percent(freq)))  + 
   theme_bw() +
   theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 8)) +
-  labs(title = 'Which actions or resources were effectively provided by the community \nfor internally displaced persons (IDPs)?', 
-       subtitle = "among communities that hosted IDPs",) +
-  scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in \ncommunal or \nstate-owned \npremises",
-                            'private_placement' = "Placement of IDPs in \nprivate premises", 
-                            'regular_meal' = "Regular \nmeal", 
-                            'humanitar_help' = "Issuance of \nhumanitarian aid", 
-                            'fundraising' = "Fundraising for \nthe needs of IDPs", 
-                            "employ" = "Employment \nprograms \nin the community", 
-                            "psych_help" = "Psychological \nsupport for IDPs", 
-                            "law_help" = "Legal \nsupport for IDPs", 
-                            "transit_center" = "Organization of \na transit center"))
+        axis.title.x = element_blank()) +
+  labs(title = 'Which actions or resources were effectively provided by the community for internally displaced persons (IDPs)?', subtitle = "excluding occupied hromadas") +
+  scale_y_continuous(labels = scales::percent) 
+  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in communal or state-owned premises",
+                            'private_placement' = "Placement of IDPs in private premises", 
+                            'regular_meal' = "Regular meal", 
+                            'humanitar_help' = "Issuance of humanitarian aid", 
+                            'fundraising' = "Fundraising for the needs of IDPs", 
+                            "employ" = "Employment programs in the community", 
+                            "psych_help" = "Psychological support for IDPs", 
+                            "law_help" = "Legal support for IDPs", 
+                            "transit_center" = "Organization of a transit center"))
+```
 
+```
+<ggproto object: Class ScaleDiscretePosition, ScaleDiscrete, Scale, gg>
+    aesthetics: x xmin xmax xend
+    axis_order: function
+    break_info: function
+    break_positions: function
+    breaks: waiver
+    call: call
+    clone: function
+    dimension: function
+    drop: TRUE
+    expand: waiver
+    get_breaks: function
+    get_breaks_minor: function
+    get_labels: function
+    get_limits: function
+    guide: waiver
+    is_discrete: function
+    is_empty: function
+    labels: Placement of IDPs in communal or state-owned premises Pl ...
+    limits: NULL
+    make_sec_title: function
+    make_title: function
+    map: function
+    map_df: function
+    n.breaks.cache: NULL
+    na.translate: TRUE
+    na.value: NA
+    name: waiver
+    palette: function
+    palette.cache: NULL
+    position: bottom
+    range: <ggproto object: Class RangeDiscrete, Range, gg>
+        range: NULL
+        reset: function
+        train: function
+        super:  <ggproto object: Class RangeDiscrete, Range, gg>
+    range_c: <ggproto object: Class RangeContinuous, Range, gg>
+        range: NULL
+        reset: function
+        train: function
+        super:  <ggproto object: Class RangeContinuous, Range, gg>
+    rescale: function
+    reset: function
+    scale_name: position_d
+    train: function
+    train_df: function
+    transform: function
+    transform_df: function
+    super:  <ggproto object: Class ScaleDiscretePosition, ScaleDiscrete, Scale, gg>
+```
+
+```{.r .fold-hide}
 p
 ```
 
 ![](figure-png-iso/help-idp-1.png)<!-- -->
 
-
-```{.r .fold-hide}
-ds0 %>% 
-  count(idp_help_count) %>% 
-  filter(!is.na(idp_help_count)) %>% 
-  mutate(freq = n/sum(n)) %>%
-  ggplot(aes(x = factor(idp_help_count), y = freq)) +
-  geom_bar(stat = "identity", fill = "blue") +
-  geom_label(aes(label = scales::percent(freq)))  + 
-  scale_y_continuous(labels = scales::percent) +
-  labs(
-    title = "Number of types of aid provided for the internally displaced persons (IDPs)"
-    ,subtitle = "among communities that hosted IDPs"
-    ,y = "Share of hromadas", x = NULL, fill = NULL
-  ) 
-```
-
-![](figure-png-iso/help-idp-number-1-1.png)<!-- -->
-
-
-```{.r .hide}
-help_idp_levels <- c('communal_placement', 'private_placement', 'regular_meal', 'humanitar_help', 
-                     'fundraising', "employ", "psych_help", "law_help", "transit_center")
-
-d <- ds0 %>% select(hromada_code, voluntary_fct, starts_with('idp_help/'), -ends_with('number')) %>% 
-  pivot_longer(-c(hromada_code, voluntary_fct), names_to = 'help', values_to = 'count') %>%
-  count(help, voluntary_fct, count) %>% 
-  group_by(help, voluntary_fct) %>% 
-  mutate(freq = n/sum(n),
-         help = str_remove(help, 'idp_help/')) %>%
-  filter(count == 1)
-
-p <- d %>% 
-  ggplot(aes(x = fct_reorder(factor(help), freq, .desc = TRUE), y = freq, fill = voluntary_fct)) +
-  geom_col(position = position_dodge())+
-  geom_text(aes(label = scales::percent(freq, 1)), hjust = .4, 
-             vjust = -.3, position = position_dodge(width = .9), size = 3.2) + 
-  theme_bw() +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 7)) +
-  labs(title = 'Which actions or resources were effectively provided by the community \nfor internally displaced persons (IDPs)?', 
-       subtitle = "excluding occupied hromadas",
-       fill = NULL) +
-  scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in \ncommunal or \nstate-owned \npremises",
-                            'private_placement' = "Placement of IDPs in \nprivate premises", 
-                            'regular_meal' = "Regular \nmeal", 
-                            'humanitar_help' = "Issuance of \nhumanitarian \naid", 
-                            'fundraising' = "Fundraising for \nthe needs of IDPs", 
-                            "employ" = "Employment \nprograms \nin the community", 
-                            "psych_help" = "Psychological \nsupport for IDPs", 
-                            "law_help" = "Legal \nsupport for IDPs", 
-                            "transit_center" = "Organization of \na transit center")) +
-  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",
-                                guide= guide_legend(reverse=T))
-
-p
-```
-
-
-```{.r .hide}
-d <- ds0 %>% select(idp_place_rooms)
-
-(d %>% make_bi_freq_graph('idp_place_rooms')) +
-  labs(
-    title = "Premises for how many beds were provided for IDPs?",
-    subtitle = "For those hromadas that provided premises (n = 92)"
-    ,y = NULL, x = NULL, fill = NULL
-  ) +
-  scale_x_discrete(labels=c('0_100_beds' = "0 - 100 beds",
-                            '101_250_beds' = "101 - 250 beds", 
-                            '251_500_beds' = "251 - 500 beds", 
-                            '501_1000_beds' = "501 - 1000 beds", 
-                            'over1000_beds' = "> 1000 beds")) +
-  guides(fill = "none")
-```
-
-![](figure-png-iso/idp-place-rooms-1.png)<!-- -->
-
-
-```{.r .hide}
-d <- ds0 %>% filter(idp_accept == 'yes' & !is.na(idp_place_rooms)) %>%
-  select(hromada_code, idp_registration_number, idp_place_rooms)
-
-d %>% 
-  ggplot(aes(y = idp_place_rooms, x = idp_registration_number, color = idp_place_rooms)) +
-  ggbeeswarm::geom_beeswarm() +
-  scale_y_discrete(labels=c('0_100_beds' = "0 - 100 beds",
-                            '101_250_beds' = "101 - 250 beds", 
-                            '251_500_beds' = "251 - 500 beds", 
-                            '501_1000_beds' = "501 - 1000 beds", 
-                            'over1000_beds' = "> 1000 beds")) +
-  labs(title = "Premises for how many beds were provided for IDPs?",
-       subtitle = "For those hromadas that provided premises (n = 92)",
-       x = "Registered IDPs", y = NULL, color = NULL) +
-  guides(color = "none")
-```
-
-![](figure-png-iso/idp-place-rooms-registered-1.png)<!-- -->
-
-
-```{.r .hide}
-d <- ds0 %>% filter(idp_accept == 'yes') %>%
-  select(hromada_code, idp_child_share, type, occupation_and_combat_fct)
-
-d %>% 
-  ggplot(aes(x = idp_child_share, y = type, col = type)) +
-  geom_boxplot(width = .3, outlier.shape = NA) +
-  geom_jitter(height = .1) +
-  labs(title = "Share of IDPs children gone to school to registered IDPs in the community",
-       x = NULL, y = NULL, color = NULL) +
-  guides(color = "none")
-```
-
-![](figure-png-iso/idp-child-share-type-1.png)<!-- -->
-
-
-```{.r .hide}
-d <- ds0 %>% filter(idp_accept == 'yes') %>%
-  select(hromada_code, idp_child_share, type, occupation_and_combat_fct)
-
-d %>% 
-  ggplot(aes(x = idp_child_share, y = occupation_and_combat_fct, col = occupation_and_combat_fct)) +
-  geom_boxplot(width = .3, outlier.shape = NA) +
-  geom_jitter(height = .1) +
-  labs(title = "Share of IDPs children gone to school to registered IDPs \nin the community",
-       x = NULL, y = NULL, color = NULL) +
-  guides(color = "none")
-```
-
-![](figure-png-iso/idp-child-share-war-1.png)<!-- -->
-
 # 8. Economics
 
-
-> It has been observed that communities, both rear and war affected, mostly have not redirected their special fund expenditures to other needs. 
-
-> However, it was found that redirection of special fund was more frequent in rear communities, as opposed to war-exposed communities.
+\
+It has been observed that communities, both rear and war affected, mostly have not redirected their special fund expenditures to other needs. \ 
+However, it was found that redirection of special fund was more frequent in rear communities, as opposed to war-exposed communities.
 
 
 ```{.r .fold-hide}
@@ -5383,7 +5201,38 @@ d %>%
 ![](figure-png-iso/special-fund-1-1.png)<!-- -->
 
 
-> Hromadas with higher level of fiscal self-sufficiency were less likely to redirect special funds for urgent needs.
+```{.r .fold-hide}
+(ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(
+    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
+                                                             special_fund_relocation=="yes"~1)
+  ) %>% 
+  ggplot(aes(x = prep_count, y = `Special fund's expenditures were relocated`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between preparation and special fund realocation for non-combat hromadas') +
+  xlab("counted preparations"))
+```
+
+![](figure-png-iso/special-fund-no-combat-1.png)<!-- -->
+
+
+```{.r .fold-hide}
+(ds0 %>% filter(military_action=="no_combat") %>%
+  mutate(
+    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
+                                                             special_fund_relocation=="yes"~1)
+  ) %>% 
+  ggplot(aes(x = urban_pct, y = `Special fund's expenditures were relocated`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=F) +
+  theme_bw() +
+  labs(title = 'Relation between urbanisation and special fund realocation for non-combat hromadas') +
+  xlab("share of urban population"))
+```
+
+![](figure-png-iso/special-fund-urbanisation-1.png)<!-- -->
 
 
 ```{.r .fold-hide}
@@ -5401,9 +5250,6 @@ d %>%
 ```
 
 ![](figure-png-iso/special-fund-own-income-1.png)<!-- -->
-
-
-> The most frequently mentioned sectors for the fund to be redirected to were Defense, Utilities, Social protection and Education - these are the most likely to challenge local authorities due to war shocks.
 
 
 ```{.r .fold-hide}
@@ -5430,70 +5276,43 @@ ds0 %>%
                            TRUE~sector)
  ) %>%
   ggplot(aes(x = `Number of Hromadas`, y = fct_reorder(sector, `Number of Hromadas`))) +
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity", fill = "blue") +
   theme_bw()+
   labs(
     title = "Sectors for which the funds of the special fund were redistributed"
     ,subtitle = "Data were collected during October-November of 2022"
-    ,y = NULL
+    ,y = "Sector"
   )+
   geom_col(position = position_stack()
-           , fill = "dodgerblue"
+           , alpha = .5
+           ,data =
   )
 ```
 
 ![](figure-png-iso/special-fund-sectors-1.png)<!-- -->
 
 
-> Hromadas did not report mass business relocation (every third mentioned no relocated companies at all). However, the most frequent destinations for relocation were naturally Western regions - Volyn, Invano-Frankivsk, Lviv, and Zakarpattia regions.
-
-
-```{.r .fold-hide}
-d <- ds0 %>% 
-  select(relocated_companies_text) %>%
-  mutate(relocated_companies = as.numeric(relocated_companies_text),
-         relocated_companies_group = cut(relocated_companies,
-                              breaks = c(0, 1, 2, 3, 4, 5, 6, 7, 100),
-                              labels = c('None', '1', '2', '3', "4", "5", "6", "More than 6"),
-                              right = T)) %>%
-  na.omit()
-
-d %>%
-  ggplot(aes(x=relocated_companies_group, group = 1)) +
-  geom_bar(aes(y = ..prop..), stat = 'count', fill = "dodgerblue") +
-  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
-  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.4)) +
-  labs(
-    title = "How many enterprises were  relocated from other regions to the community as of October 2022?"
-    ,y = NULL, x = NULL
-  )
-```
-
-![](figure-png-iso/relocated-bussiness-1.png)<!-- -->
-
-
 ```{.r .fold-hide}
 ds0 %>% 
   mutate(relocated_companies = as.numeric(relocated_companies_text)) %>%
-      group_by(region_en,  oblast_name_en) %>% 
+      group_by(region_en,  oblast_name_en ) %>% 
       summarize(`Relocated companies` = sum(relocated_companies, na.rm = TRUE)) %>% 
   filter(`Relocated companies`>0) %>%
     ggplot(aes(x = `Relocated companies`, y = fct_reorder(oblast_name_en, `Relocated companies`))) +
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity", fill = "blue") +
   theme_bw()+
   labs(
     title = "Relocated businesses by destination region"
     ,subtitle = "Data were collected during October-November of 2022"
-    ,y = NULL
+    ,y = "Oblast"
   )+
   geom_col(position = position_stack()
-           , fill = "dodgerblue"
+           , alpha = .5
+           ,data =
   )
 ```
 
-![](figure-png-iso/relocated-bussiness-oblast-1.png)<!-- -->
-
-> There is also a positive relation between fiscal autonomy and the number of relocated businesses.
+![](figure-png-iso/relocated-bussiness-1.png)<!-- -->
 
 
 ```{.r .fold-hide}
@@ -5570,7 +5389,7 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
   TRUE~type)
   ) %>%
   ggplot(aes(x = `number of hromadas`, y = fct_reorder(type, `number of hromadas`))) +
-  geom_bar(stat = "identity", fill = "dodgerblue") +
+  geom_bar(stat = "identity", fill = "blue") +
   theme_bw()+
   geom_col(position = position_stack()
            , alpha = .5
@@ -5591,11 +5410,12 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
 
 # 9. Humanitarian
 
-> Too few answers to analyze - only 6
+# 10. Reconstructioin
 
-# 10. Reconstruction
+\ 
+small number of answers (38) - omit at this stage
 
-> There are  38 communities (28% of all respondents) that had destructions from the hostilities.
+## 10.1 Damage Evaluation
 
 
 ```{.r .fold-hide}
@@ -5610,10 +5430,7 @@ ds0 %>%
   theme_bw()
 ```
 
-![](figure-png-iso/damage-region-1.png)<!-- -->
-
-
-> However, most of damaged hromadas report not mass destruction of housing of up to 10%  - 20% of all respondents.
+![](figure-png-iso/damage-1-1.png)<!-- -->
 
 
 ```{.r .fold-hide}
@@ -5640,35 +5457,11 @@ ds0 %>%
   labs(
     title = "What percentage of housing was damaged in your hromada?"
     ,subtitle = "Data was collected during October-November of 2022"
-    ,y = "Number of communities", fill = NULL
-  ) +
-  guides(fill = "none")
+    ,y = NULL
+  )
 ```
 
 ![](figure-png-iso/damage-2-1.png)<!-- -->
-
-
-> Some rear communities (nearly 15% of all rear communities-respondents) were also damaged - most likely due to the missile strikes.
-
-
-```{.r .fold-hide}
-ds0 %>% 
-  count(occupation_and_combat_fct, is_damaged) %>% 
-  ggplot() +
-  aes(x = occupation_and_combat_fct, y=n,
-             fill = is_damaged) +
-  geom_bar(position = "fill", stat = "identity") +
-  labs(
-    title = "Were there any destructions in the hromada as a result of military actions?"
-    ,y = "Share of Hromadas", x = NULL, fill = NULL
-  ) +
-  theme_bw()
-```
-
-![](figure-png-iso/damage-war-affected-1.png)<!-- -->
-
-
-> On average, only half of hromadas with reported damages performed damage assesment for indivuduals and businesses. Less have done so for communal entities - only 38%.
 
 
 ```{.r .fold-hide}
@@ -5718,7 +5511,7 @@ g <-
   )+
   labs(
     title = "Has your hromada performed damage assessment for?"
-    ,x = "Percent of communities", y = NULL, fill = NULL
+    ,x = "Percent of respondents", y = NULL, fill = NULL
     
   )+
   theme(
@@ -5735,21 +5528,17 @@ g
 ![](figure-png-iso/damage-3-1.png)<!-- -->
 
 
-> Moreover, out of hromadas with damages (and which were not occupied), only every fourth has a Recovery plan.
-
-
 ```{.r .fold-hide}
 (ds0 %>% mutate(`Does hromada have a Recovery plan?` = as.factor(case_when(reconstruction_plan=="yes"~"Yes",
                                                                 reconstruction_plan=="no"~"No"
                                                                 ))) %>% filter(is_damaged=="yes") %>% make_bi_freq_graph("Does hromada have a Recovery plan?")) +
   labs(
     title = "Does your hromada have a Recovery plan?"
-    ,subtitle = "among those who reported damages and were not occupied (n = 33)"
-    ,y = "Number of communities", x = NULL
+    ,subtitle = "among those who reported damages and were not occupied"
+    ,y = NULL, x = NULL, fill = "Does hromada have a Recovery plan?"
   ) +
   scale_x_discrete(labels=c('TRUE' = 'Yes', 'FALSE' = 'No')) +
-  scale_fill_discrete(labels=c('TRUE' = 'Yes', 'FALSE' = 'No')) +
-  guides(fill = "none")
+  scale_fill_discrete(labels=c('TRUE' = 'Yes', 'FALSE' = 'No'))
 ```
 
 ![](figure-png-iso/damage-4-1.png)<!-- -->
@@ -5812,7 +5601,7 @@ g1 <-
   )+
   labs(
     title = "Does your hromada have a Recovery plan? (depending on the housing damage level)"
-    ,subtitle = "among those who reported damages and were not occupied (n = 33)"
+    ,subtitle = "among those who reported damages and were not occupied"
     ,x = "Percent of respondents", y = NULL, fill = NULL
     
   )+
@@ -5829,625 +5618,28 @@ g1
 
 ![](figure-png-iso/damage-5-1.png)<!-- -->
 
-> Housing reconstruction is being most actively performed in hromadas with relatively slight damages (50% of damaged housing has been rebuilt on average) and among those with the most mass destructions (30% of damaged housing has been rebuilt on average).
-
-
-```{.r .fold-hide}
-p <- ds0 %>%
-  select(percent_reconstructed) %>%
-  na.omit() %>%
-  ggplot(aes(x=percent_reconstructed, group = 1)) +
-  geom_bar(aes(y = ..prop..), stat = 'count', fill = "dodgerblue") +
-  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4, size = 3.4) +
-  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.55)) +
-  scale_x_discrete(labels=c('0_10_percent' = "0-10%",
-                            '10_25_percent' = "10-25%", 
-                            '26_50_percent' = "26-50%", 
-                            '51_75_percent' = "51-75%", 
-                            '76_100_percent' = "76-100%")) +
-  labs(
-    title = "What part of the damaged housing stock has been repaired? (as of October 2022)",
-    subtitle = "among those who reported damages and were not occupied (n = 33)"
-    ,y = NULL, x = NULL
-  )
-
-p
-```
-
-![](figure-png-iso/damage-repaired-housing-1.png)<!-- -->
-
-
-```r
-ds_projects_type <- ds0 %>% 
-  mutate(international_projects_number = as.numeric(international_projects)) %>% 
-  group_by(type) %>%
-  summarise(median = median(international_projects_number, na.rm =  T),
-            mean = mean(international_projects_number, na.rm =  T),
-            max = max(international_projects_number, na.rm =  T)) 
-
-ds_projects_war <- ds0 %>% 
-  mutate(international_projects_number = as.numeric(international_projects)) %>% 
-  group_by(occupation_and_combat_fct) %>%
-  summarise(median = median(international_projects_number, na.rm =  T),
-            mean = mean(international_projects_number, na.rm =  T),
-            max = max(international_projects_number, na.rm =  T)) 
-```
-
-
-```{.r .fold-hide}
-d <- ds0 %>% 
-  mutate(international_projects_number = as.numeric(international_projects)) %>% 
-  select(hromada_full_name, international_projects_number, type, occupation_and_combat_fct) %>%
-  mutate(international_projects_group = cut(international_projects_number,
-                              breaks = c(0, 1, 2, 3, 4, 20),
-                              labels = c('None', '1', '2', '3', 'More than 3'),
-                              right = F)) %>%
-  na.omit() 
-
-p <- d %>%
-  ggplot(aes(x=international_projects_group, group = 1)) +
-  geom_bar(aes(y = ..prop..), stat = 'count', fill = "dodgerblue") +
-  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
-  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.55)) +
-  labs(
-    title = "How many projects involving funds from international donors communities has implemented / is implementing since Feb 24?"
-    ,y = NULL, x = NULL
-  )
-
-p
-```
-
-![](figure-png-iso/international-projects-1.png)<!-- -->
-
-> These are hromadas in our survey that have the most implemented projects:
-
-
-```{=html}
-<div id="nmtgvtpzii" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>html {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
-}
-
-#nmtgvtpzii .gt_table {
-  display: table;
-  border-collapse: collapse;
-  margin-left: auto;
-  margin-right: auto;
-  color: #333333;
-  font-size: 16px;
-  font-weight: normal;
-  font-style: normal;
-  background-color: #FFFFFF;
-  width: auto;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #A8A8A8;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #A8A8A8;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_heading {
-  background-color: #FFFFFF;
-  text-align: center;
-  border-bottom-color: #FFFFFF;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_caption {
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
-#nmtgvtpzii .gt_title {
-  color: #333333;
-  font-size: 125%;
-  font-weight: initial;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-bottom-color: #FFFFFF;
-  border-bottom-width: 0;
-}
-
-#nmtgvtpzii .gt_subtitle {
-  color: #333333;
-  font-size: 85%;
-  font-weight: initial;
-  padding-top: 0;
-  padding-bottom: 6px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-top-color: #FFFFFF;
-  border-top-width: 0;
-}
-
-#nmtgvtpzii .gt_bottom_border {
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_col_headings {
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_col_heading {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: normal;
-  text-transform: inherit;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: bottom;
-  padding-top: 5px;
-  padding-bottom: 6px;
-  padding-left: 5px;
-  padding-right: 5px;
-  overflow-x: hidden;
-}
-
-#nmtgvtpzii .gt_column_spanner_outer {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: normal;
-  text-transform: inherit;
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-left: 4px;
-  padding-right: 4px;
-}
-
-#nmtgvtpzii .gt_column_spanner_outer:first-child {
-  padding-left: 0;
-}
-
-#nmtgvtpzii .gt_column_spanner_outer:last-child {
-  padding-right: 0;
-}
-
-#nmtgvtpzii .gt_column_spanner {
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  vertical-align: bottom;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  overflow-x: hidden;
-  display: inline-block;
-  width: 100%;
-}
-
-#nmtgvtpzii .gt_group_heading {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: middle;
-  text-align: left;
-}
-
-#nmtgvtpzii .gt_empty_group_heading {
-  padding: 0.5px;
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  vertical-align: middle;
-}
-
-#nmtgvtpzii .gt_from_md > :first-child {
-  margin-top: 0;
-}
-
-#nmtgvtpzii .gt_from_md > :last-child {
-  margin-bottom: 0;
-}
-
-#nmtgvtpzii .gt_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  margin: 10px;
-  border-top-style: solid;
-  border-top-width: 1px;
-  border-top-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: middle;
-  overflow-x: hidden;
-}
-
-#nmtgvtpzii .gt_stub {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-right-style: solid;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#nmtgvtpzii .gt_stub_row_group {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-right-style: solid;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  padding-left: 5px;
-  padding-right: 5px;
-  vertical-align: top;
-}
-
-#nmtgvtpzii .gt_row_group_first td {
-  border-top-width: 2px;
-}
-
-#nmtgvtpzii .gt_summary_row {
-  color: #333333;
-  background-color: #FFFFFF;
-  text-transform: inherit;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#nmtgvtpzii .gt_first_summary_row {
-  border-top-style: solid;
-  border-top-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_first_summary_row.thick {
-  border-top-width: 2px;
-}
-
-#nmtgvtpzii .gt_last_summary_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_grand_summary_row {
-  color: #333333;
-  background-color: #FFFFFF;
-  text-transform: inherit;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#nmtgvtpzii .gt_first_grand_summary_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-top-style: double;
-  border-top-width: 6px;
-  border-top-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_striped {
-  background-color: rgba(128, 128, 128, 0.05);
-}
-
-#nmtgvtpzii .gt_table_body {
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_footnotes {
-  color: #333333;
-  background-color: #FFFFFF;
-  border-bottom-style: none;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_footnote {
-  margin: 0px;
-  font-size: 90%;
-  padding-left: 4px;
-  padding-right: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#nmtgvtpzii .gt_sourcenotes {
-  color: #333333;
-  background-color: #FFFFFF;
-  border-bottom-style: none;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-}
-
-#nmtgvtpzii .gt_sourcenote {
-  font-size: 90%;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#nmtgvtpzii .gt_left {
-  text-align: left;
-}
-
-#nmtgvtpzii .gt_center {
-  text-align: center;
-}
-
-#nmtgvtpzii .gt_right {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-#nmtgvtpzii .gt_font_normal {
-  font-weight: normal;
-}
-
-#nmtgvtpzii .gt_font_bold {
-  font-weight: bold;
-}
-
-#nmtgvtpzii .gt_font_italic {
-  font-style: italic;
-}
-
-#nmtgvtpzii .gt_super {
-  font-size: 65%;
-}
-
-#nmtgvtpzii .gt_footnote_marks {
-  font-style: italic;
-  font-weight: normal;
-  font-size: 75%;
-  vertical-align: 0.4em;
-}
-
-#nmtgvtpzii .gt_asterisk {
-  font-size: 100%;
-  vertical-align: 0;
-}
-
-#nmtgvtpzii .gt_indent_1 {
-  text-indent: 5px;
-}
-
-#nmtgvtpzii .gt_indent_2 {
-  text-indent: 10px;
-}
-
-#nmtgvtpzii .gt_indent_3 {
-  text-indent: 15px;
-}
-
-#nmtgvtpzii .gt_indent_4 {
-  text-indent: 20px;
-}
-
-#nmtgvtpzii .gt_indent_5 {
-  text-indent: 25px;
-}
-</style>
-<table class="gt_table">
-  
-  <thead class="gt_col_headings">
-    <tr>
-      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Hromada Name">Hromada Name</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Number of projects">Number of projects</th>
-    </tr>
-  </thead>
-  <tbody class="gt_table_body">
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Тлумацька міська громада</td>
-<td headers="Number of projects" class="gt_row gt_right">12</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Коломийська міська громада</td>
-<td headers="Number of projects" class="gt_row gt_right">12</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Бобринецька міська громада</td>
-<td headers="Number of projects" class="gt_row gt_right">9</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Покровська селищна громада</td>
-<td headers="Number of projects" class="gt_row gt_right">7</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Прилуцька міська громада</td>
-<td headers="Number of projects" class="gt_row gt_right">7</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Ясінянська селищна громада</td>
-<td headers="Number of projects" class="gt_row gt_right">5</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Гусятинська селищна громада</td>
-<td headers="Number of projects" class="gt_row gt_right">5</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Лубенська міська громада</td>
-<td headers="Number of projects" class="gt_row gt_right">5</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Надвірнянська міська громада</td>
-<td headers="Number of projects" class="gt_row gt_right">5</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Новороздільська міська громада</td>
-<td headers="Number of projects" class="gt_row gt_right">5</td></tr>
-    <tr><td headers="Hromada Name" class="gt_row gt_left">Тростянецька міська громада</td>
-<td headers="Number of projects" class="gt_row gt_right">5</td></tr>
-  </tbody>
-  
-  
-</table>
-</div>
-```
-
-
-```{.r .fold-hide}
-d1 <- d %>% count(international_projects_group, type) %>%
-  group_by(type) %>%
-  mutate(prop = n/sum(n)
-         ,pct = scales::percent(prop, accuracy = 1))
-
-p <- d1 %>%
-  ggplot() +
-  aes(y = prop, x=type, fill = international_projects_group, label = pct) +
-  geom_bar(stat = 'identity') +
-  geom_text(position = position_fill(vjust = .4), size = 4) +
-  scale_fill_viridis_d(option = "plasma") +
-  scale_y_continuous(labels = scales::percent_format()) +
-  labs(
-    title = "How many projects involving funds from international donors communities has implemented / is implementing since Feb 24?"
-    ,y = NULL, x = NULL, fill = "Number of projects"
-  )
-
-p
-```
-
-![](figure-png-iso/international-projects-type-1.png)<!-- -->
-
-
-```{.r .fold-hide}
-d1 <- d %>% count(international_projects_group, occupation_and_combat_fct) %>%
-  group_by(occupation_and_combat_fct) %>%
-  mutate(prop = n/sum(n)
-         ,pct = scales::percent(prop, accuracy = 1))
-
-p <- d1 %>%
-  ggplot() +
-  aes(y = prop, x=occupation_and_combat_fct, fill = international_projects_group, label = pct) +
-  geom_bar(stat = 'identity') +
-  geom_text(position = position_fill(vjust = .4), size = 4) +
-  scale_fill_viridis_d(option = "plasma") +
-  scale_y_continuous(labels = scales::percent_format()) +
-  labs(
-    title = "How many projects involving funds from international donors communities has implemented / is implementing since Feb 24?"
-    ,y = NULL, x = NULL, fill = "Number of projects"
-  )
-
-p
-```
-
-![](figure-png-iso/international-projects-war-1.png)<!-- -->
-
-
 # 11. Current Challenges
 
-> Only 19% communities have no spending on equipment/refurbishment of shelters for schools from the community budget.
 
-
-```{.r .hide}
-d <- ds0 %>%
-  select(hromada_code, finance_school_shelters_coded, type, occupation_and_combat_fct)
-
-d %>%
-  ggplot(aes(x = finance_school_shelters_coded, y = type, col = type)) +
-  geom_boxplot(width = .3, outlier.shape = NA) +
-  geom_jitter(height = .1) +
-  scale_x_continuous(labels = scales::label_number(suffix = "K", scale = 1e-3)) +
-  labs(title = "Money spent on the equipment/refurbishing of shelters for schools from the community budget",
-       x = NULL, y = NULL, color = NULL) +
-  guides(color = "none")
+```{.r .fold-hide}
+# ds0 %>% 
+#   count(region_en, is_damaged) %>% 
+#   ggplot(aes(x = region_en, y = n, fill = is_damaged)) +
+#   geom_bar(stat = "identity") +
+#   labs(
+#     title = "Were there any destructions in the community as a result of military actions?"
+#     ,y = "Number of Hromadas", x = NULL, fill = NULL
+#   ) +
+#   theme_bw()
 ```
 
-![](figure-png-iso/school-shelters-1.png)<!-- -->
-
-> The quality of answers for questions about missed school days since February 24th, including virtual learning, has been poor . However, half of the sample, 50.5%, haven't missed any school days due to the switch to virtual learning.
-
-
-```{.r .hide}
-d <- ds0 %>%
-  select(hromada_code, no_school_days_coded, type) %>%
-  mutate(no_school_days_coded = as.numeric(no_school_days_coded))
-
-d %>%
-  ggplot(aes(x = no_school_days_coded, y = type, color = type)) +
-  geom_boxplot(width = .3, outlier.shape = NA) +
-  geom_jitter(height = .1) +
-  labs(title = "Missed school days since Feb 24",
-       x = NULL, y = NULL, color = NULL) +
-  guides(color = "none")
-```
-
-![](figure-png-iso/school-days-without-1.png)<!-- -->
-
+#poor quality of answerts regarding days without schooling - consider to omit at all
 
 ## 11.1 Heating season
 
 
-
 ```{.r .fold-hide}
-d <- ds1_winter_prep %>% 
+ds1_winter_prep %>% 
   select(hromada_name, all_of(prep_for_winter)) %>% 
   pivot_longer(
     -hromada_name
@@ -6455,26 +5647,14 @@ d <- ds1_winter_prep %>%
     ,values_to = "response"
   ) %>% 
   group_by(action) %>% 
-  summarise(n = sum(response, na.rm = T), .groups = "drop", na = sum(!is.na(response))) %>%
-  mutate(freq = n/na)
-  
-d %>%
-  ggplot(aes(y = freq, x = fct_reorder(action, freq, .desc = T))) +
-  geom_col(fill = "dodgerblue") +
-  geom_label(aes(label = scales::percent(freq)))  + 
-  theme_bw() +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 7)) +
-  labs(title = 'Which of the following measures were implemented to prepare the community for the heating season?', 
-       subtitle = "excluding occupied hromadas",) +
-  scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(labels=c('reserves' = "Stocks and sources of \nsolid fuel for the operation of \nboiler houses have been created",
-                            'info_campaign' = "An information campaign on preparation \nof residents for the heating season \nhas been created",
-                            'count_power_sources' = "Backup/autonomous power sources \nhave been counted and evaluated, \nand locations for new energy-generating \nequipment have been identified",
-                            'count_heaters_need' = "The required number of electric \nheaters for low-income and vulnerable \npeople has been determined",
-                            'solid_fuel_boiler' = "A plan for buying a modular solid-fuel boiler \nroom has been developed")
-                   )
+  summarise(n = sum(response, na.rm = T), .groups = "drop") %>% 
+  ggplot(aes(x = n, y = fct_reorder(action, n))) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(
+    title = "Which of the following measures were implemented to prepare hromada for the heating season?"
+    ,y = NULL, x = NULL, fill = NULL
+  ) +
+  theme_bw()
 ```
 
 ![](figure-png-iso/heating-1-1.png)<!-- -->
@@ -6484,18 +5664,88 @@ d %>%
 ds1_winter_prep %>% 
   count(winter_prep_count) %>% 
   filter(!is.na(winter_prep_count)) %>% 
-  mutate(freq = n/sum(n)) %>%
-  ggplot(aes(x = factor(winter_prep_count), y = freq)) +
+  ggplot(aes(x = factor(winter_prep_count), y = n)) +
   geom_bar(stat = "identity", fill = "blue") +
-  geom_label(aes(label = scales::percent(freq)))  + 
-  scale_y_continuous(labels = scales::percent) +
   labs(
     title = "Number of measures implemented to prepare hromada for the heating season"
-    ,y = "Share of hromadas", x = NULL, fill = NULL
-  ) 
+    ,y = "Number of hromadas", x = "Number of measures", fill = NULL
+  ) +
+  xlab("winter_prep_count")
 ```
 
 ![](figure-png-iso/heating-2-1.png)<!-- -->
+
+
+```{.r .fold-hide}
+m1_heating <-lm(data = ds1_winter_prep, 
+       winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 + 
+         type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m2_heating <-lm(data = ds1_winter_prep, 
+             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 + 
+               turnout_2020 + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m3_heating <-lm(data = ds1_winter_prep,
+             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda)
+
+m4_heating <-lm(data = ds1_winter_prep,
+             winter_prep_count ~ log(income_total_2021) + own_income_prop_2021 +
+               turnout_2020 + + travel_time +
+               type + square + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda +
+               youth_councils + youth_centers + region_en * sum_osbb_2020)
+
+
+stargazer::stargazer(m1_heating, m2_heating, m3_heating, m4_heating, single.row = T, type = 'html')
+```
+
+
+<table style="text-align:center"><tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="4"><em>Dependent variable:</em></td></tr>
+<tr><td></td><td colspan="4" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="4">winter_prep_count</td></tr>
+<tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td><td>(3)</td><td>(4)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">log(income_total_2021)</td><td>-0.041 (0.608)</td><td>0.091 (0.609)</td><td>-0.155 (0.632)</td><td>1.041 (0.908)</td></tr>
+<tr><td style="text-align:left">own_income_prop_2021</td><td>-0.797 (1.098)</td><td>-1.270 (1.114)</td><td>-0.947 (1.152)</td><td>-2.188 (1.577)</td></tr>
+<tr><td style="text-align:left">turnout_2020</td><td></td><td>3.298<sup>*</sup> (1.724)</td><td>3.437<sup>*</sup> (1.771)</td><td>6.324<sup>***</sup> (2.251)</td></tr>
+<tr><td style="text-align:left">travel_time</td><td></td><td>0.002 (0.002)</td><td>0.003 (0.002)</td><td>0.005<sup>*</sup> (0.003)</td></tr>
+<tr><td style="text-align:left">typeurban village</td><td>-0.115 (0.421)</td><td>-0.251 (0.422)</td><td>-0.174 (0.432)</td><td>-0.979 (0.724)</td></tr>
+<tr><td style="text-align:left">typeurban</td><td>-0.337 (0.561)</td><td>-0.494 (0.560)</td><td>-0.407 (0.583)</td><td>-1.489<sup>*</sup> (0.867)</td></tr>
+<tr><td style="text-align:left">square</td><td>0.0002 (0.001)</td><td>-0.0001 (0.001)</td><td>0.00000 (0.001)</td><td>0.0001 (0.001)</td></tr>
+<tr><td style="text-align:left">log(total_population_2022)</td><td>0.202 (0.619)</td><td>0.310 (0.619)</td><td>0.599 (0.642)</td><td>-0.240 (0.877)</td></tr>
+<tr><td style="text-align:left">urban_pct</td><td>-0.110 (0.771)</td><td>0.169 (0.774)</td><td>-0.004 (0.804)</td><td>0.514 (1.050)</td></tr>
+<tr><td style="text-align:left">n_settlements</td><td>0.001 (0.010)</td><td>0.003 (0.010)</td><td>0.0004 (0.010)</td><td>-0.010 (0.011)</td></tr>
+<tr><td style="text-align:left">region_enEast</td><td>0.206 (0.344)</td><td>0.427 (0.351)</td><td>0.442 (0.357)</td><td>-0.015 (0.648)</td></tr>
+<tr><td style="text-align:left">region_enNorth</td><td>0.372 (0.413)</td><td>0.322 (0.411)</td><td>0.298 (0.417)</td><td>1.285 (0.799)</td></tr>
+<tr><td style="text-align:left">region_enSouth</td><td>-0.521 (0.397)</td><td>-0.542 (0.396)</td><td>-0.548 (0.400)</td><td>0.508 (0.972)</td></tr>
+<tr><td style="text-align:left">region_enWest</td><td>0.176 (0.359)</td><td>0.022 (0.378)</td><td>0.072 (0.394)</td><td>-0.256 (0.503)</td></tr>
+<tr><td style="text-align:left">occupationoccupied_april</td><td>-0.296 (0.576)</td><td>-0.439 (0.572)</td><td>-0.448 (0.592)</td><td>-1.404 (1.283)</td></tr>
+<tr><td style="text-align:left">military_actioncombat_now</td><td>0.136 (0.710)</td><td>0.246 (0.701)</td><td>0.197 (0.708)</td><td>-0.709 (1.097)</td></tr>
+<tr><td style="text-align:left">military_actionno_combat</td><td>0.196 (0.612)</td><td>0.075 (0.605)</td><td>-0.006 (0.628)</td><td>-0.628 (1.525)</td></tr>
+<tr><td style="text-align:left">voluntary</td><td>-0.042 (0.209)</td><td>0.047 (0.213)</td><td>0.036 (0.217)</td><td>-0.151 (0.279)</td></tr>
+<tr><td style="text-align:left">sex_headmale</td><td></td><td></td><td>0.056 (0.230)</td><td>-0.052 (0.326)</td></tr>
+<tr><td style="text-align:left">age_head</td><td></td><td></td><td>-0.008 (0.012)</td><td>-0.011 (0.018)</td></tr>
+<tr><td style="text-align:left">education_headnon-higher</td><td></td><td></td><td>0.399 (0.418)</td><td>0.315 (0.546)</td></tr>
+<tr><td style="text-align:left">incumbent</td><td></td><td></td><td>0.191 (0.224)</td><td>0.087 (0.302)</td></tr>
+<tr><td style="text-align:left">rda</td><td></td><td></td><td>-0.489 (0.423)</td><td>0.073 (0.485)</td></tr>
+<tr><td style="text-align:left">youth_councils</td><td></td><td></td><td></td><td>-0.075 (0.488)</td></tr>
+<tr><td style="text-align:left">youth_centers</td><td></td><td></td><td></td><td>-0.103 (0.299)</td></tr>
+<tr><td style="text-align:left">sum_osbb_2020</td><td></td><td></td><td></td><td>0.009 (0.020)</td></tr>
+<tr><td style="text-align:left">region_enEast:sum_osbb_2020</td><td></td><td></td><td></td><td>0.027 (0.034)</td></tr>
+<tr><td style="text-align:left">region_enNorth:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.035 (0.024)</td></tr>
+<tr><td style="text-align:left">region_enSouth:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.211<sup>**</sup> (0.089)</td></tr>
+<tr><td style="text-align:left">region_enWest:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.006 (0.019)</td></tr>
+<tr><td style="text-align:left">Constant</td><td>2.330 (5.461)</td><td>-2.222 (5.805)</td><td>-0.445 (6.080)</td><td>-12.656 (8.927)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>130</td><td>129</td><td>129</td><td>72</td></tr>
+<tr><td style="text-align:left">R<sup>2</sup></td><td>0.089</td><td>0.136</td><td>0.168</td><td>0.546</td></tr>
+<tr><td style="text-align:left">Adjusted R<sup>2</sup></td><td>-0.040</td><td>-0.006</td><td>-0.014</td><td>0.213</td></tr>
+<tr><td style="text-align:left">Residual Std. Error</td><td>1.075 (df = 113)</td><td>1.059 (df = 110)</td><td>1.064 (df = 105)</td><td>0.916 (df = 41)</td></tr>
+<tr><td style="text-align:left">F Statistic</td><td>0.691 (df = 16; 113)</td><td>0.958 (df = 18; 110)</td><td>0.923 (df = 23; 105)</td><td>1.641<sup>*</sup> (df = 30; 41)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="4" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>
 
 ## 11.2 Problem Involvement
 
@@ -6528,6 +5778,50 @@ m4_problem  <-glm(data = ds1_problem,
 
 stargazer::stargazer(m1_problem, m2_problem, m3_problem, m4_problem, single.row = T, type = 'html')
 ```
+
+
+<table style="text-align:center"><tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="4"><em>Dependent variable:</em></td></tr>
+<tr><td></td><td colspan="4" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="4">hromada_exp</td></tr>
+<tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td><td>(3)</td><td>(4)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">log(income_total_2021)</td><td>0.135 (1.503)</td><td>0.093 (1.517)</td><td>-0.736 (1.677)</td><td>-84.725 (692,099.900)</td></tr>
+<tr><td style="text-align:left">own_income_prop_2021</td><td>0.107 (2.818)</td><td>0.181 (2.838)</td><td>1.581 (2.970)</td><td>114.139 (730,084.900)</td></tr>
+<tr><td style="text-align:left">turnout_2020</td><td></td><td>-0.826 (4.510)</td><td>-2.146 (4.699)</td><td>135.893 (2,141,099.000)</td></tr>
+<tr><td style="text-align:left">travel_time</td><td></td><td>0.002 (0.005)</td><td>0.001 (0.005)</td><td>-0.343 (3,853.388)</td></tr>
+<tr><td style="text-align:left">typeurban village</td><td>1.061 (1.127)</td><td>1.019 (1.146)</td><td>1.402 (1.230)</td><td>-4.701 (819,133.200)</td></tr>
+<tr><td style="text-align:left">typeurban</td><td>0.307 (1.459)</td><td>0.174 (1.477)</td><td>0.566 (1.571)</td><td>-27.317 (1,039,895.000)</td></tr>
+<tr><td style="text-align:left">square</td><td>-0.003<sup>**</sup> (0.002)</td><td>-0.003<sup>**</sup> (0.002)</td><td>-0.003<sup>*</sup> (0.002)</td><td>-0.060 (265.870)</td></tr>
+<tr><td style="text-align:left">log(total_population_2022)</td><td>0.459 (1.513)</td><td>0.516 (1.557)</td><td>1.281 (1.709)</td><td>125.880 (495,023.100)</td></tr>
+<tr><td style="text-align:left">urban_pct</td><td>-0.679 (2.098)</td><td>-0.732 (2.123)</td><td>-1.165 (2.271)</td><td>7.480 (1,382,325.000)</td></tr>
+<tr><td style="text-align:left">n_settlements</td><td>0.048 (0.030)</td><td>0.054<sup>*</sup> (0.032)</td><td>0.050 (0.033)</td><td>0.270 (14,526.640)</td></tr>
+<tr><td style="text-align:left">region_enEast</td><td>1.519 (1.175)</td><td>1.595 (1.187)</td><td>1.294 (1.218)</td><td>29.804 (367,404.000)</td></tr>
+<tr><td style="text-align:left">region_enNorth</td><td>0.529 (1.207)</td><td>0.600 (1.224)</td><td>0.461 (1.263)</td><td>56.732 (691,508.000)</td></tr>
+<tr><td style="text-align:left">region_enSouth</td><td>0.383 (0.936)</td><td>0.486 (0.949)</td><td>0.395 (0.971)</td><td>-45.057 (371,854.300)</td></tr>
+<tr><td style="text-align:left">region_enWest</td><td>-0.103 (0.893)</td><td>0.062 (0.947)</td><td>0.187 (1.025)</td><td>32.596 (512,285.700)</td></tr>
+<tr><td style="text-align:left">occupationoccupied_april</td><td>-1.840 (1.633)</td><td>-1.811 (1.649)</td><td>-1.800 (1.712)</td><td>-25.166 (621,634.500)</td></tr>
+<tr><td style="text-align:left">occupationoccupied_august</td><td>-19.982 (3,956.181)</td><td>-20.257 (3,956.181)</td><td>-21.439 (6,522.639)</td><td></td></tr>
+<tr><td style="text-align:left">occupationoccupied_now</td><td>-1.855 (1.777)</td><td>-1.854 (1.803)</td><td>-1.905 (1.884)</td><td>-49.613 (460,278.900)</td></tr>
+<tr><td style="text-align:left">military_actioncombat_now</td><td>-16.271 (1,403.286)</td><td>-16.298 (1,402.541)</td><td>-17.289 (2,250.865)</td><td>-43.202 (606,589.200)</td></tr>
+<tr><td style="text-align:left">military_actionno_combat</td><td>-17.568 (1,403.286)</td><td>-17.583 (1,402.541)</td><td>-18.544 (2,250.864)</td><td>37.331 (652,535.300)</td></tr>
+<tr><td style="text-align:left">voluntary</td><td>0.614 (0.578)</td><td>0.691 (0.591)</td><td>0.901 (0.641)</td><td>42.242 (212,131.500)</td></tr>
+<tr><td style="text-align:left">sex_headmale</td><td></td><td></td><td>-0.026 (0.640)</td><td>-7.225 (289,236.300)</td></tr>
+<tr><td style="text-align:left">age_head</td><td></td><td></td><td>-0.036 (0.034)</td><td>-4.669 (29,066.870)</td></tr>
+<tr><td style="text-align:left">education_headnon-higher</td><td></td><td></td><td>17.630 (1,980.788)</td><td>15.497 (478,058.400)</td></tr>
+<tr><td style="text-align:left">incumbent</td><td></td><td></td><td>0.421 (0.592)</td><td>-34.180 (285,656.300)</td></tr>
+<tr><td style="text-align:left">rda</td><td></td><td></td><td>-0.308 (1.097)</td><td>-19.316 (352,081.200)</td></tr>
+<tr><td style="text-align:left">youth_councils</td><td></td><td></td><td></td><td>31.807 (358,561.700)</td></tr>
+<tr><td style="text-align:left">youth_centers</td><td></td><td></td><td></td><td>5.807 (252,011.000)</td></tr>
+<tr><td style="text-align:left">sum_osbb_2020</td><td></td><td></td><td></td><td>0.133 (9,351.328)</td></tr>
+<tr><td style="text-align:left">region_enEast:sum_osbb_2020</td><td></td><td></td><td></td><td>1.884 (20,336.010)</td></tr>
+<tr><td style="text-align:left">region_enNorth:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.734 (24,690.320)</td></tr>
+<tr><td style="text-align:left">region_enSouth:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.171 (10,036.550)</td></tr>
+<tr><td style="text-align:left">region_enWest:sum_osbb_2020</td><td></td><td></td><td></td><td>-0.917 (9,813.355)</td></tr>
+<tr><td style="text-align:left">Constant</td><td>11.849 (1,403.349)</td><td>12.078 (1,402.611)</td><td>21.914 (2,250.919)</td><td>498.071 (7,397,994.000)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>137</td><td>136</td><td>136</td><td>75</td></tr>
+<tr><td style="text-align:left">Log Likelihood</td><td>-54.208</td><td>-53.722</td><td>-50.852</td><td>-0.000</td></tr>
+<tr><td style="text-align:left">Akaike Inf. Crit.</td><td>146.415</td><td>149.444</td><td>153.703</td><td>64.000</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="4" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>
 
 
 ```r
@@ -6565,133 +5859,145 @@ For the sake of documentation and reproducibility, the current report was render
  collate  Ukrainian_Ukraine.utf8
  ctype    Ukrainian_Ukraine.1251
  tz       Europe/Helsinki
- date     2023-02-07
+ date     2023-02-01
  pandoc   2.19.2 @ C:/Program Files/RStudio/bin/quarto/bin/tools/ (via rmarkdown)
 
 - Packages ---------------------------------------------------------------------------------------
- package       * version date (UTC) lib source
- assertthat      0.2.1   2019-03-21 [1] CRAN (R 4.2.2)
- backports       1.4.1   2021-12-13 [1] CRAN (R 4.2.0)
- beeswarm      * 0.4.0   2021-06-01 [1] CRAN (R 4.2.0)
- broom           1.0.1   2022-08-29 [1] CRAN (R 4.2.2)
- bslib           0.4.1   2022-11-02 [1] CRAN (R 4.2.2)
- cachem          1.0.6   2021-08-19 [1] CRAN (R 4.2.2)
- callr           3.7.3   2022-11-02 [1] CRAN (R 4.2.2)
- cellranger      1.1.0   2016-07-27 [1] CRAN (R 4.2.2)
- cli             3.4.1   2022-09-23 [1] CRAN (R 4.2.2)
- colorspace      2.0-3   2022-02-21 [1] CRAN (R 4.2.2)
- crayon          1.5.2   2022-09-29 [1] CRAN (R 4.2.2)
- crosstalk       1.2.0   2021-11-04 [1] CRAN (R 4.2.2)
- DBI             1.1.3   2022-06-18 [1] CRAN (R 4.2.2)
- dbplyr          2.2.1   2022-06-27 [1] CRAN (R 4.2.2)
- devtools        2.4.5   2022-10-11 [1] CRAN (R 4.2.2)
- dichromat     * 2.0-0.1 2022-05-02 [1] CRAN (R 4.2.0)
- digest          0.6.31  2022-12-11 [1] CRAN (R 4.2.2)
- dplyr         * 1.0.10  2022-09-01 [1] CRAN (R 4.2.2)
- DT              0.26    2022-10-19 [1] CRAN (R 4.2.2)
- ellipsis        0.3.2   2021-04-29 [1] CRAN (R 4.2.2)
- evaluate        0.18    2022-11-07 [1] CRAN (R 4.2.2)
- explore         1.0.0   2022-11-11 [1] CRAN (R 4.2.2)
- fansi           1.0.3   2022-03-24 [1] CRAN (R 4.2.2)
- farver          2.1.1   2022-07-06 [1] CRAN (R 4.2.2)
- fastDummies   * 1.6.3   2020-11-29 [1] CRAN (R 4.2.2)
- fastmap         1.1.0   2021-01-25 [1] CRAN (R 4.2.2)
- forcats       * 0.5.2   2022-08-19 [1] CRAN (R 4.2.2)
- fs              1.5.2   2021-12-08 [1] CRAN (R 4.2.2)
- gargle          1.2.1   2022-09-08 [1] CRAN (R 4.2.2)
- generics        0.1.3   2022-07-05 [1] CRAN (R 4.2.2)
- ggbeeswarm      0.7.1   2022-12-16 [1] CRAN (R 4.2.2)
- ggplot2       * 3.4.0   2022-11-04 [1] CRAN (R 4.2.2)
- glue            1.6.2   2022-02-24 [1] CRAN (R 4.2.2)
- googledrive     2.0.0   2021-07-08 [1] CRAN (R 4.2.2)
- googlesheets4   1.0.1   2022-08-13 [1] CRAN (R 4.2.2)
- gridExtra       2.3     2017-09-09 [1] CRAN (R 4.2.2)
- gt            * 0.8.0   2022-11-16 [1] CRAN (R 4.2.2)
- gtable          0.3.1   2022-09-01 [1] CRAN (R 4.2.2)
- haven           2.5.1   2022-08-22 [1] CRAN (R 4.2.2)
- highr           0.9     2021-04-16 [1] CRAN (R 4.2.2)
- hms             1.1.2   2022-08-19 [1] CRAN (R 4.2.2)
- htmltools       0.5.4   2022-12-07 [1] CRAN (R 4.2.2)
- htmlwidgets     1.5.4   2021-09-08 [1] CRAN (R 4.2.2)
- httpuv          1.6.6   2022-09-08 [1] CRAN (R 4.2.2)
- httr            1.4.4   2022-08-17 [1] CRAN (R 4.2.2)
- import          1.3.0   2022-05-23 [1] CRAN (R 4.2.2)
- janitor         2.1.0   2021-01-05 [1] CRAN (R 4.2.2)
- jquerylib       0.1.4   2021-04-26 [1] CRAN (R 4.2.2)
- jsonlite        1.8.4   2022-12-06 [1] CRAN (R 4.2.2)
- kableExtra      1.3.4   2021-02-20 [1] CRAN (R 4.2.2)
- knitr         * 1.41    2022-11-18 [1] CRAN (R 4.2.2)
- labeling        0.4.2   2020-10-20 [1] CRAN (R 4.2.0)
- labelled      * 2.10.0  2022-09-14 [1] CRAN (R 4.2.2)
- later           1.3.0   2021-08-18 [1] CRAN (R 4.2.2)
- lattice         0.20-45 2021-09-22 [2] CRAN (R 4.2.2)
- lifecycle       1.0.3   2022-10-07 [1] CRAN (R 4.2.2)
- lubridate     * 1.9.0   2022-11-06 [1] CRAN (R 4.2.2)
- magrittr        2.0.3   2022-03-30 [1] CRAN (R 4.2.2)
- Matrix        * 1.5-1   2022-09-13 [2] CRAN (R 4.2.2)
- memoise         2.0.1   2021-11-26 [1] CRAN (R 4.2.2)
- mgcv            1.8-41  2022-10-21 [2] CRAN (R 4.2.2)
- mime            0.12    2021-09-28 [1] CRAN (R 4.2.0)
- miniUI          0.1.1.1 2018-05-18 [1] CRAN (R 4.2.2)
- mitools         2.4     2019-04-26 [1] CRAN (R 4.2.2)
- modelr          0.1.10  2022-11-11 [1] CRAN (R 4.2.2)
- munsell         0.5.0   2018-06-12 [1] CRAN (R 4.2.2)
- nlme            3.1-160 2022-10-10 [2] CRAN (R 4.2.2)
- pacman          0.5.1   2019-03-11 [1] CRAN (R 4.2.2)
- pillar          1.8.1   2022-08-19 [1] CRAN (R 4.2.2)
- pkgbuild        1.4.0   2022-11-27 [1] CRAN (R 4.2.2)
- pkgconfig       2.0.3   2019-09-22 [1] CRAN (R 4.2.2)
- pkgload         1.3.2   2022-11-16 [1] CRAN (R 4.2.2)
- prettyunits     1.1.1   2020-01-24 [1] CRAN (R 4.2.2)
- processx        3.8.0   2022-10-26 [1] CRAN (R 4.2.2)
- profvis         0.3.7   2020-11-02 [1] CRAN (R 4.2.2)
- promises        1.2.0.1 2021-02-11 [1] CRAN (R 4.2.2)
- ps              1.7.2   2022-10-26 [1] CRAN (R 4.2.2)
- purrr         * 0.3.5   2022-10-06 [1] CRAN (R 4.2.2)
- R6              2.5.1   2021-08-19 [1] CRAN (R 4.2.2)
- RColorBrewer  * 1.1-3   2022-04-03 [1] CRAN (R 4.2.0)
- Rcpp            1.0.9   2022-07-08 [1] CRAN (R 4.2.2)
- readr         * 2.1.3   2022-10-01 [1] CRAN (R 4.2.2)
- readxl        * 1.4.1   2022-08-17 [1] CRAN (R 4.2.2)
- remotes         2.4.2   2021-11-30 [1] CRAN (R 4.2.2)
- reprex          2.0.2   2022-08-17 [1] CRAN (R 4.2.2)
- rlang           1.0.6   2022-09-24 [1] CRAN (R 4.2.2)
- rmarkdown       2.18    2022-11-09 [1] CRAN (R 4.2.2)
- rstudioapi      0.14    2022-08-22 [1] CRAN (R 4.2.2)
- rvest           1.0.3   2022-08-19 [1] CRAN (R 4.2.2)
- sass            0.4.4   2022-11-24 [1] CRAN (R 4.2.2)
- scales          1.2.1   2022-08-20 [1] CRAN (R 4.2.2)
- sessioninfo     1.2.2   2021-12-06 [1] CRAN (R 4.2.2)
- shiny           1.7.3   2022-10-25 [1] CRAN (R 4.2.2)
- snakecase       0.11.0  2019-05-25 [1] CRAN (R 4.2.2)
- stringi         1.7.8   2022-07-11 [1] CRAN (R 4.2.1)
- stringr       * 1.5.0   2022-12-02 [1] CRAN (R 4.2.2)
- survey        * 4.1-1   2021-07-19 [1] CRAN (R 4.2.2)
- survival      * 3.4-0   2022-08-09 [2] CRAN (R 4.2.2)
- svglite         2.1.0   2022-02-03 [1] CRAN (R 4.2.2)
- systemfonts     1.0.4   2022-02-11 [1] CRAN (R 4.2.2)
- testit          0.13    2021-04-14 [1] CRAN (R 4.2.2)
- tibble        * 3.1.8   2022-07-22 [1] CRAN (R 4.2.2)
- tidyr         * 1.2.1   2022-09-08 [1] CRAN (R 4.2.2)
- tidyselect      1.2.0   2022-10-10 [1] CRAN (R 4.2.2)
- tidyverse     * 1.3.2   2022-07-18 [1] CRAN (R 4.2.2)
- timechange    * 0.1.1   2022-11-04 [1] CRAN (R 4.2.2)
- tzdb            0.3.0   2022-03-28 [1] CRAN (R 4.2.2)
- urlchecker      1.0.1   2021-11-30 [1] CRAN (R 4.2.2)
- usethis         2.1.6   2022-05-25 [1] CRAN (R 4.2.2)
- utf8            1.2.2   2021-07-24 [1] CRAN (R 4.2.2)
- vctrs           0.5.1   2022-11-16 [1] CRAN (R 4.2.2)
- vipor           0.4.5   2017-03-22 [1] CRAN (R 4.2.2)
- viridisLite     0.4.1   2022-08-22 [1] CRAN (R 4.2.2)
- webshot         0.5.4   2022-09-26 [1] CRAN (R 4.2.2)
- withr           2.5.0   2022-03-03 [1] CRAN (R 4.2.2)
- xfun            0.35    2022-11-16 [1] CRAN (R 4.2.2)
- xml2            1.3.3   2021-11-30 [1] CRAN (R 4.2.2)
- xtable          1.8-4   2019-04-21 [1] CRAN (R 4.2.2)
- yaml            2.3.6   2022-10-18 [1] CRAN (R 4.2.2)
+ ! package       * version date (UTC) lib source
+ D archive         1.1.5   2022-05-06 [1] CRAN (R 4.2.2)
+   assertthat      0.2.1   2019-03-21 [1] CRAN (R 4.2.2)
+   backports       1.4.1   2021-12-13 [1] CRAN (R 4.2.0)
+   beeswarm      * 0.4.0   2021-06-01 [1] CRAN (R 4.2.0)
+   bit             4.0.5   2022-11-15 [1] CRAN (R 4.2.2)
+   bit64           4.0.5   2020-08-30 [1] CRAN (R 4.2.2)
+   broom           1.0.1   2022-08-29 [1] CRAN (R 4.2.2)
+   bslib           0.4.1   2022-11-02 [1] CRAN (R 4.2.2)
+   cachem          1.0.6   2021-08-19 [1] CRAN (R 4.2.2)
+   callr           3.7.3   2022-11-02 [1] CRAN (R 4.2.2)
+   cellranger      1.1.0   2016-07-27 [1] CRAN (R 4.2.2)
+   cli             3.4.1   2022-09-23 [1] CRAN (R 4.2.2)
+   codetools       0.2-18  2020-11-04 [2] CRAN (R 4.2.2)
+   colorspace      2.0-3   2022-02-21 [1] CRAN (R 4.2.2)
+   crayon          1.5.2   2022-09-29 [1] CRAN (R 4.2.2)
+   crosstalk       1.2.0   2021-11-04 [1] CRAN (R 4.2.2)
+   curl            4.3.3   2022-10-06 [1] CRAN (R 4.2.2)
+   DBI             1.1.3   2022-06-18 [1] CRAN (R 4.2.2)
+   dbplyr          2.2.1   2022-06-27 [1] CRAN (R 4.2.2)
+   devtools        2.4.5   2022-10-11 [1] CRAN (R 4.2.2)
+   dichromat     * 2.0-0.1 2022-05-02 [1] CRAN (R 4.2.0)
+   digest          0.6.31  2022-12-11 [1] CRAN (R 4.2.2)
+   dplyr         * 1.0.10  2022-09-01 [1] CRAN (R 4.2.2)
+   DT              0.26    2022-10-19 [1] CRAN (R 4.2.2)
+   ellipsis        0.3.2   2021-04-29 [1] CRAN (R 4.2.2)
+   evaluate        0.18    2022-11-07 [1] CRAN (R 4.2.2)
+   explore         1.0.0   2022-11-11 [1] CRAN (R 4.2.2)
+   fansi           1.0.3   2022-03-24 [1] CRAN (R 4.2.2)
+   farver          2.1.1   2022-07-06 [1] CRAN (R 4.2.2)
+   fastDummies   * 1.6.3   2020-11-29 [1] CRAN (R 4.2.2)
+   fastmap         1.1.0   2021-01-25 [1] CRAN (R 4.2.2)
+   forcats       * 0.5.2   2022-08-19 [1] CRAN (R 4.2.2)
+   fs              1.5.2   2021-12-08 [1] CRAN (R 4.2.2)
+   gargle          1.2.1   2022-09-08 [1] CRAN (R 4.2.2)
+   generics        0.1.3   2022-07-05 [1] CRAN (R 4.2.2)
+   GGally          2.1.2   2021-06-21 [1] CRAN (R 4.2.2)
+   ggplot2       * 3.4.0   2022-11-04 [1] CRAN (R 4.2.2)
+   glue            1.6.2   2022-02-24 [1] CRAN (R 4.2.2)
+   googledrive     2.0.0   2021-07-08 [1] CRAN (R 4.2.2)
+   googlesheets4   1.0.1   2022-08-13 [1] CRAN (R 4.2.2)
+   gridExtra       2.3     2017-09-09 [1] CRAN (R 4.2.2)
+   gt            * 0.8.0   2022-11-16 [1] CRAN (R 4.2.2)
+   gtable          0.3.1   2022-09-01 [1] CRAN (R 4.2.2)
+   haven           2.5.1   2022-08-22 [1] CRAN (R 4.2.2)
+   highr           0.9     2021-04-16 [1] CRAN (R 4.2.2)
+   hms             1.1.2   2022-08-19 [1] CRAN (R 4.2.2)
+   htmltools       0.5.4   2022-12-07 [1] CRAN (R 4.2.2)
+   htmlwidgets     1.5.4   2021-09-08 [1] CRAN (R 4.2.2)
+   httpuv          1.6.6   2022-09-08 [1] CRAN (R 4.2.2)
+   httr            1.4.4   2022-08-17 [1] CRAN (R 4.2.2)
+   import          1.3.0   2022-05-23 [1] CRAN (R 4.2.2)
+   janitor         2.1.0   2021-01-05 [1] CRAN (R 4.2.2)
+   jquerylib       0.1.4   2021-04-26 [1] CRAN (R 4.2.2)
+   jsonlite        1.8.4   2022-12-06 [1] CRAN (R 4.2.2)
+   kableExtra      1.3.4   2021-02-20 [1] CRAN (R 4.2.2)
+   knitr         * 1.41    2022-11-18 [1] CRAN (R 4.2.2)
+   labeling        0.4.2   2020-10-20 [1] CRAN (R 4.2.0)
+   labelled      * 2.10.0  2022-09-14 [1] CRAN (R 4.2.2)
+   later           1.3.0   2021-08-18 [1] CRAN (R 4.2.2)
+   lattice         0.20-45 2021-09-22 [2] CRAN (R 4.2.2)
+   lifecycle       1.0.3   2022-10-07 [1] CRAN (R 4.2.2)
+   lubridate     * 1.9.0   2022-11-06 [1] CRAN (R 4.2.2)
+   magrittr        2.0.3   2022-03-30 [1] CRAN (R 4.2.2)
+   Matrix        * 1.5-1   2022-09-13 [2] CRAN (R 4.2.2)
+   memoise         2.0.1   2021-11-26 [1] CRAN (R 4.2.2)
+   mgcv            1.8-41  2022-10-21 [2] CRAN (R 4.2.2)
+   mime            0.12    2021-09-28 [1] CRAN (R 4.2.0)
+   miniUI          0.1.1.1 2018-05-18 [1] CRAN (R 4.2.2)
+   mitools         2.4     2019-04-26 [1] CRAN (R 4.2.2)
+   modelr          0.1.10  2022-11-11 [1] CRAN (R 4.2.2)
+   munsell         0.5.0   2018-06-12 [1] CRAN (R 4.2.2)
+   nlme            3.1-160 2022-10-10 [2] CRAN (R 4.2.2)
+   pacman          0.5.1   2019-03-11 [1] CRAN (R 4.2.2)
+   pillar          1.8.1   2022-08-19 [1] CRAN (R 4.2.2)
+   pkgbuild        1.4.0   2022-11-27 [1] CRAN (R 4.2.2)
+   pkgconfig       2.0.3   2019-09-22 [1] CRAN (R 4.2.2)
+   pkgload         1.3.2   2022-11-16 [1] CRAN (R 4.2.2)
+   plyr            1.8.8   2022-11-11 [1] CRAN (R 4.2.2)
+   prettyunits     1.1.1   2020-01-24 [1] CRAN (R 4.2.2)
+   processx        3.8.0   2022-10-26 [1] CRAN (R 4.2.2)
+   profvis         0.3.7   2020-11-02 [1] CRAN (R 4.2.2)
+   promises        1.2.0.1 2021-02-11 [1] CRAN (R 4.2.2)
+   ps              1.7.2   2022-10-26 [1] CRAN (R 4.2.2)
+   purrr         * 0.3.5   2022-10-06 [1] CRAN (R 4.2.2)
+   R6              2.5.1   2021-08-19 [1] CRAN (R 4.2.2)
+   ragg            1.2.4   2022-10-24 [1] CRAN (R 4.2.2)
+   RColorBrewer  * 1.1-3   2022-04-03 [1] CRAN (R 4.2.0)
+   Rcpp            1.0.9   2022-07-08 [1] CRAN (R 4.2.2)
+   readr         * 2.1.3   2022-10-01 [1] CRAN (R 4.2.2)
+   readxl        * 1.4.1   2022-08-17 [1] CRAN (R 4.2.2)
+   remotes         2.4.2   2021-11-30 [1] CRAN (R 4.2.2)
+   reprex          2.0.2   2022-08-17 [1] CRAN (R 4.2.2)
+   reshape         0.8.9   2022-04-12 [1] CRAN (R 4.2.2)
+   rlang           1.0.6   2022-09-24 [1] CRAN (R 4.2.2)
+   rmarkdown       2.18    2022-11-09 [1] CRAN (R 4.2.2)
+   rstudioapi      0.14    2022-08-22 [1] CRAN (R 4.2.2)
+   rvest           1.0.3   2022-08-19 [1] CRAN (R 4.2.2)
+   sass            0.4.4   2022-11-24 [1] CRAN (R 4.2.2)
+   scales          1.2.1   2022-08-20 [1] CRAN (R 4.2.2)
+   sessioninfo     1.2.2   2021-12-06 [1] CRAN (R 4.2.2)
+   shiny           1.7.3   2022-10-25 [1] CRAN (R 4.2.2)
+   snakecase       0.11.0  2019-05-25 [1] CRAN (R 4.2.2)
+   stargazer       5.2.3   2022-03-04 [1] CRAN (R 4.2.0)
+   stringi         1.7.8   2022-07-11 [1] CRAN (R 4.2.1)
+   stringr       * 1.5.0   2022-12-02 [1] CRAN (R 4.2.2)
+   survey        * 4.1-1   2021-07-19 [1] CRAN (R 4.2.2)
+   survival      * 3.4-0   2022-08-09 [2] CRAN (R 4.2.2)
+   svglite         2.1.0   2022-02-03 [1] CRAN (R 4.2.2)
+   systemfonts     1.0.4   2022-02-11 [1] CRAN (R 4.2.2)
+   testit          0.13    2021-04-14 [1] CRAN (R 4.2.2)
+   textshaping     0.3.6   2021-10-13 [1] CRAN (R 4.2.2)
+   tibble        * 3.1.8   2022-07-22 [1] CRAN (R 4.2.2)
+   tidyr         * 1.2.1   2022-09-08 [1] CRAN (R 4.2.2)
+   tidyselect      1.2.0   2022-10-10 [1] CRAN (R 4.2.2)
+   tidyverse     * 1.3.2   2022-07-18 [1] CRAN (R 4.2.2)
+   timechange    * 0.1.1   2022-11-04 [1] CRAN (R 4.2.2)
+   tzdb            0.3.0   2022-03-28 [1] CRAN (R 4.2.2)
+   urlchecker      1.0.1   2021-11-30 [1] CRAN (R 4.2.2)
+   usethis         2.1.6   2022-05-25 [1] CRAN (R 4.2.2)
+   utf8            1.2.2   2021-07-24 [1] CRAN (R 4.2.2)
+   vctrs           0.5.1   2022-11-16 [1] CRAN (R 4.2.2)
+   viridisLite     0.4.1   2022-08-22 [1] CRAN (R 4.2.2)
+   vroom           1.6.0   2022-09-30 [1] CRAN (R 4.2.2)
+   webshot         0.5.4   2022-09-26 [1] CRAN (R 4.2.2)
+   withr           2.5.0   2022-03-03 [1] CRAN (R 4.2.2)
+   xfun            0.35    2022-11-16 [1] CRAN (R 4.2.2)
+   xml2            1.3.3   2021-11-30 [1] CRAN (R 4.2.2)
+   xtable          1.8-4   2019-04-21 [1] CRAN (R 4.2.2)
+   yaml            2.3.6   2022-10-18 [1] CRAN (R 4.2.2)
 
  [1] C:/Users/Valentyn Hatsko/AppData/Local/R/win-library/4.2
  [2] C:/Program Files/R/R-4.2.2/library
+
+ D -- DLL MD5 mismatch, broken installation.
 
 --------------------------------------------------------------------------------------------------
 ```
@@ -6700,4 +6006,4 @@ For the sake of documentation and reproducibility, the current report was render
 
 
 
-Report rendered by Valentyn Hatsko at 2023-02-07, 12:53 +0200 in 24 seconds.
+Report rendered by Valentyn Hatsko at 2023-02-01, 13:27 +0200 in 25 seconds.

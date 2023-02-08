@@ -229,20 +229,24 @@ ds0 <-
     income_total_per_capita     = income_total_2021       / total_population_2022,
     income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
     idp_registration_share      = idp_registration_number / total_population_2022,
-    idp_real_share              = idp_real_number         / total_population_2022,
-    idp_child_share             = idp_child_education     / idp_registration_number,
+    idp_real_share              = idp_real_number         / total_population_2022 * 100,
+    idp_child_share             = idp_child_education     / idp_registration_number * 100,
     type                        = case_when(type == 'сільська' ~ 'village',
                                             type == 'селищна' ~ 'urban village',
                                             type == 'міська' ~ 'urban'),
     type = factor(type, levels  = c("village", "urban village", "urban")),
     help_military_count         = rowSums(across(all_of(military_help_short)), na.rm = T),
+    idp_help_count              = rowSums(across(all_of(idp_help), na.rm = T)),
     occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
                                             TRUE ~ 1),
     occupation_and_combat_fct   = factor(occupation_and_combat, 
                                          labels = c('Rear communities', 'Communities exposed to war (n = 22)')),
     voluntary_fct               = factor(voluntary,
-                                         labels = c('Top-down amalgamated', 'Voluntary amalgamated'))
-    )
+                                         labels = c('Top-down amalgamated', 'Voluntary amalgamated')),
+    oblast_name_en              = case_when(oblast_name_en == 'Vonyn' ~ "Volyn",
+                                            oblast_name_en == 'Driproptrovska' ~ "Dnipropetrovska",
+                                            TRUE ~ oblast_name_en)
+     )
 
 ds1_winter_prep <- ds0 %>% 
   mutate(
@@ -256,13 +260,25 @@ ds1_winter_prep <- ds0 %>%
 ds1_problem <- ds0 %>% 
   mutate(
     hromada_exp = ifelse(hromada_exp == "yes", 1, 0)
-    ,problem_info_index = rowSums(across(contains("hromada_problem_info/")))
-    ,problem_consultation_index = rowSums(across(contains("hromada_problem_consultation/")))
-    ,problem_proposition_index = rowSums(across(contains("hromada_problem_proposition/")))
-    ,problem_system_index = rowSums(across(contains("hromada_problem_system/")))
-    ,problem_feedback_index = rowSums(across(contains("hromada_problem_feedback/")))
-    ,problem_execution_index = rowSums(across(contains("hromada_problem_execution/")))
+    ,problem_info_index         =           ifelse(`hromada_problem_info/nobody`==1, 0, 
+                                           rowSums(across(contains("hromada_problem_info/"))))
+    ,problem_consultation_index =   ifelse(`hromada_problem_consultation/nobody`==1, 0, 
+                                           rowSums(across(contains("hromada_problem_consultation/"))))
+    ,problem_proposition_index  =   ifelse(`hromada_problem_proposition/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_proposition/"))))
+    ,problem_system_index       =   ifelse(`hromada_problem_system/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_system/"))))
+    ,problem_feedback_index     =   ifelse(`hromada_problem_feedback/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_feedback/"))))
+    ,problem_execution_index    =   ifelse(`hromada_problem_execution/nobody`==1, 0,
+                                           rowSums(across(contains("hromada_problem_execution/"))))
+    ,problem_additive_index     =   .4*problem_info_index + .6*problem_consultation_index + 
+      .6*problem_proposition_index + .8*problem_system_index + .8*problem_feedback_index +
+      problem_execution_index
   )
+
+
+
 
 # ---- inspect-data-0 ------------------------------------------------------------
 
@@ -337,6 +353,22 @@ ds1_prep_binary_factors <-
         ,. == 2 ~ "Yes"
         ,TRUE   ~ "Not Applicable"
       ) %>% factor(levels=c("No","Yes","Not Applicable"))
+    )
+  ) %>% 
+  select(hromada_code, starts_with("prep_score"),preparation)
+
+# Binary scale (0,1) with factors
+ds1_prep_binary_factors_feb <- 
+  ds1_prep %>% 
+  mutate(
+    across(
+      .cols = preparation
+      ,.fns = ~case_when(
+        .  == 0  ~ "No"
+        ,. == 1 ~ "No"
+        ,. == 2 ~ "Yes"
+        ,TRUE   ~ "No"
+      ) %>% factor(levels=c("No","Yes"))
     )
   ) %>% 
   select(hromada_code, starts_with("prep_score"),preparation)

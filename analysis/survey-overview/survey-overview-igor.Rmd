@@ -1578,7 +1578,7 @@ d <- ds0 %>% select(hromada_code, starts_with('help_for_military/')) %>%
 
 p <- d %>% 
   ggplot(aes(x = factor(help, levels = help_military_levels), y = freq)) +
-  geom_col() +
+  geom_col(fill = "dodgerblue") +
   geom_label(aes(label = scales::percent(freq)))  + 
   theme_bw() +
   theme(axis.title.y = element_blank(),
@@ -1655,7 +1655,7 @@ g <-  ds0 %>%
                         )
   ) %>% 
   ggplot(aes(x=value))+
-  geom_histogram(binwidth = 100, alpha = .5, breaks=c(10,20,30,40,50,60,70,80,90,100))+
+  geom_histogram(binwidth = 100, alpha = .5, breaks=c(10,20,30,40,50,60,70,80,90,100), fill = "dodgerblue")+
   facet_wrap("measure",ncol =5) +
   labs(
     y='number of hromadas'
@@ -1762,6 +1762,8 @@ d %>%
   )
 
 ```
+
+
 # 7. IDP
 
 ```{r idp-number-reg, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
@@ -1791,7 +1793,7 @@ axis(1, at=seq(0, 20000, by = 2000), las=2)
 bxplot(d$idp_real_number ~ d$type, horizontal = TRUE, add = TRUE, lwd = 1.2)
 ```
 
-```{r help-idp, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+```{r help-idp, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
 
 help_idp_levels <- c('communal_placement', 'private_placement', 'regular_meal', 'humanitar_help', 
                      'fundraising', "employ", "psych_help", "law_help", "transit_center")
@@ -1805,31 +1807,146 @@ d <- ds0 %>% select(hromada_code, starts_with('idp_help/'), -ends_with('number')
 
 p <- d %>% 
   ggplot(aes(x = fct_reorder(factor(help), freq, .desc = TRUE), y = freq)) +
-  geom_col() +
+  geom_col(fill = "dodgerblue") +
   geom_label(aes(label = scales::percent(freq)))  + 
   theme_bw() +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank()) +
-  labs(title = 'Which actions or resources were effectively provided by the community for internally displaced persons (IDPs)?', subtitle = "excluding occupied hromadas") +
-  scale_y_continuous(labels = scales::percent) 
-  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in communal or state-owned premises",
-                            'private_placement' = "Placement of IDPs in private premises", 
-                            'regular_meal' = "Regular meal", 
-                            'humanitar_help' = "Issuance of humanitarian aid", 
-                            'fundraising' = "Fundraising for the needs of IDPs", 
-                            "employ" = "Employment programs in the community", 
-                            "psych_help" = "Psychological support for IDPs", 
-                            "law_help" = "Legal support for IDPs", 
-                            "transit_center" = "Organization of a transit center"))
+  labs(title = 'Which actions or resources were effectively provided by the community \nfor internally displaced persons (IDPs)?', 
+       subtitle = "excluding occupied hromadas",) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in \ncommunal or state-owned \npremises",
+                            'private_placement' = "Placement of IDPs in \nprivate premises", 
+                            'regular_meal' = "Regular \nmeal", 
+                            'humanitar_help' = "Issuance of \nhumanitarian aid", 
+                            'fundraising' = "Fundraising for \nthe needs of IDPs", 
+                            "employ" = "Employment programs \nin the community", 
+                            "psych_help" = "Psychological \nsupport for IDPs", 
+                            "law_help" = "Legal \nsupport for IDPs", 
+                            "transit_center" = "Organization of \na transit center"))
 
 p
+
+```
+
+```{r help-idp-voluntary, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+help_idp_levels <- c('communal_placement', 'private_placement', 'regular_meal', 'humanitar_help', 
+                     'fundraising', "employ", "psych_help", "law_help", "transit_center")
+
+d <- ds0 %>% select(hromada_code, voluntary_fct, starts_with('idp_help/'), -ends_with('number')) %>% 
+  pivot_longer(-c(hromada_code, voluntary_fct), names_to = 'help', values_to = 'count') %>%
+  count(help, voluntary_fct, count) %>% 
+  group_by(help, voluntary_fct) %>% 
+  mutate(freq = n/sum(n),
+         help = str_remove(help, 'idp_help/')) %>%
+  filter(count == 1)
+
+p <- d %>% 
+  ggplot(aes(x = fct_reorder(factor(help), freq, .desc = TRUE), y = freq, fill = voluntary_fct)) +
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = scales::percent(freq, 1)), hjust = .4, 
+             vjust = -.3, position = position_dodge(width = .9), size = 3.2) + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 7)) +
+  labs(title = 'Which actions or resources were effectively provided by the community \nfor internally displaced persons (IDPs)?', 
+       subtitle = "excluding occupied hromadas",
+       fill = NULL) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(labels=c('communal_placement' = "Placement of IDPs in \ncommunal or \nstate-owned \npremises",
+                            'private_placement' = "Placement of IDPs in \nprivate premises", 
+                            'regular_meal' = "Regular \nmeal", 
+                            'humanitar_help' = "Issuance of \nhumanitarian \naid", 
+                            'fundraising' = "Fundraising for \nthe needs of IDPs", 
+                            "employ" = "Employment \nprograms \nin the community", 
+                            "psych_help" = "Psychological \nsupport for IDPs", 
+                            "law_help" = "Legal \nsupport for IDPs", 
+                            "transit_center" = "Organization of \na transit center")) +
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",
+                                guide= guide_legend(reverse=T))
+
+p
+
+```
+
+```{r idp-place-rooms, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+d <- ds0 %>% select(idp_place_rooms)
+
+(d %>% make_bi_freq_graph('idp_place_rooms')) +
+  labs(
+    title = "Premises for how many beds were provided for IDPs?",
+    subtitle = "For those hromadas that provided premises (n = 92)"
+    ,y = NULL, x = NULL, fill = NULL
+  ) +
+  scale_x_discrete(labels=c('0_100_beds' = "0 - 100 beds",
+                            '101_250_beds' = "101 - 250 beds", 
+                            '251_500_beds' = "251 - 500 beds", 
+                            '501_1000_beds' = "501 - 1000 beds", 
+                            'over1000_beds' = "> 1000 beds")) +
+  guides(fill = "none")
+
+```
+
+```{r idp-place-rooms-registered, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+d <- ds0 %>% filter(idp_accept == 'yes' & !is.na(idp_place_rooms)) %>%
+  select(hromada_code, idp_registration_number, idp_place_rooms)
+
+d %>% 
+  ggplot(aes(y = idp_place_rooms, x = idp_registration_number, color = idp_place_rooms)) +
+  ggbeeswarm::geom_beeswarm() +
+  scale_y_discrete(labels=c('0_100_beds' = "0 - 100 beds",
+                            '101_250_beds' = "101 - 250 beds", 
+                            '251_500_beds' = "251 - 500 beds", 
+                            '501_1000_beds' = "501 - 1000 beds", 
+                            'over1000_beds' = "> 1000 beds")) +
+  labs(title = "Premises for how many beds were provided for IDPs?",
+       subtitle = "For those hromadas that provided premises (n = 92)",
+       x = "Registered IDPs", y = NULL, color = NULL) +
+  guides(color = "none")
+
+```
+
+```{r idp-child-share-type, fig.height=5, fig.width=7, class.source="hide", eval = TRUE}
+
+d <- ds0 %>% filter(idp_accept == 'yes') %>%
+  select(hromada_code, idp_child_share, type, occupation_and_combat_fct)
+
+d %>% 
+  ggplot(aes(x = idp_child_share, y = type, col = type)) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+  geom_jitter(height = .1) +
+  labs(title = "Share of IDPs children gone to school to registered IDPs in the community",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none")
+
+
+```
+
+```{r idp-child-share-war, fig.height=5, fig.width=7, class.source="hide", eval = TRUE}
+
+d <- ds0 %>% filter(idp_accept == 'yes') %>%
+  select(hromada_code, idp_child_share, type, occupation_and_combat_fct)
+
+d %>% 
+  ggplot(aes(x = idp_child_share, y = occupation_and_combat_fct, col = occupation_and_combat_fct)) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+  geom_jitter(height = .1) +
+  labs(title = "Share of IDPs children gone to school to registered IDPs in the community",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none")
+
+
 ```
 
 # 8. Economics
 
 \
-It has been observed that communities, both rear and war affected, mostly have not redirected their special fund expenditures to other needs. \ 
-However, it was found that redirection of special fund was more frequent in rear communities, as opposed to war-exposed communities.
+> It has been observed that communities, both rear and war affected, mostly have not redirected their special fund expenditures to other needs. \ 
+> However, it was found that redirection of special fund was more frequent in rear communities, as opposed to war-exposed communities.
 
 ```{r special-fund-1, fig.height=3, fig.width=9,class.source="fold-hide"}
 d <- ds0 %>% 
@@ -1870,33 +1987,8 @@ d %>%
 
 ```
 
-```{r special-fund-no-combat, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
-(ds0 %>% filter(military_action=="no_combat") %>%
-  mutate(
-    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
-                                                             special_fund_relocation=="yes"~1)
-  ) %>% 
-  ggplot(aes(x = prep_count, y = `Special fund's expenditures were relocated`)) +
-  geom_point() +
-  geom_smooth(method = "lm", se=F) +
-  theme_bw() +
-  labs(title = 'Relation between preparation and special fund realocation for non-combat hromadas') +
-  xlab("counted preparations"))
-```
-
-```{r special-fund-urbanisation, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
-(ds0 %>% filter(military_action=="no_combat") %>%
-  mutate(
-    `Special fund's expenditures were relocated` = case_when(special_fund_relocation=="no"~0,
-                                                             special_fund_relocation=="yes"~1)
-  ) %>% 
-  ggplot(aes(x = urban_pct, y = `Special fund's expenditures were relocated`)) +
-  geom_point() +
-  geom_smooth(method = "lm", se=F) +
-  theme_bw() +
-  labs(title = 'Relation between urbanisation and special fund realocation for non-combat hromadas') +
-  xlab("share of urban population"))
-```
+\
+Hromadas with higher level of fiscal self-sufficiency were less likely to redirect special funds for urgent needs.
 
 ```{r special-fund-own-income, fig.height=3, fig.width=9,class.source="fold-hide", eval=TRUE}
 (ds0 %>% filter(military_action=="no_combat") %>%
@@ -1911,6 +2003,9 @@ d %>%
   labs(title = 'Relation between financial autonomy and special fund realocation for non-combat hromadas') +
   xlab("share of own revenue in total budget in 2021"))
 ```
+
+\
+The most frequently mentioned sectors for the fund to be redirected to were Defense, Utilities, Social protection and Education - these are the most likely to challenge local authorities due to war shocks.
 
 ```{r special-fund-sectors, fig.height=3, fig.width=9,class.source="fold-hide"}
 ds0 %>% 
@@ -1936,36 +2031,61 @@ ds0 %>%
                            TRUE~sector)
  ) %>%
   ggplot(aes(x = `Number of Hromadas`, y = fct_reorder(sector, `Number of Hromadas`))) +
-  geom_bar(stat = "identity", fill = "blue") +
+  geom_bar(stat = "identity") +
   theme_bw()+
   labs(
     title = "Sectors for which the funds of the special fund were redistributed"
     ,subtitle = "Data were collected during October-November of 2022"
-    ,y = "Sector"
+    ,y = NULL
   )+
   geom_col(position = position_stack()
-           , alpha = .5
-           ,data =
+           , fill = "dodgerblue"
   )
 ```
 
+\
+Hromadas did not report mass business relocation (every third mentioned no relocated companies at all). However, the most frequent destinations for relocation were naturally Western regions - Volyn, Invano-Frankivsk, Lviv, and Zakarpattia regions.
+There is also a positive relation between fiscal autonomy and the number of relocated businesses.
+
 ```{r relocated-bussiness, fig.height=3, fig.width=9, class.source="fold-hide"}
+d <- ds0 %>% 
+  select(relocated_companies_text) %>%
+  mutate(relocated_companies = as.numeric(relocated_companies_text),
+         relocated_companies_group = cut(relocated_companies,
+                              breaks = c(0, 1, 2, 3, 4, 5, 6, 7, 100),
+                              labels = c('None', '1', '2', '3', "4", "5", "6", "More than 6"),
+                              right = T)) %>%
+  na.omit()
+
+d %>%
+  ggplot(aes(x=relocated_companies_group, group = 1)) +
+  geom_bar(aes(y = ..prop..), stat = 'count', fill = "dodgerblue") +
+  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
+  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.4)) +
+  labs(
+    title = "How many enterprises were  relocated from other regions to the community as of October 2022?"
+    ,y = NULL, x = NULL
+  )
+
+
+```
+
+```{r relocated-bussiness-oblast, fig.height=3, fig.width=9, class.source="fold-hide"}
 ds0 %>% 
   mutate(relocated_companies = as.numeric(relocated_companies_text)) %>%
-      group_by(region_en,  oblast_name_en ) %>% 
+      group_by(region_en,  oblast_name_en) %>% 
       summarize(`Relocated companies` = sum(relocated_companies, na.rm = TRUE)) %>% 
   filter(`Relocated companies`>0) %>%
     ggplot(aes(x = `Relocated companies`, y = fct_reorder(oblast_name_en, `Relocated companies`))) +
-  geom_bar(stat = "identity", fill = "blue") +
+  geom_bar(stat = "identity") +
   theme_bw()+
   labs(
     title = "Relocated businesses by destination region"
     ,subtitle = "Data were collected during October-November of 2022"
-    ,y = "Oblast"
+    ,y = NULL
   )+
   geom_col(position = position_stack()
-           , alpha = .5
-           ,data =
+           , fill = "dodgerblue"
   )
 ```
 
@@ -2036,7 +2156,7 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
   TRUE~type)
   ) %>%
   ggplot(aes(x = `number of hromadas`, y = fct_reorder(type, `number of hromadas`))) +
-  geom_bar(stat = "identity", fill = "blue") +
+  geom_bar(stat = "identity", fill = "dodgerblue") +
   theme_bw()+
   geom_col(position = position_stack()
            , alpha = .5
@@ -2055,14 +2175,12 @@ ds0 %>% filter(bussiness_stimules_none == 0) %>%
 
 # 9. Humanitarian
 
-# 10. Reconstructioin
+# 10. Reconstruction
 
-\ 
-small number of answers (38) - omit at this stage
+\
+> There are  38 communities (28% of all respondents) that had destructions from the hostilities.
 
-## 10.1 Damage Evaluation
-
-```{r damage-1, fig.height=3, fig.width=9, class.source="fold-hide"}
+```{r damage-region, fig.height=3, fig.width=9, class.source="fold-hide"}
 ds0 %>% 
   count(region_en, is_damaged) %>% 
   ggplot(aes(x = region_en, y = n, fill = is_damaged)) +
@@ -2074,6 +2192,9 @@ ds0 %>%
   theme_bw()
 
 ```
+
+\
+> However, most of damaged hromadas report not mass destruction of housing of up to 10%  - 20% of all respondents.
 
 ```{r damage-2, fig.height=3, fig.width=9,class.source="fold-hide"}
 (ds0 %>% 
@@ -2099,9 +2220,32 @@ ds0 %>%
   labs(
     title = "What percentage of housing was damaged in your hromada?"
     ,subtitle = "Data was collected during October-November of 2022"
-    ,y = NULL
-  )
+    ,y = "Number of communities", fill = NULL
+  ) +
+  guides(fill = "none")
+
 ```
+
+\
+> Some rear communities (nearly 15% of all rear communities-respondents) were also damaged - most likely due to the missile strikes.
+
+```{r damage-war-affected, fig.height=3, fig.width=9, class.source="fold-hide"}
+ds0 %>% 
+  count(occupation_and_combat_fct, is_damaged) %>% 
+  ggplot() +
+  aes(x = occupation_and_combat_fct, y=n,
+             fill = is_damaged) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(
+    title = "Were there any destructions in the hromada as a result of military actions?"
+    ,y = "Share of Hromadas", x = NULL, fill = NULL
+  ) +
+  theme_bw()
+
+```
+
+\
+> On average, only half of hromadas with reported damages performed damage assesment for indivuduals and businesses. Less have done so for communal entities - only 38%.
 
 ```{r damage-3, fig.height=3, fig.width=9,class.source="fold-hide"}
 d10 <- 
@@ -2150,7 +2294,7 @@ g <-
   )+
   labs(
     title = "Has your hromada performed damage assessment for?"
-    ,x = "Percent of respondents", y = NULL, fill = NULL
+    ,x = "Percent of communities", y = NULL, fill = NULL
     
   )+
   theme(
@@ -2164,6 +2308,9 @@ g <-
 g
 ```
 
+\
+> Moreover, out of hromadas with damages (and which were not occupied), only every fourth has a Recovery plan.
+
 ```{r damage-4, fig.height=3, fig.width=9,class.source="fold-hide"}
 
 (ds0 %>% mutate(`Does hromada have a Recovery plan?` = as.factor(case_when(reconstruction_plan=="yes"~"Yes",
@@ -2171,15 +2318,17 @@ g
                                                                 ))) %>% filter(is_damaged=="yes") %>% make_bi_freq_graph("Does hromada have a Recovery plan?")) +
   labs(
     title = "Does your hromada have a Recovery plan?"
-    ,subtitle = "among those who reported damages and were not occupied"
-    ,y = NULL, x = NULL, fill = "Does hromada have a Recovery plan?"
+    ,subtitle = "among those who reported damages and were not occupied (n = 33)"
+    ,y = "Number of communities", x = NULL
   ) +
   scale_x_discrete(labels=c('TRUE' = 'Yes', 'FALSE' = 'No')) +
-  scale_fill_discrete(labels=c('TRUE' = 'Yes', 'FALSE' = 'No'))
+  scale_fill_discrete(labels=c('TRUE' = 'Yes', 'FALSE' = 'No')) +
+  guides(fill = "none")
+
 ```
 
 
-```{r damage-2, fig.height=3, fig.width=9,class.source="fold-hide"}
+```{r damage-5, fig.height=3, fig.width=9,class.source="fold-hide"}
 ds13 <- ds0 %>% filter(!is.na(reconstruction_plan)) %>%
    mutate(
     `Share of Housing Damaged` = as.factor(case_when(
@@ -2235,7 +2384,7 @@ g1 <-
   )+
   labs(
     title = "Does your hromada have a Recovery plan? (depending on the housing damage level)"
-    ,subtitle = "among those who reported damages and were not occupied"
+    ,subtitle = "among those who reported damages and were not occupied (n = 33)"
     ,x = "Percent of respondents", y = NULL, fill = NULL
     
   )+
@@ -2249,6 +2398,129 @@ g1 <-
 
 g1
 ```
+
+\
+> Housing reconstruction is being most actively performed in hromadas with relatively slight damages (50% of damaged housing has been rebuilt on average) and among those with the most mass destructions (30% of damaged housing has been rebuilt on average).
+
+```{r damage-repaired-housing, fig.height=4, fig.width=9,class.source="fold-hide"}
+
+p <- ds0 %>%
+  select(percent_reconstructed) %>%
+  na.omit() %>%
+  ggplot(aes(x=percent_reconstructed, group = 1)) +
+  geom_bar(aes(y = ..prop..), stat = 'count', fill = "dodgerblue") +
+  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4, size = 3.4) +
+  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.55)) +
+  scale_x_discrete(labels=c('0_10_percent' = "0-10%",
+                            '10_25_percent' = "10-25%", 
+                            '26_50_percent' = "26-50%", 
+                            '51_75_percent' = "51-75%", 
+                            '76_100_percent' = "76-100%")) +
+  labs(
+    title = "What part of the damaged housing stock has been repaired? (as of October 2022)",
+    subtitle = "among those who reported damages and were not occupied (n = 33)"
+    ,y = NULL, x = NULL
+  )
+
+p
+
+```
+
+```{r}
+ds_projects_type <- ds0 %>% 
+  mutate(international_projects_number = as.numeric(international_projects)) %>% 
+  group_by(type) %>%
+  summarise(median = median(international_projects_number, na.rm =  T),
+            mean = mean(international_projects_number, na.rm =  T),
+            max = max(international_projects_number, na.rm =  T)) 
+
+ds_projects_war <- ds0 %>% 
+  mutate(international_projects_number = as.numeric(international_projects)) %>% 
+  group_by(occupation_and_combat_fct) %>%
+  summarise(median = median(international_projects_number, na.rm =  T),
+            mean = mean(international_projects_number, na.rm =  T),
+            max = max(international_projects_number, na.rm =  T)) 
+```
+
+```{r international-projects, fig.height=4, fig.width=9,class.source="fold-hide"}
+d <- ds0 %>% 
+  mutate(international_projects_number = as.numeric(international_projects)) %>% 
+  select(hromada_full_name, international_projects_number, type, occupation_and_combat_fct) %>%
+  mutate(international_projects_group = cut(international_projects_number,
+                              breaks = c(0, 1, 2, 3, 4, 20),
+                              labels = c('None', '1', '2', '3', 'More than 3'),
+                              right = F)) %>%
+  na.omit() 
+
+p <- d %>%
+  ggplot(aes(x=international_projects_group, group = 1)) +
+  geom_bar(aes(y = ..prop..), stat = 'count', fill = "dodgerblue") +
+  geom_text(aes(label = scales::percent(..prop..), y = ..prop..), stat = 'count', vjust = -.4) +
+  scale_y_continuous(labels = scales::percent_format(), limits = c(0, 0.55)) +
+  labs(
+    title = "How many projects involving funds from international donors communities has implemented / is implementing since Feb 24?"
+    ,y = NULL, x = NULL
+  )
+
+p
+
+```
+
+> These are hromadas in our survey that have the most implemented projects:
+
+```{r international-projects-top, class.source="fold-hide", echo=FALSE}
+d %>% 
+  filter(international_projects_group == "More than 3") %>%
+  select(hromada_full_name, international_projects_number) %>%
+  slice_max(international_projects_number, n = 10) %>%
+  rename('Hromada Name' = "hromada_full_name"
+         , "Number of projects" = "international_projects_number") %>%
+  gt()
+
+```
+
+```{r international-projects-type, fig.height=4, fig.width=9,class.source="fold-hide"}
+d1 <- d %>% count(international_projects_group, type) %>%
+  group_by(type) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1))
+
+p <- d1 %>%
+  ggplot() +
+  aes(y = prop, x=type, fill = international_projects_group, label = pct) +
+  geom_bar(stat = 'identity') +
+  geom_text(position = position_fill(vjust = .4), size = 4) +
+  scale_fill_viridis_d(option = "plasma") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "How many projects involving funds from international donors communities has implemented / is implementing since Feb 24?"
+    ,y = NULL, x = NULL, fill = "Number of projects"
+  )
+
+p
+```
+
+```{r international-projects-war, fig.height=4, fig.width=9,class.source="fold-hide"}
+d1 <- d %>% count(international_projects_group, occupation_and_combat_fct) %>%
+  group_by(occupation_and_combat_fct) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1))
+
+p <- d1 %>%
+  ggplot() +
+  aes(y = prop, x=occupation_and_combat_fct, fill = international_projects_group, label = pct) +
+  geom_bar(stat = 'identity') +
+  geom_text(position = position_fill(vjust = .4), size = 4) +
+  scale_fill_viridis_d(option = "plasma") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "How many projects involving funds from international donors communities has implemented / is implementing since Feb 24?"
+    ,y = NULL, x = NULL, fill = "Number of projects"
+  )
+
+p
+```
+
 
 # 11. Current Challenges
 
