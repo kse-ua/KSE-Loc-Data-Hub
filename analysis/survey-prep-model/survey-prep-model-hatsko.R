@@ -225,7 +225,7 @@ ds0 <-
     income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
     idp_registration_share      = idp_registration_number / total_population_2022,
     idp_real_share              = idp_real_number         / total_population_2022,
-    idp_child_share             = idp_child_education     / idp_registration_number,
+    idp_child_share             = idp_child_education     / idp_registration_number * 100,
     occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
                                             TRUE ~ 1),
     info_channels_count_long    = rowSums(across(all_of(comm_channels)) == 2, na.rm = T),
@@ -508,7 +508,7 @@ predictor_vars_categorical_new <- c(
   ,'youth_centers_b' # наявність молодіжних центрів
   ,'youth_councils_b' # наявність молодіжних рад
   ,'business_support_centers_b' # наявність центру підтримки бізнесу
-  ,'occupation_and_combat'
+  # ,'occupation_and_combat'
 )
 
 predictor_vars <- c(
@@ -606,7 +606,44 @@ ds1 <-
   ) %>% 
   mutate(country = "Ukraine") 
 
-
+ds_general1 <- 
+  ds_general %>%
+  mutate(
+    income_own_per_capita       = income_own_2021         / total_population_2022
+    ,income_total_per_capita     = income_total_2021       / total_population_2022
+    ,income_tranfert_per_capita  = income_transfert_2021   / total_population_2022
+    ,income_own_per_capita_k = income_own_per_capita/1000
+    ,income_total_per_capita_k = income_total_per_capita/1000
+    ,income_tranfert_per_capita_k = income_tranfert_per_capita/1000
+    ,time_before_24th_years = time_before_24th/365
+    ,dfrr_executed_k = dfrr_executed/1000
+    ,urban_perc_100 = urban_pct * 100
+    %>% as.character() %>% as.integer()
+  )  %>% 
+  # zero filling NAs
+  mutate(
+    dfrr_executed_k_zeros = replace_na(dfrr_executed_k, 0)
+    ,passengers_2021_zeros = replace_na(passangers_2021, 0)
+    ,sum_osbb_2020_zeros = replace_na(sum_osbb_2020, 0)
+  ) %>%
+  # making binary vars where not enough variation
+  mutate(
+    business_support_centers_b = ifelse(business_support_centers == 0, 0, 1)
+    ,youth_centers_b = ifelse(youth_centers == 0, 0, 1)
+    ,youth_councils_b =ifelse(youth_councils == 0, 0, 1)
+    ,city = factor(ifelse(type == 'міська', 1, 0))
+    ,war_zone = war_zone_10_10_2022 == 1 | war_zone_20_06_2022 == 1 | 
+                    war_zone_27_04_2022 == 1 | war_zone_23_08_2022 == 1
+    ) %>%
+  mutate(
+    across(
+      .cols = all_of(predictor_vars_categorical_new)
+      ,.fns = ~factor(.)
+    )
+  ) %>%
+  rename(square = area, urban_population_2022 = urban_popultaion_2022) %>%
+  mutate(country = "Ukraine") 
+  
 # inspect outcomes
 ds1 %>% select(all_of(outcomes_vars_new)) %>% explore::describe_all() %>%neat_DT()
 ggplot(reshape2::melt(ds1[outcomes_vars_new]),aes(x=value)) + geom_histogram() + facet_wrap(~variable, scales = 'free')
@@ -759,7 +796,7 @@ performance::check_overdispersion(fit1_poisson)
 
 fit1_nbinom <- 
   MASS::glm.nb(
-    formula = prep_score_feb ~ occupation_and_combat + city + edem_open_hromada
+    formula = prep_score_feb ~ occupation_and_combat + region_en + sum_osbb_2020_zeros
     ,data = ds2_prep
   )
 
@@ -809,26 +846,27 @@ d %>% plot_complex_scan()
 
 ##+ Revenue -----------------------------------------------------------
 
-x <- ds1 %>% select(idp_child_share) %>% filter(!is.na(idp_child_share)) %>% pull()
-norm_dist <- fitdistrplus::fitdist(x, distr = "lnorm")
+x <- ds_general %>% select(own_prop_change) %>% filter(!is.na(own_prop_change)) %>% pull()
+norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+fitdistrplus::descdist(x)
 plot(norm_dist)
-
+fitur::fit_dist_addin()
 # plot
 d <-
-  ds1 %>%
+  ds_general1 %>%
   run_complex_scan(
-    dependent = 'idp_child_share'
-    ,depdist = "poisson"
+    dependent = 'own_prop_change'
+    ,depdist = "gaussian"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     ,explanatory_categorical = predictor_vars_categorical_new
-    ,confounder = 'occupation_and_combat'
+    ,confounder = 'war_zone'
   )
 d %>% plot_complex_scan()
 
 fit1_norm <- 
   glm(
-    formula = problem_additive_index ~ occupation_and_combat + 
-      ,data = ds1
+    formula = own_prop_change * 100 ~ war_zone + total_population_2022
+      ,data = ds_general1
     ,family = "gaussian"
   )
 
@@ -925,7 +963,7 @@ d %>% plot_complex_scan()
 
 fit1_logistic <- 
   glm(
-    formula = dftg_creation_b ~ occupation_and_combat
+    formula = dftg_creation_b ~ occupation_and_combat + city + edem_participatory_budget
     ,data = ds1
     ,family = "binomial"
   )
@@ -965,13 +1003,14 @@ summary(fit1_norm)
 
 x <- ds1 %>% select(idp_help_count) %>% filter(!is.na(idp_help_count)) %>% pull()
 norm_dist <- fitdistrplus::fitdist(x, distr = "unif")
+fitdistrplus::descdist(x)
 plot(norm_dist)
 
 # plot
 d <-
   ds1 %>%
   run_complex_scan(
-    dependent = 'problem_additive_index'
+    dependent = 'idp_help_count'
     ,depdist = "uniform"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     ,explanatory_categorical = predictor_vars_categorical_new
@@ -981,7 +1020,7 @@ d %>% plot_complex_scan()
 
 fit1_norm <- 
   glm(
-    formula = problem_additive_index ~ occupation_and_combat + 
+    formula = idp_help_count ~ occupation_and_combat
       ,data = ds1
     ,family = "gaussian"
   )
@@ -991,15 +1030,22 @@ summary(fit1_norm)
 ##+ IDP Share Children -----------------------------------------------------------
 
 x <- ds1 %>% select(idp_child_share) %>% filter(!is.na(idp_child_share)) %>% pull()
-norm_dist <- fitdistrplus::fitdist(x, distr = "lnorm")
+norm_dist <- fitdistrplus::fitdist(x, distr = "norm")
+
 plot(norm_dist)
+
+x <- x[x!=max(x)]
+
+
+## Caution! Gaussian can give biased coefficients
 
 # plot
 d <-
   ds1 %>%
+  filter(idp_child_share != max(idp_child_share, na.rm = T)) %>%
   run_complex_scan(
     dependent = 'idp_child_share'
-    ,depdist = "poisson"
+    ,depdist = "gaussian"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     ,explanatory_categorical = predictor_vars_categorical_new
     ,confounder = 'occupation_and_combat'
@@ -1008,8 +1054,8 @@ d %>% plot_complex_scan()
 
 fit1_norm <- 
   glm(
-    formula = problem_additive_index ~ occupation_and_combat + 
-      ,data = ds1
+    formula = idp_child_share ~ occupation_and_combat + total_population_2022
+      ,data = ds1 %>% filter(idp_child_share != max(idp_child_share, na.rm = T))
     ,family = "gaussian"
   )
 
