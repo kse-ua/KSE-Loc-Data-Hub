@@ -6,11 +6,6 @@ author:
 date: 'Last updated: `r Sys.Date()`'
 always_allow_html: true
 output:
-  word_document:
-    toc: yes
-  pdf_document:
-    toc: yes
-    latex_engine: xelatex
   html_document:
     keep_md: yes
     toc: yes
@@ -18,6 +13,11 @@ output:
     code_folding: hide
     theme: cerulean
     highlight: zenburn
+  pdf_document:
+    toc: yes
+    latex_engine: xelatex
+  word_document:
+    toc: yes
 editor_options:
   chunk_output_type: console
 ---
@@ -552,12 +552,11 @@ g <-
   d_in %>% 
   { 
   ggplot(
-    data = (.) %>% filter(value !="Yes") %>% mutate(value=factor(value))
+    data = (.) %>% filter(value !="Yes")
     ,aes(x=prop, y = display_name, fill=value)
   )+
   geom_col(position = position_stack()
            , alpha = .7
-           ,data =
   )+
   geom_text(aes(label = str_remove(pct,"\\%"))
             ,hjust = 1
@@ -581,9 +580,9 @@ g <-
     ,expand = expansion(add=c(-.000,-.0))
   )+
   scale_fill_viridis_d(
-    begin = .8, end = .0, direction = -1
-    , option = "plasma", guide= guide_legend(reverse=T)
-  )+
+    breaks = c("As of Oct", "As of Feb", "No", "Not Applicable"),
+    begin = 0, end = .8, direction = 1, option = "plasma",guide= guide_legend(reverse=F)
+    )+
   labs(
     title = "Have your hromada made the following preparations?"
     ,x = "Percent of respondents", y = NULL, fill = NULL
@@ -667,9 +666,10 @@ g <-
     ,labels = scales::percent_format()
     ,expand = expansion(add=c(-.000,-.0))
   )+
-  scale_fill_manual(
-    values = c("#cc4778", "#0d0887")
-  )+
+  scale_fill_viridis_d(
+    breaks = c("Yes", "No"),
+    begin = .5, end = .0, direction = 1, option = "plasma",guide= guide_legend(reverse=F)
+    )+
   labs(
     title = "Have your hromada made the following preparations? (before Feb 24)"
     ,x = "Percent of respondents", y = NULL, fill = NULL
@@ -1463,7 +1463,7 @@ meta_survey %>% filter(name=="dftg_creation") %>% pull(label) %>% cat()
 ```{r dftg-1, fig.height=3, fig.width=9,class.source="fold-hide"}
 
 d <- ds0 %>% 
-  select(hromada_code, dftg_creation, type) %>%
+  select(hromada_code, dftg_creation, type, region_en) %>%
   mutate(dftg_creation = factor(dftg_creation, levels = c('not_able', 'still_not', 'yes')),
          dftg_creation = fct_recode(dftg_creation,
              'Yes' = 'yes'
@@ -1500,6 +1500,25 @@ d %>%
   )
 ```
 
+```{r dftg-region, fig.height=3, fig.width=9,class.source="fold-hide"}
+d %>%
+  group_by(region_en) %>%
+  count(dftg_creation) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1)) %>% 
+  ggplot(aes(x=prop, y = region_en, fill = dftg_creation))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), hjust = -.5,position = position_dodge(width = .9))+
+  scale_x_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
+  )+
+  labs(
+    title = "Did hromadas create a voluntary formation of a territorial community?"
+    ,fill = "Region"
+    ,x = "Percent of respondents in each group"
+    , y = NULL
+  )
+```
 
 > Here you can see the timeline of creation of these forces for our sample.
 
@@ -1630,12 +1649,31 @@ p <- d %>%
   labs(
     title = "When VDF was created?"
     ,fill = "Hromada Type"
-    ,x = "Percent of respondents in each group"
-    , y = NULL
+    ,y = "Percent of respondents in each group"
+    , x = NULL
   )
 
 p
 
+p <- d %>%
+  select(invasion_duration, region_en) %>% 
+  group_by(region_en) %>%
+  count(invasion_duration) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1)) %>% 
+  ggplot(aes(y=prop, x = region_en, fill = invasion_duration))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), position = position_dodge(width = .9), vjust = -.6)+
+  scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma")+
+  labs(
+    title = "When VDF was created?"
+    ,fill = "Period of creation"
+    ,y = "Percent of respondents in each group"
+    , x = NULL
+  )
+
+p
 ```
 
 > Almost all communities provided at least products for military, significant majority allocated rooms and provided money and transport. 
