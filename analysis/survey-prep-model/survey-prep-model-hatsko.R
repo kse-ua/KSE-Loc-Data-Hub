@@ -508,7 +508,7 @@ predictor_vars_categorical_new <- c(
   ,'youth_centers_b' # наявність молодіжних центрів
   ,'youth_councils_b' # наявність молодіжних рад
   ,'business_support_centers_b' # наявність центру підтримки бізнесу
-  # ,'occupation_and_combat'
+  ,'occupation_and_combat'
 )
 
 predictor_vars <- c(
@@ -603,7 +603,7 @@ ds1 <-
       .cols = all_of(predictor_vars_categorical_new)
       ,.fns = ~factor(.)
     )
-  ) %>% 
+    ) %>%
   mutate(country = "Ukraine") 
 
 ds_general1 <- 
