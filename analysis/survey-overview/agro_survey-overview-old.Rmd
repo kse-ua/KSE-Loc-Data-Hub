@@ -17,11 +17,11 @@ editor_options:
   chunk_output_type: console
 ---
 
-> This report visualizes key information about the survey conducted by the Center for Food and Land Use Research (KSE Agrocenter) in June-August 2023
+> This report visualizes key information about Resilience Survey
 
 ***Important Definitions***
 
-> Research Sample: Hromadas who responded to the survey. In total, 477 hromadas participated in the survey out of 1438 hromadas eligible to take part in the survey
+> Research Sample: Hromadas who responded to the survey.
 
 <!--  Set the working directory to the repository's base directory; this assumes the report is nested inside of two directories.-->
 
@@ -278,132 +278,38 @@ ds_survey %>%
 ```
 
 
-<mark>1.5</mark> **Comparison between the survey sample and total population of hromadas based on the list of predictors**
-
-```{r  class.source="fold-hide"}
-library(tableone)
-
-predictors_all <- 
-  ds_general %>% 
-  select(-c("hromada_code", "hromada_name","raion_code", "raion_name","oblast_code",
-            "oblast_name","hromada_full_name","hromada_center_code","hromada_center",           
-            "lat_center","lon_center", "budget_name", "creation_date", "budget_code", "party", "region_code_en")) %>% 
-  colnames()
-
-
-ds_survey_codes <- 
-  ds0 %>% 
-  filter(!is.na(hromada_code)) %>% 
-  distinct(hromada_code) %>% 
-  pull(hromada_code)
-
-ds_surveyed <- 
-  ds_general %>% 
-  filter(hromada_code %in% ds_survey_codes) %>% 
-  mutate(survey_participant = "surveyed" )
-
-ds_comparison <- 
-  ds_general  %>% 
-  mutate(survey_participant = "all") 
-
-#add to all gromadas (including surveyed) surveyed hromadas one more time to make a comparison
-ds_comparison <- rbind(ds_surveyed, ds_comparison) %>% 
-  filter(oblast_name_en %ni% c("Luhansk", "Kherson"))
-
-table_pre <- CreateTableOne(vars=predictors_all
-                            ,factorVars = c("sex_head", "education_head", "incumbent", "rda")
-                            , strata = "survey_participant"
-                            , data=ds_comparison)
-
-p <-print(table_pre, smd=T, printToggle = FALSE, noSpaces = TRUE)
-knitr::kable(p, format = "html")
-
-
-```
-
-
 
 # 2. Budget
 
-<mark>2.1</mark> What questions were asked about preparations hromadas made?
+<!-- <mark>2.1</mark> What questions were asked about preparations hromadas made? -->
 
-```{r class.source = "fold-hide"}
+<!-- ```{r class.source = "fold-hide"} -->
 
-ds0 %>%
+<!-- ds0 %>% -->
 
-  ggplot(aes(x = budget_cut_sphere_count)) +
+<!--   ggplot(aes(x = budget_cut_sphere_count)) + -->
 
-  geom_histogram()
+<!--   geom_histogram() -->
 
-hist(ds0$budget_cut_sphere_count)
+<!-- hist(ds0$budget_cut_sphere_count) -->
 
-```
+<!-- ``` -->
 
-```{r preparation-summary-1, fig.height=5, fig.width=12,class.source="fold-hide"}
+<!-- ```{r preparation-summary-1, fig.height=5, fig.width=12,class.source="fold-hide"} -->
 
-(ds0 %>% make_bi_freq_graph("population_change"))+
+<!-- (ds0 %>% make_bi_freq_graph("population_change"))+ -->
 
-  labs(
+<!--   labs( -->
 
-    title = "How many respondent hromadas have experienced military action at the time of the interview?"
+<!--     title = "How many respondent hromadas have experienced military action at the time of the interview?" -->
 
-    ,subtitle = "Data were collected during October-November of 2022"
+<!--     ,subtitle = "Data were collected during October-November of 2022" -->
 
-    ,y = NULL
+<!--     ,y = NULL -->
 
-  )
+<!--   ) -->
 
-```
-
-<mark>2.2</mark> Whether hromada applied for financial help from state/oblast/raion budget
-
-```{r class.source = "fold-hide"}
-
-(ds0 %>%
-  mutate(
-    financial_support = factor(financial_support, labels = c("Applied, didn't receive", 
-                                                              "Applied, received",
-                                                              "Didn't applie, didn't receive",
-                                                              "Didn't applie, received"))
-    ,financial_support_b = case_when(
-      financial_support %in% c("Applied, received", "Didn't applie, received") ~ "Received"
-      ,TRUE ~ "Didn't receive"
-    )
-  ) %>% 
-  make_bi_freq_graph("financial_support"))+
-  labs(
-    title = "Has your hromada applied for and received financial assistance"
-    ,subtitle = "Data were collected during June-July of 2022"
-    ,y=NULL
-  )
-```
-
-
-```{r class.source = "fold-hide"}
-
-ds0 %>%
-  mutate(
-    financial_support = factor(financial_support, labels = c("Applied, didn't receive", 
-                                                              "Applied, received",
-                                                              "Didn't applie, didn't receive",
-                                                              "Didn't applie, received"))
-    ,financial_support_b = case_when(
-      financial_support %in% c("Applied, received", "Didn't applie, received") ~ "Received"
-      ,TRUE ~ "Didn't receive"
-    )
-  ) %>% 
-  count(party_national_winner, financial_support) %>% 
-  group_by(party_national_winner) %>% 
-  mutate(pct = n/sum(n)) %>% 
-  filter(!is.na(party_national_winner)) %>% 
-  ggplot(aes(x = factor(party_national_winner), y = pct, fill = financial_support)) +
-  geom_col() +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank()) +
-  labs(title = "Applied/received financial assistance by head party affiliation",
-       fill = NULL) + 
-  scale_y_continuous(labels = scales::percent, limits = c(0,1)) 
-```
+<!-- ``` -->
 
 # 3. Population changes/IDPs
 
@@ -417,22 +323,6 @@ ds0 %>%
     ,y = NULL
   )
 ```
-
-```{r , fig.height=5, fig.width=12,class.source="fold-hide"}
-ds0 %>%
-  count(population_change, idp_pct) %>% 
-  group_by(population_change) %>% 
-  mutate(pct = n/sum(n)) %>% 
-  ggplot(aes(x = population_change, y = pct, fill = idp_pct)) +
-  geom_col() +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank()) +
-  labs(title = "Applied/received financial assistance by head party affiliation",
-       fill = NULL) + 
-  scale_y_continuous(labels = scales::percent, limits = c(0,1)) 
-
-```
-
 
 <mark>3.2</mark> **Share of IDPs among total population by region**
 
@@ -466,8 +356,30 @@ ds0 %>%
 <mark>3.4</mark> **Modelling of relation between number of IDPs and predictors**
 
 ```{r population-change-models, results= "asis", class.source="fold-hide"}
+m1_idps <-lm(data = ds0 %>% filter(!is.na(idp_number)), 
+       log(idp_number) ~ log_income_total_2021 + income_own_pct +
+         type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m2_idps <-lm(data = ds0 %>% filter(!is.na(idp_number)), 
+             log(idp_number) ~ log_income_total_2021 + income_own_pct + 
+               turnout_2020 +
+               type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m3_idps <-lm(data = ds0 %>% filter(!is.na(idp_number)),
+             log(idp_number) ~ log_income_total_2021 + income_own_pct +
+               turnout_2020 +
+               type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda)
+
+m4_idps <-lm(data = ds0 %>% filter(!is.na(idp_number)),
+             log(idp_number) ~ log_income_total_2021 + income_own_pct +
+               turnout_2020 + 
+               type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda +
+               youth_councils + youth_centers + region_en * sum_osbb_2020)
 
 
+stargazer(m1_idps, m2_idps, m3_idps, m4_idps, single.row = T, type = 'html')
 ```
 
 # 4. Situation with services
@@ -482,126 +394,14 @@ ds0 %>%
   geom_col() +
   theme_bw() +
   theme(axis.title.y = element_blank()) +
-  labs(title = 'Suspension and resumption of services') +
-  xlab("Services stopped") +
+  labs(title = 'Suspension and resumption of services', 
+       xlab = "Services stopped") +
   scale_y_continuous(labels = scales::percent) +
   scale_fill_manual(name = "Status of service resumption"
-                   ,values = c("#093058", "#EC4544", "#1DB5C4", "grey"))
+                   ,values = c("steelblue3", "indianred", "palegreen4", "grey"))
 ```
-
-
-```{r fig.height=5,fig.show="hold", out.width="50%, fig.width=12,class.source="fold-hide"}
-# par(mar = c(4, 4, .1, .1))
-
-ds0 %>% 
-  group_by(military_action) %>% 
-  count(admin_services_stopped) %>% 
-  mutate(pct = n/sum(n)) %>% 
-  ggplot(aes(x = military_action , y = pct, fill = factor(admin_services_stopped))) +
-  geom_col() +
-  theme_bw() +
-  theme(axis.title.y = element_blank()) +
-  labs(title = 'Suspension of services per military actions status') +
-  xlab("Military actions status") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(name = "Whether provision of services was stopped"
-                    ,labels =c("No", "Yes")
-                   ,values = c("#1DB5C4", "#EC4544"))
-
-```
-
-```{r fig.height=5, fig.width=12,class.source="fold-hide"}
-ds0 %>% 
-  group_by(region_en) %>% 
-  count(admin_services_stopped) %>% 
-  mutate(pct = n/sum(n)) %>% 
-  ggplot(aes(x = region_en , y = pct, fill = factor(admin_services_stopped))) +
-  geom_col() +
-  theme_bw() +
-  theme(axis.title.y = element_blank()) +
-  labs(title = 'Suspension of services per region') +
-  xlab("Region") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(name = "Whether provision of services was stopped"
-                    ,labels =c("No", "Yes")
-                   ,values = c("#1DB5C4", "#EC4544"))
-```
-
-```{r fig.height=5, fig.width=12,class.source="fold-hide"}
-ds0 %>% 
-  group_by(type) %>% 
-  count(admin_services_stopped) %>% 
-  mutate(pct = n/sum(n)) %>% 
-  ggplot(aes(x = type , y = pct, fill = factor(admin_services_stopped))) +
-  geom_col() +
-  theme_bw() +
-  theme(axis.title.y = element_blank()) +
-  labs(title = 'Suspension of services per hromada type') +
-  xlab("Type") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(name = "Whether provision of services was stopped"
-                    ,labels =c("No", "Yes")
-                   ,values = c("#1DB5C4", "#EC4544"))
-```
-
-```{r fig.height=5, fig.width=12,class.source="fold-hide"}
-ds0 %>% 
-  group_by(region_en, type) %>% 
-  count(admin_services_stopped) %>% 
-  mutate(pct = n/sum(n)) %>% 
-  ggplot(aes(x = region_en , y = pct, fill = factor(admin_services_stopped))) +
-  geom_col() +
-  facet_wrap(~ type) +
-  theme_bw() +
-  theme(axis.title.y = element_blank()) +
-  labs(title = 'Suspension of services per region and hromada type') +
-  xlab("Region") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(name = "Whether provision of \nservices was stopped"
-                    ,labels =c("No", "Yes")
-                   ,values = c("#1DB5C4", "#EC4544"))
-```
-
-```{r fig.height=5, fig.width=12,class.source="fold-hide"}
-ds0 %>% 
-  group_by(region_en, type) %>% 
-  count(admin_services_stopped) %>% 
-  mutate(pct = n/sum(n)) %>% 
-  ggplot(aes(x = region_en , y = pct, fill = factor(admin_services_stopped))) +
-  geom_col() +
-  facet_wrap(~ type) +
-  theme_bw() +
-  theme(axis.title.y = element_blank()) +
-  labs(title = 'Suspension of services per region and hromada type') +
-  xlab("Region") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(name = "Whether provision of \nservices was stopped"
-                    ,labels =c("No", "Yes")
-                   ,values = c("#1DB5C4", "#EC4544"))
-```
-
-```{r fig.height=5, fig.width=12,class.source="fold-hide"}
-ds0 %>% 
-  group_by(no_party) %>% 
-  count(admin_services_stopped) %>% 
-  mutate(pct = n/sum(n)) %>% 
-  na.omit() %>% 
-  ggplot(aes(x = as.factor(no_party) , y = pct, fill = factor(admin_services_stopped))) +
-  geom_col() +
-  theme_bw() +
-  theme(axis.title.y = element_blank()) +
-  labs(title = 'Suspension of services per party affiliation of the head') +
-  xlab("No party status") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(labels = c("Represent some party", "No party")) +
-  scale_fill_manual(name = "Whether provision of \nservices was stopped"
-                    ,labels =c("No", "Yes")
-                   ,values = c("#1DB5C4", "#EC4544"))
-```
-
 
 <mark>4.2</mark> **Interruption of garbage collection**
-
 ```{r services-garbage, fig.height=5, fig.width=12,class.source="fold-hide"}
 ds0 %>% 
   count(garbage_interruptions, garbage_functional) %>% 
@@ -613,59 +413,91 @@ ds0 %>%
   xlab("Hromada had interruption with garbage collection") +
   scale_y_continuous(labels = scales::percent) +
   scale_fill_manual(name = "Current status of garbage collection"
-                   ,values = c("#EC4544", "#1DB5C4"))
-```
-
-```{r fig.height=5, fig.width=12,class.source="fold-hide"}
-ds0 %>% 
-  group_by(military_action) %>% 
-  count(garbage_interruptions) %>% 
-  mutate(pct = n/sum(n)) %>% 
-  ggplot(aes(x = military_action , y = pct, fill = factor(garbage_interruptions))) +
-  geom_col() +
-  theme_bw() +
-  theme(axis.title.y = element_blank()) +
-  labs(title = 'Suspension of garbage collection per military actions status') +
-  xlab("Military actions status") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(name = "Whether garbage collection was stopped"
-                    ,labels =c("Hard to say", "No", "Yes")
-                   ,values = c("grey90", "#1DB5C4", "#EC4544"))
+                   ,values = c("firebrick2", "deepskyblue3"))
 ```
 
 
-<mark>4.3</mark> **Modeling of relation between suspension time of admin services and different predictors**
+<mark>4.3</mark> **Modeling of relation between suspencion time of admin services and different predictors**
 
 ```{r services-models, results="asis", class.source="fold-hide"}
+m1_services <-lm(data = ds0, 
+                 admin_services_time ~ log_income_total_2021 + income_own_pct + 
+                 type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m2_services <-lm(data = ds0,
+                 admin_services_time ~ log_income_total_2021 + income_own_pct +
+                  turnout_2020 +
+                  type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                  sex_head + age_head + education_head + incumbent + rda)
+
+m3_services <-lm(data = ds0,
+              admin_services_time  ~ log_income_total_2021 + income_own_pct +
+               turnout_2020 +
+               type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda +
+               youth_councils + youth_centers + region_en * sum_osbb_2020)
 
 
+stargazer(m1_services, m2_services, m3_services, single.row = T, type = 'html')
 ```
 
 <mark>4.4</mark> **Modeling of relation between garbage collection interruptions and different predictors**
-
 ```{r garbage-models, results="asis", class.source="fold-hide"}
+m1_garbage <-glm(data = d_garbage, 
+                 garbage_interruptions ~ log_income_total_2021 + income_own_pct + 
+                 type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary,
+                 family = "binomial")
 
+m2_garbage <-glm(data = d_garbage,
+                 garbage_interruptions ~ log_income_total_2021 + income_own_pct +
+                  turnout_2020 +
+                  type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                  sex_head + age_head + education_head + incumbent + rda,
+                  family = "binomial")
+
+m3_garbage <-glm(data = d_garbage,
+              garbage_interruptions  ~ log_income_total_2021 + income_own_pct +
+               turnout_2020 +
+               type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+               sex_head + age_head + education_head + incumbent + rda +
+               youth_councils + youth_centers + region_en * sum_osbb_2020,
+               family = "binomial")
+
+
+stargazer(m1_garbage, m2_garbage, m3_garbage, single.row = T, type = 'html')
 ```
+
 
 # 5. Volunteers/humanitarian hubs
 
-<mark>5.1</mark> **Relation between number of hubs and total population**
+<mark>5.1</mark> **Modelling of % of volunteers out of total population and different predictors**
 
-```{r hubs, fig.height=5, fig.width=12,class.source="fold-hide"}
-#TO CHANGE
-d_volunteers %>% 
-  ggplot(aes(x = total_population_2022, y = humanitarian_hubs)) +
-  geom_point() +
-  geom_smooth(method = "lm", se=F) +
-  theme_bw() +
-  labs(title = 'Relation between volunteers per capita and humanitarian hubs') +
-  xlab("% of volunteers out of total population")
+```{r models-volunteers, results = "asis", class.source="fold-hide"}
+  
+m1_volunteers <-lm(data = d_volunteers, 
+                   volunteers_per_capita ~ log_income_total_2021 + income_own_pct + 
+                   type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
 
+m2_volunteers <-lm(data = d_volunteers,
+                   volunteers_per_capita ~ log_income_total_2021 + income_own_pct +
+                   turnout_2020 +
+                   type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                   sex_head + age_head + education_head + incumbent + rda)
+
+m3_volunteers <-lm(data = d_volunteers,
+                   volunteers_per_capita  ~ log_income_total_2021 + income_own_pct +
+                   turnout_2020 +
+                   type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                   sex_head + age_head + education_head + incumbent + rda +
+                   youth_councils + youth_centers + region_en * sum_osbb_2020)
+
+
+stargazer(m1_volunteers, m2_volunteers, m3_volunteers, single.row = T, type = 'html')
 ```
 
 <mark>5.2</mark> **Relation between % of volunteers and number of hubs**
 
-```{r, fig.height=5, fig.width=12,class.source="fold-hide"}
+```{r hubs, fig.height=5, fig.width=12,class.source="fold-hide"}
 d_volunteers %>% 
   ggplot(aes(x = volunteers_per_capita, y = humanitarian_hubs)) +
   geom_point() +
@@ -676,19 +508,29 @@ d_volunteers %>%
 
 ```
 
-<mark>5.3</mark> **Relation between % of volunteers and total population**
+<mark>5.3</mark> **Modelling of n of hubs and different predictors**
 
-```{r results = "asis", class.source="fold-hide"}
-#TO CHANGE
-d_volunteers %>% 
-  filter(total_population_2022 <200000) %>% 
-  ggplot(aes(x = log(total_population_2022) , y = volunteers_number, color = type)) +
-  geom_point() +
-  geom_smooth(method = "lm", se=F) +
-  theme_bw() +
-  labs(title = 'Relation between volunteers per capita and humanitarian hubs') +
-  xlab("% of volunteers out of total population")
+```{r models-hubs, results = "asis", class.source="fold-hide"}
+  
+m1_hubs<-lm(data = d_volunteers, 
+                    humanitarian_hubs ~ volunteers_per_capita + log_income_total_2021 + income_own_pct + 
+                     type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
 
+m2_hubs <-lm(data = d_volunteers,
+                    humanitarian_hubs ~ volunteers_per_capita + log_income_total_2021 + income_own_pct + 
+                    turnout_2020 +
+                     type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                     sex_head + age_head + education_head + incumbent + rda)
+
+m3_hubs <-lm(data = d_volunteers,
+                    humanitarian_hubs ~ volunteers_per_capita + log_income_total_2021 + income_own_pct + 
+                    turnout_2020 +
+                     type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                     sex_head + age_head + education_head + incumbent + rda +
+                     youth_councils + youth_centers + region_en * sum_osbb_2020)
+
+
+stargazer(m1_hubs, m2_hubs, m3_hubs, single.row = T, type = 'html')
 ```
 
 # 6. Aid providers
@@ -753,6 +595,7 @@ ds0 %>%
 
 ```
 
+round(5.231342, 2)
 
 <mark>6.3</mark> **How many hromadas covered by aid from each country ?**
 
@@ -774,8 +617,8 @@ ds0 %>%
         axis.title.y = element_blank()) 
 ```
 
-
 <mark>6.4</mark> **How many hromadas covered by aid from each aid provider?**
+
 
 ```{r ingos-rating, fig.height=12, fig.width=12,class.source="fold-hide"}
 
@@ -796,45 +639,79 @@ ds0 %>%
 ```
 
 
-<mark>6.5</mark> **Relation between population and number of organizations**
+
+
+
+<mark>6.5</mark> **Modelling of relation between number of countries provided aid and different predictors**
 
 ```{r models-countries, results = "asis", class.source="fold-hide"}
-ds0 %>% 
-  ggplot(aes(x = log(total_population_2022), y= ingo_count)) +
-  geom_point() + 
-  geom_smooth(method = "lm")
-  theme(axis.text.y = element_text(size = 11),
-        axis.title.y = element_blank())   
+  
+m1_countries <-lm(data = ds0, 
+              countries_count ~ log_income_total_2021 + income_own_pct + 
+              log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
 
+m2_countries<-lm(data = ds0, 
+                 countries_count ~ log_income_total_2021 + income_own_pct + 
+              log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+              sex_head + age_head + education_head + incumbent + rda)
+
+m3_countries<-lm(data = ds0, 
+                 countries_count ~ log_income_total_2021 + income_own_pct + 
+                   log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                   sex_head + age_head + education_head + incumbent + rda +
+                   youth_councils + youth_centers + region_en * sum_osbb_2020)
+
+
+stargazer(m1_countries, m2_countries, m3_countries, single.row = T, type = 'html')
 ```
-
-<mark>6.6</mark> **Relation between population and number of organizations**
-```{r models-countries, results = "asis", class.source="fold-hide"}
-ds0 %>% 
-  ggplot(aes(x = log(total_population_2022), y= ingo_count)) +
-  geom_point() + 
-  geom_smooth(method = "lm")
-  theme(axis.text.y = element_text(size = 11),
-        axis.title.y = element_blank())   
-
-```
-
 
 
 <mark>6.6</mark> **Modelling of relation between number of aid providers and different predictors**
 
 ```{r models-aid-providers, results = "asis", class.source="fold-hide"}
   
+m1_providers <-lm(data = ds0, 
+              ingo_count ~ log_income_total_2021 + income_own_pct + 
+              log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
 
+m2_providers <-lm(data = ds0, 
+                 ingo_count ~ log_income_total_2021 + income_own_pct + 
+              log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+              sex_head + age_head + education_head + incumbent + rda)
+
+m3_providers <-lm(data = ds0, 
+                 ingo_count ~ log_income_total_2021 + income_own_pct + 
+                   log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                   sex_head + age_head + education_head + incumbent + rda +
+                   youth_councils + youth_centers + region_en * sum_osbb_2020)
+
+
+stargazer(m1_countries, m2_countries, m3_countries, single.row = T, type = 'html')
 ```
+
+
 
 # 7. Aid received
 
 <mark>7.1</mark> **Modelling of relation between volume of received aid and different predictors**
 
 ```{r aid received, results = "asis", echo=FALSE, warning = FALSE, class.source="fold-hide"}
+m1_aid_received <-lm(data = ds0, 
+                  aid_received_volume ~ log_income_total_2021 + income_own_pct + volunteers_number + humanitarian_hubs +
+                    log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
 
+m2_aid_received <-lm(data = ds0, 
+                     aid_received_volume ~ log_income_total_2021 + income_own_pct + volunteers_number + humanitarian_hubs +
+                   log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                   sex_head + age_head + education_head + incumbent + rda)
 
+m3_aid_received <-lm(data = ds0, 
+                     aid_received_volume ~ log_income_total_2021 + income_own_pct + volunteers_number + humanitarian_hubs +
+                   log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                   sex_head + age_head + education_head + incumbent + rda +
+                   youth_councils + youth_centers + region_en * sum_osbb_2020)
+
+stargazer(m1_aid_received, m2_aid_received, m3_aid_received, single.row = T, type = 'html')
 
 ```
 
@@ -843,8 +720,23 @@ ds0 %>%
 <mark>8.1</mark> **Modelling of relation between relocated enterprises and different predictors**
 
 ```{r relocated, results = "asis", echo=FALSE, warning = FALSE, class.source="fold-hide"}
+m1_relocated <-lm(data = ds0, 
+                  enterprises_relocated ~ log_income_total_2021 + income_own_pct + dfrr_executed +
+                    log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+m2_relocated <-lm(data = ds0, 
+                  enterprises_relocated ~ log_income_total_2021 + income_own_pct + dfrr_executed + volunteers_number + humanitarian_hubs +
+                   log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                   sex_head + age_head + education_head + incumbent + rda)
+
+m3_relocated <-lm(data = ds0, 
+                  enterprises_relocated ~ log_income_total_2021 + income_own_pct + dfrr_executed + volunteers_number + humanitarian_hubs +
+                   log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary +
+                   sex_head + age_head + education_head + incumbent + rda +
+                   youth_councils + youth_centers + region_en * sum_osbb_2020)
 
 
+stargazer(m1_relocated, m2_relocated, m3_relocated, single.row = T, type = 'html')
 
 ```
 

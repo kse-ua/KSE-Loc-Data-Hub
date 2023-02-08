@@ -51,7 +51,7 @@ message_chunks <- FALSE #Toggle for debugging.
 options(width=100) # number of characters to display in the output (dflt = 80)
 ggplot2::theme_set(ggplot2::theme_bw()) # common theme for all graphs
 read_chunk("./analysis/survey-overview/survey-overview.R") #This allows knitr to call chunks tagged in the underlying *.R file.
-Sys.setlocale("LC_CTYPE", "ukr")
+# Sys.setlocale("LC_CTYPE", "ukr")
 ```
 
 # Environment

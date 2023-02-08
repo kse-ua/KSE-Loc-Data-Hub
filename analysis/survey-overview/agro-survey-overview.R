@@ -221,6 +221,7 @@ ds0 <-
     ,income_own_pct = income_own_2021/income_total_2021
     ,military_action = factor(military_action, labels = c("No", "Yes, Feb-March", "Yes, currently"))
     ,occupation = factor(occupation, labels = c("No", "Yes, was occupied", "Yes, currently occupied"))
+    ,admin_services_stopped = recode(admin_services_stopped, "Так" = 1, "Ні" = 0)
   ) 
 
 
@@ -240,10 +241,34 @@ d_garbage <- ds0 %>%
   )
 
 
-# ---- inspect-data-0 ------------------------------------------------------------
+
+
+
+
+# ---- idps------------------------------------------------------------
+
+
+
+
+# ---- idps------------------------------------------------------------
+
+hist(log(ds0$idp_number))
+
+m1_idps <-lm(data = ds0 %>% filter(!is.na(idp_number)), 
+             log(idp_number) ~ log_income_total_2021 + income_own_pct +
+               type + area + log(total_population_2022) + urban_pct + n_settlements + region_en + occupation + military_action + voluntary)
+
+
+
+
+
+
+
+
+
 
 # ---- tweak-data-1 ------------------------------------------------------------
-# compute total binary score (preparations are made at all, regardless of timing)
+
 
 
 
