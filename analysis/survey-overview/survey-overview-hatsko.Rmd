@@ -1506,18 +1506,21 @@ d %>%
   count(dftg_creation) %>%
   mutate(prop = n/sum(n)
          ,pct = scales::percent(prop, accuracy = 1)) %>% 
-  ggplot(aes(x=prop, y = region_en, fill = dftg_creation))+
+  ggplot(aes(x=prop, y = region_en, fill = fct_rev(dftg_creation)))+
   geom_col(position = position_dodge())+
-  geom_text(aes(label = pct), hjust = -.5,position = position_dodge(width = .9))+
+  geom_text(aes(label = pct), hjust = .3, vjust = -.4, position = position_dodge(width = .9))+
   scale_x_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
-  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T)
-  )+
+  scale_fill_viridis_d(
+    begin = 0, end = .8, direction = 1, option = "plasma",guide= guide_legend(reverse=F)
+    )+  
   labs(
     title = "Did hromadas create a voluntary formation of a territorial community?"
-    ,fill = "Region"
+    ,fill = NULL
     ,x = "Percent of respondents in each group"
     , y = NULL
-  )
+  )+
+  coord_flip()
+
 ```
 
 > Here you can see the timeline of creation of these forces for our sample.
