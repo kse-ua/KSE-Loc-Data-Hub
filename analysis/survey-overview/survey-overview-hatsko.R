@@ -406,6 +406,46 @@ ds1_info <-
 
 # ---- testing chunks ----------------------------------------------------------
 
+d <- ds1_problem %>% select(contains('index'), region_en, hromada_code,
+                            occupation_and_combat_fct, -index) %>%
+  pivot_longer(-c(region_en, occupation_and_combat_fct, hromada_code), 
+               names_to = 'engagement', values_to = 'index')
+
+ds1_problem %>% select(contains('index'), -index, -problem_additive_index) %>% 
+  summarise(across(everything(.), ~mean(.x, na.rm = T))) %>%
+  mutate(group = "all") %>%
+  pivot_longer(-group, names_to = 'engagement', values_to = "index") %>%
+  mutate(engagement = factor(engagement,
+                             levels = c('problem_info_index', 'problem_consultation_index',
+                                        'problem_proposition_index', 'problem_system_index',
+                                        'problem_feedback_index', 'problem_execution_index'))) %>%
+  ggplot(aes(x = engagement, y = index, fill = engagement)) +
+    geom_col()+
+    geom_text(aes(label = round(index, 2)), hjust = .6, vjust = -.6) + 
+    scale_y_continuous(expand = expansion(add = c(0,1))) +
+    scale_x_discrete(labels=c('problem_info_index' = "Information",
+                              'problem_consultation_index' = "Consultation", 
+                              'problem_proposition_index' = "Involvement", 
+                              'problem_system_index' = "Systematic Exchange", 
+                              'problem_feedback_index' = "Feedback",
+                              'problem_execution_index' = "Execution")) +
+    scale_fill_viridis_d(begin = 0, end = .8, direction = -1, 
+                                  option = "plasma",guide= guide_legend(reverse=T))+
+  labs(
+    title = "How hromadas engaged different actors in solving critical problems?"
+    ,fill = NULL
+    ,x = "Types of engagement"
+    , y = "Index value"
+  ) + 
+  guides(fill = "none") 
+
+  
+
+
+
+
+
+
 # ---- save-to-disk ------------------------------------------------------------
 
 # ---- publish ------------------------------------------------------------
