@@ -498,7 +498,7 @@ predictor_vars_categorical_new <- c(
   ,'polit_work'
   ,'party_national_winner'
   ,'no_party'
-  ,'war_zone_27_04_2022'
+  # ,'war_zone_27_04_2022'
   ,'train_station'
   ,'edem_petitions' # binary from above
   ,'edem_consultations'# binary from above
@@ -508,7 +508,7 @@ predictor_vars_categorical_new <- c(
   ,'youth_centers_b' # наявність молодіжних центрів
   ,'youth_councils_b' # наявність молодіжних рад
   ,'business_support_centers_b' # наявність центру підтримки бізнесу
-  ,'occupation_and_combat'
+  # ,'occupation_and_combat'
 )
 
 predictor_vars <- c(
@@ -643,7 +643,7 @@ ds_general1 <-
   ) %>%
   rename(square = area, urban_population_2022 = urban_popultaion_2022) %>%
   mutate(country = "Ukraine") 
-  
+
 # inspect outcomes
 ds1 %>% select(all_of(outcomes_vars_new)) %>% explore::describe_all() %>%neat_DT()
 ggplot(reshape2::melt(ds1[outcomes_vars_new]),aes(x=value)) + geom_histogram() + facet_wrap(~variable, scales = 'free')
@@ -859,7 +859,7 @@ d <-
     ,depdist = "gaussian"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     ,explanatory_categorical = predictor_vars_categorical_new
-    ,confounder = 'war_zone'
+    ,confounder = c('war_zone', 'city')
   )
 d %>% plot_complex_scan()
 
