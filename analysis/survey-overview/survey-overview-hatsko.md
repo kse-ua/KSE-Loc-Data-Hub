@@ -3,7 +3,7 @@ title: "Resilience Survey Overview"
 author:
 - Valentyn Hatsko
 - Andriy Koval
-date: 'Last updated: 2023-02-09'
+date: 'Last updated: 2023-02-14'
 always_allow_html: true
 output:
   html_document:
@@ -483,6 +483,13 @@ Next, we define useful sets of variable names to be used throughout the report
 ```
 
 ```
+[1] "skills_needed/fundraising"        "skills_needed/project_management"
+[3] "skills_needed/longterm_planning"  "skills_needed/crisis_planning"   
+[5] "skills_needed/data_analysis"      "skills_needed/human_resourse"    
+[7] "skills_needed/other"             
+```
+
+```
 [1] "own_income_prop_2021"   "transfert_prop_2021"    "military_tax_prop_2021"
 [4] "pdfo_prop_2021"         "unified_tax_prop_2021"  "property_tax_prop_2021"
 [7] "excise_duty_prop_2021" 
@@ -619,12 +626,18 @@ ds0 <-
                                             type == 'селищна' ~ 'urban village',
                                             type == 'міська' ~ 'urban'),
     type = factor(type, levels  = c("village", "urban village", "urban")),
-    help_military_count         = rowSums(across(all_of(military_help_short)), na.rm = T),
-    idp_help_count              = rowSums(across(all_of(idp_help), na.rm = T)),
+    help_military_count         = rowSums(across(all_of(military_help_short))),
+    idp_help_count              = rowSums(across(all_of(idp_help))),
     occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
                                             TRUE ~ 1),
     occupation_and_combat_fct   = factor(occupation_and_combat, 
-                                         labels = c('Rear communities', 'Communities exposed to war (n = 22)')),
+                                         labels = c('Rear communities', 
+                                                    'Communities exposed to war (n = 22)')),
+    occupation_fct              = factor(case_when(occupation == 'not_occupied' ~ 0,
+                                                   NA ~ NA_integer_,
+                                                   TRUE ~ 1),
+                                           labels = c('Rear communities', 
+                                                    'Deoccupied communities (n = 19)')),
     voluntary_fct               = factor(voluntary,
                                          labels = c('Top-down amalgamated', 'Voluntary amalgamated')),
     oblast_name_en              = case_when(oblast_name_en == 'Vonyn' ~ "Volyn",
@@ -834,8 +847,8 @@ ds0 %>% explore::describe_all() %>%neat_DT()
 ```
 
 ```{=html}
-<div id="htmlwidget-d45d0a4c495522f66438" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-d45d0a4c495522f66438">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283","284","285","286"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_now_text","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military_text","transport_help_communal","transport_help_bought","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share","occupation_and_combat","occupation_and_combat_fct","voluntary_fct"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","fct","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","fct","fct"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,0,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,83,46,46,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,26,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,8,0,0,0,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,0,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,18.8,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,5.8,0,0,0,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6,0,0,0],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,106,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,56,23,32,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,38,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,10,22,11,5,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117,2,2,2],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,null,null,null,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,1,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.62,0,0,null,null],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,null,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,null,null,null,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,4.82,13.72,4.29,2.99,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,10.03,4.66,0.16,null,null],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,null,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,null,null,null,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,9,29,10,4,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,62.72,33.43,1,null,null]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-b46695f55991f4cba757" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b46695f55991f4cba757">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"100\" data-scale=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"138\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.83\" data-max=\"191541757\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"-0.01\" data-max=\"197322877.2\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1288755475.83\" data-scale=\"2\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283","284","285","286","287"],["index","today","_id","hromada_code","hromada_name","hromada_full_name","raion_code","raion_name","oblast_code","oblast_name","type","occupation","military_action","population_text","partners_text","friends_text","state_communication","prep_first_aid_water","prep_first_aid_fuel","prep_reaction_plan","prep_evacuation_plan","prep_reaction_plan_oth_hromadas","prep_reaction_plan_oda","prep_dftg_creation","prep_national_resistance","prep_starosta_meeting","prep_communal_meetiing","prep_online_map","prep_shelter_list","prep_notification_check","prep_backup","prep_partly_backup","shelter_capacity_before_text","shelter_capacity_now_text","telegram","viber","facebook","chat_help","hotline","telegram_link","facebook_link","head_hromada_communication","dftg_creation","dftg_creation_date","help_for_military","help_for_military/rooms","help_for_military/transport","help_for_military/money","help_for_military/products","help_for_military/other","help_for_military_text","transport_help_communal","transport_help_bought","percent_working_march","percent_working_now","commun_between_hromadas","evacuation","idp_accept","idp_registration_date","idp_registration_number","idp_real_number","idp_help","idp_help/communal_placement","idp_help/private_placement","idp_help/regular_meal","idp_help/humanitar_help","idp_help/fundraising","idp_help/employ","idp_help/psych_help","idp_help/law_help","idp_help/transit_center","idp_place_rooms","idp_room_number","idp_child_education","special_fund_relocation","special_fund_relocation_needs","special_fund_relocation_needs/state_functions","special_fund_relocation_needs/defense","special_fund_relocation_needs/public_order","special_fund_relocation_needs/economic_activity","special_fund_relocation_needs/environment","special_fund_relocation_needs/utilities","special_fund_relocation_needs/spirit_development","special_fund_relocation_needs/education","special_fund_relocation_needs/social_protection","special_fund_relocation_needs/healthcare","relocated_companies_text","created_jobs","bussiness_stimules","bussiness_stimules/tax_benefits","bussiness_stimules/free_rooms","bussiness_stimules/education","bussiness_stimules/other","bussiness_stimules_none","bussiness_stimules_other","humanitarian_hub","hromada_cooperation","hromada_cooperation/medicine","hromada_cooperation/food","hromada_cooperation/pensions","hromada_cooperation/evacuation","hromada_cooperation/other","hromada_cooperation/none","hromada_cooperation_text","is_damaged","percent_damaged","damage_evaluation_persons","damage_evaluation_communal","damage_evaluation_bussiness","reconstruction_plan","reconstruction_financing","reconstruction_financing_text","international_projects","percent_reconstructed","finance_school_shelters","finance_school_shelters_coded","info_campaign","reserves","count_power_sources","count_heaters_need","solid_fuel_boiler","no_school_days","no_school_days_coded","hromada_exp","hromada_problem_info","hromada_problem_info/idp","hromada_problem_info/citizens","hromada_problem_info/bussiness","hromada_problem_info/experts","hromada_problem_info/ngo","hromada_problem_info/nobody","hromada_problem_consultation","hromada_problem_consultation/idp","hromada_problem_consultation/citizens","hromada_problem_consultation/bussiness","hromada_problem_consultation/experts","hromada_problem_consultation/ngo","hromada_problem_consultation/nobody","hromada_problem_proposition","hromada_problem_proposition/idp","hromada_problem_proposition/citizens","hromada_problem_proposition/bussiness","hromada_problem_proposition/experts","hromada_problem_proposition/ngo","hromada_problem_proposition/nobody","hromada_problem_system","hromada_problem_system/idp","hromada_problem_system/citizens","hromada_problem_system/bussiness","hromada_problem_system/experts","hromada_problem_system/ngo","hromada_problem_system/nobody","hromada_problem_feedback","hromada_problem_feedback/idp","hromada_problem_feedback/citizens","hromada_problem_feedback/bussiness","hromada_problem_feedback/experts","hromada_problem_feedback/ngo","hromada_problem_feedback/nobody","hromada_problem_execution","hromada_problem_execution/idp","hromada_problem_execution/citizens","hromada_problem_execution/bussiness","hromada_problem_execution/experts","hromada_problem_execution/ngo","hromada_problem_execution/nobody","skills_needed","skills_needed/fundraising","skills_needed/project_management","skills_needed/longterm_planning","skills_needed/crisis_planning","skills_needed/data_analysis","skills_needed/human_resourse","skills_needed/other","skills_needed_text","contact_text","evacuation_001","hromada_exp_problem","_uuid","_submission_time","_validation_status","_status","_submitted_by","_tags","region_en","idp_help/communal_placement_number","idp_help/private_placement_number","idp_help/regular_meal_number","idp_help/humanitar_help_number","idp_help/fundraising_number","idp_help/employ_number","idp_help/psych_help_number","idp_help/law_help_number","idp_help/transit_center_number","idp_help_count","prep_count","comm_channels_count","help_military_count","hromada_cooperation_count","dftg_creation_time","idp_registration_time","prep_winter_count","oblast_center","hromada_center_code","hromada_center","lat_center","lon_center","travel_time","n_settlements","square","occipied_before_2022","total_population_2022","urban_population_2022","urban_pct","budget_code","budget_name","oblast_name_en","region_en.x","region_code_en","income_total_2021","income_transfert_2021","income_military_2021","income_pdfo_2021","income_unified_tax_2021","income_property_tax_2021","income_excise_duty_2021","income_own_2021","own_income_prop_2021","transfert_prop_2021","military_tax_prop_2021","pdfo_prop_2021","unified_tax_prop_2021","property_tax_prop_2021","excise_duty_prop_2021","own_income_change","own_prop_change","total_income_change","income_own","income_total","income_transfert","dfrr_executed","turnout_2020","sex_head","age_head","education_head","incumbent","rda","not_from_here","party","enterpreuner","unemployed","priv_work","polit_work","communal_work","ngo_work","party_national_winner","no_party","male","high_educ","sum_osbb_2020","edem_total","edem_petitions","edem_consultations","edem_participatory_budget","edem_open_hromada","youth_councils","youth_centers","business_support_centers","region_en.y","creation_date","creation_year","time_before_24th","voluntary","war_zone_27_04_2022","war_zone_20_06_2022","war_zone_23_08_2022","war_zone_10_10_2022","income_own_per_capita","income_total_per_capita","income_tranfert_per_capita","idp_registration_share","idp_real_share","idp_child_share","occupation_and_combat","occupation_and_combat_fct","occupation_fct","voluntary_fct"],["dbl","dat","dbl","chr","chr","chr","chr","chr","chr","chr","fct","chr","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dat","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","chr","chr","chr","dat","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","lgl","chr","dat","lgl","chr","lgl","lgl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","dbl","dbl","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","chr","chr","chr","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dbl","chr","dbl","dbl","dbl","chr","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","chr","dat","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","dbl","fct","fct","fct"],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,4,6,1,2,7,7,5,7,2,6,9,4,7,10,10,0,0,0,0,0,0,0,81,6,0,0,41,6,6,6,6,6,6,83,46,46,1,0,12,0,8,16,9,16,8,8,8,8,8,8,8,8,8,8,46,131,15,0,77,77,77,77,77,77,77,77,77,77,77,11,8,8,8,8,8,8,8,99,132,132,132,132,132,132,132,132,136,0,100,100,100,100,105,105,129,14,105,8,16,11,13,12,17,27,22,26,0,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,0,0,0,0,0,0,0,0,130,15,12,138,0,0,138,0,138,138,0,9,9,9,9,9,9,9,9,9,8,0,0,6,0,16,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,16,16,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0.7,0.7,0.7,0.7,0.7,0,2.9,4.3,0.7,1.4,5.1,5.1,3.6,5.1,1.4,4.3,6.5,2.9,5.1,7.2,7.2,0,0,0,0,0,0,0,58.7,4.3,0,0,29.7,4.3,4.3,4.3,4.3,4.3,4.3,60.1,33.3,33.3,0.7,0,8.7,0,5.8,11.6,6.5,11.6,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,33.3,94.9,10.9,0,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,55.8,8,5.8,5.8,5.8,5.8,5.8,5.8,5.8,71.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,95.7,98.6,0,72.5,72.5,72.5,72.5,76.1,76.1,93.5,10.1,76.1,5.8,11.6,8,9.4,8.7,12.3,19.6,15.9,18.8,0,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,18.8,0,0,0,0,0,0,0,0,94.2,10.9,8.7,100,0,0,100,0,100,100,0,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,5.8,0,0,4.3,0,11.6,29.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,31.9,0.7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6.5,11.6,11.6,0,0,0,0],[138,30,138,138,135,137,76,76,22,22,3,5,4,120,11,15,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,105,106,3,3,3,3,3,58,133,5,3,51,20,3,3,3,3,3,56,23,32,26,29,6,3,2,32,120,110,68,3,3,3,3,3,3,3,3,3,6,8,79,2,45,3,3,3,3,3,3,3,3,3,3,12,5,11,3,3,3,3,3,32,3,5,3,3,2,3,3,3,3,2,5,3,3,3,3,3,8,11,6,109,82,3,3,3,3,3,61,38,2,18,3,3,3,3,3,3,23,3,3,3,3,3,3,21,3,3,3,3,3,3,24,3,3,3,3,3,3,23,3,3,3,3,3,3,22,3,3,3,3,3,3,42,2,2,2,2,2,2,2,9,124,4,1,138,138,1,1,1,1,5,88,79,52,120,36,31,88,77,37,10,22,11,6,4,32,51,6,2,138,138,138,138,134,54,137,1,138,95,96,138,137,22,5,5,138,138,91,138,138,138,138,138,52,52,10,42,12,30,15,71,42,58,138,138,138,95,138,2,35,2,2,2,2,24,2,2,2,2,2,1,2,2,2,2,38,5,2,2,2,2,3,4,9,5,15,6,15,2,2,2,2,2,138,138,138,130,123,117,2,2,2,2],[2,null,191541757,null,null,null,null,null,null,null,null,null,null,140,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,0,0,0,0,0,null,null,null,null,null,null,0,0,0,0,0,null,null,null,0,0,null,null,null,null,23,23,null,0,0,0,0,0,0,0,0,0,null,null,0,null,null,0,0,0,0,0,0,0,0,0,0,null,null,null,0,0,0,0,0,null,null,null,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,null,null,null,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,null,0,0,0,0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,1,2,0,0,0,null,null,0,0,null,null,45.68,22.49,0,1,42.2,0,3359,0,0,null,null,null,null,null,10846101.81,5163331,0,1056172.94,227066.07,224034.84,8271,3131966.65,0.14,0.14,0,0.09,0.01,0.01,0,-0.83,-0.39,-0.43,1972353.16,11030764.44,5642000,78.5,0.27,null,32,null,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,null,2015,556.79,0,0,0,0,0,507.13,2607.8,962.57,0.01,0.62,0,0,null,null,null],[78.2,null,197322877.2,null,null,null,null,null,null,null,null,null,null,21136.72,1.34,1.34,null,1.04,1.08,1.41,1,0.55,0.84,1.02,0.56,1.12,1.13,0.78,1.08,1.24,0.55,0.86,null,null,0.6,0.71,1.8,0.33,0.86,null,null,null,null,null,null,0.73,0.7,0.73,0.97,0.42,null,null,null,89.22,91.77,null,null,null,null,2001.63,2326.16,null,0.71,0.65,0.41,0.99,0.26,0.22,0.69,0.61,0.28,null,null,64.67,null,null,0.23,0.51,0.34,0.13,0.08,0.49,0.03,0.39,0.39,0.28,null,null,null,0.19,0.18,0.45,0.3,0.19,null,null,null,0.33,0.33,0,0.5,0.33,0.33,null,null,null,null,null,null,null,null,null,null,null,null,853167.02,0.86,0.93,0.9,0.43,0.34,null,null,null,null,0.38,0.64,0.58,0.09,0.35,0.08,null,0.34,0.39,0.33,0.09,0.27,0.24,null,0.28,0.46,0.49,0.08,0.29,0.21,null,0.26,0.45,0.55,0.16,0.34,0.16,null,0.36,0.45,0.47,0.11,0.33,0.16,null,0.15,0.37,0.46,0.07,0.38,0.21,null,0.75,0.41,0.32,0.49,0.26,0.32,0.06,null,null,null,null,null,null,null,null,null,null,null,1590.84,1037.82,1107.57,1977.64,461.12,623.09,1618.08,1513.87,784.98,4.82,13.72,4.29,3.13,0.08,null,null,3.11,0.01,null,null,49.07,29.43,93.67,22.23,410.51,0,22076.86,12499.06,0.35,null,null,null,null,null,91899785.68,37659862.26,1815527.65,31364648.7,6130599.53,8123370.3,3741911.43,54239923.43,0.51,0.49,0.01,0.27,0.06,0.1,0.03,0.04,0.01,-0.01,56792346.01,92278010.92,35485664.91,32738.42,0.42,null,52.36,null,0.54,0.07,0.11,null,0.02,0.02,0.08,0.83,0.04,0,0.16,0.43,0.27,0.93,35.48,0.62,0.22,0.16,0.15,0.09,0.1,0.22,0.56,null,null,2018.22,1209.18,0.58,0.08,0.12,0.12,0.12,2244.72,4224.02,1979.3,0.1,10.03,4.66,0.16,null,null,null],[151,null,206471695,null,null,null,null,null,null,null,null,null,null,243000,20,17,null,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,null,null,2,2,2,2,2,null,null,null,null,null,null,1,1,1,1,1,null,null,null,100,100,null,null,null,null,20000,60000,null,1,1,1,1,1,1,1,1,1,null,null,800,null,null,1,1,1,1,1,1,1,1,1,1,null,null,null,1,1,1,1,1,null,null,null,1,1,0,1,1,1,null,null,null,null,null,null,null,null,null,null,null,null,13936323,1,1,1,1,1,null,null,null,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,null,1,1,1,1,1,1,1,null,null,null,null,null,null,null,null,null,null,null,20000,16331,20000,20000,8500,20000,20000,20000,16331,9,29,10,4,3,null,null,5,1,null,null,52.06,36.73,288,97,2497.1,0,317752,305239,1,null,null,null,null,null,1288755475.83,346574777.46,47254976.84,608781726.22,124876522.55,78663469.37,73206177.69,942180698.37,0.86,0.86,0.14,0.59,0.13,0.44,0.27,1.69,0.23,0.89,969725144.97,1248182878.17,315122334.64,757596.25,0.65,null,71,null,1,1,1,null,1,1,1,1,1,0,1,1,1,1,638,4,1,1,1,1,2,4,17,null,null,2020,2383.79,1,1,1,1,1,7418.91,9388.75,3470.86,0.63,62.72,33.43,1,null,null,null]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>variable<\/th>\n      <th>type<\/th>\n      <th>na<\/th>\n      <th>na_pct<\/th>\n      <th>unique<\/th>\n      <th>min<\/th>\n      <th>mean<\/th>\n      <th>max<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":6,"autoWidth":false,"columnDefs":[{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"orderClasses":false,"orderCellsTop":true,"lengthMenu":[6,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
 ```
 
 # 0. Introduction
@@ -861,7 +874,7 @@ meta_survey %>% filter(group=="preamble") %>% pull(label) %>% cat()
 
 <mark>1.1</mark> How many hromadas contributed responses to so far?
 
-> As of 2023-02-09, 138 hromadas contributed valid response to the survey
+> As of 2023-02-14, 138 hromadas contributed valid response to the survey
 
 <mark>1.2</mark> What regions are represented in this sample? 
 
@@ -901,12 +914,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="ukmjvcweys" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="ugvvzrulhx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#ukmjvcweys .gt_table {
+#ugvvzrulhx .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -931,7 +944,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_heading {
+#ugvvzrulhx .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -943,12 +956,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_caption {
+#ugvvzrulhx .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#ukmjvcweys .gt_title {
+#ugvvzrulhx .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -960,7 +973,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#ukmjvcweys .gt_subtitle {
+#ugvvzrulhx .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -972,13 +985,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#ukmjvcweys .gt_bottom_border {
+#ugvvzrulhx .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_col_headings {
+#ugvvzrulhx .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -993,7 +1006,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_col_heading {
+#ugvvzrulhx .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1013,7 +1026,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#ukmjvcweys .gt_column_spanner_outer {
+#ugvvzrulhx .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1025,15 +1038,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#ukmjvcweys .gt_column_spanner_outer:first-child {
+#ugvvzrulhx .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#ukmjvcweys .gt_column_spanner_outer:last-child {
+#ugvvzrulhx .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#ukmjvcweys .gt_column_spanner {
+#ugvvzrulhx .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1045,7 +1058,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#ukmjvcweys .gt_group_heading {
+#ugvvzrulhx .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1071,7 +1084,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#ukmjvcweys .gt_empty_group_heading {
+#ugvvzrulhx .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1086,15 +1099,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#ukmjvcweys .gt_from_md > :first-child {
+#ugvvzrulhx .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#ukmjvcweys .gt_from_md > :last-child {
+#ugvvzrulhx .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#ukmjvcweys .gt_row {
+#ugvvzrulhx .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1113,7 +1126,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#ukmjvcweys .gt_stub {
+#ugvvzrulhx .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1126,7 +1139,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ukmjvcweys .gt_stub_row_group {
+#ugvvzrulhx .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1140,11 +1153,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#ukmjvcweys .gt_row_group_first td {
+#ugvvzrulhx .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#ukmjvcweys .gt_summary_row {
+#ugvvzrulhx .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1154,16 +1167,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ukmjvcweys .gt_first_summary_row {
+#ugvvzrulhx .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_first_summary_row.thick {
+#ugvvzrulhx .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#ukmjvcweys .gt_last_summary_row {
+#ugvvzrulhx .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1173,7 +1186,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_grand_summary_row {
+#ugvvzrulhx .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1183,7 +1196,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ukmjvcweys .gt_first_grand_summary_row {
+#ugvvzrulhx .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1193,11 +1206,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_striped {
+#ugvvzrulhx .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#ukmjvcweys .gt_table_body {
+#ugvvzrulhx .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1206,7 +1219,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_footnotes {
+#ugvvzrulhx .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1220,7 +1233,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_footnote {
+#ugvvzrulhx .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -1229,7 +1242,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ukmjvcweys .gt_sourcenotes {
+#ugvvzrulhx .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1243,7 +1256,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#ukmjvcweys .gt_sourcenote {
+#ugvvzrulhx .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1251,64 +1264,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ukmjvcweys .gt_left {
+#ugvvzrulhx .gt_left {
   text-align: left;
 }
 
-#ukmjvcweys .gt_center {
+#ugvvzrulhx .gt_center {
   text-align: center;
 }
 
-#ukmjvcweys .gt_right {
+#ugvvzrulhx .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#ukmjvcweys .gt_font_normal {
+#ugvvzrulhx .gt_font_normal {
   font-weight: normal;
 }
 
-#ukmjvcweys .gt_font_bold {
+#ugvvzrulhx .gt_font_bold {
   font-weight: bold;
 }
 
-#ukmjvcweys .gt_font_italic {
+#ugvvzrulhx .gt_font_italic {
   font-style: italic;
 }
 
-#ukmjvcweys .gt_super {
+#ugvvzrulhx .gt_super {
   font-size: 65%;
 }
 
-#ukmjvcweys .gt_footnote_marks {
+#ugvvzrulhx .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#ukmjvcweys .gt_asterisk {
+#ugvvzrulhx .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#ukmjvcweys .gt_indent_1 {
+#ugvvzrulhx .gt_indent_1 {
   text-indent: 5px;
 }
 
-#ukmjvcweys .gt_indent_2 {
+#ugvvzrulhx .gt_indent_2 {
   text-indent: 10px;
 }
 
-#ukmjvcweys .gt_indent_3 {
+#ugvvzrulhx .gt_indent_3 {
   text-indent: 15px;
 }
 
-#ukmjvcweys .gt_indent_4 {
+#ugvvzrulhx .gt_indent_4 {
   text-indent: 20px;
 }
 
-#ukmjvcweys .gt_indent_5 {
+#ugvvzrulhx .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -1423,12 +1436,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="ispppxtnji" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="ibouthohps" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#ispppxtnji .gt_table {
+#ibouthohps .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -1453,7 +1466,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_heading {
+#ibouthohps .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1465,12 +1478,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_caption {
+#ibouthohps .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#ispppxtnji .gt_title {
+#ibouthohps .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1482,7 +1495,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#ispppxtnji .gt_subtitle {
+#ibouthohps .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1494,13 +1507,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#ispppxtnji .gt_bottom_border {
+#ibouthohps .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_col_headings {
+#ibouthohps .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1515,7 +1528,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_col_heading {
+#ibouthohps .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1535,7 +1548,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#ispppxtnji .gt_column_spanner_outer {
+#ibouthohps .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1547,15 +1560,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#ispppxtnji .gt_column_spanner_outer:first-child {
+#ibouthohps .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#ispppxtnji .gt_column_spanner_outer:last-child {
+#ibouthohps .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#ispppxtnji .gt_column_spanner {
+#ibouthohps .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1567,7 +1580,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#ispppxtnji .gt_group_heading {
+#ibouthohps .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1593,7 +1606,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#ispppxtnji .gt_empty_group_heading {
+#ibouthohps .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1608,15 +1621,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#ispppxtnji .gt_from_md > :first-child {
+#ibouthohps .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#ispppxtnji .gt_from_md > :last-child {
+#ibouthohps .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#ispppxtnji .gt_row {
+#ibouthohps .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1635,7 +1648,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#ispppxtnji .gt_stub {
+#ibouthohps .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1648,7 +1661,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ispppxtnji .gt_stub_row_group {
+#ibouthohps .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1662,11 +1675,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#ispppxtnji .gt_row_group_first td {
+#ibouthohps .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#ispppxtnji .gt_summary_row {
+#ibouthohps .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1676,16 +1689,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ispppxtnji .gt_first_summary_row {
+#ibouthohps .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_first_summary_row.thick {
+#ibouthohps .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#ispppxtnji .gt_last_summary_row {
+#ibouthohps .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1695,7 +1708,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_grand_summary_row {
+#ibouthohps .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1705,7 +1718,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ispppxtnji .gt_first_grand_summary_row {
+#ibouthohps .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1715,11 +1728,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_striped {
+#ibouthohps .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#ispppxtnji .gt_table_body {
+#ibouthohps .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1728,7 +1741,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_footnotes {
+#ibouthohps .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1742,7 +1755,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_footnote {
+#ibouthohps .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -1751,7 +1764,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ispppxtnji .gt_sourcenotes {
+#ibouthohps .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1765,7 +1778,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#ispppxtnji .gt_sourcenote {
+#ibouthohps .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1773,64 +1786,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#ispppxtnji .gt_left {
+#ibouthohps .gt_left {
   text-align: left;
 }
 
-#ispppxtnji .gt_center {
+#ibouthohps .gt_center {
   text-align: center;
 }
 
-#ispppxtnji .gt_right {
+#ibouthohps .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#ispppxtnji .gt_font_normal {
+#ibouthohps .gt_font_normal {
   font-weight: normal;
 }
 
-#ispppxtnji .gt_font_bold {
+#ibouthohps .gt_font_bold {
   font-weight: bold;
 }
 
-#ispppxtnji .gt_font_italic {
+#ibouthohps .gt_font_italic {
   font-style: italic;
 }
 
-#ispppxtnji .gt_super {
+#ibouthohps .gt_super {
   font-size: 65%;
 }
 
-#ispppxtnji .gt_footnote_marks {
+#ibouthohps .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#ispppxtnji .gt_asterisk {
+#ibouthohps .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#ispppxtnji .gt_indent_1 {
+#ibouthohps .gt_indent_1 {
   text-indent: 5px;
 }
 
-#ispppxtnji .gt_indent_2 {
+#ibouthohps .gt_indent_2 {
   text-indent: 10px;
 }
 
-#ispppxtnji .gt_indent_3 {
+#ibouthohps .gt_indent_3 {
   text-indent: 15px;
 }
 
-#ispppxtnji .gt_indent_4 {
+#ibouthohps .gt_indent_4 {
   text-indent: 20px;
 }
 
-#ispppxtnji .gt_indent_5 {
+#ibouthohps .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -2034,12 +2047,12 @@ ds_survey %>%
 ```
 
 ```{=html}
-<div id="bqkbovpqwu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="sqtzjyznsi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#bqkbovpqwu .gt_table {
+#sqtzjyznsi .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -2064,7 +2077,7 @@ ds_survey %>%
   border-left-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_heading {
+#sqtzjyznsi .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2076,12 +2089,12 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_caption {
+#sqtzjyznsi .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#bqkbovpqwu .gt_title {
+#sqtzjyznsi .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2093,7 +2106,7 @@ ds_survey %>%
   border-bottom-width: 0;
 }
 
-#bqkbovpqwu .gt_subtitle {
+#sqtzjyznsi .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2105,13 +2118,13 @@ ds_survey %>%
   border-top-width: 0;
 }
 
-#bqkbovpqwu .gt_bottom_border {
+#sqtzjyznsi .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_col_headings {
+#sqtzjyznsi .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2126,7 +2139,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_col_heading {
+#sqtzjyznsi .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2146,7 +2159,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#bqkbovpqwu .gt_column_spanner_outer {
+#sqtzjyznsi .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2158,15 +2171,15 @@ ds_survey %>%
   padding-right: 4px;
 }
 
-#bqkbovpqwu .gt_column_spanner_outer:first-child {
+#sqtzjyznsi .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#bqkbovpqwu .gt_column_spanner_outer:last-child {
+#sqtzjyznsi .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#bqkbovpqwu .gt_column_spanner {
+#sqtzjyznsi .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2178,7 +2191,7 @@ ds_survey %>%
   width: 100%;
 }
 
-#bqkbovpqwu .gt_group_heading {
+#sqtzjyznsi .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2204,7 +2217,7 @@ ds_survey %>%
   text-align: left;
 }
 
-#bqkbovpqwu .gt_empty_group_heading {
+#sqtzjyznsi .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2219,15 +2232,15 @@ ds_survey %>%
   vertical-align: middle;
 }
 
-#bqkbovpqwu .gt_from_md > :first-child {
+#sqtzjyznsi .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#bqkbovpqwu .gt_from_md > :last-child {
+#sqtzjyznsi .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#bqkbovpqwu .gt_row {
+#sqtzjyznsi .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2246,7 +2259,7 @@ ds_survey %>%
   overflow-x: hidden;
 }
 
-#bqkbovpqwu .gt_stub {
+#sqtzjyznsi .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2259,7 +2272,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#bqkbovpqwu .gt_stub_row_group {
+#sqtzjyznsi .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2273,11 +2286,11 @@ ds_survey %>%
   vertical-align: top;
 }
 
-#bqkbovpqwu .gt_row_group_first td {
+#sqtzjyznsi .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#bqkbovpqwu .gt_summary_row {
+#sqtzjyznsi .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2287,16 +2300,16 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#bqkbovpqwu .gt_first_summary_row {
+#sqtzjyznsi .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_first_summary_row.thick {
+#sqtzjyznsi .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#bqkbovpqwu .gt_last_summary_row {
+#sqtzjyznsi .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2306,7 +2319,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_grand_summary_row {
+#sqtzjyznsi .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2316,7 +2329,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#bqkbovpqwu .gt_first_grand_summary_row {
+#sqtzjyznsi .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2326,11 +2339,11 @@ ds_survey %>%
   border-top-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_striped {
+#sqtzjyznsi .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#bqkbovpqwu .gt_table_body {
+#sqtzjyznsi .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2339,7 +2352,7 @@ ds_survey %>%
   border-bottom-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_footnotes {
+#sqtzjyznsi .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2353,7 +2366,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_footnote {
+#sqtzjyznsi .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -2362,7 +2375,7 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#bqkbovpqwu .gt_sourcenotes {
+#sqtzjyznsi .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2376,7 +2389,7 @@ ds_survey %>%
   border-right-color: #D3D3D3;
 }
 
-#bqkbovpqwu .gt_sourcenote {
+#sqtzjyznsi .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2384,64 +2397,64 @@ ds_survey %>%
   padding-right: 5px;
 }
 
-#bqkbovpqwu .gt_left {
+#sqtzjyznsi .gt_left {
   text-align: left;
 }
 
-#bqkbovpqwu .gt_center {
+#sqtzjyznsi .gt_center {
   text-align: center;
 }
 
-#bqkbovpqwu .gt_right {
+#sqtzjyznsi .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#bqkbovpqwu .gt_font_normal {
+#sqtzjyznsi .gt_font_normal {
   font-weight: normal;
 }
 
-#bqkbovpqwu .gt_font_bold {
+#sqtzjyznsi .gt_font_bold {
   font-weight: bold;
 }
 
-#bqkbovpqwu .gt_font_italic {
+#sqtzjyznsi .gt_font_italic {
   font-style: italic;
 }
 
-#bqkbovpqwu .gt_super {
+#sqtzjyznsi .gt_super {
   font-size: 65%;
 }
 
-#bqkbovpqwu .gt_footnote_marks {
+#sqtzjyznsi .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#bqkbovpqwu .gt_asterisk {
+#sqtzjyznsi .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#bqkbovpqwu .gt_indent_1 {
+#sqtzjyznsi .gt_indent_1 {
   text-indent: 5px;
 }
 
-#bqkbovpqwu .gt_indent_2 {
+#sqtzjyznsi .gt_indent_2 {
   text-indent: 10px;
 }
 
-#bqkbovpqwu .gt_indent_3 {
+#sqtzjyznsi .gt_indent_3 {
   text-indent: 15px;
 }
 
-#bqkbovpqwu .gt_indent_4 {
+#sqtzjyznsi .gt_indent_4 {
   text-indent: 20px;
 }
 
-#bqkbovpqwu .gt_indent_5 {
+#sqtzjyznsi .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -2520,12 +2533,12 @@ in the General Population</th>
 
 
 ```{=html}
-<div id="kwrftqhuca" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<div id="uwumxxcrgn" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#kwrftqhuca .gt_table {
+#uwumxxcrgn .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -2550,7 +2563,7 @@ in the General Population</th>
   border-left-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_heading {
+#uwumxxcrgn .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2562,12 +2575,12 @@ in the General Population</th>
   border-right-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_caption {
+#uwumxxcrgn .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#kwrftqhuca .gt_title {
+#uwumxxcrgn .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2579,7 +2592,7 @@ in the General Population</th>
   border-bottom-width: 0;
 }
 
-#kwrftqhuca .gt_subtitle {
+#uwumxxcrgn .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2591,13 +2604,13 @@ in the General Population</th>
   border-top-width: 0;
 }
 
-#kwrftqhuca .gt_bottom_border {
+#uwumxxcrgn .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_col_headings {
+#uwumxxcrgn .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2612,7 +2625,7 @@ in the General Population</th>
   border-right-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_col_heading {
+#uwumxxcrgn .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2632,7 +2645,7 @@ in the General Population</th>
   overflow-x: hidden;
 }
 
-#kwrftqhuca .gt_column_spanner_outer {
+#uwumxxcrgn .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2644,15 +2657,15 @@ in the General Population</th>
   padding-right: 4px;
 }
 
-#kwrftqhuca .gt_column_spanner_outer:first-child {
+#uwumxxcrgn .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#kwrftqhuca .gt_column_spanner_outer:last-child {
+#uwumxxcrgn .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#kwrftqhuca .gt_column_spanner {
+#uwumxxcrgn .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2664,7 +2677,7 @@ in the General Population</th>
   width: 100%;
 }
 
-#kwrftqhuca .gt_group_heading {
+#uwumxxcrgn .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2690,7 +2703,7 @@ in the General Population</th>
   text-align: left;
 }
 
-#kwrftqhuca .gt_empty_group_heading {
+#uwumxxcrgn .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2705,15 +2718,15 @@ in the General Population</th>
   vertical-align: middle;
 }
 
-#kwrftqhuca .gt_from_md > :first-child {
+#uwumxxcrgn .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#kwrftqhuca .gt_from_md > :last-child {
+#uwumxxcrgn .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#kwrftqhuca .gt_row {
+#uwumxxcrgn .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2732,7 +2745,7 @@ in the General Population</th>
   overflow-x: hidden;
 }
 
-#kwrftqhuca .gt_stub {
+#uwumxxcrgn .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2745,7 +2758,7 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#kwrftqhuca .gt_stub_row_group {
+#uwumxxcrgn .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2759,11 +2772,11 @@ in the General Population</th>
   vertical-align: top;
 }
 
-#kwrftqhuca .gt_row_group_first td {
+#uwumxxcrgn .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#kwrftqhuca .gt_summary_row {
+#uwumxxcrgn .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2773,16 +2786,16 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#kwrftqhuca .gt_first_summary_row {
+#uwumxxcrgn .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_first_summary_row.thick {
+#uwumxxcrgn .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#kwrftqhuca .gt_last_summary_row {
+#uwumxxcrgn .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2792,7 +2805,7 @@ in the General Population</th>
   border-bottom-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_grand_summary_row {
+#uwumxxcrgn .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2802,7 +2815,7 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#kwrftqhuca .gt_first_grand_summary_row {
+#uwumxxcrgn .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2812,11 +2825,11 @@ in the General Population</th>
   border-top-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_striped {
+#uwumxxcrgn .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#kwrftqhuca .gt_table_body {
+#uwumxxcrgn .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2825,7 +2838,7 @@ in the General Population</th>
   border-bottom-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_footnotes {
+#uwumxxcrgn .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2839,7 +2852,7 @@ in the General Population</th>
   border-right-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_footnote {
+#uwumxxcrgn .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-left: 4px;
@@ -2848,7 +2861,7 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#kwrftqhuca .gt_sourcenotes {
+#uwumxxcrgn .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2862,7 +2875,7 @@ in the General Population</th>
   border-right-color: #D3D3D3;
 }
 
-#kwrftqhuca .gt_sourcenote {
+#uwumxxcrgn .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2870,64 +2883,64 @@ in the General Population</th>
   padding-right: 5px;
 }
 
-#kwrftqhuca .gt_left {
+#uwumxxcrgn .gt_left {
   text-align: left;
 }
 
-#kwrftqhuca .gt_center {
+#uwumxxcrgn .gt_center {
   text-align: center;
 }
 
-#kwrftqhuca .gt_right {
+#uwumxxcrgn .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#kwrftqhuca .gt_font_normal {
+#uwumxxcrgn .gt_font_normal {
   font-weight: normal;
 }
 
-#kwrftqhuca .gt_font_bold {
+#uwumxxcrgn .gt_font_bold {
   font-weight: bold;
 }
 
-#kwrftqhuca .gt_font_italic {
+#uwumxxcrgn .gt_font_italic {
   font-style: italic;
 }
 
-#kwrftqhuca .gt_super {
+#uwumxxcrgn .gt_super {
   font-size: 65%;
 }
 
-#kwrftqhuca .gt_footnote_marks {
+#uwumxxcrgn .gt_footnote_marks {
   font-style: italic;
   font-weight: normal;
   font-size: 75%;
   vertical-align: 0.4em;
 }
 
-#kwrftqhuca .gt_asterisk {
+#uwumxxcrgn .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#kwrftqhuca .gt_indent_1 {
+#uwumxxcrgn .gt_indent_1 {
   text-indent: 5px;
 }
 
-#kwrftqhuca .gt_indent_2 {
+#uwumxxcrgn .gt_indent_2 {
   text-indent: 10px;
 }
 
-#kwrftqhuca .gt_indent_3 {
+#uwumxxcrgn .gt_indent_3 {
   text-indent: 15px;
 }
 
-#kwrftqhuca .gt_indent_4 {
+#uwumxxcrgn .gt_indent_4 {
   text-indent: 20px;
 }
 
-#kwrftqhuca .gt_indent_5 {
+#uwumxxcrgn .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -6738,6 +6751,175 @@ ds1_problem %>% select(contains('index'), -index, -problem_additive_index) %>%
 
 ![](figure-png-iso/problem-models-3.png)<!-- -->
 
+# 12. Deoccupied hromadas
+
+
+```{.r .fold-hide}
+d <- ds0 %>% 
+   filter(!is.na(occupation)) %>%
+   mutate(
+    `Share of Housing Damaged` = as.factor(case_when(
+       is_damaged == "no" ~ "No Damages",
+      percent_damaged== "0_10_percent" ~ "0-10%",
+      percent_damaged== "10_25_percent" ~ "10-25%",
+      percent_damaged== "26_50_percent" ~ "26-50%",
+      percent_damaged== "50_75_percent" ~ "50-75%",
+      percent_damaged== "76_100_percent" ~ "76-100%"
+    )) %>% factor( levels = c(
+       "No Damages"           
+       ,"0-10%" ,
+       "10-25%",
+       "26-50%",
+       "50-75%",
+       "76-100%"
+    ))) %>%
+  group_by(`Share of Housing Damaged`,occupation_fct, .drop = F) %>% 
+  summarize(
+    hromada_count = n_distinct(hromada_code)
+    ,.groups = "drop") %>% 
+  group_by(occupation_fct) %>% 
+  mutate(
+    prop = hromada_count/sum(hromada_count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  )
+
+g <- d %>%
+  ggplot(aes(y=prop, x = `Share of Housing Damaged`, fill = occupation_fct))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), hjust = .3, vjust = -.2, position = position_dodge(width = .9))+
+  scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T))+
+  labs(
+    title = "What percentage of housing was damaged in your hromada?"
+    ,fill = NULL
+    ,y = "Percent of respondents in each group"
+    ,x = NULL
+  )
+
+g
+```
+
+![](figure-png-iso/damage-deoccup-1.png)<!-- -->
+
+
+```{.r .fold-hide}
+d <- ds0 %>% 
+   filter(!is.na(occupation) & !is.na(percent_reconstructed)) %>%
+  group_by(percent_reconstructed,occupation_fct, .drop = F) %>% 
+  summarize(
+    hromada_count = n_distinct(hromada_code)
+    ,.groups = "drop") %>% 
+  group_by(occupation_fct) %>% 
+  mutate(
+    prop = hromada_count/sum(hromada_count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  )
+
+g <- d %>%
+  ggplot(aes(y=prop, x = percent_reconstructed, fill = occupation_fct))+
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = pct), hjust = .3, vjust = -.2, position = position_dodge(width = .9))+
+  scale_y_continuous(labels = scales::percent_format(),expand = expansion(add = c(0,.1)))+
+  ggplot2::scale_fill_viridis_d(begin = 0, end = .8, direction = -1, option = "plasma",guide= guide_legend(reverse=T))+
+  scale_fill_discrete(labels = c("Rear communities",
+                                 "Deoccupied communities")) +
+    scale_x_discrete(labels=c('0_10_percent' = "0-10%",
+                            '10_25_percent' = "10-25%", 
+                            '26_50_percent' = "26-50%", 
+                            '51_75_percent' = "51-75%", 
+                            '76_100_percent' = "76-100%")) +
+  labs(
+    title = "What part of the damaged housing stock has been repaired? (as of October 2022)"
+    ,subtitle = "among those who reported damages and were not occupied or deoccupied for a long time (n = 33)"
+    ,fill = NULL
+    ,y = "Percent of respondents in each group"
+    ,x = NULL
+  )
+
+g
+```
+
+![](figure-png-iso/damage-deoccup-repair-1.png)<!-- -->
+
+
+```{.r .hide}
+d <- ds0 %>%
+  select(hromada_code, finance_school_shelters_coded, occupation_fct) %>%
+  mutate(finance_school_shelters_coded = as.numeric(finance_school_shelters_coded))
+
+g <- d %>%
+  filter(!is.na(finance_school_shelters_coded)) %>%
+  ggplot(aes(x = finance_school_shelters_coded, y = occupation_fct, color = occupation_fct)) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+coord_cartesian(xlim = quantile(d$finance_school_shelters_coded, c(0, 0.9), na.rm = T)) +
+  scale_x_continuous(labels = scales::label_number(suffix = "K", scale = 1e-3)) +
+  geom_jitter(height = .1) +
+  labs(title = "Money spent on the equipment/refurbishing of shelters for schools from the community budget",
+       subtitle = "Values greater than 90th percentile removed",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none") 
+
+g 
+```
+
+![](figure-png-iso/damage-deoccup-finance-shelter-1-1.png)<!-- -->
+
+
+```{.r .hide}
+d <- ds0 %>%
+  filter(!is.na(occupation)) %>%
+  select(hromada_name, occupation_fct, all_of(skills)) %>% 
+  pivot_longer(
+    -c(hromada_name,occupation_fct)
+    ,names_to = "action"
+    ,values_to = "response"
+  ) %>% 
+  group_by(action, occupation_fct) %>% 
+  summarise(n = sum(response, na.rm = T), .groups = "drop", na = sum(!is.na(response))) %>%
+  mutate(freq = n/na)
+
+g <- d %>%
+  ggplot(aes(y = freq, x = fct_reorder(action, freq, .desc = T), fill = occupation_fct)) +
+  geom_col(position = position_dodge())+
+  geom_text(aes(label = scales::percent(freq, 1)), hjust = .4, 
+             vjust = -.3, position = position_dodge(width = .9), size = 3.2) + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 7)) +
+  labs(title = 'What skills do executives need to address current community challenges?', 
+       fill = NULL) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 0.9)) +
+  scale_x_discrete(labels=c('skills_needed/fundraising' = "Fundraising \n(attracting additional funds \nto the community through \ngrants, investment projects)",
+                            'skills_needed/project_management' = "Project management", 
+                            'skills_needed/longterm_planning' = "Long-term planning", 
+                            'skills_needed/crisis_planning' = "Crisis planning and management", 
+                            'skills_needed/data_analysis' = "Collection and analysis \nof data for decision-making", 
+                            "skills_needed/human_resourse" = "Lack of human resources", 
+                            "skills_needed/other" = "Other")
+                   )
+
+g 
+```
+
+![](figure-png-iso/deoccup-skills-1.png)<!-- -->
+
+
+```{.r .hide}
+d <- ds0 %>% filter(idp_accept == 'yes') %>%
+  select(hromada_code, idp_child_share, occupation_fct)
+
+d %>% 
+  ggplot(aes(x = idp_child_share, y = occupation_fct, col = occupation_fct)) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+  geom_jitter(height = .1) +
+  labs(title = "Share of IDPs children gone to school to registered IDPs \nin the community",
+       x = NULL, y = NULL, color = NULL) +
+  guides(color = "none")
+```
+
+![](figure-png-iso/idp-child-share-occupation-1.png)<!-- -->
+
 
 ```r
 meta_survey %>% filter(group=="preparation") %>% pull(name)
@@ -6774,8 +6956,8 @@ For the sake of documentation and reproducibility, the current report was render
  collate  Ukrainian_Ukraine.utf8
  ctype    Ukrainian_Ukraine.1251
  tz       Europe/Helsinki
- date     2023-02-09
- pandoc   2.19.2 @ C:/Program Files/RStudio/bin/quarto/bin/tools/ (via rmarkdown)
+ date     2023-02-14
+ pandoc   2.19.2 @ C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools/ (via rmarkdown)
 
 - Packages ---------------------------------------------------------------------------------------
  package       * version date (UTC) lib source
@@ -6788,7 +6970,6 @@ For the sake of documentation and reproducibility, the current report was render
  callr           3.7.3   2022-11-02 [1] CRAN (R 4.2.2)
  cellranger      1.1.0   2016-07-27 [1] CRAN (R 4.2.2)
  cli             3.4.1   2022-09-23 [1] CRAN (R 4.2.2)
- codetools       0.2-18  2020-11-04 [2] CRAN (R 4.2.2)
  colorspace      2.0-3   2022-02-21 [1] CRAN (R 4.2.2)
  crayon          1.5.2   2022-09-29 [1] CRAN (R 4.2.2)
  crosstalk       1.2.0   2021-11-04 [1] CRAN (R 4.2.2)
@@ -6797,7 +6978,7 @@ For the sake of documentation and reproducibility, the current report was render
  devtools        2.4.5   2022-10-11 [1] CRAN (R 4.2.2)
  dichromat     * 2.0-0.1 2022-05-02 [1] CRAN (R 4.2.0)
  digest          0.6.31  2022-12-11 [1] CRAN (R 4.2.2)
- dplyr         * 1.0.10  2022-09-01 [1] CRAN (R 4.2.2)
+ dplyr         * 1.1.0   2023-01-29 [1] CRAN (R 4.2.2)
  DT              0.26    2022-10-19 [1] CRAN (R 4.2.2)
  ellipsis        0.3.2   2021-04-29 [1] CRAN (R 4.2.2)
  evaluate        0.18    2022-11-07 [1] CRAN (R 4.2.2)
@@ -6890,7 +7071,7 @@ For the sake of documentation and reproducibility, the current report was render
  urlchecker      1.0.1   2021-11-30 [1] CRAN (R 4.2.2)
  usethis         2.1.6   2022-05-25 [1] CRAN (R 4.2.2)
  utf8            1.2.2   2021-07-24 [1] CRAN (R 4.2.2)
- vctrs           0.5.1   2022-11-16 [1] CRAN (R 4.2.2)
+ vctrs           0.5.2   2023-01-23 [1] CRAN (R 4.2.2)
  vipor           0.4.5   2017-03-22 [1] CRAN (R 4.2.2)
  viridisLite     0.4.1   2022-08-22 [1] CRAN (R 4.2.2)
  webshot         0.5.4   2022-09-26 [1] CRAN (R 4.2.2)
@@ -6910,4 +7091,4 @@ For the sake of documentation and reproducibility, the current report was render
 
 
 
-Report rendered by Valentyn Hatsko at 2023-02-09, 13:03 +0200 in 26 seconds.
+Report rendered by Valentyn Hatsko at 2023-02-14, 12:52 +0200 in 29 seconds.
