@@ -190,6 +190,12 @@ hromada_cooperation <-
 
 prep_for_winter <- c('info_campaign', 'reserves', 'count_power_sources', 
                      'count_heaters_need', 'solid_fuel_boiler')
+
+skills <- 
+  ds_survey %>% 
+  select(starts_with('skills_needed/')) %>% 
+  colnames() %>% 
+  print()
 # vector of income variables 
 income <- 
   ds_survey %>%
@@ -235,12 +241,18 @@ ds0 <-
                                             type == 'селищна' ~ 'urban village',
                                             type == 'міська' ~ 'urban'),
     type = factor(type, levels  = c("village", "urban village", "urban")),
-    help_military_count         = rowSums(across(all_of(military_help_short)), na.rm = T),
-    idp_help_count              = rowSums(across(all_of(idp_help), na.rm = T)),
+    help_military_count         = rowSums(across(all_of(military_help_short))),
+    idp_help_count              = rowSums(across(all_of(idp_help))),
     occupation_and_combat       = case_when(military_action == 'no_combat' & occupation == 'not_occupied' ~ 0,
                                             TRUE ~ 1),
     occupation_and_combat_fct   = factor(occupation_and_combat, 
-                                         labels = c('Rear communities', 'Communities exposed to war (n = 22)')),
+                                         labels = c('Rear communities', 
+                                                    'Communities exposed to war (n = 22)')),
+    occupation_fct              = factor(case_when(occupation == 'not_occupied' ~ 0,
+                                                   NA ~ NA_integer_,
+                                                   TRUE ~ 1),
+                                           labels = c('Rear communities', 
+                                                    'Deoccupied communities (n = 19)')),
     voluntary_fct               = factor(voluntary,
                                          labels = c('Top-down amalgamated', 'Voluntary amalgamated')),
     oblast_name_en              = case_when(oblast_name_en == 'Vonyn' ~ "Volyn",
