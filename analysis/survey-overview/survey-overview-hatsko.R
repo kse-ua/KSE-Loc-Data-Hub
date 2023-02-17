@@ -120,8 +120,9 @@ make_corr_plot <- function (
 # the product of ./manipulation/ellis-general.R
 ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
 # 
-ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean.xlsx")
+ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean_new.xlsx")
 
+ds_deoccup <- readxl::read_excel("./data-private/raw/deoccupied.xlsx")
 # meta_oblast <- googlesheets4::read_sheet(sheet_name,"choices",skip = 0)
 
 # Originally, we pulled the meta data object from Kobo front end and stored to 
@@ -196,6 +197,7 @@ skills <-
   select(starts_with('skills_needed/')) %>% 
   colnames() %>% 
   print()
+
 # vector of income variables 
 income <- 
   ds_survey %>%
@@ -226,7 +228,12 @@ ds_general0 <-
   )
 # ds_general0 %>% group_by(survey_response) %>% count()
 
-
+ds_general1 <- ds_general %>% 
+  mutate(oblast_name_en = case_when(oblast_name_en == 'Vonyn' ~ "Volyn",
+                                    oblast_name_en == 'Driproptrovska' ~ "Dnipropetrovska",
+                                    TRUE ~ oblast_name_en)) %>%
+           left_join(ds_deoccup %>% select(hromada_code, deoccupied_at_feb_2023),
+                     by = c('hromada_code'))
 
 ds0 <- 
   ds_survey %>% 
@@ -248,11 +255,9 @@ ds0 <-
     occupation_and_combat_fct   = factor(occupation_and_combat, 
                                          labels = c('Rear communities', 
                                                     'Communities exposed to war (n = 22)')),
-    occupation_fct              = factor(case_when(occupation == 'not_occupied' ~ 0,
-                                                   NA ~ NA_integer_,
-                                                   TRUE ~ 1),
-                                           labels = c('Rear communities', 
-                                                    'Deoccupied communities (n = 19)')),
+    occupation_fct              = factor(deoccupied_at_feb_2023,
+                                         labels = c('Rear communities', 
+                                                    'Deoccupied communities (n = 16)')),
     voluntary_fct               = factor(voluntary,
                                          labels = c('Top-down amalgamated', 'Voluntary amalgamated')),
     oblast_name_en              = case_when(oblast_name_en == 'Vonyn' ~ "Volyn",
@@ -288,9 +293,6 @@ ds1_problem <- ds0 %>%
       .6*problem_proposition_index + .8*problem_system_index + .8*problem_feedback_index +
       problem_execution_index
   )
-
-
-
 
 # ---- inspect-data-0 ------------------------------------------------------------
 
@@ -333,7 +335,7 @@ ds1_prep <-
       ,na.rm = T
     )
   )  %>% 
-  select(hromada_code, starts_with("prep_score"),preparation)  
+  select(hromada_code, starts_with("prep_score"),preparation, deoccupied_at_feb_2023)  
 ds1_prep %>% select(1:4)
 
 ## Some handy datasets for quick visualization
@@ -351,7 +353,7 @@ ds1_prep_ordinal_factors <-
       ) %>% factor(levels=c("No","As of Oct","As of Feb",  "Not Applicable"))
     )
   ) %>% 
-  select(hromada_code, starts_with("prep_score"),preparation)
+  select(hromada_code, starts_with("prep_score"),preparation, deo)
 
 # Binary scale (0,1) with factors
 ds1_prep_binary_factors <- 
@@ -383,7 +385,7 @@ ds1_prep_binary_factors_feb <-
       ) %>% factor(levels=c("No","Yes"))
     )
   ) %>% 
-  select(hromada_code, starts_with("prep_score"),preparation)
+  select(hromada_code, starts_with("prep_score"),preparation, deoccupied_at_feb_2023)
 
 # ----- inspect-data-1-prep -----------------------
 
@@ -418,44 +420,24 @@ ds1_info <-
 
 # ---- testing chunks ----------------------------------------------------------
 
-d <- ds1_problem %>% select(contains('index'), region_en, hromada_code,
-                            occupation_and_combat_fct, -index) %>%
-  pivot_longer(-c(region_en, occupation_and_combat_fct, hromada_code), 
-               names_to = 'engagement', values_to = 'index')
+library(rpivotTable)
+rpivotTable(ds_general1)
 
-ds1_problem %>% select(contains('index'), -index, -problem_additive_index) %>% 
-  summarise(across(everything(.), ~mean(.x, na.rm = T))) %>%
-  mutate(group = "all") %>%
-  pivot_longer(-group, names_to = 'engagement', values_to = "index") %>%
-  mutate(engagement = factor(engagement,
-                             levels = c('problem_info_index', 'problem_consultation_index',
-                                        'problem_proposition_index', 'problem_system_index',
-                                        'problem_feedback_index', 'problem_execution_index'))) %>%
-  ggplot(aes(x = engagement, y = index, fill = engagement)) +
-    geom_col()+
-    geom_text(aes(label = round(index, 2)), hjust = .6, vjust = -.6) + 
-    scale_y_continuous(expand = expansion(add = c(0,1))) +
-    scale_x_discrete(labels=c('problem_info_index' = "Information",
-                              'problem_consultation_index' = "Consultation", 
-                              'problem_proposition_index' = "Involvement", 
-                              'problem_system_index' = "Systematic Exchange", 
-                              'problem_feedback_index' = "Feedback",
-                              'problem_execution_index' = "Execution")) +
-    scale_fill_viridis_d(begin = 0, end = .8, direction = -1, 
-                                  option = "plasma",guide= guide_legend(reverse=T))+
-  labs(
-    title = "How hromadas engaged different actors in solving critical problems?"
-    ,fill = NULL
-    ,x = "Types of engagement"
-    , y = "Index value"
-  ) + 
-  guides(fill = "none") 
+d <- ds0 %>%
+  filter(deoccupied_at_feb_2023 == 1) %>%
+  mutate(population_change = population_text / total_population_2022 - 1) %>%
+  select(oblast_name_en, hromada_full_name, total_population_2022, population_text, population_change) %>%
+  arrange(population_change)
 
-  
+ds0 %>%
+  filter(deoccupied_at_feb_2023 == 1) %>%
+  mutate(population_change = population_text / total_population_2022 - 1) %>%
+  select(oblast_name_en, hromada_full_name, total_population_2022, population_text, population_change) %>%
+  arrange(population_change)
 
-
-
-
+write.csv(d, 'population.csv')
+d %>%
+  summarise(avg = mean(population_change))
 
 
 # ---- save-to-disk ------------------------------------------------------------
