@@ -49,20 +49,22 @@ na_strings <- c("NA", "N A", "N / A", "N/A", "N/ A", "n/a", "NOt available", '<N
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
 # Xls_form
-survey_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "survey")
-choices_xls <- readxl::read_excel("./data-private/raw/kobo.xlsx", sheet = "choices")
+googlesheets4::gs4_deauth() # to indicate there is no need for a access token
+# https://googlesheets4.tidyverse.org/ 
+# https://docs.google.com/spreadsheets/d/1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo/edit?usp=sharing
+survey_url <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
+meta_survey <- googlesheets4::read_sheet(survey_url,"survey",skip = 0)
+meta_choices <- googlesheets4::read_sheet(survey_url,"choices",skip = 0)
 
 # Survey data
 d0 <- readxl::read_excel("./data-private/raw/Resilience_survey_2022_12_07_eng_clean.xlsx")
 
 ds_population <- readr::read_csv("./data-private/derived/ua-pop-2022.csv")
 
-ds_hromada <- readr::read_delim("./data-private/derived/hromada.csv", delim = ';') %>% 
+ds_hromada <- readr::read_delim("./data-private/derived/hromada.csv", delim = ',') %>% 
   mutate(
     key = paste(hromada_name, type, "громада")
   )
-
-ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
 
 oblasts <- readr::read_csv("./data-private/raw/oblast.csv") %>% 
   mutate(
