@@ -76,6 +76,19 @@ ds_fin <- index_means %>%
          ,v1_norm = rescale(V1)) %>%
   arrange(desc(v1_norm))
 
+ds_index %>% 
+  summarise(across(.cols = water_stored:data_backup,
+                   .fns = ~round(mean(.),2)
+                   )
+            ,.by = "group"
+            ) %>% 
+  t() %>% 
+  as_tibble() %>%
+  janitor::row_to_names(row_number = 1) %>%
+  mutate_all(.,as.numeric) %>%
+  mutate(name = vars[3:16],
+         diff = round(.$'non-experts' - .$"experts", 2)) %>%
+  arrange(diff)
 # ---- save-data ------------------------------------------------------------
 readr::write_csv(ds_fin, "./data-private/derived/index_preparedness_weights.csv")
 
