@@ -264,6 +264,9 @@ d_meta_prep <-
   filter(group=="preparation") %>% 
   select(item_name = name,label_en,label)
 
+paste0(preparation, "_feb")
+paste0(preparation, "_oct")
+
 ds_prep_new <- ds0 %>%
   mutate(
       across(
@@ -273,17 +276,37 @@ ds_prep_new <- ds0 %>%
           ,. == 1 ~ 0 #"After Feb 24"
           ,. == 2 ~ 1 #"Before Feb 24"
           ,.default = 0
-        ))
+        ),
+        .names = "{col}_feb"),
+      across(
+        .cols = preparation
+        ,.fns = ~case_when(
+          .  == 0 ~ 0 #"No"
+          ,. == 1 ~ 1 #"After Feb 24"
+          ,. == 2 ~ 1 #"Before Feb 24"
+          ,.default = 0
+        ),
+        .names = "{col}_oct"
+        )
       ) %>% 
-  select(hromada_code,preparation) %>%
-  mutate(prep_score_feb = prep_first_aid_water*7.95 + prep_first_aid_fuel*7.90 +
-               prep_reaction_plan*7.72 + prep_evacuation_plan*7.21 + 
-               prep_reaction_plan_oth_hromadas*6.53 + prep_reaction_plan_oda*6.80 + 
-               prep_dftg_creation*6.94 + prep_national_resistance*6.26 + 
-               prep_starosta_meeting*7.44 + prep_communal_meetiing*7.53 + 
-               prep_online_map*6.07 + prep_shelter_list*6.48 + 
-               prep_notification_check*7.95 + prep_backup*7.21) %>%
-  select(hromada_code, prep_score_feb)
+  select(hromada_code,
+         paste0(preparation, "_feb"),
+         paste0(preparation, "_oct")) %>%
+  mutate(prep_score_feb = prep_first_aid_water_feb*7.95 + prep_first_aid_fuel_feb*7.90 +
+               prep_reaction_plan_feb*7.72 + prep_evacuation_plan_feb*7.21 + 
+               prep_reaction_plan_oth_hromadas_feb*6.53 + prep_reaction_plan_oda_feb*6.80 + 
+               prep_dftg_creation_feb*6.94 + prep_national_resistance_feb*6.26 + 
+               prep_starosta_meeting_feb*7.44 + prep_communal_meetiing_feb*7.53 + 
+               prep_online_map_feb*6.07 + prep_shelter_list_feb*6.48 + 
+               prep_notification_check_feb*7.95 + prep_backup_feb*7.21,
+         prep_score_oct = prep_first_aid_water_oct*7.95 + prep_first_aid_fuel_oct*7.90 +
+           prep_reaction_plan_oct*7.72 + prep_evacuation_plan_oct*7.21 + 
+           prep_reaction_plan_oth_hromadas_oct*6.53 + prep_reaction_plan_oda_oct*6.80 + 
+           prep_dftg_creation_oct*6.94 + prep_national_resistance_oct*6.26 + 
+           prep_starosta_meeting_oct*7.44 + prep_communal_meetiing_oct*7.53 + 
+           prep_online_map_oct*6.07 + prep_shelter_list_oct*6.48 + 
+           prep_notification_check_oct*7.95 + prep_backup_oct*7.21) %>%
+  select(hromada_code, prep_score_feb, prep_score_oct)
 
 ds1_prep <-
   ds0 %>% 
