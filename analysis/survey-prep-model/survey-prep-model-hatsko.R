@@ -217,7 +217,7 @@ ds_general0 <-
 ds0 <- 
   ds_survey %>% 
   mutate(
-    idp_help_count              = rowSums(across(all_of(idp_help), na.rm = T)), # idp_help_count fix
+    idp_help_count              = rowSums(across(all_of(idp_help)), na.rm = T), # idp_help_count fix
     help_military_count         = rowSums(across(all_of(military_help)), na.rm = T),
     help_military_count_neg     = 4 - help_military_count,
     income_own_per_capita       = income_own_2021         / total_population_2022,
