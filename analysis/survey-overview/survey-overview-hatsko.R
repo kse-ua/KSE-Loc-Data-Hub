@@ -353,7 +353,7 @@ ds1_prep_ordinal_factors <-
       ) %>% factor(levels=c("No","As of Oct","As of Feb",  "Not Applicable"))
     )
   ) %>% 
-  select(hromada_code, starts_with("prep_score"),preparation, deo)
+  select(hromada_code, starts_with("prep_score"),preparation)
 
 # Binary scale (0,1) with factors
 ds1_prep_binary_factors <- 
@@ -387,7 +387,7 @@ ds1_prep_binary_factors_feb <-
   ) %>% 
   select(hromada_code, starts_with("prep_score"),preparation, deoccupied_at_feb_2023)
 
-# ----- inspect-data-1-prep -----------------------
+і# ----- inspect-data-1-prep -----------------------
 
 
 ds1_prep_ordinal_integers %>% glimpse()
@@ -428,6 +428,23 @@ d <- ds0 %>%
   mutate(population_change = population_text / total_population_2022 - 1) %>%
   select(oblast_name_en, hromada_full_name, total_population_2022, population_text, population_change) %>%
   arrange(population_change)
+
+d <- ds0 %>%
+  filter(deoccupied_at_feb_2023 == 1) %>%
+  select(oblast_name_en, hromada_full_name, idp_registration_number, population_text) %>%
+  arrange(desc(idp_registration_number))
+
+ds0 %>% select(deoccupied_at_feb_2023, hromada_exp) %>%
+  filter(deoccupied_at_feb_2023 == 1) %>%
+  count(hromada_exp)
+
+
+
+write.excel <- function(x,row.names=FALSE,col.names=TRUE,...) {
+  write.table(x,"clipboard",sep="\t",row.names=row.names,col.names=col.names,...)
+}
+
+
 
 ds0 %>%
   filter(deoccupied_at_feb_2023 == 1) %>%
