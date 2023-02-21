@@ -133,7 +133,7 @@ survey_url <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
 meta_survey <- googlesheets4::read_sheet(survey_url,"survey",skip = 0)
 meta_choices <- googlesheets4::read_sheet(survey_url,"choices",skip = 0)
 
-
+ds_weights <- readr::read_csv("./data-private/derived/index_preparedness_weights.csv")
 
 # ---- inspect-data ------------------------------------------------------------
 ds_general %>% glimpse(80)
@@ -263,6 +263,27 @@ d_meta_prep <-
   meta_survey %>% 
   filter(group=="preparation") %>% 
   select(item_name = name,label_en,label)
+
+ds_prep_new <- ds0 %>%
+  mutate(
+      across(
+        .cols = preparation
+        ,.fns = ~case_when(
+          .  == 0 ~ 0 #"No"
+          ,. == 1 ~ 0 #"After Feb 24"
+          ,. == 2 ~ 1 #"Before Feb 24"
+          ,.default = 0
+        ))
+      ) %>% 
+  select(hromada_code,preparation) %>%
+  mutate(prep_score_feb = prep_first_aid_water*7.95 + prep_first_aid_fuel*7.90 +
+               prep_reaction_plan*7.72 + prep_evacuation_plan*7.21 + 
+               prep_reaction_plan_oth_hromadas*6.53 + prep_reaction_plan_oda*6.80 + 
+               prep_dftg_creation*6.94 + prep_national_resistance*6.26 + 
+               prep_starosta_meeting*7.44 + prep_communal_meetiing*7.53 + 
+               prep_online_map*6.07 + prep_shelter_list*6.48 + 
+               prep_notification_check*7.95 + prep_backup*7.21) %>%
+  select(hromada_code, prep_score_feb)
 
 ds1_prep <-
   ds0 %>% 
