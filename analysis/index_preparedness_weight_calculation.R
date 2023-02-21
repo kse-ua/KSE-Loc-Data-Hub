@@ -73,7 +73,9 @@ index_means <- ds_index %>%
 
 ds_fin <- index_means %>% 
   mutate(name = vars[3:16]
-         ,v1_norm = rescale(V1)) %>%
+         ,v1_norm = rescale(V1)
+         ,share = V1 / sum(V1)
+         ,new_prop = 100 * share) %>%
   arrange(desc(v1_norm))
 
 ds_index %>% 
