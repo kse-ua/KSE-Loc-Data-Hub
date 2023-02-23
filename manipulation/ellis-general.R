@@ -112,14 +112,21 @@ income_2022 <-
   ds_budget_income %>% 
   filter(year == "2022") %>% 
   select(hromada_code, own_income_change, own_prop_change, total_income_change, 
-         income_own, income_total, income_transfert) %>% 
+         income_own, income_total, income_transfert, own_income_no_mil_change_YoY_jan_feb,
+         own_income_no_mil_change_YoY_jun_aug,
+         own_income_no_mil_change_YoY_mar_may,
+         own_income_no_mil_change_YoY_adapt) %>% 
   rename(income_own_2022 = income_own, income_total_2022 = income_total, income_transfert_2022 = income_transfert)
 
 #aggregate income data for 2021 as a predictor and combine with data for 2022
 ds1_budget_income <- 
   ds_budget_income %>% 
   filter(year == "2021") %>%
-  select(-c(ends_with('change'), ends_with('net')))
+  select(-c(ends_with('change'), ends_with('net'))) %>%
+  select(-c("own_income_no_mil_change_YoY_jan_feb",
+            "own_income_no_mil_change_YoY_jun_aug",
+            "own_income_no_mil_change_YoY_mar_may",
+            "own_income_no_mil_change_YoY_adapt")) 
   
 colnames(ds1_budget_income) <- ifelse(
   str_detect(colnames(ds1_budget_income), "income") |
