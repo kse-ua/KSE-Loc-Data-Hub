@@ -54,17 +54,240 @@ cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
-paths_budget <-  list.files("./data-private/raw/", pattern = "^boost_incomes_INCO4.+.xlsx$",full.names = T)
+path_admin <- "./data-private/derived/ua-admin-map.csv"
+path_func <- "./data-private/raw/boost_expenses_func.csv"
+path_econ <- "./data-private/raw/boost_expenses_econ.csv"
+path_prog <- "./data-private/raw/boost_expenses_prog.csv"
 
-ls_import <- list()
-for(i in seq_along(paths_budget)){
+ds_admin_full <- readr::read_csv(path_admin)
+ds_expenses_func <- readr::read_delim(path_func, delim = ";", 
+                                      locale = locale(encoding = "WINDOWS-1251"))
+ds_expenses_econ <- readr::read_delim(path_econ, delim = ";", 
+                                      locale = locale(encoding = "WINDOWS-1251"))
+ds_expenses_prog <- readr::read_delim(path_prog, delim = ";", 
+                                      locale = locale(encoding = "WINDOWS-1251"))
+
+#+ load-data, eval=eval_chunks -------------------------------------------------
+
+#+ prepare-func-expenses, eval=eval_chunks -------------------------------------
+
+ds1 <- 
+  ds_expenses_func %>% 
+  janitor::clean_names() %>%
+  # select only local budgets 
+  filter(grepl('^[0-9][0-9]5', admin3)) %>%
+  filter(!is.na(func3)) %>%
+  mutate(
+    admin4_code = as.character(str_extract(admin4, '[0-9]+'))
+    ,admin4_label = str_remove(admin4, '[0-9]+ ')
+    ,across(ends_with('executed'), as.numeric)
+    ,x2021_executed = case_when(is.na(x2021_executed) ~ 0,
+                                .default = x2021_executed)
+    ,x2022_executed = case_when(is.na(x2022_executed) ~ 0,
+                                .default = x2022_executed)
+  ) %>% 
+  filter(!(x2021_executed==0 & x2022_executed==0)) %>%
+  relocate(c("admin4_code", 'admin4_label'), .after = "admin4") %>%
+  select(-c("admin4")) %>% 
+  arrange(admin4_code)
+
+ds2 <- 
+  ds1 %>%
+  mutate(func_code = paste0("func_", str_extract(func3, '[0-9]+'))) %>%
+  select(-c(func1, func2, func3)) %>%
+  pivot_longer(
+    -c(starts_with('adm'), func_code)
+    , names_to = 'year'
+    , values_to = 'expenses'
+  ) %>%
+  mutate(
+    year = str_extract(year, "(?<=x)....(?=_)")
+    ) %>%
+  pivot_wider(names_from = func_code, values_from = expenses) %>%
+  select(admin4_code, admin4_label, year, sort(names(.))) %>%
+  mutate(across(
+    starts_with("func"), 
+    ~case_when(is.na(.) ~ 0,
+               .default = .)))
+
+ds_func_fin <- ds2 %>%
+  left_join(
+    ds_admin_full %>% 
+      mutate(budget_code = paste0(budget_code,"0"),
+      ) %>% 
+      distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
+               , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
+    ,by = c("admin4_code"  = "budget_code")
+  ) %>%
+  relocate(hromada_name, hromada_code, admin4_label, admin4_code, raion_name, 
+           raion_code, oblast_name, oblast_name_en, oblast_code, region_en, 
+           region_code_en, year) %>%
+  rename(budget_name = admin4_label,
+         budget_code = admin4_code) %>%
+  select(-c(admin1, admin2, admin3)) %>% 
+  # filtering out non-hromadas and hromadas occupied before 2022
+  filter(!is.na(hromada_code) & budget_code %nin% toh_before_22)
+
+#+ prepare-econ-expenses, eval=eval_chunks -------------------------------------
+
+ds1 <- 
+  ds_expenses_econ %>% 
+  janitor::clean_names() %>%
+  # select only local budgets 
+  filter(grepl('^[0-9][0-9]5', admin3)) %>%
+  filter(!is.na(econ3)) %>%
+  mutate(
+    admin4_code = as.character(str_extract(admin4, '[0-9]+'))
+    ,admin4_label = str_remove(admin4, '[0-9]+ ')
+    ,across(ends_with('executed'), as.numeric)
+    ,x2021_executed = case_when(is.na(x2021_executed) ~ 0,
+                                .default = x2021_executed)
+    ,x2022_executed = case_when(is.na(x2022_executed) ~ 0,
+                                .default = x2022_executed)
+  ) %>% 
+  filter(!(x2021_executed==0 & x2022_executed==0)) %>%
+  relocate(c("admin4_code", 'admin4_label'), .after = "admin4") %>%
+  select(-c("admin4")) %>% 
+  arrange(admin4_code)
+
+ds2 <- 
+  ds1 %>%
+  mutate(econ_code = paste0("econ_", str_extract(econ3, '[0-9]+'))) %>%
+  select(-c(econ1, econ2, econ3)) %>%
+  pivot_longer(
+    -c(starts_with('adm'), econ_code)
+    , names_to = 'year'
+    , values_to = 'expenses'
+  ) %>%
+  mutate(
+    year = str_extract(year, "(?<=x)....(?=_)")
+  ) %>%
+  pivot_wider(names_from = econ_code, values_from = expenses) %>%
+  select(admin4_code, admin4_label, year, sort(names(.))) %>%
+  mutate(across(
+    starts_with("econ"), 
+    ~case_when(is.na(.) ~ 0,
+               .default = .)))
+
+ds_econ_fin <- ds2 %>%
+  left_join(
+    ds_admin_full %>% 
+      mutate(budget_code = paste0(budget_code,"0"),
+      ) %>% 
+      distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
+               , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
+    ,by = c("admin4_code"  = "budget_code")
+  ) %>%
+  relocate(hromada_name, hromada_code, admin4_label, admin4_code, raion_name, 
+           raion_code, oblast_name, oblast_name_en, oblast_code, region_en, 
+           region_code_en, year) %>%
+  rename(budget_name = admin4_label,
+         budget_code = admin4_code) %>%
+  select(-c(admin1, admin2, admin3)) %>% 
+  # filtering out non-hromadas and hromadas occupied before 2022
+  filter(!is.na(hromada_code) & budget_code %nin% toh_before_22)
+
+#+ prepare-prog-expenses, eval=eval_chunks -------------------------------------
+
+ds1 <- 
+  ds_expenses_prog %>% 
+  janitor::clean_names() %>%
+  # select only local budgets 
+  filter(grepl('^[0-9][0-9]5', admin3)) %>%
+  filter(!is.na(prog2)) %>%
+  mutate(
+    admin4_code = as.character(str_extract(admin4, '[0-9]+'))
+    ,admin4_label = str_remove(admin4, '[0-9]+ ')
+    ,across(ends_with('executed'), as.numeric)
+    ,x2021_executed = case_when(is.na(x2021_executed) ~ 0,
+                                .default = x2021_executed)
+    ,x2022_executed = case_when(is.na(x2022_executed) ~ 0,
+                                .default = x2022_executed)
+  ) %>% 
+  filter(!(x2021_executed==0 & x2022_executed==0)) %>%
+  relocate(c("admin4_code", 'admin4_label'), .after = "admin4") %>%
+  select(-c("admin4")) %>% 
+  arrange(admin4_code)
+
+ds2 <- 
+  ds1 %>%
+  mutate(prog_code = paste0("prog_", str_extract(prog2, '[0-9]+'))
+         ) %>% 
+  select(-c(prog1, prog2)) %>%
+  # filter(prog_code %in% c("prog_1080", "prog_8130", "prog_5043"))
+  pivot_longer(
+    -c(starts_with('adm'), prog_code)
+    , names_to = 'year'
+    , values_to = 'expenses'
+  ) %>%
+  mutate(
+    year = str_extract(year, "(?<=x)....(?=_)")
+  ) %>%
+  # some prog codes changed names so there are duplicates, sum it
+  summarise(expenses = sum(expenses, na.rm = T),
+            .by = c(admin4_code, admin4_label, year, prog_code)) %>% 
+  pivot_wider(names_from = prog_code, values_from = expenses) %>%
+  select(admin4_code, admin4_label, year, sort(names(.))) %>%
+  mutate(across(
+    starts_with("prog"), 
+    ~case_when(is.na(.) ~ 0,
+               .default = .)))
+
+ds_prog_fin <- ds2 %>%
+  left_join(
+    ds_admin_full %>% 
+      mutate(budget_code = paste0(budget_code,"0"),
+      ) %>% 
+      distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
+               , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
+    ,by = c("admin4_code"  = "budget_code")
+  ) %>%
+  relocate(hromada_name, hromada_code, admin4_label, admin4_code, raion_name, 
+           raion_code, oblast_name, oblast_name_en, oblast_code, region_en, 
+           region_code_en, year) %>%
+  rename(budget_name = admin4_label,
+         budget_code = admin4_code) %>%
+  # filtering out non-hromadas and hromadas occupied before 2022
+  filter(!is.na(hromada_code) & budget_code %nin% toh_before_22)
+
+#+ merge-all, eval=eval_chunks -------------------------------------------------
+
+ds_fin <- ds_prog_fin %>% 
+  left_join(ds_econ_fin, suffix = c("", ".y"), 
+            by = c("hromada_code", "year")) %>%
+  select(-ends_with('.y')) %>% 
+  left_join(ds_func_fin, suffix = c("", ".y"), 
+            by = c("hromada_code", "year")) %>% 
+  select(-ends_with('.y'))
   
-  ls_import[[i]] <- 
-    readxl::read_xlsx(
-      path = paths_budget[[i]]
-    ) %>% 
-    janitor::clean_names() %>%
-    mutate_all(.funs = as.character)
-}
+#+ save, eval=eval_chunks -------------------------------------------------
 
-lapply(ls_import, glimpse)
+openxlsx::write.xlsx(ds_fin, './data-private/derived/hromada_expenses_2021_2022.xlsx')
+
+#+ results="asis", echo=F ------------------------------------------------------
+cat("\n# A. Session Information{#session-info}")
+#+ results="show", echo=F ------------------------------------------------------
+#' For the sake of documentation and reproducibility, the current report was rendered in the following environment.
+if( requireNamespace("devtools", quietly = TRUE) ) {
+  devtools::session_info()
+} else {
+  sessionInfo()
+}
+report_render_duration_in_seconds <- scales::comma(as.numeric(difftime(Sys.time(), report_render_start_time, units="secs")),accuracy=1)
+report_render_duration_in_minutes <- scales::comma(as.numeric(difftime(Sys.time(), report_render_start_time, units="mins")),accuracy=1)
+#' Report rendered by `r Sys.info()["user"]` at `r strftime(Sys.time(), "%Y-%m-%d, %H:%M %z")` in `r report_render_duration_in_seconds` seconds ( or `r report_render_duration_in_minutes` minutes)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
