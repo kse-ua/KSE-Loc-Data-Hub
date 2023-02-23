@@ -469,26 +469,35 @@ a <- ds5_long %>%
 
 b <- a %>%
   group_by(budget_code) %>%
-  mutate(own_income_no_mil_change_YoY_jul_aug = ((((income_own_no_military_tax[month=="8"&year==2022]+
-                                                      income_own_no_military_tax[month=="7"&year==2022]) / 
+  mutate(own_income_no_mil_change_YoY_jun_aug = ((((income_own_no_military_tax[month=="8"&year==2022]+
+                                                      income_own_no_military_tax[month=="7"&year==2022]+
+                                                      income_own_no_military_tax[month=="6"&year==2022]) / 
                                                      (income_own_no_military_tax[month=="8"&year==2021]+
-                                                        income_own_no_military_tax[month=="7"&year==2021]))-1)*100),
-         own_income_no_mil_change_YoY_mar_apr = ((((income_own_no_military_tax[month=="3"&year==2022]+
-                                                      income_own_no_military_tax[month=="4"&year==2022]) / 
+                                                        income_own_no_military_tax[month=="7"&year==2021]+
+                                                        income_own_no_military_tax[month=="6"&year==2021]))-1)*100),
+         own_income_no_mil_change_YoY_mar_may = ((((income_own_no_military_tax[month=="3"&year==2022]+
+                                                      income_own_no_military_tax[month=="4"&year==2022]+
+                                                      income_own_no_military_tax[month=="5"&year==2022]) / 
                                                      (income_own_no_military_tax[month=="3"&year==2021]+
-                                                        income_own_no_military_tax[month=="4"&year==2021]))-1)*100),
-         own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_jul_aug - own_income_no_mil_change_YoY_mar_apr)
+                                                        income_own_no_military_tax[month=="4"&year==2021]+
+                                                        income_own_no_military_tax[month=="5"&year==2021]))-1)*100),
+         own_income_no_mil_change_YoY_jan_feb = ((((income_own_no_military_tax[month=="1"&year==2022]+
+                                                      income_own_no_military_tax[month=="2"&year==2022]) / 
+                                                     (income_own_no_military_tax[month=="1"&year==2021]+
+                                                        income_own_no_military_tax[month=="2"&year==2021]))-1)*100),
+         own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_jun_aug - own_income_no_mil_change_YoY_mar_may)
 
-b$own_income_no_mil_change_YoY_jul_aug[b$year == 2021] <- 0
-b$own_income_no_mil_change_YoY_mar_apr[b$year == 2021] <- 0
+b$own_income_no_mil_change_YoY_jun_aug[b$year == 2021] <- 0
+b$own_income_no_mil_change_YoY_mar_may[b$year == 2021] <- 0
 b$own_income_no_mil_change_YoY_adapt[b$year == 2021] <- 0
 
 c <- b %>% 
   distinct(budget_code, year, .keep_all = TRUE) %>%
   select(budget_code,
          year,
-         own_income_no_mil_change_YoY_jul_aug,
-         own_income_no_mil_change_YoY_mar_apr,
+         own_income_no_mil_change_YoY_jan_feb,
+         own_income_no_mil_change_YoY_jun_aug,
+         own_income_no_mil_change_YoY_mar_may,
          own_income_no_mil_change_YoY_adapt)
 
 ds5_final <- ds5_former %>%
