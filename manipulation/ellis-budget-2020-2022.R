@@ -460,11 +460,53 @@ ds5_former <-
   ungroup() %>% 
   glimpse()
 
+a <- ds5_long %>% 
+  filter(year!=2020) %>% 
+  group_by(budget_code, month) %>%
+  mutate(income_own_no_mil_change_YoY = ((income_own - income_military) -
+                                           (income_own[year==2021] - income_military[year==2021])),
+         income_own_no_military_tax = income_own - income_military)
+
+b <- a %>%
+  group_by(budget_code) %>%
+  mutate(own_income_no_mil_change_YoY_jun_aug = ((((income_own_no_military_tax[month=="8"&year==2022]+
+                                                      income_own_no_military_tax[month=="7"&year==2022]+
+                                                      income_own_no_military_tax[month=="6"&year==2022]) / 
+                                                     (income_own_no_military_tax[month=="8"&year==2021]+
+                                                        income_own_no_military_tax[month=="7"&year==2021]+
+                                                        income_own_no_military_tax[month=="6"&year==2021]))-1)*100),
+         own_income_no_mil_change_YoY_mar_may = ((((income_own_no_military_tax[month=="3"&year==2022]+
+                                                      income_own_no_military_tax[month=="4"&year==2022]+
+                                                      income_own_no_military_tax[month=="5"&year==2022]) / 
+                                                     (income_own_no_military_tax[month=="3"&year==2021]+
+                                                        income_own_no_military_tax[month=="4"&year==2021]+
+                                                        income_own_no_military_tax[month=="5"&year==2021]))-1)*100),
+         own_income_no_mil_change_YoY_jan_feb = ((((income_own_no_military_tax[month=="1"&year==2022]+
+                                                      income_own_no_military_tax[month=="2"&year==2022]) / 
+                                                     (income_own_no_military_tax[month=="1"&year==2021]+
+                                                        income_own_no_military_tax[month=="2"&year==2021]))-1)*100),
+         own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_jun_aug - own_income_no_mil_change_YoY_mar_may)
+
+b$own_income_no_mil_change_YoY_jun_aug[b$year == 2021] <- 0
+b$own_income_no_mil_change_YoY_mar_may[b$year == 2021] <- 0
+b$own_income_no_mil_change_YoY_adapt[b$year == 2021] <- 0
+
+c <- b %>% 
+  distinct(budget_code, year, .keep_all = TRUE) %>%
+  select(budget_code,
+         year,
+         own_income_no_mil_change_YoY_jan_feb,
+         own_income_no_mil_change_YoY_jun_aug,
+         own_income_no_mil_change_YoY_mar_may,
+         own_income_no_mil_change_YoY_adapt)
+
+ds5_final <- ds5_former %>%
+  left_join(c, by = c("budget_code","year"))
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 dataset_names_dis <- list('Data' = ds3, 'Metadata' = metadata_dis)
 
-dataset_names <- list('Data' = ds5_long, 'Metadata' = metadata)
+dataset_names <- list('Data' = ds5_final, 'Metadata' = metadata)
 
 openxlsx::write.xlsx(dataset_names_dis, './data-public/derived/hromada_budget_2020_2022_taxes.xlsx')
 openxlsx::write.xlsx(dataset_names, './data-public/derived/hromada_budget_2020_2022.xlsx')
@@ -481,4 +523,5 @@ if( requireNamespace("devtools", quietly = TRUE) ) {
 report_render_duration_in_seconds <- scales::comma(as.numeric(difftime(Sys.time(), report_render_start_time, units="secs")),accuracy=1)
 report_render_duration_in_minutes <- scales::comma(as.numeric(difftime(Sys.time(), report_render_start_time, units="mins")),accuracy=1)
 #' Report rendered by `r Sys.info()["user"]` at `r strftime(Sys.time(), "%Y-%m-%d, %H:%M %z")` in `r report_render_duration_in_seconds` seconds ( or `r report_render_duration_in_minutes` minutes)
+
 

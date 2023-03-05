@@ -133,7 +133,7 @@ survey_url <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
 meta_survey <- googlesheets4::read_sheet(survey_url,"survey",skip = 0)
 meta_choices <- googlesheets4::read_sheet(survey_url,"choices",skip = 0)
 
-
+ds_weights <- readr::read_csv("./data-private/derived/index_preparedness_weights.csv")
 
 # ---- inspect-data ------------------------------------------------------------
 ds_general %>% glimpse(80)
@@ -217,7 +217,7 @@ ds_general0 <-
 ds0 <- 
   ds_survey %>% 
   mutate(
-    idp_help_count              = rowSums(across(all_of(idp_help), na.rm = T)), # idp_help_count fix
+    idp_help_count              = rowSums(across(all_of(idp_help)), na.rm = T), # idp_help_count fix
     help_military_count         = rowSums(across(all_of(military_help)), na.rm = T),
     help_military_count_neg     = 4 - help_military_count,
     income_own_per_capita       = income_own_2021         / total_population_2022,
@@ -263,6 +263,50 @@ d_meta_prep <-
   meta_survey %>% 
   filter(group=="preparation") %>% 
   select(item_name = name,label_en,label)
+
+paste0(preparation, "_feb")
+paste0(preparation, "_oct")
+
+ds_prep_new <- ds0 %>%
+  mutate(
+      across(
+        .cols = preparation
+        ,.fns = ~case_when(
+          .  == 0 ~ 0 #"No"
+          ,. == 1 ~ 0 #"After Feb 24"
+          ,. == 2 ~ 1 #"Before Feb 24"
+          ,.default = 0
+        ),
+        .names = "{col}_feb"),
+      across(
+        .cols = preparation
+        ,.fns = ~case_when(
+          .  == 0 ~ 0 #"No"
+          ,. == 1 ~ 1 #"After Feb 24"
+          ,. == 2 ~ 1 #"Before Feb 24"
+          ,.default = 0
+        ),
+        .names = "{col}_oct"
+        )
+      ) %>% 
+  select(hromada_code,
+         paste0(preparation, "_feb"),
+         paste0(preparation, "_oct")) %>%
+  mutate(prep_score_feb = prep_first_aid_water_feb*7.95 + prep_first_aid_fuel_feb*7.90 +
+               prep_reaction_plan_feb*7.72 + prep_evacuation_plan_feb*7.21 + 
+               prep_reaction_plan_oth_hromadas_feb*6.53 + prep_reaction_plan_oda_feb*6.80 + 
+               prep_dftg_creation_feb*6.94 + prep_national_resistance_feb*6.26 + 
+               prep_starosta_meeting_feb*7.44 + prep_communal_meetiing_feb*7.53 + 
+               prep_online_map_feb*6.07 + prep_shelter_list_feb*6.48 + 
+               prep_notification_check_feb*7.95 + prep_backup_feb*7.21,
+         prep_score_oct = prep_first_aid_water_oct*7.95 + prep_first_aid_fuel_oct*7.90 +
+           prep_reaction_plan_oct*7.72 + prep_evacuation_plan_oct*7.21 + 
+           prep_reaction_plan_oth_hromadas_oct*6.53 + prep_reaction_plan_oda_oct*6.80 + 
+           prep_dftg_creation_oct*6.94 + prep_national_resistance_oct*6.26 + 
+           prep_starosta_meeting_oct*7.44 + prep_communal_meetiing_oct*7.53 + 
+           prep_online_map_oct*6.07 + prep_shelter_list_oct*6.48 + 
+           prep_notification_check_oct*7.95 + prep_backup_oct*7.21) %>%
+  select(hromada_code, prep_score_feb, prep_score_oct)
 
 ds1_prep <-
   ds0 %>% 
@@ -498,7 +542,7 @@ predictor_vars_categorical_new <- c(
   ,'polit_work'
   ,'party_national_winner'
   ,'no_party'
-  ,'war_zone_27_04_2022'
+  # ,'war_zone_27_04_2022'
   ,'train_station'
   ,'edem_petitions' # binary from above
   ,'edem_consultations'# binary from above
@@ -508,7 +552,7 @@ predictor_vars_categorical_new <- c(
   ,'youth_centers_b' # наявність молодіжних центрів
   ,'youth_councils_b' # наявність молодіжних рад
   ,'business_support_centers_b' # наявність центру підтримки бізнесу
-  ,'occupation_and_combat'
+  # ,'occupation_and_combat'
 )
 
 predictor_vars <- c(
@@ -643,7 +687,7 @@ ds_general1 <-
   ) %>%
   rename(square = area, urban_population_2022 = urban_popultaion_2022) %>%
   mutate(country = "Ukraine") 
-  
+
 # inspect outcomes
 ds1 %>% select(all_of(outcomes_vars_new)) %>% explore::describe_all() %>%neat_DT()
 ggplot(reshape2::melt(ds1[outcomes_vars_new]),aes(x=value)) + geom_histogram() + facet_wrap(~variable, scales = 'free')
@@ -859,7 +903,7 @@ d <-
     ,depdist = "gaussian"
     ,explantory_continous = predictor_vars_continuous_scaled_wo_na
     ,explanatory_categorical = predictor_vars_categorical_new
-    ,confounder = 'war_zone'
+    ,confounder = c('war_zone', 'city')
   )
 d %>% plot_complex_scan()
 

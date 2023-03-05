@@ -600,6 +600,122 @@ g
 # g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
 ```
 
+```{r preparation-summary-3, fig.height=5, fig.width=12,class.source="fold-hide", cache=T}
+
+
+d1 <- 
+  ds1_prep_ordinal_factors %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>% 
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d2 <- 
+  ds1_prep_binary_factors %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>% 
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count, rm.na = T)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup()
+
+d12 <- 
+  bind_rows(
+    d1
+    ,d2 %>% filter(value == "Yes")
+  ) %>% 
+  left_join(
+    d_meta_prep
+  ) %>% 
+  arrange(item_name, value) 
+
+d_in <- 
+  d12 %>% 
+    mutate(
+    display_name = label_en
+    ,display_name = factor(
+      display_name
+      ,levels =  d12 %>%
+        left_join(d_meta_prep) %>%
+        filter(value == "Yes") %>%
+        # filter(value == "Before Feb 24") %>%
+        arrange(prop) %>%
+        # arrange(desc(item_number)) %>%
+        pull(label_en)
+    ) # display_name
+    ,value = fct_relevel(
+      value
+      , "As of Feb", "As of Oct", "Yes", "No", "Not Applicable",
+    ) %>% fct_rev()
+  ) 
+
+g <- 
+  d_in %>% 
+  { 
+  ggplot(
+    data = (.) %>% filter(value !="Yes")
+    ,aes(x=prop, y = display_name, fill=value)
+  )+
+  geom_col(position = position_stack()
+           , alpha = .7
+  )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = 1
+            , size = 4
+            ,color="white"
+            ,position = position_stack()
+            ,data = . %>% filter(value !="Yes")
+            )+
+  geom_text(aes(label = str_remove(pct,"\\%"))
+            ,hjust = -.5
+            ,vjust = .5
+            , size = 2
+            ,color="black"
+            ,position = position_stack()
+            ,data = (.) %>% filter(value=="Yes") %>% mutate(value=NA)
+
+            )+
+  scale_x_continuous(
+    breaks = seq(.1,1,.1)
+    ,labels = scales::percent_format()
+    ,expand = expansion(add=c(-.000,-.0))
+  )+
+  scale_fill_manual(
+    breaks = c("As of Feb", "As of Oct",  "No", "Not Applicable"),
+    values = c("#0d0887", "#0b2c9c", "#cc475a", "#bab7b7")
+    )+
+  labs(
+    title = "Have your hromada made the following preparations?"
+    ,x = "Percent of respondents", y = NULL, fill = NULL
+    ,caption = "Cummulative percent shown in black"
+  )+
+  theme(
+    # panel.grid = element_blank()
+    panel.grid.major.y  = element_blank()
+    ,panel.border = element_blank()
+    ,panel.grid.major.x = element_line(color = "black")
+  )
+  }
+
+g
+# g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
+```
+
+
 ```{r preparation-summary-2, fig.height=5, fig.width=12,class.source="fold-hide", cache=T}
 
 
@@ -2750,17 +2866,17 @@ ds1_winter_prep %>%
 ## 11.2 Problem Involvement
 ```{r problem-models, results = "asis", class.source="fold-hide", eval = T}
 d <- ds1_problem %>%
-  select(hromada_code, problem_additive_index, type)
+  select(hromada_code, problem_additive_index, region_en)
 
 d_mean <- ds1_problem %>%
-  group_by(type) %>%
+  group_by(region_en) %>%
   summarise(mean = mean(problem_additive_index, na.rm = T))
 
 
 d %>%
   ggplot(aes(x = problem_additive_index)) +
   geom_density(fill="dodgerblue") +
-  facet_wrap(type ~ ., nrow = 3) +
+  facet_wrap(region_en ~ ., nrow = 5) +
   geom_vline(data = d_mean, aes(xintercept = mean), color = "red", lwd = 1.2) +
   labs(title = "Problem Involvement Index",
        subtitle = "Red lines show mean value for community type",
@@ -2768,18 +2884,45 @@ d %>%
   guides(color = "none")
 
 d %>%
-  ggplot(aes(x = problem_additive_index, y = type, color = type)) +
+  ggplot(aes(x = problem_additive_index, y = region_en, color = region_en)) +
   geom_boxplot(width = .3, outlier.shape = NA) +
   geom_jitter(height = .1) +
   labs(title = "Problem Involvement Index",
        x = NULL, y = NULL, color = NULL) +
   guides(color = "none")
 
-```
+d <- ds1_problem %>% select(contains('index'), region_en, hromada_code,
+                            occupation_and_combat_fct, -index) %>%
+  pivot_longer(-c(region_en, occupation_and_combat_fct, hromada_code), 
+               names_to = 'engagement', values_to = 'index')
 
-```{r}
-meta_survey %>% filter(group=="preparation") %>% pull(name)
-
+ds1_problem %>% select(contains('index'), -index, -problem_additive_index) %>% 
+  summarise(across(everything(.), ~mean(.x, na.rm = T))) %>%
+  mutate(group = "all") %>%
+  pivot_longer(-group, names_to = 'engagement', values_to = "index") %>%
+  mutate(engagement = factor(engagement,
+                             levels = c('problem_info_index', 'problem_consultation_index',
+                                        'problem_proposition_index', 'problem_system_index',
+                                        'problem_feedback_index', 'problem_execution_index'))) %>%
+  ggplot(aes(x = engagement, y = index, fill = engagement)) +
+    geom_col()+
+    geom_text(aes(label = round(index, 2)), hjust = .6, vjust = -.6) + 
+    scale_y_continuous(expand = expansion(add = c(0,1))) +
+    scale_x_discrete(labels=c('problem_info_index' = "Information",
+                              'problem_consultation_index' = "Consultation", 
+                              'problem_proposition_index' = "Involvement", 
+                              'problem_system_index' = "Systematic Exchange", 
+                              'problem_feedback_index' = "Feedback",
+                              'problem_execution_index' = "Execution")) +
+    scale_fill_viridis_d(begin = 0, end = .8, direction = -1, 
+                                  option = "plasma",guide= guide_legend(reverse=T))+
+  labs(
+    title = "How hromadas engaged different actors in solving critical problems?"
+    ,fill = NULL
+    ,x = "Types of engagement"
+    , y = "Index value"
+  ) + 
+  guides(fill = "none") 
 
 ```
 
