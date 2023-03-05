@@ -245,6 +245,166 @@ ds_geo_full <-
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 readr::write_csv(ds_geo_full, "./data-public/derived/geography.csv")
 
+#+ closest-distance-russia, eval=eval_chunks-----------------------------------------------
+
+library(osmdata)
+library(ggmap)
+library(geosphere)
+library(geojsonsf)
+
+ds3 <- readr::read_csv("./data-public/derived/geography.csv")
+
+#upload polygons of Russia (with Crimea due to deployment of armed forces there) + Belarus 
+#and only Russian with Crimea (also excluded Kaliningrad)
+
+russia_bel_border <-st_read("./data-public/derived/shapefiles/russia_bel_crimea.shp")
+russia_border <- st_read("./data-public/derived/shapefiles/russia_crimea.shp")
+
+#polygon for the neighbours of Ukraine which are EU members
+eu_border <- st_read("./data-public/derived/shapefiles/eu_neighbours.shp")
+
+#create dataframe of coordinates of hromada centers
+centers <- ds3 %>% 
+  select(hromada_code, hromada_center_code, lon_center, lat_center) %>% 
+  st_as_sf(coords = c("lon_center","lat_center"), crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+#calculate distances and merge with the main geography dataset
+distance_to_russia_belarus <- st_distance(centers, russia_bel_border)
+distance_to_russia <- st_distance(centers, russia_border)
+distance_to_eu <- st_distance(centers, eu_border)
+
+ds4 <- cbind(ds3, distance_to_russia_belarus, distance_to_russia, distance_to_eu) %>% 
+  mutate(
+    distance_to_russia_belarus = as.numeric(distance_to_russia_belarus/1000)
+    ,distance_to_russia = as.numeric(distance_to_russia/1000)
+    ,distance_to_eu = as.numeric(distance_to_eu/1000)
+  )
+  
+
+#+ mountain-hromadas, eval=eval_chunks-----------------------------------------------
+d0_mountain <- readxl::read_xlsx("./data-private/raw/mountain-hromadas.xlsx", col_names = "all")
+
+d1_mountain <- d0_mountain %>% 
+  mutate(
+    oblast_name = str_to_title(str_extract(all, ".+(?= ОБЛАСТЬ)"))
+    ,raion_name = str_extract(all, ".+(?= район)")
+    ,hromada_name = str_extract(all, "(?<=Територія ).+(?= територіальної)")
+    ,hromada_name = case_when(
+      str_detect(hromada_name,"Красноїльської") ~ 	"Красноїльська селищна"
+      ,!str_detect(hromada_name,"Красноїльської") ~ str_replace_all(hromada_name, c("ої"="а", "'"="’"))
+    )
+  ) %>% 
+  fill(oblast_name, raion_name) %>% 
+  filter(!is.na(hromada_name)) %>% 
+  mutate(
+    key = paste(oblast_name, raion_name, hromada_name)
+    ,mountain_hromada = 1
+  )
+
+ds5 <- ds4 %>% 
+  left_join(
+    d1_mountain %>% select(key, mountain_hromada)
+    ,by = "key"
+  )
+
+
+#+ additional-geographic-data, eval=eval_chunks-----------------------------------------------
+
+near_seas <- st_read("./data-public/derived/shapefiles/near_seas.shp") %>% 
+  janitor::clean_names() %>% 
+  mutate(near_seas = 1)
+
+bordering_hromadas <- st_read("./data-public/derived/shapefiles/bordering_hromadas.shp") %>% 
+  janitor::clean_names()%>% 
+  mutate(bordering_hromadas = 1)
+
+hromadas_30km_from_border <- st_read("./data-public/derived/shapefiles/hromadas_30km_from_border.shp") %>% 
+  janitor::clean_names() %>% 
+  mutate(hromadas_30km_from_border = 1)
+
+hromadas_30km_russia_belarus <- st_read("./data-public/derived/shapefiles/hromadas_30km_russia_belarussia.shp") %>% 
+  janitor::clean_names() %>% 
+  mutate(hromadas_30km_russia_belarus = 1)
+  
+buffer_int_15km <- st_read("./data-public/derived/shapefiles/buffer_int_15km.shp") 
+buffer_nat_15km <- st_read("./data-public/derived/shapefiles/buffer_nat_15km.shp") 
+
+#select hromdas inside 15 km buffers from national and international roads
+buffer_nat_15km <- st_filter(ds_polygons, buffer_nat_15km) %>% mutate(buffer_nat_15km = 1)
+buffer_int_15km <- st_filter(ds_polygons, buffer_int_15km) %>% mutate(buffer_int_15km = 1)
+
+
+ds6 <- ds5 %>% 
+  left_join(
+    near_seas %>% select(cod_3, near_seas)
+    ,by = c("hromada_code" = "cod_3")
+  ) %>% 
+  left_join(
+    bordering_hromadas %>% select(cod_3, bordering_hromadas)
+    ,by = c("hromada_code" = "cod_3")
+  ) %>% 
+  left_join(
+    hromadas_30km_from_border %>% select(cod_3, hromadas_30km_from_border)
+    ,by = c("hromada_code" = "cod_3")
+  ) %>% 
+  left_join(
+    hromadas_30km_russia_belarus %>% select(cod_3, hromadas_30km_russia_belarus)
+    ,by = c("hromada_code" = "cod_3")
+  ) %>% 
+  left_join(
+    buffer_nat_15km %>% select(cod_3, buffer_nat_15km)
+    ,by = c("hromada_code" = "cod_3")
+  ) %>% 
+  left_join(
+    buffer_int_15km %>% select(cod_3, buffer_int_15km)
+    ,by = c("hromada_code" = "cod_3")
+  ) %>% 
+  select(-starts_with("geometry")) %>% 
+  left_join(
+    ds_polygons %>% select(cod_3, geometry)
+    ,by = c("hromada_code" = "cod_3")
+  )
+
+
+#visualize all layers
+
+ds7 <- st_as_sf(ds6, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+roads_national <- st_read("./data-public/derived/shapefiles/roads_national.shp")
+roads_international <- st_read("./data-public/derived/shapefiles/roads_international.shp")
+
+g1 <- tm_shape(ds7) +
+  tm_polygons("near_seas", alpha = 0.5, palette = "cadetblue1", group = "Громади на відстані 30км від моря") +
+  tm_shape(roads_international) +
+  tm_lines(col = "red", group = "Міжнародні транспортні коридори") +
+  tm_shape(roads_national) +
+  tm_lines(col = "blue", group = "Дороги національного значення") +
+  tm_shape(ds7) +
+  tm_polygons("buffer_int_15km", alpha = 0.4, palette = "red", group = "Громади на відстані 15 км від міжнародних транспортних шляхів") +
+  tm_shape(ds7) +
+  tm_polygons("buffer_nat_15km", alpha = 0.4, palette = "blue", group = "Громади на відстані 15 км від національних транспортних шляхів") +
+  tm_shape(ds7) +
+  tm_polygons("mountain_hromada", alpha = 0.4, palette = "brown", group = "Гірські громади") +
+  tm_shape(ds7) +
+  tm_polygons("bordering_hromadas", alpha = 0.4, palette = "green", group = "Громади, що прилягають до кордону") +
+  tm_shape(ds7) +
+  tm_polygons("hromadas_30km_from_border", alpha = 0.4, palette = "lightgreen", group = "Громади в межах 30 км зони від кордону") +
+  tm_shape(ds7) +
+  tm_polygons("hromadas_30km_russia_belarus", alpha = 0.4, palette = "salmon", group = "Громади в межах 30 км зони від кордонів Росії та Білорусі")
+  
+tmap_save(g1, "./analysis/map_geography.html")
+
+
+tm_shape(ds7)+
+  tm_polygons(col = "grey", alpha = 0.1) +
+  tm_shape(ds7 %>% filter(!is.na(near_seas))) +
+  tm_polygons("near_seas", alpha = 0.5, palette = "cadetblue1", group = "Громади на відстані 30км від моря") +
+  tm_shape(roads_international) +
+  tm_lines(col = "red", group = "Міжнародні транспортні коридори")
+
+
+#+ save-data, eval=eval_chunks-----------------------------------------------
+readr::write_csv(ds6, "./data-public/derived/geography.csv")
 
 
 #+ results="asis", echo=F ------------------------------------------------------
