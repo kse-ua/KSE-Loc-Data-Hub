@@ -85,21 +85,22 @@ ds_passangers <- readr::read_csv(path_passangers)
 
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
-# ds1_demography <- 
-#   ds_demography %>% 
-#   left_join(
-#     ds_declarations %>% 
-#       rename_at(vars(total:working_age_pct), ~paste(., "declarations", sep ="_")) %>% 
-#       select(-area, -hromada_name)
-#     ,by = "hromada_code"
-#   ) %>% 
-#   mutate(
-#     declarations_pct = total_declarations/total_popultaion_2022
-#     ,urban_declarations_pct = case_when(
-#       urban_popultaion_2022 != 0 ~ urban_declarations/urban_popultaion_2022
-#       ,TRUE ~ NA_real_
-#     )
-#   )
+
+ds1_declarations <- ds_declarations %>% 
+  rename_at(vars(total:working_age_pct), ~paste(., "declarations", sep ="_")) %>%
+  select(-area, -hromada_name) %>% 
+  left_join(
+    ds_demography %>% select(hromada_code, total_popultaion_2022, urban_popultaion_2022)
+    ,by = "hromada_code"
+  ) %>% 
+  mutate(
+    declarations_pct = total_declarations/total_popultaion_2022
+    ,urban_declarations_pct = case_when(
+      urban_popultaion_2022 != 0 ~ urban_declarations/urban_popultaion_2022
+      ,TRUE ~ NA_real_
+    )
+  ) %>% 
+  filter(declarations_pct >= 0.5)
 
 
 #comparison population 2022 and declarations
@@ -279,13 +280,17 @@ d1 <-
     ds_passangers
     ,by = "hromada_code"
   ) %>% 
+  left_join(
+    ds1_declarations %>% select(-total_popultaion_2022, -total_popultaion_2022)
+    ,by = "hromada_code"
+  ) %>% 
   mutate(
     train_station = ifelse(is.na(passangers_2021), 0, 1)
   ) %>% 
   mutate_at(
     vars(starts_with("income_")), ~./1000
-  ) %>% 
-  rename(area = square)
+  ) 
+  
   
 
 #TO-DO: add partnerships

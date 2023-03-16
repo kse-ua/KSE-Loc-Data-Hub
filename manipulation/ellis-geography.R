@@ -309,6 +309,7 @@ ds5 <- ds4 %>%
 
 
 #+ additional-geographic-data, eval=eval_chunks-----------------------------------------------
+sf::sf_use_s2(FALSE)
 
 near_seas <- st_read("./data-public/derived/shapefiles/near_seas.shp") %>% 
   janitor::clean_names() %>% 
