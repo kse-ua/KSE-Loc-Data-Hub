@@ -56,6 +56,7 @@ cat("\n# 2.Data ")
 ds_budget_data <- readr::read_csv(path_budget_data)
 ds_polygons <- st_read(path_polygons) %>% janitor::clean_names()
 ds_admin_full <- readr::read_csv(path_admin)
+ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
 
 #+ inspect-data ----------------------------------------------------------------
 ds_budget_data %>% glimpse()
@@ -69,12 +70,21 @@ tor_before_22 <- c("05561000000","05556000000","12538000000","05555000000","1253
                    ,"05566000000","12531000000","05565000000","05559000000","05558000000","05550000000"
                    ,"12536000000","05553000000") 
 
+most_affected <- c('Малинівська', "Балаклійська", "Печенізька", "Ізюмська",
+                   "Куньєвська", "Борівська", "Петропавлівська")
 
 ds_1 <- ds_budget_data %>% 
   # filter(year == 2022) %>%
   mutate(
     tor_before_22 = admin4_code %in% tor_before_22
-  ) 
+  ) %>%  
+  left_join(
+    ds_admin_full %>%
+      mutate(budget_code = paste0(budget_code,"0")) %>%
+      distinct(budget_code, hromada_name, hromada_code, oblast_name_display, 
+               oblast_name_en, map_position, region_ua, oblast_code)
+    ,by = c("admin4_code"  = "budget_code")
+  )
 
 hist(ds_1$own_prop_change)
 hist(ds_1$own_prop_change_2021const)
@@ -88,7 +98,8 @@ d1 <- st_sf(
   right_join(
     ds_1 %>%
       filter(year == 2022) %>%
-      select(oblast_code, hromada_code, hromada_name, own_income_change_pct, own_prop_change, tor_before_22,
+      select(oblast_code, oblast_name_en, hromada_code, hromada_name, 
+             own_income_change_pct, own_prop_change, tor_before_22, income_total,
              own_prop, own_prop_change_pct, income_own)
     ,ds_polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
@@ -96,10 +107,19 @@ d1 <- st_sf(
 )
 
 d2 <- d1 %>%
-  left_join(ds_1 %>% filter(year == 2021) %>% select(hromada_code, own_prop, income_own)
+  left_join(ds_1 %>% filter(year == 2021) %>% select(hromada_code, own_prop)
             , suffix = c('2022', '2021'), by = 'hromada_code') %>%
-  mutate(own_prop_pct2021 = scales::percent(own_prop2021),
-         own_prop_pct2022 = scales::percent(own_prop2022))
+  left_join(ds_general %>% select(hromada_code, total_population_2022)
+            , by = 'hromada_code') %>%
+  mutate(own_prop_pct2021 = scales::percent(own_prop2021, accuracy = 1L),
+         own_prop_pct2022 = scales::percent(own_prop2022, accuracy = 1L),
+         own_income_pp = round(income_own / total_population_2022),
+         total_income_pp = round(income_total / total_population_2022),
+         most_affected = case_when(hromada_name %in% most_affected ~ TRUE,
+                                   .default = FALSE))
+
+d3 <- d2 %>% 
+  filter(oblast_name_en == "Kharkiv")
 
 #+ data-for-map-with-infl, eval=eval_chunks ------------------------------------------------
 d3 <- st_sf(
@@ -119,8 +139,8 @@ d4 <- d3 %>%
               filter(year == 2021) %>% 
               select(hromada_code, own_prop_2021const, income_own_2021const)
             , suffix = c('2022', '2021'), by = 'hromada_code') %>%
-  mutate(own_prop_pct2021 = scales::percent(own_prop_2021const2021),
-         own_prop_pct2022 = scales::percent(own_prop_2021const2022))
+  mutate(own_prop_pct2021 = scales::percent(round(own_prop_2021const2021)),
+         own_prop_pct2022 = scales::percent(round(own_prop_2021const2022)))
 
 
 hist(d4$own_income_change_2021const)
@@ -129,9 +149,9 @@ d4 %>% slice_max(own_income_change_2021const, n = 10) %>% neat_DT()
 
 #+ map-wo-infl, eval=eval_chunks ------------------------------------------------
 
-tmap_mode('view')
+tmap_mode('plot')
 g1 <- 
-  d2 %>%
+  d3 %>%
   mutate(own_prop_change = if_else(!tor_before_22, own_prop_change, NA_real_)) %>%
   tm_shape() + 
   tm_fill("own_prop_change",
@@ -139,25 +159,122 @@ g1 <-
           title = 'Зміна частки власних доходів',
           palette = "RdBu",
           id="hromada_name",
-          popup.vars=c('Зміна частки власних доходів' = "own_prop_change_pct",
-                       'Частка власних доходів у 2021' = 'own_prop_pct2021',
-                       'Частка власних доходів у 2022' = 'own_prop_pct2022',
-                       'Зміна обсягу власних доходів' = 'own_income_change_pct',
-                       'Обсяг власних доходів у 2021' = 'income_own2021',
-                       'Обсяг власних доходів у 2022' = 'income_own2022'
-                       ),
           style = 'pretty',
-          labels = c('-60 to -40%', '-40% to -20%', '-20% to 0%', '0% to +20%', 
-                    '+20% to +40%', '+40% to +60%', 'Немає даних')
-          ) + 
+          labels = c('від -40 до -30%', 'від -30% до -20%', 'від -20% до -10%', 
+                     'від -10 до 0%','від 0% до +10%', 'від +10% до +20%'),
+          legend.show = T) + 
   tm_borders('gray', lwd = 0.2) +
+  tm_shape(d3 %>% filter(most_affected)) +
+  tm_borders('black', lwd = 1.8) +
+  # tm_text('own_prop_change_pct', size = 1.2, xmod = 0, ymod = 1, fontface = 'bold') +
   # tm_shape(d2 %>% distinct(oblast_code)) + 
   # tm_borders('oblast_code', 'black', lwd = 1) +
-  tm_legend(outside=TRUE) +
-  tm_layout(frame = FALSE) +
+  tm_layout(frame = F
+            # ,legend.text.size = .6
+            ,legend.outside.size = .3
+            # ,legend.title.size = .6
+            ,legend.position = c("right", "bottom")
+            ,legend.outside = T
+            ,title.position = c('left', 'top')) +  
   tmap_options(check.and.fix = TRUE)
 g1
 
+g2 <- 
+  d3 %>%
+  mutate(own_prop2022 = if_else(!tor_before_22, own_prop2022, NA_real_)) %>%
+  tm_shape() + 
+  tm_fill("own_prop2022",
+          # title = 'Change in share of \n hromada own revenue',
+          title = 'Частка власних доходів',
+          palette = "RdYlBu",
+          id="hromada_name",
+          style = 'pretty',
+          labels = c('менше 20%', '20% to 40%', '40% to 60%', '60% to 80%',
+                     'більше 80%'),
+          # legend.show = F
+  ) + 
+  tm_borders('gray', lwd = 0.2) +
+  tm_shape(d3 %>% filter(most_affected)) +
+  tm_borders('black', lwd = 1.8) +
+  # tm_text('own_prop_pct2022', size = 0.5) +
+  # tm_shape(d2 %>% distinct(oblast_code)) + 
+  # tm_borders('oblast_code', 'black', lwd = 1) +
+  tm_layout(frame = F
+            # ,legend.text.size = .6
+            ,legend.outside.size = .2
+            # ,legend.title.size = .6
+            ,legend.position = c("right", "bottom")
+            ,legend.outside = T
+            ,title.position = c('left', 'top')) +
+  tmap_options(check.and.fix = TRUE)
+g2
+
+g3 <- 
+  d3 %>%
+  mutate(own_prop2022 = if_else(!tor_before_22, own_prop2022, NA_real_)) %>%
+  tm_shape() + 
+  tm_fill("own_income_pp",
+          # title = 'Change in share of \n hromada own revenue',
+          title = 'Обсяг власних доходів на 1 особу',
+          palette = "RdYlBu",
+          id="hromada_name",
+          style = 'pretty'
+          # labels = c('менше 20%', '20% to 40%', '40% to 60%', '60% to 80%',
+                     # 'більше 80%'),
+          # legend.show = F
+  ) + 
+  tm_borders('gray', lwd = 0.2) +
+  tm_shape(d3 %>% filter(most_affected)) +
+  tm_borders('black', lwd = 1.8) +
+  # tm_text('own_prop_pct2022', size = 0.5) +
+  # tm_shape(d2 %>% distinct(oblast_code)) + 
+  # tm_borders('oblast_code', 'black', lwd = 1) +
+  tm_layout(frame = F
+            # ,legend.text.size = .6
+            ,legend.outside.size = .3
+            # ,legend.title.size = .6
+            ,legend.position = c("right", "bottom")
+            ,legend.outside = T
+            ,title.position = c('left', 'top')) +
+  tmap_options(check.and.fix = TRUE)
+g3
+
+g4 <- 
+  d3 %>%
+  mutate(own_prop2022 = if_else(!tor_before_22, own_prop2022, NA_real_)) %>%
+  tm_shape() + 
+  tm_fill("total_income_pp",
+          # title = 'Change in share of \n hromada own revenue',
+          title = 'Обсяг загальних доходів на 1 особу',
+          palette = "RdYlBu",
+          id="hromada_name",
+          style = 'pretty'
+          # labels = c('менше 20%', '20% to 40%', '40% to 60%', '60% to 80%',
+          # 'більше 80%'),
+          # legend.show = F
+  ) + 
+  tm_borders('gray', lwd = 0.2) +
+  tm_shape(d3 %>% filter(most_affected)) +
+  tm_borders('black', lwd = 1.8) +
+  # tm_text('own_prop_pct2022', size = 0.5) +
+  # tm_shape(d2 %>% distinct(oblast_code)) + 
+  # tm_borders('oblast_code', 'black', lwd = 1) +
+  tm_layout(frame = F
+            # ,legend.text.size = .6
+            ,legend.outside.size = .3
+            # ,legend.title.size = .6
+            ,legend.position = c("right", "bottom")
+            ,legend.outside = T
+            ,title.position = c('left', 'top')) +
+  tmap_options(check.and.fix = TRUE)
+g4
+tmap_save(g1, "own_prop_change_kharkiv.png", dpi = 800)
+tmap_save(g2, "own_prop_kharkiv.png", dpi = 800)
+tmap_save(g3, "own_income_pp_kharkiv.png", dpi = 800)
+tmap_save(g4, "total_income_pp_kharkiv.png", dpi = 800)
+
+
+tmap_arrange(g1, g2, ncol = 2)
 #+ map-with-infl, eval=eval_chunks ------------------------------------------------
 
 tmap_mode('view')
