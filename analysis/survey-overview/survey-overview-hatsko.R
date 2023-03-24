@@ -387,7 +387,7 @@ ds1_prep_binary_factors_feb <-
   ) %>% 
   select(hromada_code, starts_with("prep_score"),preparation, deoccupied_at_feb_2023)
 
-і# ----- inspect-data-1-prep -----------------------
+# ----- inspect-data-1-prep -----------------------
 
 
 ds1_prep_ordinal_integers %>% glimpse()
