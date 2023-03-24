@@ -3098,6 +3098,47 @@ g
 
 ```
 
+```{r deoccup-skills, fig.height=5, fig.width=9, class.source="hide", eval = TRUE}
+
+d <- ds0 %>%
+  filter(!is.na(occupation)) %>%
+  select(hromada_name, all_of(skills)) %>% 
+  pivot_longer(
+    -c(hromada_name)
+    ,names_to = "action"
+    ,values_to = "response"
+  ) %>% 
+  group_by(action) %>% 
+  summarise(n = sum(response, na.rm = T), .groups = "drop", na = sum(!is.na(response))) %>%
+  mutate(freq = n/na)
+
+g <- d %>%
+  ggplot(aes(y = freq, x = fct_reorder(action, freq, .desc = T))) +
+  geom_col(position = position_dodge(), fill = "dodgerblue")+
+  geom_text(aes(label = scales::percent(freq, 1)), hjust = .4, 
+             vjust = -.3, position = position_dodge(width = .9), size = 3.2) + 
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 5)) +
+  labs(title = 'What skills do executives need to address current \ncommunity challenges?', 
+       fill = NULL) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 0.9)) +
+  scale_x_discrete(labels=c('skills_needed/fundraising' = "Fundraising \n(attracting additional funds \nto the community through \ngrants, investment projects)",
+                            'skills_needed/project_management' = "Project management", 
+                            'skills_needed/longterm_planning' = "Long-term planning", 
+                            'skills_needed/crisis_planning' = "Crisis planning \nand management", 
+                            'skills_needed/data_analysis' = "Collection and analysis \nof data for decision-making", 
+                            "skills_needed/human_resourse" = "Lack of human resources", 
+                            "skills_needed/other" = "Other")
+                   )
+
+g 
+g %>%  quick_save("skills-general",w=6, h=4)
+
+
+```
+
 ```{r preparation-summary-3, fig.height=5, fig.width=12,class.source="fold-hide", cache=T}
 
 d2 <- 
