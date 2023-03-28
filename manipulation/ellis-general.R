@@ -29,8 +29,6 @@ Sys.setlocale("LC_CTYPE", "ukr")
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
 library(tidyverse)
-library(tmap)
-
 
 #+ load-all-datasets -------------------------------------------------------------
 #main datasets
@@ -57,6 +55,8 @@ path_internet <- "./data-private/derived/internet-speed.csv"
 path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
 path_oblast <- "./data-private/raw/oblast.csv"
 path_passangers <- "./data-private/derived/passangers.csv"
+path_internet_speed <- "./data-private/derived/internet-speed.csv"
+path_roads_lengths <- "./data-private/derived/roads-lengths.csv"
 
 #+ declare-functions -----------------------------------------------------------
 
@@ -82,6 +82,8 @@ ds_community_competence <- readr::read_csv(path_community_competence) %>%
 ds_oblasts <- readr::read_csv(path_oblast)
 ds_war <- readr::read_csv(path_war)
 ds_passangers <- readr::read_csv(path_passangers)
+ds_internet_speed <- readr::read_csv(path_internet_speed)
+ds_passangers <- readr::read_csv(path_roads_lengths)
 
 #+ inspect-data ----------------------------------------------------------------
 

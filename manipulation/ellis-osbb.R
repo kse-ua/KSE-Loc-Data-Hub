@@ -256,7 +256,7 @@ d1 %>%
 
 
 
-#### Managing duplicated cases ones again usig raions additionally
+#### Managing duplicated cases ones again using raions additionally
 
 dups <- d1 %>%
   group_by(edrpou) %>%

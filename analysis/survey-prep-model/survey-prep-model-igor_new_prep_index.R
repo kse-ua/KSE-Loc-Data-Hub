@@ -117,7 +117,7 @@ make_corr_plot <- function (
 }
 
 # ---- load-data ---------------------------------------------------------------
-ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean.xlsx")
+ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean_new.xlsx")
 
 # the product of ./manipulation/ellis-general.R
 ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
@@ -134,6 +134,8 @@ meta_survey <- googlesheets4::read_sheet(survey_url,"survey",skip = 0)
 meta_choices <- googlesheets4::read_sheet(survey_url,"choices",skip = 0)
 
 ds_weights <- readr::read_csv("./data-private/derived/index_preparedness_weights.csv")
+
+
 
 # ---- inspect-data ------------------------------------------------------------
 ds_general %>% glimpse(80)
@@ -188,10 +190,15 @@ prep_for_winter <- c('info_campaign', 'reserves', 'count_power_sources',
                      'count_heaters_need', 'solid_fuel_boiler')
 # vector of income variables 
 income <- 
-  ds_survey %>%
+  ds_general %>%
   select(ends_with('capita'), ends_with('prop_2021')) %>%
   colnames() %>% 
   print()
+
+geographic_vars <- c("distance_to_russia_belarus",'distance_to_russia', 'distance_to_eu',
+                     "mountain_hromada", "near_seas", "bordering_hromadas", 
+                     "hromadas_30km_from_border", "hromadas_30km_russia_belarus",
+                     "buffer_nat_15km", "buffer_int_15km")
 
 # ---- meta-data-1 -------------------------------------------------------------
 meta_survey %>% glimpse()
@@ -213,16 +220,26 @@ ds_general0 <-
     )
   )
 
-
 ds0 <- 
   ds_survey %>% 
+  left_join(ds_general,
+            by = 'hromada_code') %>% 
+  select(-ends_with('.y')) %>%
+  rename_at(.vars = vars(ends_with(".x")),
+            .funs = list(~ sub("[.]x$", "", .))) %>%
+  mutate(
+    across(
+      .cols = all_of(geographic_vars),
+      .fns = ~replace_na(., 0L)
+    )
+  ) %>% 
   mutate(
     idp_help_count              = rowSums(across(all_of(idp_help)), na.rm = T), # idp_help_count fix
     help_military_count         = rowSums(across(all_of(military_help)), na.rm = T),
     help_military_count_neg     = 4 - help_military_count,
-    income_own_per_capita       = income_own_2021         / total_population_2022,
-    income_total_per_capita     = income_total_2021       / total_population_2022,
-    income_tranfert_per_capita  = income_transfert_2021   / total_population_2022,
+    income_own_per_capita_2021       = income_own_2021         / total_population_2022,
+    income_total_per_capita_2021     = income_total_2021       / total_population_2022,
+    income_tranfert_per_capita_2021  = income_transfert_2021   / total_population_2022,
     idp_registration_share      = idp_registration_number / total_population_2022,
     idp_real_share              = idp_real_number         / total_population_2022,
     idp_child_share             = idp_child_education     / idp_registration_number * 100,
@@ -246,9 +263,8 @@ ds0 <-
     ,problem_additive_index     =   .4*problem_info_index + .6*problem_consultation_index + 
       .6*problem_proposition_index + .8*problem_system_index + .8*problem_feedback_index +
       problem_execution_index
-  ) %>%
-  left_join(ds_general %>% select(hromada_code, train_station, passangers_2021),
-            by = 'hromada_code')
+  )
+
 
 ds0 %>% select(all_of(military_help), help_military_count) %>% neat_DT()
 
@@ -291,7 +307,9 @@ ds_prep_new <- ds0 %>%
   ) %>% 
   select(hromada_code,
          paste0(preparation, "_feb"),
-         paste0(preparation, "_oct")) %>%
+         paste0(preparation, "_oct"),
+         all_of(geographic_vars), 
+         occupation_and_combat) %>%
   mutate(prep_score_feb = prep_first_aid_water_feb*7.95 + prep_first_aid_fuel_feb*7.90 +
            prep_reaction_plan_feb*7.72 + prep_evacuation_plan_feb*7.21 + 
            prep_reaction_plan_oth_hromadas_feb*6.53 + prep_reaction_plan_oda_feb*6.80 + 
@@ -306,7 +324,8 @@ ds_prep_new <- ds0 %>%
            prep_starosta_meeting_oct*7.44 + prep_communal_meetiing_oct*7.53 + 
            prep_online_map_oct*6.07 + prep_shelter_list_oct*6.48 + 
            prep_notification_check_oct*7.95 + prep_backup_oct*7.21) %>%
-  select(hromada_code, prep_score_feb, prep_score_oct)
+  select(hromada_code, prep_score_feb, prep_score_oct, all_of(geographic_vars),
+         occupation_and_combat)
 
 ds1_prep <-
   ds0 %>% 
@@ -426,8 +445,8 @@ outcomes_vars_new <-  c(
 # Continuous - good for spreading out # Valentyn, please add relevant predictors here
 predictor_vars_continuous <- c(
   "income_own_per_capita"     # весь дохід з податків (без видатків з держви) - заможність громади
-  ,"income_total_per_capita"  # свій доход + дотації, суммарний дохід
-  ,"income_tranfert_per_capita" # що надходить від держави, 
+  ,"income_total_per_capita_2021"  # свій доход + дотації, суммарний дохід
+  ,"income_tranfert_per_capita_2021" # що надходить від держави, 
   ,'own_income_prop_2021' # відсоток власних доходів у загальному доході
   ,'transfert_prop_2021' # відсоток трансфертів у загальному доході
   ,'dfrr_executed' # сума всіх проектів (скільки дали на розвиток громади - спец прокти), виграні інвестиційні проекти, на скільки г. залучила інвест кошти в рамках програми
@@ -699,9 +718,9 @@ ggplot(reshape2::melt(ds1[outcomes_vars_new]),aes(x=value)) + geom_histogram() +
 #+ - plot-linear-models-1 ------------------------------------------------------
 
 d <- 
-  ds2_prep %>% 
+  ds_prep_new %>% 
   pivot_longer(
-    cols = predictor_vars_continuous_scaled_wo_na
+    cols = geographic_vars
     ,names_to = "item_name"
     ,values_to = "item_value"
   ) %>% glimpse()
@@ -716,7 +735,7 @@ make_plot_prepvs <- function(
   g <- 
     d %>% 
     mutate(
-      item_name = factor(item_name, levels = predictor_vars_continuous_scaled_wo_na)
+      item_name = factor(item_name, levels = geographic_vars)
     ) %>% 
     ggplot(aes(
       x     = !!rlang::sym(xvar)
@@ -824,8 +843,8 @@ g %>% quick_save("tester3",w=16,h=9)
 ##+ Preparation Score February -------------------------------------------------
 
 # check distribution
-x <- ds2_prep %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %>% pull()
-pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+x <- ds_prep_new %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "norm")
 plot(pois_dist)
 # too left-skewed for poisson 
 nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
@@ -834,20 +853,29 @@ plot(nbin_dist)
 
 fit1_poisson <- 
   glm(
-    formula = prep_score_feb ~ occupation_and_combat
-    ,data = ds2_prep
+    formula = prep_score_feb ~ mountain_hromada
+    ,data = ds_prep_new
     ,family = "poisson"
   )
+
+fit1_gaussian <- 
+  glm(
+    formula = prep_score_feb ~ distance_to_eu
+    ,data = ds_prep_new
+    ,family = "gaussian"
+  )
+
 
 performance::check_overdispersion(fit1_poisson)
 # overdispersed data - so negative binomial
 
 fit1_nbinom <- 
   MASS::glm.nb(
-    formula = prep_score_feb ~ incumbent
-    ,data = ds2_prep
+    formula = prep_score_feb ~ distance_to_eu
+    ,data = ds_prep_new
   )
 
+summary(fit1_gaussian)
 summary(fit1_nbinom)
 
 # for zero-inflated model
@@ -874,24 +902,48 @@ plot(norm_dist)
 
 fit1_norm <- 
   glm(
-    formula = prep_score_oct ~ not_from_here
-    ,data = ds2_prep
+    formula = prep_score_oct ~ buffer_int_15km
+    ,data = ds_prep_new
     ,family = "gaussian"
   )
 
 summary(fit1_norm)
 
+fit1_norm <- 
+  glm(
+    formula = prep_score_oct ~ buffer_int_15km + occupation_and_combat
+      ,data = ds_prep_new
+    ,family = "gaussian"
+  )
+
+summary(fit1_norm)
+
+occupation_and_combat
+
+
 # plot
 d <-
-  ds2_prep %>%
+  ds_prep_new %>%
   run_complex_scan(
     dependent = 'prep_score_oct'
     ,depdist = "gaussian"
-    ,explantory_continous = predictor_vars_continuous_scaled_wo_na
-    , explanatory_categorical = predictor_vars_categorical_new
+    ,explantory_continous = geographic_vars_cont
+    , explanatory_categorical = geographic_vars_cat
   )
 d %>% plot_complex_scan()
 
+geographic_vars <- c("distance_to_russia_belarus",'distance_to_russia', 
+                     'distance_to_eu', "mountain_hromada", "near_seas", 
+                     "bordering_hromadas", "hromadas_30km_from_border", 
+                     "hromadas_30km_russia_belarus", "buffer_nat_15km", 
+                     "buffer_int_15km")
+
+geographic_vars_cont <- c("distance_to_russia_belarus",'distance_to_russia', 
+                     'distance_to_eu')
+geographic_vars_cat <- c("mountain_hromada", "near_seas", 
+                     "bordering_hromadas", "hromadas_30km_from_border", 
+                     "hromadas_30km_russia_belarus", "buffer_nat_15km", 
+                     "buffer_int_15km")
 ##+ Revenue -----------------------------------------------------------
 
 x <- ds_general %>% select(own_prop_change) %>% filter(!is.na(own_prop_change)) %>% pull()

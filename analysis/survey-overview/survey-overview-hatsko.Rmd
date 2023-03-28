@@ -649,13 +649,14 @@ d_in <-
     display_name = label_en
     ,display_name = factor(
       display_name
-      ,levels =  d12 %>%
-        left_join(d_meta_prep) %>%
-        filter(value == "Yes") %>%
-        # filter(value == "Before Feb 24") %>%
-        arrange(prop) %>%
-        # arrange(desc(item_number)) %>%
-        pull(label_en)
+      ,levels =  rev(
+        c("Water stored (1)", "Communication tested (13)", "Fuel stored (2)",
+                   "Plan of response (3)", "Meeting with utilities (10)", "Meeting with heads (9)",
+                   "Plan of evacuation (4)", "Data backup fully (14)", 
+                   "Data backed up partially (15)", "Territorial Defense (7)",
+                   "Plan coord w/ Oblast (6)", "Plan coord w/ oth. Hs (5)", 
+                   "Shelter list online (12)", "Plan of resistance (8)", "Shelter map online (11)")
+      )
     ) # display_name
     ,value = fct_relevel(
       value
@@ -663,11 +664,20 @@ d_in <-
     ) %>% fct_rev()
   ) 
 
+labels <- c("Formed stocks (water, food, med.)", "Means of warning checked",
+            "Formed stocks (fuel)", "Emergency response plan upd.", 
+            "Mtg. with heads of utility co.", "Mtg. with starostas",
+            "Plan for the evacuation", "Community data backed up (fully)",
+            "Community data backed up (partially)", "Voluntary def. formation created",
+            "Res. plan with Oblast State Adm.", "Res. plan with other hromadas",
+            "List of shelters addresses published", "Local nat. resistance plan app.",
+            "Online map of shelters published")
+
 g <- 
   d_in %>% 
   { 
   ggplot(
-    data = (.) %>% filter(value !="Yes")
+    data = (.) %>% filter(value %ni% c("Yes","No", "Not Applicable"))
     ,aes(x=prop, y = display_name, fill=value)
   )+
   geom_col(position = position_stack()
@@ -683,7 +693,7 @@ g <-
   geom_text(aes(label = str_remove(pct,"\\%"))
             ,hjust = -.5
             ,vjust = .5
-            , size = 2
+            , size = 3
             ,color="black"
             ,position = position_stack()
             ,data = (.) %>% filter(value=="Yes") %>% mutate(value=NA)
@@ -694,14 +704,15 @@ g <-
     ,labels = scales::percent_format()
     ,expand = expansion(add=c(-.000,-.0))
   )+
-  scale_fill_manual(
+      scale_y_discrete(labels = rev(labels)) +
+      scale_fill_manual(
     breaks = c("As of Feb", "As of Oct",  "No", "Not Applicable"),
     values = c("#0d0887", "#0b2c9c", "#cc475a", "#bab7b7")
     )+
   labs(
     title = "Have your hromada made the following preparations?"
     ,x = "Percent of respondents", y = NULL, fill = NULL
-    ,caption = "Cummulative percent shown in black"
+    ,caption = "Cumulative percent shown in black"
   )+
   theme(
     # panel.grid = element_blank()
@@ -712,7 +723,7 @@ g <-
   }
 
 g
-# g %>% quick_save("2-preparation-summary-yes",w=12,h=5)
+g %>% quick_save("2-preparation-summary-yes-2",w=12,h=5)
 ```
 
 
