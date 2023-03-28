@@ -34,6 +34,7 @@ library(sf)
 library(mapview)
 library(htmltools)
 library(shiny)
+library(rsconnect)
 
 #+ declare-globals -------------------------------------------------------------
 # printed figures will go here:
@@ -153,6 +154,8 @@ leaflet(dataset, options = leafletOptions(minZoom = 5)) %>%
   #            group = 'map_labels') %>% 
   addLegend(pal = num_pal, values = ~n_settlements, title = "Number of settlements")
 
+
+##
 leaflet(oblast_subset, options = leafletOptions(minZoom = 5)) %>%
   setView(lng = 30.45, lat = 50.36, zoom = 5) %>% 
   fitBounds(lng1 = 21.39, lat1 = 44.79, lng2 = 41.16, lat2 = 52.75) %>% 
@@ -174,47 +177,89 @@ leaflet(oblast_subset, options = leafletOptions(minZoom = 5)) %>%
 
 
 #+ Shiny app -------------------------------------------------------------------
-#create the UI
+
+vars <- dataset %>%
+  select(is.numeric | is.factor | 'oblast_name_en') %>%
+  select(-c(lat_center, lon_center, geometry, oblast_name_en, region_en, male, 
+            high_educ)) %>%
+  st_drop_geometry() %>% 
+  colnames()
+
+#create the UI (ver 2)
 ui <- fluidPage(
   #create title
-  titlePanel("dfad"),
-  sidebarLayout(
-    sidebarPanel(
+  titlePanel("Hromada Dashboard"),
+  
+  fluidRow(
+    column(4,
       
-      selectInput("Metric",
+      selectInput(inputId = "metric",
                   label = "Choose a Metric",
-                  choices = c("Travel Time",
-                              "Number of Settlements"),
-                  selected = "Travel Time")
-    ),
-    mainPanel(
-      leafletOutput("mymap"),
-      p()
+                  choices = vars,
+                  selected = "travel_time")
     )
-  )
+    ),
+    
+      leafletOutput("map", height = 800)
+  
 )
-
 # Server
 
 #Create the server
 
-server <- function(input, output, session) {
+server <- function(input, output) {
   
   #select the input
-  decision <- reactive({
-    switch(input$Metric,
-           "Travel Time" = test_data$travel_time,
-           "Number of Settlements" = test_data$n_settlements)
+  metric_to_map <- reactive({
+    input$metric
   })
   
-  #create dataframe based on input
-  newDf <- reactive({
-    cbind(test_data["Row.Labels"],decision())
+  #
+  output$map <- renderLeaflet({
+    
+    leaflet(options = leafletOptions(minZoom = 5)) %>%
+      setView(lng = 30.45, lat = 50.36, zoom = 5) %>% 
+      fitBounds(lng1 = 21.39, lat1 = 44.79, lng2 = 41.16, lat2 = 52.75) %>% 
+      addTiles() %>%
+      addProviderTiles(providers$Thunderforest.MobileAtlas, 
+                       options = providerTileOptions(opacity = 0.2))
+    
   })
+ 
+  #
   
-  #create the states and join with dataframe to create spatial object
-  statesUsed <- states(cb=T)
-  states_merged <- reactive({
-    geo_join(statesUsed, newDf(), "STUSPS", "Row.Labels", how = 'inner')
+  observeEvent(input$metric, {
+    
+    pal <- if(is.numeric(dataset[[metric_to_map()]])) {
+              colorNumeric("viridis", NULL)
+    } else {
+              colorFactor('viridis', NULL)
+    }
+    
+    leafletProxy("map") %>%
+      clearShapes() %>%
+      clearControls() %>%
+      addPolygons(data = dataset,
+                  label = ~lapply(paste0('<p>', hromada_full_name, '</p><p>', 
+                                         dataset[[metric_to_map()]], '</p>'), 
+                                 htmltools::HTML),
+                  fillColor = ~pal(dataset[[metric_to_map()]]),
+                  weight = 0.5,
+                  fillOpacity = 0.5,
+                  smoothFactor = 0.2,
+                  highlightOptions = highlightOptions(color = "grey", 
+                                                      weight = 2,
+                                                      bringToFront = TRUE)) %>%
+      addLegend(
+        position = "topright",
+        pal = pal,
+        values = dataset[[metric_to_map()]],
+        title = ""
+      )
   })
+}
   
+app <- shinyApp(ui, server)
+
+
+deployApp()
