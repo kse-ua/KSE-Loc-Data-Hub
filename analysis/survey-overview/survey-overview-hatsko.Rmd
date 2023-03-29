@@ -812,6 +812,99 @@ g <-
 g
 ```
 
+```{r preparation-table, fig.height=5, fig.width=12,class.source="fold-hide", cache=T}
+
+
+d1 <- 
+  ds1_prep_binary_factors_feb %>% 
+  select(-c(prep_score_combo, prep_score_feb, prep_score_oct, deoccupied_at_feb_2023)) %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>%
+  left_join(ds_general1 %>% select(hromada_code, type), by = "hromada_code") %>% 
+  group_by(item_name,value, type) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name, type) %>% 
+  mutate(
+    prop = count/sum(count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup() %>% 
+  filter(value == "Yes") %>% 
+  select(-c(value, count, prop)) %>% 
+  pivot_wider(names_from = type, values_from = pct) 
+
+d2 <- 
+  ds1_prep_binary_factors_feb %>% 
+  select(-c(prep_score_combo, prep_score_feb, prep_score_oct, deoccupied_at_feb_2023)) %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>%
+  left_join(ds_general1 %>% select(hromada_code, region_en), by = "hromada_code") %>% 
+  group_by(item_name,value, region_en) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name, region_en) %>% 
+  mutate(
+    prop = count/sum(count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup() %>% 
+  filter(value == "Yes") %>% 
+  select(-c(value, count, prop)) %>% 
+  pivot_wider(names_from = region_en, values_from = pct) 
+
+d3 <- 
+  ds1_prep_binary_factors_feb %>% 
+  select(-c(prep_score_combo, prep_score_feb, prep_score_oct, deoccupied_at_feb_2023)) %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>%
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup() %>% 
+  filter(value == "Yes") %>% 
+  select(-c(value, count, prop)) %>% 
+  rename(total = pct)
+
+d4 <- d1 %>% left_join(d2, by = "item_name") %>% 
+  left_join(d3, by = "item_name") %>% 
+  mutate(item_name = case_when(item_name == "prep_backup" ~ "Community data backed up (fully)",
+                               item_name == "prep_communal_meetiing" ~ "Mtg. with heads of utility co.",
+                               item_name == "prep_dftg_creation" ~ "Voluntary def. formation created",
+                               item_name == "prep_evacuation_plan" ~ "Plan for the evacuation",
+                               item_name == "prep_first_aid_fuel" ~ "Formed stocks (fuel)",
+                               item_name == "prep_first_aid_water" ~ "Formed stocks (water, food, med.)",
+                               item_name == "prep_national_resistance" ~ "Local nat. resistance plan app.",
+                               item_name == "prep_notification_check" ~ "Means of warning checked",
+                               item_name == "prep_online_map" ~ "Online map of shelters published",
+                               item_name == "prep_partly_backup" ~ "Community data backed up (partially)",
+                               item_name == "prep_reaction_plan" ~ "Emergency response plan upd.",
+                               item_name == "prep_reaction_plan_oda" ~ "Res. plan with Oblast State Adm.",
+                               item_name == "prep_reaction_plan_oth_hromadas" ~ "Res. plan with other hromadas",
+                               item_name == "prep_shelter_list" ~ "List of shelters addresses published",
+                               item_name == "prep_starosta_meeting" ~ "Mtg. with starostas"))
+
+
+d4 %>% gridExtra::grid.table()
+  
+labels <- c("Formed stocks (water, food, med.)", "Means of warning checked",
+            "Formed stocks (fuel)", "Emergency response plan upd.", 
+            "Mtg. with heads of utility co.", "Mtg. with starostas",
+            "Plan for the evacuation", "Community data backed up (fully)",
+            "Community data backed up (partially)", "Voluntary def. formation created",
+            "Res. plan with Oblast State Adm.", "Res. plan with other hromadas",
+            "List of shelters addresses published", "Local nat. resistance plan app.",
+            "Online map of shelters published")
+```
+
 <mark>2.1</mark> What questions were asked about preparations hromadas made? 
 
 ```{r class.source = "fold-hide"}
@@ -1627,6 +1720,19 @@ d %>%
   )
 ```
 
+```{r dftg-region-table, fig.height=3, fig.width=9,class.source="fold-hide"}
+
+d %>%
+  group_by(region_en) %>%
+  count(dftg_creation) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1)) %>% 
+  select(-c(prop, n)) %>% 
+  pivot_wider(values_from = pct, names_from = dftg_creation) %>% 
+  gridExtra::grid.table()
+
+```
+
 ```{r dftg-region, fig.height=3, fig.width=9,class.source="fold-hide"}
 d %>%
   group_by(region_en) %>%
@@ -1833,6 +1939,35 @@ p <- d %>%
                             "other" = "Other types of assistance", "none" = "Nothing"))
 
 p
+```
+
+```{r help-military-table, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+
+help_military_levels <- c('rooms', 'transport', 'money', 'products', 'other', "none")
+
+d1 <- ds0 %>% select(hromada_code, type, starts_with('help_for_military/')) %>% 
+  pivot_longer(-c(hromada_code, type), names_to = 'help', values_to = 'count') %>%
+  count(help, type, count) %>% group_by(type, help) %>% 
+  mutate(freq = n/sum(n),
+         help = str_remove(help, 'help_for_military/')) %>%
+  filter(count == 1) %>%
+  select(-c(count, n)) %>% 
+  pivot_wider(names_from = type, values_from = freq)
+
+d2 <- ds0 %>% select(hromada_code, region_en, starts_with('help_for_military/')) %>% 
+  pivot_longer(-c(hromada_code, region_en), names_to = 'help', values_to = 'count') %>%
+  count(help, region_en, count) %>% group_by(region_en, help) %>% 
+  mutate(freq = n/sum(n),
+         help = str_remove(help, 'help_for_military/')) %>%
+  filter(count == 1) %>%
+  select(-c(count, n)) %>% 
+  pivot_wider(names_from = region_en, values_from = freq)
+
+d3 <- d1 %>% left_join(d2, by = "help") %>% filter(help != 'none') %>% 
+  mutate(across(is.numeric, ~formatC(as.numeric(.), digits = 2)))
+
+d3 %>% gridExtra::grid.table()
+
 ```
 
 > Most communities provided several types of aid: 42% provided transport, money and products, and allocated rooms for military; 72% provided three and more of those \
