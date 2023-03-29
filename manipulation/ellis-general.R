@@ -46,6 +46,8 @@ path_edem <- "./data-private/derived/edem-data.csv"
 path_community_competence <- "./data-private/derived/community-competence-hromada.csv"
 path_declarations <- "./data-public/derived/declarations-hromada.csv"
 path_war <- "./data-private/derived/minregion-war-status.csv"
+path_internet <- "./data-private/derived/internet-speed.csv"
+
 
 # path_budget_expences <- 
 
@@ -92,13 +94,13 @@ ds1_declarations <- ds_declarations %>%
   rename_at(vars(total:working_age_pct), ~paste(., "declarations", sep ="_")) %>%
   select(-area, -hromada_name) %>% 
   left_join(
-    ds_demography %>% select(hromada_code, total_popultaion_2022, urban_popultaion_2022)
+    ds_demography %>% select(hromada_code, total_population_2022, urban_population_2022)
     ,by = "hromada_code"
   ) %>% 
   mutate(
-    declarations_pct = total_declarations/total_popultaion_2022
+    declarations_pct = total_declarations/total_population_2022
     ,urban_declarations_pct = case_when(
-      urban_popultaion_2022 != 0 ~ urban_declarations/urban_popultaion_2022
+      urban_population_2022 != 0 ~ urban_declarations/urban_population_2022
       ,TRUE ~ NA_real_
     )
   ) %>% 
@@ -142,7 +144,7 @@ colnames(ds1_budget_income) <- ifelse(
 ds1_dfrr <- 
   ds_dfrr %>% 
   group_by(hromada_code) %>% 
-  summarise(dfrr_executed = sum(budget_executed, na.rm=T), .groups = "drop")
+  summarise(dfrr_executed = sum(budget_executed_2015, na.rm=T), .groups = "drop")
 
 #changes in ds_heads
 ds1_heads <-
@@ -218,6 +220,11 @@ d1 <-
     ds_geography %>% select(-c(hromada_type, hromada, oblast_name, raion_name, key))
     ,by = "hromada_code"  
   ) %>% 
+  mutate_at(
+    vars(mountain_hromada, near_seas, bordering_hromadas, hromadas_30km_from_border,
+         hromadas_30km_russia_belarus, buffer_nat_15km, buffer_int_15km),
+    ~replace(., is.na(.), 0)
+  ) %>% 
   mutate(
     occipied_before_2022 = case_when(
       is.na(n_settlements) ~ 1
@@ -283,7 +290,7 @@ d1 <-
     ,by = "hromada_code"
   ) %>% 
   left_join(
-    ds1_declarations %>% select(-total_popultaion_2022, -total_popultaion_2022)
+    ds1_declarations %>% select(-total_population_2022, -urban_population_2022)
     ,by = "hromada_code"
   ) %>% 
   mutate(
@@ -291,7 +298,8 @@ d1 <-
   ) %>% 
   mutate_at(
     vars(starts_with("income_")), ~./1000
-  ) 
+  ) %>% 
+  rename(area = square)
   
   
 
