@@ -237,6 +237,11 @@ ds_general1 <- ds_general %>%
 
 ds0 <- 
   ds_survey %>% 
+  left_join(ds_general1,
+            by = 'hromada_code') %>% 
+  select(-ends_with('.y')) %>%
+  rename_at(.vars = vars(ends_with(".x")),
+            .funs = list(~ sub("[.]x$", "", .))) %>% 
   mutate(
     income_own_per_capita       = income_own_2021         / total_population_2022,
     income_total_per_capita     = income_total_2021       / total_population_2022,
