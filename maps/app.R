@@ -24,7 +24,6 @@ eval_chunks <- TRUE
 cache_chunks <- TRUE
 report_render_start_time <- Sys.time()
 options(width=100) # number of characters to display in the output (dflt = 80)
-setwd('./maps')
 #+ load-packages -----------------------------------------------------------
 library(tidyverse)
 library(leaflet)
