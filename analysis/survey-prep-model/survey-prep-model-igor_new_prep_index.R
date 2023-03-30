@@ -847,7 +847,7 @@ x <- ds_prep_new %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %
 pois_dist <- fitdistrplus::fitdist(x, distr = "norm")
 plot(pois_dist)
 # too left-skewed for poisson 
-nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+nbin_dist <- fitdistrplus::fitdist(x, distr = "poison", densfun = "poison")
 plot(nbin_dist)
 # seems like negative binomial
 
