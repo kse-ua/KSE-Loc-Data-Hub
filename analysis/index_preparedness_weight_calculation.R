@@ -73,10 +73,13 @@ index_means <- ds_index %>%
 
 ds_fin <- index_means %>% 
   mutate(name = vars[3:16]
-         ,v1_norm = rescale(V1)
+         ,v1_norm = scales::rescale(V1)
          ,share = V1 / sum(V1)
-         ,new_prop = 10 * share) %>%
+         ,new_prop = 15 * share) %>%
   arrange(desc(v1_norm))
+
+ds_fin %>% 
+  summarise(sum = sum(new_prop))
 
 ds_index %>% 
   summarise(across(.cols = water_stored:data_backup,
