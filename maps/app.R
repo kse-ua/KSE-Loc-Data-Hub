@@ -111,10 +111,8 @@ dataset <- st_sf(
             working_age_total_declarations, urban_declarations_pct,
             total_popultaion_2022, urban_popultaion_2022)) %>% 
   relocate(declarations_pct, .before = female_pct_declarations) %>% 
-  relocate(train_station, .before = passangers_2021)
-  
-
-
+  relocate(train_station, .before = passangers_2021) %>% 
+  select(-c(contains('military'), contains('no_mil_change')))
 
 #+ Shiny app -------------------------------------------------------------------
 
