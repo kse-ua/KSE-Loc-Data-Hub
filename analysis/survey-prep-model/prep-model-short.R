@@ -44,6 +44,98 @@ if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
 data_cache_folder <- prints_folder # to sink modeling steps
 # ---- declare-functions -------------------------------------------------------
 '%ni%' <- Negate(`%in%`)
+
+rquery.cormat<-function(x,
+                        type=c('lower', 'upper', 'full', 'flatten'),
+                        graph=TRUE,
+                        graphType=c("correlogram", "heatmap"),
+                        col=NULL, ...)
+{
+  library(corrplot)
+  # Helper functions
+  #+++++++++++++++++
+  # Compute the matrix of correlation p-values
+  cor.pmat <- function(x, ...) {
+    mat <- as.matrix(x)
+    n <- ncol(mat)
+    p.mat<- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    for (i in 1:(n - 1)) {
+      for (j in (i + 1):n) {
+        tmp <- cor.test(mat[, i], mat[, j], ...)
+        p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+      }
+    }
+    colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+    p.mat
+  }
+  # Get lower triangle of the matrix
+  getLower.tri<-function(mat){
+    upper<-mat
+    upper[upper.tri(mat)]<-""
+    mat<-as.data.frame(upper)
+    mat
+  }
+  # Get upper triangle of the matrix
+  getUpper.tri<-function(mat){
+    lt<-mat
+    lt[lower.tri(mat)]<-""
+    mat<-as.data.frame(lt)
+    mat
+  }
+  # Get flatten matrix
+  flattenCorrMatrix <- function(cormat, pmat) {
+    ut <- upper.tri(cormat)
+    data.frame(
+      row = rownames(cormat)[row(cormat)[ut]],
+      column = rownames(cormat)[col(cormat)[ut]],
+      cor  =(cormat)[ut],
+      p = pmat[ut]
+    )
+  }
+  # Define color
+  if (is.null(col)) {
+    col <- colorRampPalette(
+      c("#67001F", "#B2182B", "#D6604D", "#F4A582",
+                 "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE", 
+                 "#4393C3", "#2166AC", "#053061"))(200)
+                 col<-rev(col)
+  }
+  
+  # Correlation matrix
+  cormat<-signif(cor(x, use = "complete.obs", ...),2)
+  pmat<-signif(cor.pmat(x, ...),2)
+  # Reorder correlation matrix
+  ord<-corrMatOrder(cormat, order="hclust")
+  cormat<-cormat[ord, ord]
+  pmat<-pmat[ord, ord]
+  # Replace correlation coeff by symbols
+  sym<-symnum(cormat, abbr.colnames=FALSE)
+  # Correlogram
+  if(graph & graphType[1]=="correlogram"){
+    corrplot(cormat, type=ifelse(type[1]=="flatten", "lower", type[1]),
+             tl.col="black", tl.srt=45,col=col,...)
+  }
+  else if(graphType[1]=="heatmap")
+    heatmap(cormat, col=col, symm=TRUE)
+  # Get lower/upper triangle
+  if(type[1]=="lower"){
+    cormat<-getLower.tri(cormat)
+    pmat<-getLower.tri(pmat)
+  }
+  else if(type[1]=="upper"){
+    cormat<-getUpper.tri(cormat)
+    pmat<-getUpper.tri(pmat)
+    sym=t(sym)
+  }
+  else if(type[1]=="flatten"){
+    cormat<-flattenCorrMatrix(cormat, pmat)
+    pmat=NULL
+    sym=NULL
+  }
+  list(r=cormat, p=pmat, sym=sym)
+}
+
 # ---- load-data ---------------------------------------------------------------
 ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean_new.xlsx")
 
@@ -200,49 +292,40 @@ ds1 <- ds0 %>% select(all_of(var_select))
 
 
 
+
 #+ - tweak-data-2 --------------------------------------------------------------
 
-# ds2_prep <- 
-#   ds_prep_new %>% 
-#   select(hromada_code, starts_with("prep_score")) %>% 
-#   left_join(
-#     ds0 %>% 
-#       select(hromada_code,all_of(predictor_vars), oblast_name_en, hromada_name)
-#   ) %>% 
-#   # scaling 
-#   mutate(
-#     income_own_per_capita_k = income_own_per_capita/1000
-#     ,income_total_per_capita_k = income_total_per_capita/1000
-#     ,income_tranfert_per_capita_k = income_tranfert_per_capita/1000
-#     ,time_before_24th_years = time_before_24th/365
-#     ,dfrr_executed_k = dfrr_executed/1000
-#     ,urban_perc_100 = urban_pct * 100
-#   )  %>% 
-#   # zero filling NAs
-#   mutate(
-#     dfrr_executed_k_zeros = replace_na(dfrr_executed_k, 0)
-#     ,passengers_2021_zeros = replace_na(passangers_2021, 0)
-#     ,sum_osbb_2020_zeros = replace_na(sum_osbb_2020, 0)
-#   ) %>%
-#   # making binary vars where not enough variation
-#   mutate(
-#     business_support_centers_b = ifelse(business_support_centers == 0, 0, 1)
-#     ,youth_centers_b = ifelse(youth_centers == 0, 0, 1)
-#     ,youth_councils_b =ifelse(youth_councils == 0, 0, 1)
-#     ,city = factor(ifelse(type == 'міська', 1, 0))
-#   ) %>%
-#   mutate(
-#     across(
-#       .cols = all_of(predictor_vars_categorical_new)
-#       ,.fns = ~factor(.)
-#     )
-#   ) %>% 
-#   mutate(country = "Ukraine")
+ds2 <-
+  ds1 %>%
+  # scaling
+  mutate(
+    income_own_per_capita_k = income_own_2021_per_capita/1000
+    ,income_total_per_capita_k = income_total_2021_per_capita/1000
+    ,income_tranfert_per_capita_k = income_transfert_2021_per_capita/1000
+    ,time_before_24th_years = time_before_24th/365
+    ,dfrr_executed_k = dfrr_executed/1000
+    ,urban_perc_100 = urban_pct * 100
+    ,passengers_2021_per_capita = passangers_2021 / total_popultaion_2022
+    ,osbb_per_capita_k_2020 = sum_osbb_2020 / total_popultaion_2022 * 1000
+  )  %>%
+  # zero filling NAs
+  mutate(
+    dfrr_executed_k_zeros = replace_na(dfrr_executed_k, 0)
+    ,passengers_2021_per_capita_zeros = replace_na(passengers_2021_per_capita, 0)
+    ,osbb_per_capita_2020_zeros = replace_na(osbb_per_capita_k_2020, 0)
+  ) %>%
+  # making binary vars where not enough variation
+  mutate(
+    business_support_centers_b = ifelse(business_support_centers == 0, 0, 1)
+    ,youth_centers_b = ifelse(youth_centers == 0, 0, 1)
+    ,youth_councils_b =ifelse(youth_councils == 0, 0, 1)
+    ,city = factor(ifelse(type == 'міська', 1, 0))
+  )
 
 ##+ Preparation Score February -------------------------------------------------
 
 # check distribution
-x <- ds_prep_new %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %>% pull()
+x <- ds2 %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %>% pull()
 pois_dist <- fitdistrplus::fitdist(x, distr = "norm")
 plot(pois_dist)
 # too left-skewed for poisson 
@@ -250,32 +333,40 @@ nbin_dist <- fitdistrplus::fitdist(x, distr = "poison", densfun = "poison")
 plot(nbin_dist)
 # seems like negative binomial
 
-fit1_poisson <- 
-  glm(
-    formula = prep_score_feb ~ mountain_hromada
-    ,data = ds_prep_new
-    ,family = "poisson"
-  )
+cor_ds <- ds2 %>% 
+  select(is.numeric) %>% 
+  select(-c(income_total_2021, income_own_2021, income_transfert_2021, 
+            transfert_prop_2021, contains('declarations'), contains('war_zone'),
+            dfrr_executed, dfrr_executed_k, sum_osbb_2020, osbb_per_capita_k_2020,
+            business_support_centers, youth_councils, youth_centers, 
+            income_total_2021_per_capita, income_own_2021_per_capita, 
+            income_transfert_2021_per_capita, time_before_24th, passangers_2021,
+            urban_pct, passengers_2021_per_capita)) %>% 
+  na.omit()
+
+cor_ds %>% 
+  summarise(across(everything(), ~sum(is.na(.)))) %>% 
+  t()
+
+cor(cor_ds, method = 'pearson') %>% neat_DT()
+
 
 fit1_gaussian <- 
   glm(
-    formula = prep_score_feb ~ distance_to_eu
-    ,data = ds_prep_new
+    formula = prep_score_feb ~ urban_perc_100
+    ,data = ds2
     ,family = "gaussian"
   )
 
-
-performance::check_overdispersion(fit1_poisson)
-# overdispersed data - so negative binomial
-
-fit1_nbinom <- 
-  MASS::glm.nb(
-    formula = prep_score_feb ~ distance_to_eu
-    ,data = ds_prep_new
+fit1_poisson <- 
+  glm(
+    formula = prep_score_feb ~ urban_perc_100
+    ,data = ds2
+    ,family = "poisson"
   )
 
 summary(fit1_gaussian)
-summary(fit1_nbinom)
+summary(fit1_poisson)
 
 # for zero-inflated model
 
