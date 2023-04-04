@@ -92,12 +92,32 @@ dataset <- st_sf(
     ,ds_polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
   )
-)
+) %>% 
+  mutate(across(starts_with('income'), 
+                ~ case_when(. == 0 ~ NA_real_,
+                            .default = . / total_popultaion_2022))) %>% 
+  rename_with(~str_c(., '_per_capita'), .cols = starts_with('income')) %>% 
+  mutate(total_popultaion_2022_log = log10(total_popultaion_2022),
+         urban_popultaion_2022_log = case_when(
+           urban_popultaion_2022 == 0 ~ NA_real_,
+           .default = log10(urban_popultaion_2022 + 1))
+         ) %>%
+  relocate(total_popultaion_2022_log, urban_popultaion_2022_log, .after = square) %>% 
+  mutate(dfrr_executed_per_capita = dfrr_executed / total_popultaion_2022,
+         sum_osbb_2020_per_capita = sum_osbb_2020 / total_popultaion_2022) %>% 
+  select(-c(dfrr_executed, sum_osbb_2020, total_declarations, 
+            female_declarations, male_declarations, urban_declarations, 
+            rural_declarations, youth_declarations, 
+            working_age_total_declarations, urban_declarations_pct,
+            total_popultaion_2022, urban_popultaion_2022)) %>% 
+  relocate(declarations_pct, .before = female_pct_declarations) %>% 
+  relocate(train_station, .before = passangers_2021) %>% 
+  select(-c(contains('military'), contains('no_mil_change')))
 
 #+ Shiny app -------------------------------------------------------------------
 
 vars <- dataset %>%
-  select(is.numeric | is.factor | 'oblast_name_en') %>%
+  select(where(is.numeric) | where(is.factor) | 'oblast_name_en') %>%
   select(-c(lat_center, lon_center, geometry, oblast_name_en, region_en, male, 
             high_educ)) %>%
   st_drop_geometry() %>% 
@@ -150,9 +170,9 @@ server <- function(input, output) {
   observeEvent(input$metric, {
     
     pal <- if(is.numeric(dataset[[metric_to_map()]])) {
-      colorBin("viridis", dataset[[metric_to_map()]], 8, pretty = F)
+      colorNumeric("magma", NULL, na.color = rgb(0,0,0,0))
     } else {
-      colorFactor('viridis', NULL)
+      colorFactor('viridis', NULL, na.color = rgb(0,0,0,0))
     }
     
     leafletProxy("map") %>%
@@ -164,7 +184,7 @@ server <- function(input, output) {
                                   htmltools::HTML),
                   fillColor = ~pal(dataset[[metric_to_map()]]),
                   weight = 0.5,
-                  fillOpacity = 0.5,
+                  fillOpacity = 0.7,
                   smoothFactor = 0.2,
                   highlightOptions = highlightOptions(color = "grey", 
                                                       weight = 2,

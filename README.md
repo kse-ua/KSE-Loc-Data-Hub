@@ -21,6 +21,8 @@ The project is funded by GIZ within its project "Support to the Decentralisation
 
 -   [Resilience Survey overview](https://raw.githack.com/kse-ua/ua-de-center-serve/main/analysis/survey-overview/survey-overview.html) - Results and Key findings of the Resiliance Survey
 
+- [Hromada Dashboard](https://valentyn-hatsko.shinyapps.io/hromada-dash/) - Dashboard with Data on Territorial Communities
+
 # Data Products
 
 | Data Product Name                      | Description                                                                                                                                                                                                                                                                                                                                                                                            | Current State / Left To Do                                                                               | Script                                        |

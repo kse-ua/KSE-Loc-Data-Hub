@@ -310,20 +310,20 @@ ds_prep_new <- ds0 %>%
          paste0(preparation, "_oct"),
          all_of(geographic_vars), 
          occupation_and_combat) %>%
-  mutate(prep_score_feb = prep_first_aid_water_feb*7.95 + prep_first_aid_fuel_feb*7.90 +
-           prep_reaction_plan_feb*7.72 + prep_evacuation_plan_feb*7.21 + 
-           prep_reaction_plan_oth_hromadas_feb*6.53 + prep_reaction_plan_oda_feb*6.80 + 
-           prep_dftg_creation_feb*6.94 + prep_national_resistance_feb*6.26 + 
-           prep_starosta_meeting_feb*7.44 + prep_communal_meetiing_feb*7.53 + 
-           prep_online_map_feb*6.07 + prep_shelter_list_feb*6.48 + 
-           prep_notification_check_feb*7.95 + prep_backup_feb*7.21,
-         prep_score_oct = prep_first_aid_water_oct*7.95 + prep_first_aid_fuel_oct*7.90 +
-           prep_reaction_plan_oct*7.72 + prep_evacuation_plan_oct*7.21 + 
-           prep_reaction_plan_oth_hromadas_oct*6.53 + prep_reaction_plan_oda_oct*6.80 + 
-           prep_dftg_creation_oct*6.94 + prep_national_resistance_oct*6.26 + 
-           prep_starosta_meeting_oct*7.44 + prep_communal_meetiing_oct*7.53 + 
-           prep_online_map_oct*6.07 + prep_shelter_list_oct*6.48 + 
-           prep_notification_check_oct*7.95 + prep_backup_oct*7.21) %>%
+  mutate(prep_score_feb = prep_first_aid_water_feb*1.19 + prep_first_aid_fuel_feb*1.18 +
+           prep_reaction_plan_feb*1.16 + prep_evacuation_plan_feb*1.08 + 
+           prep_reaction_plan_oth_hromadas_feb*.98 + prep_reaction_plan_oda_feb*1.02 + 
+           prep_dftg_creation_feb*1.04 + prep_national_resistance_feb*.94 + 
+           prep_starosta_meeting_feb*1.12 + prep_communal_meetiing_feb*1.13 + 
+           prep_online_map_feb*.91 + prep_shelter_list_feb*.97 + 
+           prep_notification_check_feb*1.19 + prep_backup_feb*1.08,
+         prep_score_oct = prep_first_aid_water_oct*1.19 + prep_first_aid_fuel_oct*1.18 +
+           prep_reaction_plan_oct*1.16 + prep_evacuation_plan_oct*1.08 + 
+           prep_reaction_plan_oth_hromadas_oct*.98 + prep_reaction_plan_oda_oct*1.02 + 
+           prep_dftg_creation_oct*1.04 + prep_national_resistance_oct*.94 + 
+           prep_starosta_meeting_oct*1.12 + prep_communal_meetiing_oct*1.13 + 
+           prep_online_map_oct*.91 + prep_shelter_list_oct*.97 + 
+           prep_notification_check_oct*1.19 + prep_backup_oct*1.08) %>%
   select(hromada_code, prep_score_feb, prep_score_oct, all_of(geographic_vars),
          occupation_and_combat)
 
@@ -847,7 +847,7 @@ x <- ds_prep_new %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %
 pois_dist <- fitdistrplus::fitdist(x, distr = "norm")
 plot(pois_dist)
 # too left-skewed for poisson 
-nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+nbin_dist <- fitdistrplus::fitdist(x, distr = "poison", densfun = "poison")
 plot(nbin_dist)
 # seems like negative binomial
 

@@ -29,10 +29,10 @@ base::source("./scripts/common-functions.R") # project-level
 prints_folder <- paste0("./analysis/economic-outcomes/prints/")
 if (!fs::dir_exists(prints_folder)) { fs::dir_create(prints_folder) }
 
-path_economics_wide    <- "./data-private/derived/economics-wide.csv"    # product of ./manipulation/ellis-economics.R
-path_economics    <- "./data-private/derived/economics.csv"    # product of ./manipulation/ellis-economics.R
-path_admin        <- "./data-private/derived/ua-admin-map.rds" # product of ./manipulation/ellis-ua-admin.R
-path_time         <- "./data-private/derived/time_rada.csv"    # product of ./manipulation/ellis-rada-hromada.R
+path_economics_wide   <- "./data-private/derived/economics-wide.csv"    # product of ./manipulation/ellis-economics.R
+path_economics       <- "./data-private/derived/economics.csv"    # product of ./manipulation/ellis-economics.R
+path_admin           <- "./data-private/derived/ua-admin-map.rds" # product of ./manipulation/ellis-ua-admin.R
+path_time            <- "./data-private/derived/time_rada.csv"    # product of ./manipulation/ellis-rada-hromada.R
 
 # ---- declare-functions -------------------------------------------------------
 
@@ -91,7 +91,8 @@ ds0_long <-
   left_join(
     ds0_wide %>% distinct(hromada_code, hromada_type, tot)
   ) %>% 
-  relocate("hromada_type", .after = "hromada_code")
+  relocate("hromada_type", .after = "hromada_code") %>% 
+  relocate("tot",.before="time")
 ds0_long %>% glimpse()
 
 ds0_wide %>% glimpse()

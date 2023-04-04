@@ -812,6 +812,99 @@ g <-
 g
 ```
 
+```{r preparation-table, fig.height=5, fig.width=12,class.source="fold-hide", cache=T}
+
+
+d1 <- 
+  ds1_prep_binary_factors_feb %>% 
+  select(-c(prep_score_combo, prep_score_feb, prep_score_oct, deoccupied_at_feb_2023)) %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>%
+  left_join(ds_general1 %>% select(hromada_code, type), by = "hromada_code") %>% 
+  group_by(item_name,value, type) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name, type) %>% 
+  mutate(
+    prop = count/sum(count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup() %>% 
+  filter(value == "Yes") %>% 
+  select(-c(value, count, prop)) %>% 
+  pivot_wider(names_from = type, values_from = pct) 
+
+d2 <- 
+  ds1_prep_binary_factors_feb %>% 
+  select(-c(prep_score_combo, prep_score_feb, prep_score_oct, deoccupied_at_feb_2023)) %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>%
+  left_join(ds_general1 %>% select(hromada_code, region_en), by = "hromada_code") %>% 
+  group_by(item_name,value, region_en) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name, region_en) %>% 
+  mutate(
+    prop = count/sum(count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup() %>% 
+  filter(value == "Yes") %>% 
+  select(-c(value, count, prop)) %>% 
+  pivot_wider(names_from = region_en, values_from = pct) 
+
+d3 <- 
+  ds1_prep_binary_factors_feb %>% 
+  select(-c(prep_score_combo, prep_score_feb, prep_score_oct, deoccupied_at_feb_2023)) %>% 
+  pivot_longer(cols = preparation, names_to = "item_name") %>%
+  group_by(item_name,value) %>% 
+  summarize(
+    count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  group_by(item_name) %>% 
+  mutate(
+    prop = count/sum(count)
+    ,pct = scales::percent(prop, accuracy = 1)
+  ) %>% 
+  ungroup() %>% 
+  filter(value == "Yes") %>% 
+  select(-c(value, count, prop)) %>% 
+  rename(total = pct)
+
+d4 <- d1 %>% left_join(d2, by = "item_name") %>% 
+  left_join(d3, by = "item_name") %>% 
+  mutate(item_name = case_when(item_name == "prep_backup" ~ "Community data backed up (fully)",
+                               item_name == "prep_communal_meetiing" ~ "Mtg. with heads of utility co.",
+                               item_name == "prep_dftg_creation" ~ "Voluntary def. formation created",
+                               item_name == "prep_evacuation_plan" ~ "Plan for the evacuation",
+                               item_name == "prep_first_aid_fuel" ~ "Formed stocks (fuel)",
+                               item_name == "prep_first_aid_water" ~ "Formed stocks (water, food, med.)",
+                               item_name == "prep_national_resistance" ~ "Local nat. resistance plan app.",
+                               item_name == "prep_notification_check" ~ "Means of warning checked",
+                               item_name == "prep_online_map" ~ "Online map of shelters published",
+                               item_name == "prep_partly_backup" ~ "Community data backed up (partially)",
+                               item_name == "prep_reaction_plan" ~ "Emergency response plan upd.",
+                               item_name == "prep_reaction_plan_oda" ~ "Res. plan with Oblast State Adm.",
+                               item_name == "prep_reaction_plan_oth_hromadas" ~ "Res. plan with other hromadas",
+                               item_name == "prep_shelter_list" ~ "List of shelters addresses published",
+                               item_name == "prep_starosta_meeting" ~ "Mtg. with starostas"))
+
+
+d4 %>% gridExtra::grid.table()
+  
+labels <- c("Formed stocks (water, food, med.)", "Means of warning checked",
+            "Formed stocks (fuel)", "Emergency response plan upd.", 
+            "Mtg. with heads of utility co.", "Mtg. with starostas",
+            "Plan for the evacuation", "Community data backed up (fully)",
+            "Community data backed up (partially)", "Voluntary def. formation created",
+            "Res. plan with Oblast State Adm.", "Res. plan with other hromadas",
+            "List of shelters addresses published", "Local nat. resistance plan app.",
+            "Online map of shelters published")
+```
+
 <mark>2.1</mark> What questions were asked about preparations hromadas made? 
 
 ```{r class.source = "fold-hide"}
@@ -834,7 +927,9 @@ ds0 %>%
 - `prep_score_oct` - the number of security measures implemented as of October 2022
 
 ```{r}
-ds1_prep %>% select(1:4) # + individual preparation items
+# ds1_prep %>% select(1:4) # + individual preparation items
+ds_prep_new %>% select(4:8) # + individual preparation items
+
 ```
 
 > We  also compute `prep_score_combo`, which is a sum of `prep_score_feb` and `prep_score_oct`, the quantity equivalent to weighting the implementation of security measures  prior to Feb 24, 2022 **twice as important**.
@@ -843,13 +938,17 @@ ds1_prep %>% select(1:4) # + individual preparation items
 
 ```{r info-score-distribution, fig.height=6, fig.width=5,class.source="fold-hide", cache=F}
 g <-  
-  ds1_prep %>%
+  # ds1_prep %>%
+  ds_prep_new %>% 
   select(starts_with("prep_score")) %>% 
   pivot_longer(cols = everything(),names_to = "measure",values_to="value") %>% 
   mutate( 
     measure = factor(measure,
-                        levels = c("prep_score_feb","prep_score_oct","prep_score_combo")
-                        ,labels = c("..as of February","..as of October", "Combined = Feb + Oct")
+                        # levels = c("prep_score_feb","prep_score_oct","prep_score_combo")
+                                             levels = c("prep_score_feb","prep_score_oct")
+                        # ,labels = c("..as of February","..as of October", "Combined = Feb + Oct")
+                                             ,labels = c("..as of February","..as of October")
+
                         )
   ) %>% 
   ggplot(aes(x=value))+
@@ -865,13 +964,13 @@ g
 ```
 
 ```{r fig.height=7, fig.width=8,class.source="fold-hide", cache=T}
-ds1_prep %>% select(starts_with("prep_score")) %>% GGally::ggpairs()
+ds_prep_new %>% select(starts_with("prep_score")) %>% GGally::ggpairs()
 # Note that correlation coefficient is Pearson
 ```
 
 > The item-total correlations indicates that all three preparedness scores are adequate unidimensional measures.
 
-```{r prep-item-total, fig.height=4, fig.width=8,class.source="fold-hide", cache=T}
+```{r prep-item-total, fig.height=4, fig.width=8,class.source="fold-hide", cache=T, eval=F}
 
 # Step 1 - create data sets with re-coded item responses
 # As of February 2022, how many of these security steps have been implemented?
@@ -994,6 +1093,83 @@ g_item_total
 g_item_total %>% quick_save("item-total",w=8,h=4)
 ```
 
+```{r prep-item-total-new, fig.height=4, fig.width=8,class.source="fold-hide", cache=T}
+
+# Step 1 - create data sets with re-coded item responses
+# As of February 2022, how many of these security steps have been implemented?
+
+# convert to matrices
+m_feb <- 
+  ds_prep_new %>% select(hromada_code, prep_score_feb, ends_with("feb")) %>% 
+  rename_with(~str_remove(., '_feb'), .cols = 3:17) %>% 
+  select(-hromada_code) %>% 
+  make_corr_matrix(na_action = "remove", method="spearman")
+
+ds_prep_new %>% select(hromada_code, ends_with("feb")) %>% 
+  rename_with(~str_remove(., '_feb'), .cols = 3:17) %>% 
+  select(-c(hromada_code,prep_score_feb)) %>% 
+  ltm::cronbach.alpha(CI=TRUE, na.rm = T)
+
+d_item_total <- 
+  list(
+     "February"  = m_feb[,"prep_score_feb"]
+  ) %>% 
+  as_tibble() %>% 
+  mutate(item_name = rownames(m_feb)) %>% 
+  filter(item_name %ni% c("prep_score_feb")) %>% 
+  mutate(item_name = factor(item_name)) %>% 
+  relocate(item_name) %>% 
+  pivot_longer(
+    cols = 2
+    ,names_to = "scenario"
+    ,values_to = "correlation"
+  ) %>%
+  mutate(
+    discrimination = case_when(
+      correlation <= 0  ~ "problematic"
+      ,correlation > 0 & correlation < .2 ~ "poor"
+      ,correlation >=.2 & correlation < .4 ~ "good"
+      ,correlation >=.4  ~ "very good"
+    ) %>% factor(levels = c("problematic","poor","good","very good"))
+    ,scenario = scenario %>% factor(
+      labels=c("February"))
+    ,item_name = factor(item_name,levels = preparation) %>% fct_rev()
+  )
+
+discrimination_levels <- c(
+  "problematic" = "#d01c8b"
+  ,"poor"        = "#f1b6da"
+  ,"good"        = "#b8e186"
+  ,"very good"   = "#4dac26"
+)
+
+g_item_total <-
+  d_item_total %>% 
+  ggplot(aes(x = item_name, y = correlation, color = discrimination, group = scenario))+
+  geom_line(aes(group = "scenario"))+
+  geom_point()+
+  geom_text(aes(label=correlation %>% scales::number(accuracy = .01) %>% 
+                  RemoveLeadingZero())
+            ,hjust=-.3
+            ,size = 3
+            ,show.legend = F)+
+  geom_hline(aes( yintercept = 0))+ 
+  scale_y_continuous(limits = c(-.3,.7), expand = expansion(add = c(0,.2)))+
+  scale_color_manual(
+    values = discrimination_levels
+    , limits = names(discrimination_levels)
+  )+
+  coord_flip() +
+  labs(
+    title = "Index of Preparedness Item-total corellation"
+    ,y = "Item-total Correlation (Spearman)"
+    ,x = NULL
+    ,color = "Discrimination"
+  )
+
+g_item_total
+g_item_total %>% quick_save("item-total",w=6,h=4)
+```
 > While all three metrics should be considered during modeling, the next section demonstrates why and how the interpreations of these scores will differ
 
 ## Prep score change
@@ -1627,6 +1803,19 @@ d %>%
   )
 ```
 
+```{r dftg-region-table, fig.height=3, fig.width=9,class.source="fold-hide"}
+
+d %>%
+  group_by(region_en) %>%
+  count(dftg_creation) %>%
+  mutate(prop = n/sum(n)
+         ,pct = scales::percent(prop, accuracy = 1)) %>% 
+  select(-c(prop, n)) %>% 
+  pivot_wider(values_from = pct, names_from = dftg_creation) %>% 
+  gridExtra::grid.table()
+
+```
+
 ```{r dftg-region, fig.height=3, fig.width=9,class.source="fold-hide"}
 d %>%
   group_by(region_en) %>%
@@ -1833,6 +2022,35 @@ p <- d %>%
                             "other" = "Other types of assistance", "none" = "Nothing"))
 
 p
+```
+
+```{r help-military-table, fig.height=5, fig.width=9,class.source="fold-hide", eval = TRUE}
+
+help_military_levels <- c('rooms', 'transport', 'money', 'products', 'other', "none")
+
+d1 <- ds0 %>% select(hromada_code, type, starts_with('help_for_military/')) %>% 
+  pivot_longer(-c(hromada_code, type), names_to = 'help', values_to = 'count') %>%
+  count(help, type, count) %>% group_by(type, help) %>% 
+  mutate(freq = n/sum(n),
+         help = str_remove(help, 'help_for_military/')) %>%
+  filter(count == 1) %>%
+  select(-c(count, n)) %>% 
+  pivot_wider(names_from = type, values_from = freq)
+
+d2 <- ds0 %>% select(hromada_code, region_en, starts_with('help_for_military/')) %>% 
+  pivot_longer(-c(hromada_code, region_en), names_to = 'help', values_to = 'count') %>%
+  count(help, region_en, count) %>% group_by(region_en, help) %>% 
+  mutate(freq = n/sum(n),
+         help = str_remove(help, 'help_for_military/')) %>%
+  filter(count == 1) %>%
+  select(-c(count, n)) %>% 
+  pivot_wider(names_from = region_en, values_from = freq)
+
+d3 <- d1 %>% left_join(d2, by = "help") %>% filter(help != 'none') %>% 
+  mutate(across(is.numeric, ~formatC(as.numeric(.), digits = 2)))
+
+d3 %>% gridExtra::grid.table()
+
 ```
 
 > Most communities provided several types of aid: 42% provided transport, money and products, and allocated rooms for military; 72% provided three and more of those \

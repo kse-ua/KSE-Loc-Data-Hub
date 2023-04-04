@@ -237,6 +237,11 @@ ds_general1 <- ds_general %>%
 
 ds0 <- 
   ds_survey %>% 
+  left_join(ds_general1,
+            by = 'hromada_code') %>% 
+  select(-ends_with('.y')) %>%
+  rename_at(.vars = vars(ends_with(".x")),
+            .funs = list(~ sub("[.]x$", "", .))) %>% 
   mutate(
     income_own_per_capita       = income_own_2021         / total_population_2022,
     income_total_per_capita     = income_total_2021       / total_population_2022,
@@ -335,8 +340,52 @@ ds1_prep <-
       ,na.rm = T
     )
   )  %>% 
-  select(hromada_code, starts_with("prep_score"),preparation, deoccupied_at_feb_2023)  
+  select(hromada_code, starts_with("prep_score"),preparation)  
 ds1_prep %>% select(1:4)
+
+## Prep Score Weighted
+
+ds_prep_new <- ds0 %>%
+mutate(
+  across(
+    .cols = preparation
+    ,.fns = ~case_when(
+      .  == 0 ~ 0 #"No"
+      ,. == 1 ~ 0 #"After Feb 24"
+      ,. == 2 ~ 1 #"Before Feb 24"
+      ,.default = 0
+    ),
+    .names = "{col}_feb"),
+  across(
+    .cols = preparation
+    ,.fns = ~case_when(
+      .  == 0 ~ 0 #"No"
+      ,. == 1 ~ 1 #"After Feb 24"
+      ,. == 2 ~ 1 #"Before Feb 24"
+      ,.default = 0
+    ),
+    .names = "{col}_oct"
+  )
+) %>% 
+  select(hromada_code,
+         paste0(preparation, "_feb"),
+         paste0(preparation, "_oct")) %>%
+  mutate(prep_score_feb = prep_first_aid_water_feb*1.19 + prep_first_aid_fuel_feb*1.18 +
+           prep_reaction_plan_feb*1.16 + prep_evacuation_plan_feb*1.08 + 
+           prep_reaction_plan_oth_hromadas_feb*.98 + prep_reaction_plan_oda_feb*1.02 + 
+           prep_dftg_creation_feb*1.04 + prep_national_resistance_feb*.94 + 
+           prep_starosta_meeting_feb*1.12 + prep_communal_meetiing_feb*1.13 + 
+           prep_online_map_feb*.91 + prep_shelter_list_feb*.97 + 
+           prep_notification_check_feb*1.19 + prep_backup_feb*1.08,
+         prep_score_oct = prep_first_aid_water_oct*1.19 + prep_first_aid_fuel_oct*1.18 +
+           prep_reaction_plan_oct*1.16 + prep_evacuation_plan_oct*1.08 + 
+           prep_reaction_plan_oth_hromadas_oct*.98 + prep_reaction_plan_oda_oct*1.02 + 
+           prep_dftg_creation_oct*1.04 + prep_national_resistance_oct*.94 + 
+           prep_starosta_meeting_oct*1.12 + prep_communal_meetiing_oct*1.13 + 
+           prep_online_map_oct*.91 + prep_shelter_list_oct*.97 + 
+           prep_notification_check_oct*1.19 + prep_backup_oct*1.08) %>%
+  select(hromada_code, prep_score_feb, prep_score_oct, starts_with('prep'))
+
 
 ## Some handy datasets for quick visualization
 # Raw scale (0,1,2) with factors
@@ -385,7 +434,7 @@ ds1_prep_binary_factors_feb <-
       ) %>% factor(levels=c("No","Yes"))
     )
   ) %>% 
-  select(hromada_code, starts_with("prep_score"),preparation, deoccupied_at_feb_2023)
+  select(hromada_code, starts_with("prep_score"),preparation)
 
 # ----- inspect-data-1-prep -----------------------
 
