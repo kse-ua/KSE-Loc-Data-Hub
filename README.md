@@ -7,7 +7,7 @@ The project is funded by GIZ within its project "Support to the Decentralisation
 ![](https://www.nationsonline.org/maps/Ukraine-Administrative-Map.jpg)
 
 | Name              | Role                                                            | \@         |
-|------------------------|------------------------|------------------------|
+|-------------------|-----------------------------------------------------------------|------------|
 | Tymofii Brik      | Lead Researcher                                                 |            |
 | Andriy Darkovich  | Research Assistant                                              |            |
 | Valentyn Hatsko   | Data Analyst                                                    | valgat29   |
@@ -21,12 +21,12 @@ The project is funded by GIZ within its project "Support to the Decentralisation
 
 -   [Resilience Survey overview](https://raw.githack.com/kse-ua/ua-de-center-serve/main/analysis/survey-overview/survey-overview.html) - Results and Key findings of the Resiliance Survey
 
-- [Hromada Dashboard](https://valentyn-hatsko.shinyapps.io/hromada-dash/) - Dashboard with Data on Territorial Communities
+-   [Hromada Dashboard](https://valentyn-hatsko.shinyapps.io/hromada-dash/) - Dashboard with Data on Territorial Communities
 
 # Data Products
 
 | Data Product Name                      | Description                                                                                                                                                                                                                                                                                                                                                                                            | Current State / Left To Do                                                                               | Script                                        |
-|-------------|-------------------------------|---------------------|----------------------|
+|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------|
 | Admininstrative Units                  | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region)                                                                                                                                                                                                                                                                                                   | ready for analysis at `./data-public/derived/ua-admin-map-2020.csv`                                      | `./manipulation/ellis-ua-admin.R`             |
 | Admin History                          | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020                                                                                                                                                                                                                                                                               | push to ./data-public/derived/                                                                           | `./manipulation/ellis-rada-hromada.R`         |
 | Population                             | Population counts at the level of hromada                                                                                                                                                                                                                                                                                                                                                              | Add more years (currently only 2021), push to ./data-public/derived/                                     | `./manipulation/ellis-demography.R`           |
