@@ -125,7 +125,11 @@ ds_general0 <-
       hromada_code %in% (ds_survey %>% pull(hromada_code) %>% unique()) ~ TRUE
       ,TRUE ~ FALSE
     )
-  )
+  ) %>% 
+  mutate(
+    business_support_centers_b = ifelse(business_support_centers == 0, 0, 1)
+    )
+
 
 ds0 <- 
   ds_survey %>% 
@@ -184,23 +188,19 @@ ds0 <-
            prep_notification_check_oct*1.19 + prep_backup_oct*1.08) 
   
 
-vars1 <- ds0 %>% select(contains("income_total_"), contains("income_own_"),
-                       contains("income_transfert_"), own_income_prop_2021,
-                       transfert_prop_2021) %>% 
-  select(-ends_with('2022')) %>% colnames()
+vars1 <- ds0 %>% select(income_total_2021_per_capita, income_own_2021_per_capita,
+                        own_income_prop_2021) %>% 
+  colnames()
          
 vars2 <- ds0 %>% 
-  select(contains('pct'), contains('prep_score')) %>% colnames()
+  select(contains('pct'), contains('prep_score'), prep_winter_count) %>% colnames()
 
-vars3 <- ds0 %>% select(4:15, 191, 196:208, 210:212, 243:244, 248, 250:251, 255, 258:279,
-                        295, 304) %>% colnames()
+vars3 <- ds0 %>% select(4:11, 13:16, 191, 196:208, 210:211, 238:239, 241, 243, 250, 
+                        253:274, 290, 299) %>% colnames()
 
 var_select <- c(vars1, vars2, vars3)
 
-ds1 <- ds0 %>% select(all_of(var_select))
-
-
-
+ds1 <- ds0 %>% select(all_of(var_select)) %>% select(-prep_score_oct)
 
 #+ - tweak-data-2 --------------------------------------------------------------
 
@@ -208,18 +208,18 @@ ds2 <-
   ds1 %>%
   # scaling
   mutate(
-    income_own_per_capita_k = income_own_2021_per_capita/1000
-    ,income_total_per_capita_k = income_total_2021_per_capita/1000
-    ,income_tranfert_per_capita_k = income_transfert_2021_per_capita/1000
-    ,time_before_24th_years = time_before_24th/365
-    ,dfrr_executed_k = dfrr_executed/1000
+    # income_total_per_capita_k = income_total_2021_per_capita/1000
+    time_before_24th_years = time_before_24th/365
+    ,dfrr_executed_k_per_capita = dfrr_executed/ total_population_2022
     ,urban_perc_100 = urban_pct * 100
-    ,passengers_2021_per_capita = passangers_2021 / total_popultaion_2022
-    ,osbb_per_capita_k_2020 = sum_osbb_2020 / total_popultaion_2022 * 1000
+    ,passengers_2021_per_capita = passangers_2021 / total_population_2022
+    ,osbb_per_capita_k_2020 = sum_osbb_2020 / total_population_2022 * 1000
+    ,own_income_prop_2021 = own_income_prop_2021 * 100
+    ,turnout_2020 = turnout_2020 * 100
   )  %>%
   # zero filling NAs
   mutate(
-    dfrr_executed_k_zeros = replace_na(dfrr_executed_k, 0)
+    dfrr_executed_k_zeros = replace_na(dfrr_executed_k_per_capita, 0)
     ,passengers_2021_per_capita_zeros = replace_na(passengers_2021_per_capita, 0)
     ,osbb_per_capita_2020_zeros = replace_na(osbb_per_capita_k_2020, 0)
   ) %>%
@@ -229,65 +229,185 @@ ds2 <-
     ,youth_centers_b = ifelse(youth_centers == 0, 0, 1)
     ,youth_councils_b =ifelse(youth_councils == 0, 0, 1)
     ,city = factor(ifelse(type == 'міська', 1, 0))
-  )
+  ) %>% fastDummies::dummy_cols(select_columns = c('type', 'region_en')) %>% 
+  select(-c(hromada_name, hromada_full_name, raion_code, raion_name, oblast_code,
+            oblast_name, occupation, military_action, hromada_code, 
+            contains("declarations"), occipied_before_2022, contains('war_zone'),
+            dfrr_executed, sum_osbb_2020, 
+            osbb_per_capita_k_2020, business_support_centers, youth_councils, 
+            youth_centers, time_before_24th, 
+            passangers_2021, urban_pct, passengers_2021_per_capita, region_en, 
+            type, city)) %>% 
+  select(-c(mountain_hromada, near_seas, bordering_hromadas,
+            hromadas_30km_from_border, buffer_nat_15km,
+            buffer_int_15km, oblast_center, 
+            passengers_2021_per_capita_zeros, creation_date,
+            creation_year, edem_consultations, edem_petitions, edem_participatory_budget,
+            edem_open_hromada)) %>% 
+  na.omit()
 
 ##+ Preparation Score February -------------------------------------------------
 
-# check distribution
-x <- ds2 %>% select(prep_score_feb) %>% filter(!is.na(prep_score_feb)) %>% pull()
-pois_dist <- fitdistrplus::fitdist(x, distr = "norm")
-plot(pois_dist)
-# too left-skewed for poisson 
-nbin_dist <- fitdistrplus::fitdist(x, distr = "poison", densfun = "poison")
-plot(nbin_dist)
-# seems like negative binomial
+ds2$prep_score_feb_round <- round(ds2$prep_score_feb)
 
-cor_ds <- ds2 %>% 
-  select(is.numeric) %>% 
-  select(-c(income_total_2021, income_own_2021, income_transfert_2021, 
-            transfert_prop_2021, contains('declarations'), contains('war_zone'),
-            dfrr_executed, dfrr_executed_k, sum_osbb_2020, osbb_per_capita_k_2020,
-            business_support_centers, youth_councils, youth_centers, 
-            income_total_2021_per_capita, income_own_2021_per_capita, 
-            income_transfert_2021_per_capita, time_before_24th, passangers_2021,
-            urban_pct, passengers_2021_per_capita)) %>% 
-  na.omit()
+model_gaussian <- lm(prep_score_feb ~ osbb_per_capita_2020_zeros,
+                     data = ds2)
 
-cor <- cor(cor_ds, method = 'pearson')
-cor[cor == 1 | cor < 0.3 | is.na(cor)] <- ''
+plot(model_gaussian)
 
-g1 <- corrplot::corrplot(cor, method="circle", type = 'upper', tl.cex = .2)
+model_poisson <- glm(prep_score_feb ~ osbb_per_capita_2020_zeros, 
+                     data = ds2, family = "poisson")
 
-fit1_gaussian <- 
-  glm(
-    formula = prep_score_feb ~ urban_perc_100
-    ,data = ds2
-    ,family = "gaussian"
-  )
+model_negbin <- MASS::glm.nb(prep_score_feb_round ~ osbb_per_capita_2020_zeros, data = ds2)
 
-fit1_poisson <- 
-  glm(
-    formula = prep_score_feb ~ urban_perc_100
-    ,data = ds2
-    ,family = "poisson"
-  )
+lrtest <- lmtest::lrtest(model_poisson, model_negbin)
 
-summary(fit1_gaussian)
-summary(fit1_poisson)
+if (lrtest$Pr[2] < 0.05) {
+  print("Use negative binomial regression")
+} else {
+  print("Use Poisson regression")
+}
 
-# for zero-inflated model
+# Fit the zero-inflated binomial model
+zib_model <- pscl::zeroinfl(prep_score_feb_round ~  osbb_per_capita_2020_zeros | osbb_per_capita_2020_zeros, 
+                            dist = "negbin", data = ds2)
 
-# fit1_zi_pois <- pscl::zeroinfl(formula = prep_score_feb ~ occupation_and_combat | 1
-#                                ,data = ds2_prep
-#                                ,dist = "pois")
-# 
-# summary(fit1_zi_pois)
+# Compare the AIC of the models
+if (AIC(zib_model) < AIC(model_negbin)) {
+  print("Zero-inflated binomial model fits better than negative binomial model")
+} else {
+  print("Negative binomial model fits better than zero-inflated binomial model")
+}
 
-fit1_zi_nbinom <- pscl::zeroinfl(formula = prep_score_feb ~ train_station | 1
-                                 ,data = ds2_prep
-                                 ,dist = "negbin")
+summary(zib_model)
+summary(model_negbin)
 
-summary(fit1_zi_nbinom)
+##+ Preparation Winter -------------------------------------------------
+
+model_poisson <- glm(prep_winter_count ~ occupation_and_combat + region_en_North, 
+                     data = ds2, family = "poisson")
+model_negbin <- MASS::glm.nb(prep_winter_count ~ occupation_and_combat + region_en_North, 
+                             data = ds2)
+
+lrtest <- lmtest::lrtest(model_poisson, model_negbin)
+
+if (lrtest$Pr[2] < 0.05) {
+  print("Use negative binomial regression")
+} else {
+  print("Use Poisson regression")
+}
+
+summary(model_poisson)
+
+variables <- colnames(ds2)[-c(4, 5 , 24, 28)]
+
+# Create an empty dataframe to store the results
+results_df <- data.frame(variable = character(),
+                         estimate = numeric(),
+                         std_error = numeric(),
+                         z_value = numeric(),
+                         p_value = numeric(),
+                         stringsAsFactors = FALSE)
+
+# Loop over the variables and fit a poisson regression model for each variable
+for (var in variables) {
+  # Create a formula for the poisson regression model with the current variable
+  formula <- as.formula(paste("prep_winter_count ~", var, '+', 'occupation_and_combat'))
+  
+  # Fit the poisson regression model
+  model <- glm(formula, data = ds2, family = "poisson")
+  
+  # Extract the coefficient estimates, standard errors, z-values, and p-values
+  coef_estimates <- coef(summary(model))[2,1]
+  std_errors <- coef(summary(model))[2,2]
+  z_values <- coef(summary(model))[2,3]
+  p_values <- coef(summary(model))[2,4]
+  
+  # Add the results to the dataframe
+  results_df <- rbind(results_df, data.frame(variable = var,
+                                             estimate = round(coef_estimates,3),
+                                             std_error = round(std_errors,3),
+                                             z_value = z_values,
+                                             p_value = p_values,
+                                             stringsAsFactors = FALSE))
+}
+
+# Print the results dataframe
+print(results_df)
+
+write.table(results_df, 'clipboard')
+
+filter_result <- results_df %>%
+  filter(p_value < 0.05)
+
+#+ Best Subset ----------------------
+
+regfit.full <- leaps::regsubsets(prep_score_feb ~ ., data = ds2, really.big=TRUE, 
+                                 method = "forward", nvmax = 15)
+reg.summary <- summary(regfit.full)
+
+reg.summary
+
+reg.summary$cp
+
+par(mfrow = c(2, 2))
+plot(reg.summary$rss, xlab = "Number of Variables",
+     ylab = "RSS", type = "l")
+plot(reg.summary$adjr2, xlab = "Number of Variables",
+     ylab = "Adjusted RSq", type = "l")
+
+which.max(reg.summary$adjr2)
+points(7, reg.summary$adjr2[7], col = "red", cex = 2, 
+       pch = 21)
+
+plot(reg.summary$cp, xlab = "Number of Variables",
+     ylab = "Cp", type = "l")
+which.min(reg.summary$cp)
+points(4, reg.summary$cp[4], col = "red", cex = 2,
+       pch = 21)
+
+which.min(reg.summary$bic)
+plot(reg.summary$bic, xlab = "Number of Variables",
+     ylab = "BIC", type = "l")
+points(2, reg.summary$bic[2], col = "red", cex = 2,
+       pch = 21)
+
+get_model_formula <- function(id, object, outcome){
+  # get models data
+  models <- summary(object)$which[id,-1]
+  # Get outcome variable
+  #form <- as.formula(object$call[[2]])
+  #outcome <- all.vars(form)[1]
+  # Get model predictors
+  predictors <- names(which(models == TRUE))
+  predictors <- paste(predictors, collapse = "+")
+  # Build model formula
+  as.formula(paste0(outcome, "~", predictors))
+}
+
+get_model_formula(2, regfit.full, "prep_score_feb")
+get_model_formula(4, regfit.full, "prep_score_feb")
+get_model_formula(6, regfit.full, "prep_score_feb")
+get_model_formula(9, regfit.full, "prep_score_feb")
+
+get_cv_error <- function(model.formula, data){
+  set.seed(1)
+  train.control <- trainControl(method = "cv", number = 5)
+  cv <- train(model.formula, data = data, method = "lm",
+              trControl = train.control)
+  cv$results$RMSE
+}
+
+# Compute cross-validation error
+model.ids <- 1:15
+cv.errors <-  map(model.ids, get_model_formula, regfit.full, "prep_score_feb") %>%
+  map(get_cv_error, data = ds2) %>%
+  unlist()
+cv.errors
+
+# Select the model that minimize the CV error
+which.min(cv.errors)
+
 
 ##+ Preparation Score October --------------------------------------------------
 
