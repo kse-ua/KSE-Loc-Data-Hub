@@ -264,7 +264,7 @@ nagreements <- ds5_partnerships %>%
 #count the number of unique hromadas with which each hromada has had experience of cooperation
 nagreements_hromadas <- ds5_partnerships %>% 
   inner_join(ds5_partnerships, by = "register_number") %>%
-  filter(hromada_code.x != hromada_code.y) %>%
+  filter(hromada_code.x != hromada_code.y) %>% View()
   group_by(hromada_code.x) %>%
   summarise(n_agreements_hromadas = n_distinct(hromada_code.y)) %>% 
   rename(hromada_code = hromada_code.x)
@@ -290,4 +290,19 @@ ds6_partnerships <- ds_admin %>%
 #+ save ------------------------------------------------
 readr::write_csv(ds4_partnerships, "./data-private/derived/partnerships-all-settlements.csv")
 readr::write_csv(ds6_partnerships, "./data-private/derived/partnerships-hromadas.csv")
+
+
+#save the dataset with hromada pairs for network analysis
+
+hromadas_network <- ds5_partnerships %>% 
+  filter(active_2402 == 1) %>% 
+  inner_join(ds5_partnerships %>% filter(active_2402 == 1), by = "register_number") %>% 
+  filter(hromada_code.x != hromada_code.y) %>% 
+  select(-start.y, -end.y, -active_2402.y) %>% 
+  rename(start = start.x, end = end.x, active_2402 = active_2402.x) %>% 
+  relocate(active_2402, .after = end)
+
+readr::write_csv(hromadas_network, "./data-private/derived/partnerships-hromadas-network.csv")
+
+
                             

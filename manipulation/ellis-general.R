@@ -47,6 +47,7 @@ path_community_competence <- "./data-private/derived/community-competence-hromad
 path_declarations <- "./data-public/derived/declarations-hromada.csv"
 path_war <- "./data-private/derived/minregion-war-status.csv"
 path_internet <- "./data-private/derived/internet-speed.csv"
+path_partnerships <- "./data-private/derived/partnerships-hromadas.csv"
 
 
 # path_budget_expences <- 
@@ -84,6 +85,7 @@ ds_war <- readr::read_csv(path_war)
 ds_passangers <- readr::read_csv(path_passangers)
 ds_internet_speed <- readr::read_csv(path_internet_speed)
 ds_roads_lengths <- readr::read_csv(path_roads_lengths)
+ds_partnerships <- readr::read_csv(path_partnerships)
 
 #+ inspect-data ----------------------------------------------------------------
 
@@ -302,11 +304,14 @@ d1 <-
   mutate_at(
     vars(starts_with("income_")), ~./1000
   ) %>% 
-  rename(area = square)
+  rename(area = square) %>% 
+  left_join(
+    ds_partnerships %>% select(-hromada_name)
+    ,by = "hromada_code"
+  )
   
   
 
-#TO-DO: add partnerships
 #TO-DO: add big taxpayers
 #TO-DO: add dates of creation + status based on military actions/occupation (DONE)
 
