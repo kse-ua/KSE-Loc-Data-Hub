@@ -33,9 +33,6 @@ library(lubridate)
 library(gptstudio) 
 
 
-# Sys.setenv(OPENAI_API_KEY = "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")
-
-
 '%ni%' <- Negate(`%in%`)
 
 #+ load-data -------------------------------------------------------------
