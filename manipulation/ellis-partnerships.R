@@ -302,7 +302,7 @@ hromadas_network <- ds5_partnerships %>%
   rename(start = start.x, end = end.x, active_2402 = active_2402.x) %>% 
   relocate(active_2402, .after = end)
 
-readr::write_csv(hromadas_network, "./data-private/derived/partnerships-hromadas-network.csv")
+readr::write_csv(hromadas_network, "./data-public/derived/partnerships-hromadas-network.csv")
 
 
                             
