@@ -289,9 +289,9 @@ summary(model_negbin)
 
 ##+ Preparation Winter -------------------------------------------------
 
-model_poisson <- glm(prep_winter_count ~ occupation_and_combat + region_en_North, 
+model_poisson <- glm(prep_winter_count ~ occupation_and_combat + n_agreements_hromadas_active, 
                      data = ds2, family = "poisson")
-model_negbin <- MASS::glm.nb(prep_winter_count ~ occupation_and_combat + region_en_North, 
+model_negbin <- MASS::glm.nb(prep_winter_count ~ occupation_and_combat + n_agreements_hromadas_active, 
                              data = ds2)
 
 lrtest <- lmtest::lrtest(model_poisson, model_negbin)
