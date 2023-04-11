@@ -56,7 +56,7 @@ survey_url <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
 meta_survey <- googlesheets4::read_sheet(survey_url,"survey",skip = 0)
 meta_choices <- googlesheets4::read_sheet(survey_url,"choices",skip = 0)
 ds_weights <- readr::read_csv("./data-private/derived/index_preparedness_weights.csv")
-
+ds_partnerships <- readr::read_csv("./data-private/derived/partnerships-hromadas.csv")
 # ---- variable-groups -----------------------------------------------------------
 # create supporting objects for convenient reference of variable groups
 
@@ -128,7 +128,8 @@ ds_general0 <-
   ) %>% 
   mutate(
     business_support_centers_b = ifelse(business_support_centers == 0, 0, 1)
-    )
+    ) %>% 
+  left_join(ds_partnerships %>% select(-hromada_name), by = "hromada_code")
 
 
 ds0 <- 
@@ -138,6 +139,7 @@ ds0 <-
   select(-ends_with('.y')) %>%
   rename_at(.vars = vars(ends_with(".x")),
             .funs = list(~ sub("[.]x$", "", .))) %>%
+  left_join(ds_partnerships %>% select(-hromada_name), by = "hromada_code") %>% 
   mutate(
     across(
       .cols = all_of(geographic_vars),
@@ -196,12 +198,14 @@ vars2 <- ds0 %>%
   select(contains('pct'), contains('prep_score'), prep_winter_count) %>% colnames()
 
 vars3 <- ds0 %>% select(4:11, 13:16, 191, 196:208, 210:211, 238:239, 241, 243, 250, 
-                        253:274, 290, 299) %>% colnames()
+                        253:274, 290:294, 303) %>% colnames()
 
 var_select <- c(vars1, vars2, vars3)
 
 ds1 <- ds0 %>% select(all_of(var_select)) %>% select(-prep_score_oct)
 
+ds2 <- ds0 %>% select(contains('agreements'), prep_score_feb, prep_winter_count, occupation_and_combat)
+ds1 %>% summarise(across(everything(), ~sum(is.na(.)))) %>% t()
 #+ - tweak-data-2 --------------------------------------------------------------
 
 ds2 <-
@@ -250,15 +254,16 @@ ds2 <-
 
 ds2$prep_score_feb_round <- round(ds2$prep_score_feb)
 
-model_gaussian <- lm(prep_score_feb ~ osbb_per_capita_2020_zeros,
+model_gaussian <- lm(prep_score_feb ~ n_agreements_hromadas_active,
                      data = ds2)
+summary(model_gaussian)
 
 plot(model_gaussian)
 
-model_poisson <- glm(prep_score_feb ~ osbb_per_capita_2020_zeros, 
+model_poisson <- glm(prep_score_feb ~ n_agreements_hromadas_active, 
                      data = ds2, family = "poisson")
 
-model_negbin <- MASS::glm.nb(prep_score_feb_round ~ osbb_per_capita_2020_zeros, data = ds2)
+model_negbin <- MASS::glm.nb(prep_score_feb ~ n_agreements_hromadas_active, data = ds2)
 
 lrtest <- lmtest::lrtest(model_poisson, model_negbin)
 
@@ -269,7 +274,7 @@ if (lrtest$Pr[2] < 0.05) {
 }
 
 # Fit the zero-inflated binomial model
-zib_model <- pscl::zeroinfl(prep_score_feb_round ~  osbb_per_capita_2020_zeros | osbb_per_capita_2020_zeros, 
+zib_model <- pscl::zeroinfl(prep_score_feb_round ~  n_agreements_hromadas_active | n_agreements_hromadas_active, 
                             dist = "negbin", data = ds2)
 
 # Compare the AIC of the models
