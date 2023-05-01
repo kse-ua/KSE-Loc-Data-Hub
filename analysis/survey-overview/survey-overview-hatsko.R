@@ -472,40 +472,18 @@ ds1_info <-
 library(rpivotTable)
 rpivotTable(ds_general1)
 
-d <- ds0 %>%
-  filter(deoccupied_at_feb_2023 == 1) %>%
-  mutate(population_change = population_text / total_population_2022 - 1) %>%
-  select(oblast_name_en, hromada_full_name, total_population_2022, population_text, population_change) %>%
-  arrange(population_change)
-
-d <- ds0 %>%
-  filter(deoccupied_at_feb_2023 == 1) %>%
-  select(oblast_name_en, hromada_full_name, idp_registration_number, population_text) %>%
-  arrange(desc(idp_registration_number))
-
-ds0 %>% select(deoccupied_at_feb_2023, hromada_exp) %>%
-  filter(deoccupied_at_feb_2023 == 1) %>%
-  count(hromada_exp)
+ds0 <- ds_survey %>% 
+  left_join(ds_general %>% 
+              filter(occipied_before_2022 == 0) %>% 
+              select(hromada_code, war_zone_20_06_2022, hromadas_30km_russia_belarus)) %>% 
+  summarize(n = n(), .by = war_zone_20_06_2022) %>% 
+  summarize(prop = n / sum(n))
 
 
-
-write.excel <- function(x,row.names=FALSE,col.names=TRUE,...) {
-  write.table(x,"clipboard",sep="\t",row.names=row.names,col.names=col.names,...)
-}
-
-
-
-ds0 %>%
-  filter(deoccupied_at_feb_2023 == 1) %>%
-  mutate(population_change = population_text / total_population_2022 - 1) %>%
-  select(oblast_name_en, hromada_full_name, total_population_2022, population_text, population_change) %>%
-  arrange(population_change)
-
-write.csv(d, 'population.csv')
-d %>%
-  summarise(avg = mean(population_change))
-
-
+ds_general %>% 
+  filter(occipied_before_2022 == 0) %>% 
+  summarise(n = n(), .by = type) %>% 
+  mutate(prop = n / sum(n))
 # ---- save-to-disk ------------------------------------------------------------
 
 # ---- publish ------------------------------------------------------------

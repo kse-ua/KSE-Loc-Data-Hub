@@ -48,7 +48,7 @@ toh_before_22 <- c("05561000000","05556000000","12538000000","05555000000","1253
 #+ declare-functions -----------------------------------------------------------
 
 '%nin%' <- Negate('%in%') 
-  
+
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# 2.Data ")
 
@@ -150,7 +150,7 @@ ds3 <- ds2_wide %>%
   left_join(
     ds_admin_full %>% 
       mutate(budget_code = paste0(budget_code,"0"),
-             ) %>% 
+      ) %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
                , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
     ,by = c("admin4_code"  = "budget_code")
@@ -179,13 +179,13 @@ ds4_long <-
   ds3_long %>% 
   mutate(
     transfert = str_detect(tax_code, "^4.+")
-    ,target_segment = month %in% c(3:7) & year %in% c(2021, 2022)
+    ,target_segment = month %in% c(3:8) & year %in% c(2021, 2022)
     ,military_tax = tax_code %in% c('11010200')
     ,income_tax = str_detect(tax_code, "^1101.+")
     ,unified_tax = str_detect(tax_code, "^1805.+")
     ,property_tax = str_detect(tax_code, "^1801.+")
     ,excise_duty = str_detect(tax_code, "^140.+")
-    )
+  )
 
 ds5_long <- ds4_long %>%
   filter(target_segment) %>%
@@ -238,13 +238,13 @@ ds5_long <- ds4_long %>%
 # for disaggregated on separate incomes dataset
 variables_dis <- c(colnames(ds3)[1:14], '11010100-50110000')
 description_dis <- c('Hromada name',
-                 'Hromada code from Codifier of administrative-territorial units (CATUTTC)',
-                 'Hromada budget name', 'Hromada budget code', 'Raion name', 
-                 'Raion code from Codifier of administrative-territorial units (CATUTTC)',
-                 'Oblast name', 'Oblast name Eng', 
-                 'Oblast code from Codifier of administrative-territorial units (CATUTTC)',
-                 'Region name Eng', 'Region short code', 'Year', 'Month', 'Date',
-                 'Tax code')
+                     'Hromada code from Codifier of administrative-territorial units (CATUTTC)',
+                     'Hromada budget name', 'Hromada budget code', 'Raion name', 
+                     'Raion code from Codifier of administrative-territorial units (CATUTTC)',
+                     'Oblast name', 'Oblast name Eng', 
+                     'Oblast code from Codifier of administrative-territorial units (CATUTTC)',
+                     'Region name Eng', 'Region short code', 'Year', 'Month', 'Date',
+                     'Tax code')
 
 metadata_dis <- data.frame(variables_dis, description_dis)
 
@@ -448,7 +448,7 @@ grouping_stem <- ds5_long %>% select(budget_code:year) %>% names()
 ds5_former <- 
   ds5_long %>% 
   mutate(
-    target_segment = month %in% c(3:7) & year %in% c(2021, 2022) # i think
+    target_segment = month %in% c(3:8) & year %in% c(2021, 2022) # i think
   ) %>% 
   filter(target_segment) %>% 
   group_by_at(grouping_stem) %>% 
@@ -492,11 +492,11 @@ b <- a %>%
                                                         income_own_no_military_tax[month=="2"&year==2021]))-1)*100),
          own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_jun_aug - own_income_no_mil_change_YoY_mar_apr)
 
-b$own_income_no_mil_change_YoY_jun_aug[b$year == 2021] <- 0
-b$own_income_no_mil_change_YoY_mar_may[b$year == 2021] <- 0
-b$own_income_no_mil_change_YoY_adapt[b$year == 2021] <- 0
-b$own_income_no_mil_change_YoY_jan_feb[b$year == 2021] <- 0
-b$own_income_no_mil_change_YoY_mar_apr[b$year == 2021] <- 0
+# b$own_income_no_mil_change_YoY_jun_aug[b$year == 2021] <- NA
+# b$own_income_no_mil_change_YoY_mar_may[b$year == 2021] <- NA
+# b$own_income_no_mil_change_YoY_adapt[b$year == 2021] <- NA
+# b$own_income_no_mil_change_YoY_jan_feb[b$year == 2021] <- NA
+# b$own_income_no_mil_change_YoY_mar_apr[b$year == 2021] <- NA
 
 c <- b %>% 
   distinct(budget_code, year, .keep_all = TRUE) %>%
@@ -522,10 +522,13 @@ ds5_final <- ds5_long %>%
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 dataset_names_dis <- list('Data' = ds3, 'Metadata' = metadata_dis)
 
-dataset_names <- list('Data' = ds5_long, 'Metadata' = metadata)
+dataset_names <- list('Data' = ds5_final, 'Metadata' = metadata)
+
+library(openxlsx)
 
 openxlsx::write.xlsx(dataset_names_dis, './data-public/derived/hromada_budget_2020_2022_taxes.xlsx')
-openxlsx::write.xlsx(dataset_names, './data-public/derived/hromada_budget_2020_2022.xlsx')
+openxlsx::write.xlsx(dataset_names, 'C:/GitHub/ua-de-center/data-public/derived/hromada_budget_2020_2022.xlsx')
+readr::write_csv(ds5_final, 'C:/GitHub/ua-de-center/data-public/derived/hromada_budget_2020_2022.csv')
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
