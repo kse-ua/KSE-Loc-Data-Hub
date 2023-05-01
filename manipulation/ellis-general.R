@@ -149,7 +149,11 @@ colnames(ds1_budget_income) <- ifelse(
 ds1_dfrr <- 
   ds_dfrr %>% 
   group_by(hromada_code) %>% 
-  summarise(dfrr_executed = sum(budget_executed_2015, na.rm=T), .groups = "drop")
+  summarise(
+    dfrr_executed = sum(budget_executed_2015, na.rm=T)
+    ,dfrr_executed_20_21 = sum(budget_executed_2015[year %in% c(2020, 2021)]) 
+    , .groups = "drop"
+  )
 
 #changes in ds_heads
 ds1_heads <-
