@@ -39,7 +39,8 @@ path_geography <- "./data-public/derived/geography.csv"
 path_demography <- "./data-private/derived/ua-pop-2022.csv"
 path_osbb <- "./data-private/derived/osbb-hromada.csv"
 path_zno <- "./data-private/derived/zno-2022-aggragated.csv"
-path_budget_income <- "./data-public/derived/hromada_budget_2020_2022.xlsx"
+#path_budget_income <- "./data-public/derived/hromada_budget_2020_2022.xlsx"
+path_budget_income <- "./data-public/derived/hromada_budget_2020_2022.csv"
 path_heads <- "./data-private/raw/hromada_heads.xlsx"
 path_dfrr <- "./data-private/derived/dfrr_hromadas.csv"
 path_edem <- "./data-private/derived/edem-data.csv"
@@ -72,7 +73,8 @@ ds_geography <- readr::read_csv(path_geography)
 ds_demography <- readr::read_csv(path_demography) 
 ds_osbb <- readr::read_csv(path_osbb)
 ds_zno<- readr::read_csv(path_zno)
-ds_budget_income <- readxl::read_xlsx(path_budget_income)
+#ds_budget_income <- readxl::read_xlsx(path_budget_income)
+ds_budget_income <- readr::read_csv(path_budget_income)
 ds_heads <- readxl::read_xlsx(path_heads)
 ds_dfrr <- readr::read_csv(path_dfrr)
 ds_edem <- readr::read_csv(path_edem)
@@ -142,7 +144,14 @@ colnames(ds1_budget_income) <- ifelse(
   str_detect(colnames(ds1_budget_income), "income") |
     str_detect(colnames(ds1_budget_income), "prop")
   ,paste(colnames(ds1_budget_income), "2021", sep = "_")
-  ,colnames(ds1_budget_income))
+  ,colnames(ds1_budget_income)) %>%
+  rename(own_income_no_mil_change_YoY_jan_feb = own_income_no_mil_change_YoY_jan_feb_2021,
+         own_income_no_mil_change_YoY_mar_apr = own_income_no_mil_change_YoY_mar_apr_2021,
+         own_income_no_mil_change_YoY_mar_may = own_income_no_mil_change_YoY_mar_may_2021,
+         own_income_no_mil_change_YoY_jun_aug = own_income_no_mil_change_YoY_jun_aug_2021,
+         own_income_no_mil_change_YoY_jul_sep = own_income_no_mil_change_YoY_jul_sep_2021,
+         own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_adapt_2021
+         )
 
 
 #aggregate DFRR data for all years

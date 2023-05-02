@@ -49,13 +49,16 @@ data_cache_folder <- prints_folder # to sink modeling steps
 # the product of ./manipulation/ellis-general.R
 d <- readr::read_csv("./data-private/derived/full_dataset.csv")
 d <- d %>% 
-  rename("YoY_mar_may" = "own_income_no_mil_change_YoY_mar_may_2021",
-         "YoY_jan_feb" = "own_income_no_mil_change_YoY_jan_feb_2021",
-         "YoY_mar_apr" = "own_income_no_mil_change_YoY_mar_apr_2021",
-         "YoY_jun_aug" = "own_income_no_mil_change_YoY_jun_aug_2021",
-         "YoY_adapt" = "own_income_no_mil_change_YoY_adapt_2021")
+  rename("YoY_mar_may" = "own_income_no_mil_change_YoY_mar_may",
+         "YoY_jan_feb" = "own_income_no_mil_change_YoY_jan_feb",
+         "YoY_mar_apr" = "own_income_no_mil_change_YoY_mar_apr",
+         "YoY_jun_aug" = "own_income_no_mil_change_YoY_jun_aug",
+         "YoY_jul_sep" = "own_income_no_mil_change_YoY_jul_sep",
+         "YoY_adapt" = "own_income_no_mil_change_YoY_adapt",
+         "income_own_2021" = "income_own",
+         "income_own_full_year_2021" = "income_own_full_year")
 
-d <- d %>% mutate(income_own_2021_per_capita = income_own_2021/total_population_2022,
+d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021/total_population_2022,
                   dfrr_executed_per_capita = dfrr_executed / total_population_2022,
                   dfrr_executed_corr = ifelse(is.na(dfrr_executed), 0, dfrr_executed),
                   dfrr_executed_corr_per_capita = dfrr_executed_corr / total_population_2022)
@@ -77,7 +80,7 @@ cor_mat_full <-
                distance_to_russia_belarus ,
                war_zone_20_06_2022 ,
                
-               own_income_prop_2021 ,
+               own_income_prop_full_year ,
                income_own_2021_per_capita,
                income_own_2021 ,
                dfrr_executed_per_capita,
@@ -103,11 +106,12 @@ cor_mat <-
         select(area,
                total_population_2022,
                urban_pct,n_settlements,
-               own_income_prop_2021,
+               own_income_prop_full_year,
                YoY_jan_feb,
                YoY_mar_apr,
                YoY_mar_may,
                YoY_jun_aug,
+               YoY_jul_sep,
                dfrr_executed,
                turnout_2020,
                incumbent
@@ -118,6 +122,7 @@ corrplot::corrplot(cor_mat, tl.col = "black",tl.cex = 1, addCoef.col = "black", 
 d %>% select(train_station) %>% summary() 
 a <- d %>% select(YoY_jun_aug,
                   YoY_mar_apr ,
+                  YoY_jul_sep,
                     
                     
                     total_population_2022 ,
@@ -132,8 +137,8 @@ a <- d %>% select(YoY_jun_aug,
                     distance_to_russia_belarus ,
                     war_zone_20_06_2022 ,
                     
-                    own_income_prop_2021 ,
-                    income_own_2021 ,
+                  own_income_prop_full_year ,
+                  income_own_full_year_2021 ,
                     dfrr_executed ,    # a lot of NA
                     train_station ,
                     working_age_pct_declarations , #  a lot of NA
@@ -153,7 +158,7 @@ a <- d %>% select(YoY_jun_aug,
   summarise_all(funs(sum(is.na(.))))
 
 ols_1 <- lm(data = d,
-            YoY_jun_aug ~ YoY_mar_apr +
+            YoY_jul_sep ~ YoY_mar_apr +
               
               
               log(total_population_2022) +
@@ -167,8 +172,8 @@ ols_1 <- lm(data = d,
               region_en + 
               distance_to_russia_belarus +
 
-              own_income_prop_2021 +
-              log(income_own_2021) +
+              own_income_prop_full_year +
+              log(income_own_full_year_2021) +
               log(dfrr_executed + 1) +  #a lot of NA
               train_station+
               working_age_pct_declarations + # a lot of NA
@@ -188,7 +193,7 @@ ols_1 <- lm(data = d,
                           )
 
 ols_2 <- lm(data = d,
-            YoY_jun_aug ~ YoY_mar_apr +
+            YoY_jul_sep ~ YoY_mar_apr +
               
               
               log(total_population_2022) +
@@ -202,7 +207,7 @@ ols_2 <- lm(data = d,
               region_en + 
               distance_to_russia_belarus +
 
-              own_income_prop_2021 +
+              own_income_prop_full_year +
               log(income_own_2021) +
               train_station+
 
@@ -221,7 +226,7 @@ ols_2 <- lm(data = d,
 )
 
 ols_3 <- lm(data = d,
-            YoY_jun_aug ~ YoY_mar_apr +
+            YoY_jul_sep ~ YoY_mar_apr +
               
               
               urban_pct + 
@@ -237,7 +242,6 @@ ols_3 <- lm(data = d,
               
               youth_councils + 
               youth_centers + 
-              business_support_centers +
               sex_head +
               age_head +
               education_head + 
@@ -253,7 +257,7 @@ stargazer::stargazer(ols_1, ols_2, ols_3, single.row = T, type = 'html', out = '
 
 
 ols_4 <- lm(data = d,
-            YoY_jun_aug ~ YoY_mar_apr +
+            YoY_jul_sep ~ YoY_mar_apr +
               
               
               log(total_population_2022) +
@@ -267,8 +271,8 @@ ols_4 <- lm(data = d,
               region_en + 
               distance_to_russia_belarus +
               
-              own_income_prop_2021 +
-              log(income_own_2021) +
+              own_income_prop_full_year +
+              log(income_own_full_year_2021) +
               dfrr_executed_corr_per_capita +  #a lot of NA
               train_station+
               working_age_pct_declarations + # a lot of NA
@@ -284,11 +288,11 @@ ols_4 <- lm(data = d,
               rda +
               turnout_2020 +
               edem_total +
-              n_agreements_hromadas_active 
+              n_agreements_hromadas 
 )
 
 ols_5 <- lm(data = d,
-            YoY_jun_aug ~ YoY_mar_apr +
+            YoY_jul_sep ~ YoY_mar_apr +
               
               
               log(total_population_2022) +
@@ -302,8 +306,8 @@ ols_5 <- lm(data = d,
               region_en + 
               distance_to_russia_belarus +
               
-              own_income_prop_2021 +
-              log(income_own_2021) +
+              own_income_prop_full_year +
+              log(income_own_full_year_2021) +
               dfrr_executed_corr_per_capita +
               train_station+
               
@@ -318,11 +322,11 @@ ols_5 <- lm(data = d,
               rda +
               turnout_2020 +
               edem_total +
-              n_agreements_hromadas_active 
+              n_agreements_hromadas 
 )
 
 ols_6 <- lm(data = d,
-            YoY_jun_aug ~ YoY_mar_apr +
+            YoY_jul_sep ~ YoY_mar_apr +
               
               
               urban_pct + 
@@ -348,7 +352,39 @@ ols_6 <- lm(data = d,
               rda +
               turnout_2020 +
               edem_total +
-              n_agreements_hromadas_active 
+              n_agreements_hromadas 
 )
 
-stargazer::stargazer(ols_4, ols_5, ols_6, single.row = T, type = 'html', out = './analysis/budget-models/revenue_fall.html')
+stargazer::stargazer(ols_6, ols_7, single.row = T, type = 'html', out = './analysis/budget-models/revenue_fall_alt.html')
+
+ols_7 <- lm(data = d,
+            YoY_jul_sep ~ 
+              
+              
+              urban_pct + 
+              area + 
+              travel_time +
+              time_before_24th +
+              
+              region_en + 
+              distance_to_russia_belarus +
+              
+              log(income_own_2021_per_capita) +
+              dfrr_executed_corr_per_capita +
+              train_station+
+              
+              youth_councils + 
+              youth_centers + 
+              business_support_centers +
+              sex_head +
+              age_head +
+              education_head + 
+              incumbent +
+              polit_work +
+              rda +
+              turnout_2020 +
+              edem_total +
+              n_agreements_hromadas 
+)
+
+stargazer::stargazer(ols_6, ols_7, single.row = T, type = 'html', out = './analysis/budget-models/revenue_fall_comp.html')
