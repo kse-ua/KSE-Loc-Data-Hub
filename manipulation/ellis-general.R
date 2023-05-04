@@ -300,7 +300,10 @@ d1 <-
     ,~replace(., is.na(.), 0)
   ) %>%
   left_join(
-    ds_war %>% select(hromada_code, starts_with('war_zone'))
+    ds_war %>% select(hromada_code, starts_with('war_zone'),
+                      Status_war_sept,
+                      Status_war_sept_ext, 
+                      deoccupation_date)
     ,by = "hromada_code"
   ) %>% 
   left_join(
