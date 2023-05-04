@@ -61,13 +61,26 @@ d <- d %>%
 d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021/total_population_2022,
                   dfrr_executed_per_capita = dfrr_executed / total_population_2022,
                   dfrr_executed_corr = ifelse(is.na(dfrr_executed), 0, dfrr_executed),
-                  dfrr_executed_corr_per_capita = dfrr_executed_corr / total_population_2022)
+                  dfrr_executed_corr_per_capita = dfrr_executed_corr / total_population_2022,
+                  creation_year = as.factor(creation_year),
+                  pioneer = case_when(creation_year == "2015" | creation_year == "2016" ~ 1, TRUE ~ 0),
+                  dfrr_executed_20_21_cat = case_when(dfrr_executed_20_21 > 0 ~ 1,
+                                                      dfrr_executed_20_21 == 0 ~ 0,
+                                                      is.na(dfrr_executed_20_21) ~ 0,
+                                                      TRUE ~ 0),
+                  sum_osbb_2020_corr = ifelse(is.na(sum_osbb_2020), 0, sum_osbb_2020),
+                  Status_war_sept_ext = as.factor(Status_war_sept_ext),
+                  Status_war_sept_ext = relevel(Status_war_sept_ext, ref = "not occupied"),
+                  Status_war_sept = as.factor(Status_war_sept_ext),
+                  Status_war_sept = relevel(Status_war_sept, ref = "not occupied"))
+
+sample_data$x <- relevel(sample_data$x, ref = 4)
 
 cor_mat_full <- 
   cor(d %>% 
         select(YoY_jun_aug,
                YoY_mar_apr ,
-               
+               pioneer,
                
                total_population_2022 ,
                urban_pct , 
@@ -80,12 +93,14 @@ cor_mat_full <-
                distance_to_russia_belarus ,
                war_zone_20_06_2022 ,
                
+               
                own_income_prop_full_year ,
                income_own_2021_per_capita,
                income_own_2021 ,
                dfrr_executed_per_capita,
                dfrr_executed ,    # a lot of NA
                dfrr_executed_corr_per_capita,
+               dfrr_executed_20_21_cat,
                train_station ,
                working_age_pct_declarations , #  a lot of NA
                
@@ -96,9 +111,11 @@ cor_mat_full <-
                incumbent ,
                polit_work ,
                rda ,
+               enterpreuner ,
                turnout_2020 ,
                edem_total ,
-               n_agreements_hromadas_active)
+               n_agreements_hromadas_active,
+               sum_osbb_2020_corr)
       ,use = "complete.obs")
 
 cor_mat <- 
@@ -114,7 +131,8 @@ cor_mat <-
                YoY_jul_sep,
                dfrr_executed,
                turnout_2020,
-               incumbent
+               incumbent,
+               pioneer
               )
       ,use = "complete.obs")
 corrplot::corrplot(cor_mat, tl.col = "black",tl.cex = 1, addCoef.col = "black", number.cex=1, order = "FPC")
@@ -166,6 +184,7 @@ ols_1 <- lm(data = d,
               area + 
               travel_time +
               voluntary +
+              pioneer +
               time_before_24th +
               n_settlements + 
               
@@ -201,6 +220,7 @@ ols_2 <- lm(data = d,
               area + 
               travel_time +
               voluntary +
+              pioneer +
               time_before_24th +
               n_settlements + 
               
@@ -232,7 +252,7 @@ ols_3 <- lm(data = d,
               urban_pct + 
               area + 
               travel_time +
-              time_before_24th +
+              pioneer +
 
               region_en + 
               distance_to_russia_belarus +
@@ -240,17 +260,19 @@ ols_3 <- lm(data = d,
               log(income_own_2021_per_capita) +
               train_station+
               
-              youth_councils + 
               youth_centers + 
               sex_head +
               age_head +
               education_head + 
               incumbent +
               polit_work +
+              enterpreuner +
               rda +
               turnout_2020 +
               edem_total +
-              n_agreements_hromadas_active 
+              n_agreements_hromadas_active +
+              dfrr_executed_20_21_cat +
+              sum_osbb_2020_corr
 )
 
 stargazer::stargazer(ols_1, ols_2, ols_3, single.row = T, type = 'html', out = './analysis/budget-models/revenue_fall.html')
@@ -388,3 +410,96 @@ ols_7 <- lm(data = d,
 )
 
 stargazer::stargazer(ols_6, ols_7, single.row = T, type = 'html', out = './analysis/budget-models/revenue_fall_comp.html')
+
+
+ols_initial <- lm(data = d,
+                YoY_jun_aug ~ YoY_mar_apr +
+                  
+                  
+                  urban_pct + 
+                  area + 
+                  travel_time +
+                  time_before_24th+
+                  
+                  region_en + 
+                  distance_to_russia_belarus +
+                  
+                  log(income_own_2021_per_capita) +
+                  train_station+
+                  dfrr_executed_corr_per_capita +
+                  
+                  youth_centers + 
+                  youth_councils + 
+                  business_support_centers +
+                  
+                  sex_head +
+                  age_head +
+                  education_head + 
+                  incumbent +
+                  polit_work +
+                  rda +
+                  turnout_2020 +
+                  edem_total +
+                  n_agreements_hromadas 
+)
+
+ols_final <- lm(data = d,
+            YoY_jul_sep ~ YoY_mar_apr +
+              
+              
+              urban_pct + 
+              area + 
+              travel_time +
+              pioneer +
+              
+              region_en + 
+              distance_to_russia_belarus +
+              
+              log(income_own_2021_per_capita) +
+              train_station+
+              
+              youth_centers + 
+              sex_head +
+              age_head +
+              education_head + 
+              incumbent +
+              polit_work +
+              enterpreuner +
+              rda +
+              turnout_2020 +
+              edem_total +
+              n_agreements_hromadas +
+              dfrr_executed_20_21_cat +
+              sum_osbb_2020_corr
+)
+
+ols_final_alt <- lm(data = d,
+                YoY_jul_sep ~ YoY_mar_apr +
+                  
+                  
+                  urban_pct + 
+                  area + 
+                  travel_time +
+                  pioneer +
+                  
+                  Status_war_sept_ext +
+                  
+                  log(income_own_2021_per_capita) +
+                  train_station+
+                  
+                  youth_centers + 
+                  sex_head +
+                  age_head +
+                  education_head + 
+                  incumbent +
+                  polit_work +
+                  enterpreuner +
+                  rda +
+                  turnout_2020 +
+                  edem_total +
+                  n_agreements_hromadas +
+                  dfrr_executed_20_21_cat +
+                  sum_osbb_2020_corr
+)
+
+stargazer::stargazer(ols_initial, ols_final, ols_final_alt, single.row = T, type = 'html', out = './analysis/budget-models/budget_models.html')
