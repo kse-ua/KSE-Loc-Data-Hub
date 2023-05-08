@@ -66,9 +66,6 @@ merge <- nakaz_war_status %>%
   left_join(occupation_status,
             by = c('hromada_code'))
 
-merge_full <- 
-
-
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
 readr::write_csv(merge, "./data-private/derived/minregion-war-status.csv") #aggregated on hromada level

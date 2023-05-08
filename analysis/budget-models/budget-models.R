@@ -58,7 +58,7 @@ d <- d %>%
          "income_own_2021" = "income_own",
          "income_own_full_year_2021" = "income_own_full_year")
 
-d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021/total_population_2022,
+d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021*1000/total_population_2022,
                   dfrr_executed_per_capita = dfrr_executed / total_population_2022,
                   dfrr_executed_corr = ifelse(is.na(dfrr_executed), 0, dfrr_executed),
                   dfrr_executed_corr_per_capita = dfrr_executed_corr / total_population_2022,
@@ -503,3 +503,6 @@ ols_final_alt <- lm(data = d,
 )
 
 stargazer::stargazer(ols_initial, ols_final, ols_final_alt, single.row = T, type = 'html', out = './analysis/budget-models/budget_models.html')
+
+d %>% filter(!is.na(income_own_2021_per_capita)) %>% group_by(Status_war_sept_ext) %>%
+  summarise(m = mean(income_own_2021_per_capita)) 
