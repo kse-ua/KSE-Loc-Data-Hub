@@ -246,6 +246,9 @@ ds4_partnerships <- ds3_partnerships %>%
     ,by = c("settlement_code"="settlement_code_old")
   )
 
+
+
+#leave only hromadas (collapse settlements) and only agreements signed before 24.02.2022
 ds5_partnerships <- ds4_partnerships %>% 
   filter(!is.na(start)) %>% 
   distinct(register_number, start, end, hromada_code, hromada_name) %>% 
@@ -264,7 +267,7 @@ nagreements <- ds5_partnerships %>%
 #count the number of unique hromadas with which each hromada has had experience of cooperation
 nagreements_hromadas <- ds5_partnerships %>% 
   inner_join(ds5_partnerships, by = "register_number") %>%
-  filter(hromada_code.x != hromada_code.y) %>% View()
+  filter(hromada_code.x != hromada_code.y) %>% 
   group_by(hromada_code.x) %>%
   summarise(n_agreements_hromadas = n_distinct(hromada_code.y)) %>% 
   rename(hromada_code = hromada_code.x)
@@ -288,8 +291,11 @@ ds6_partnerships <- ds_admin %>%
   mutate_at(vars(-hromada_code, -hromada_name), ~replace(., is.na(.), 0))
 
 #+ save ------------------------------------------------
-readr::write_csv(ds4_partnerships, "./data-private/derived/partnerships-all-settlements.csv")
-readr::write_csv(ds6_partnerships, "./data-private/derived/partnerships-hromadas.csv")
+#save full dataset will all settlements, agreements and their descriptions
+readr::write_csv(ds4_partnerships, "./data-public/derived/partnerships-all-settlements.csv")
+
+#save aggregated data on agreements per each hromada
+readr::write_csv(ds6_partnerships, "./data-public/derived/partnerships-hromadas.csv")
 
 
 #save the dataset with hromada pairs for network analysis
