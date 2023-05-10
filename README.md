@@ -7,7 +7,7 @@ The project is funded by GIZ within its project "Support to the Decentralisation
 ![](https://www.nationsonline.org/maps/Ukraine-Administrative-Map.jpg)
 
 | Name              | Role                                                            | \@         |
-|-------------------|-----------------------------------------------------------------|------------|
+|--------------|-------------------------------------------|--------------|
 | Tymofii Brik      | Lead Researcher                                                 |            |
 | Andriy Darkovich  | Research Assistant                                              |            |
 | Valentyn Hatsko   | Data Analyst                                                    | valgat29   |
@@ -16,6 +16,61 @@ The project is funded by GIZ within its project "Support to the Decentralisation
 | Myroslava Savisko | Project Manager                                                 | splanetina |
 | Serhii Tytiuk     | Data Analyst                                                    | tytser     |
 | Igor Piddubniy    | Data Analyst                                                    | ipiddubnyi |
+
+# Surveys
+
+The Kyiv School of Economics (KSE) Institute conducted two surveys of hromadas in 2022 to study the impact of Russia's full-scale invasion on their economic performance and to identify factors of hromada resilience to various types of war-related shocks.
+
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 48%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><p></p></th>
+<th><p>Survey #1</p></th>
+<th><p>Survey #2</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><p><strong>Lead center</strong></p></td>
+<td><p>KSE Agrocenter</p></td>
+<td><p>KSE Center for Sociological Research Decentralization<br />
+and Regional Development</p></td>
+</tr>
+<tr class="even">
+<td><p><strong>Target audience</strong></p></td>
+<td><p>Local authorities of hromadas </p></td>
+<td><p>Local authorities of hromadas </p></td>
+</tr>
+<tr class="odd">
+<td><p><strong>Survey mode</strong></p></td>
+<td><p>Web survey</p></td>
+<td><p>Web survey</p></td>
+</tr>
+<tr class="even">
+<td><p><strong>Sample size</strong></p></td>
+<td><p>477 hromadas</p></td>
+<td><p>138 hromadas</p></td>
+</tr>
+<tr class="odd">
+<td><p><strong>Fieldwork dates</strong></p></td>
+<td><p>June-August 2022</p></td>
+<td><p>October-November 2022</p></td>
+</tr>
+</tbody>
+</table>
+
+### **Map of hromadas participated in the surveys**
+
+````{=html}
+```{r, echo=FALSE, results='asis'}
+xfun::file_string('map_surveys.html')
+```
+````
 
 # Reports
 
@@ -26,7 +81,7 @@ The project is funded by GIZ within its project "Support to the Decentralisation
 # Data Products
 
 | Data Product Name                      | Description                                                                                                                                                                                                                                                                                                                                                                                            | Current State / Left To Do                                                                               | Script                                        |
-|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------|
+|-----------|---------------------------------------|-----------|-----------|
 | Admininstrative Units                  | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region)                                                                                                                                                                                                                                                                                                   | ready for analysis at `./data-public/derived/ua-admin-map-2020.csv`                                      | `./manipulation/ellis-ua-admin.R`             |
 | Admin History                          | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020                                                                                                                                                                                                                                                                               | push to ./data-public/derived/                                                                           | `./manipulation/ellis-rada-hromada.R`         |
 | Population                             | Population counts at the level of hromada                                                                                                                                                                                                                                                                                                                                                              | Add more years (currently only 2021), push to ./data-public/derived/                                     | `./manipulation/ellis-demography.R`           |
