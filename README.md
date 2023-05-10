@@ -2,12 +2,34 @@
 
 The project investigates the effects of restructurization of local councils (i.e. "rada", N = 11,250) into amalgamated territorial communities (i.e. "hromada", N = 1,469) and the effect of this tranformation on key macroeconomic and social indicators. Of specific interest is hromadas' resiliance to full-scale russian invasion launched on 2022-02-24.
 
+This repository contains all the materials used to study the factors of resilience of Ukrainian communities in the context of the Russian invasion.
+
+Another goal of the project is to create a repository of data available in Ukraine at the hromada level for further use in research and policy-making.
+
 The project is funded by GIZ within its project "Support to the Decentralisation Reform in Ukraine (UDU U-LEAD with Europe. Phase II) (#`81281025`)
 
 ![](https://www.nationsonline.org/maps/Ukraine-Administrative-Map.jpg)
 
+# Repository Structure 
+
+The repository has the following structure:
+
+-   **data-public**:
+
+    -   **data-public/raw**: a folder with initial data on hromadas obtained from open sources or through requests to government agencies
+
+    -   **data-public/derived**: a folder with the final data that we received after processing the initial data with scripts (aggregation of data at the hromada level and calculation of new metrics)
+
+-   **manipulation**: all the scripts which are used for data transformation of the raw data (the content of data-public/derived is a product of these scripts)
+
+-   **analysis**: scripts for data analysis and data presentation within the project
+
+-   **scripts**: useful functions for data wrangling/analysis
+
+# Project Team
+
 | Name              | Role                                                            | \@         |
-|--------------|-------------------------------------------|--------------|
+|----------------|----------------------------------------|----------------|
 | Tymofii Brik      | Lead Researcher                                                 |            |
 | Andriy Darkovich  | Research Assistant                                              |            |
 | Valentyn Hatsko   | Data Analyst                                                    | valgat29   |
@@ -21,11 +43,11 @@ The project is funded by GIZ within its project "Support to the Decentralisation
 
 The Kyiv School of Economics (KSE) Institute conducted two surveys of hromadas in 2022 to study the impact of Russia's full-scale invasion on their economic performance and to identify factors of hromada resilience to various types of war-related shocks.
 
-<table>
+<table style="width:100%;">
 <colgroup>
-<col style="width: 29%" />
-<col style="width: 48%" />
-<col style="width: 22%" />
+<col style="width: 27%" />
+<col style="width: 35%" />
+<col style="width: 36%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -43,8 +65,8 @@ and Regional Development</p></td>
 </tr>
 <tr class="even">
 <td><p><strong>Target audience</strong></p></td>
-<td><p>Local authorities of hromadas </p></td>
-<td><p>Local authorities of hromadas </p></td>
+<td><p>Local authorities of hromadas</p></td>
+<td><p>Local authorities of hromadas</p></td>
 </tr>
 <tr class="odd">
 <td><p><strong>Survey mode</strong></p></td>
@@ -66,7 +88,11 @@ and Regional Development</p></td>
 
 ### **Map of hromadas participated in the surveys**
 
-<iframe src="./map_surveys.html" width="100%" height="500"></iframe>
+![](images/Screenshot%202023-05-10%20at%2016.53.20.png)
+
+<iframe src="/Users/serhii/Desktop/KSE Institute/ua-de-center/map_surveys.html" width="100%" height="500">
+
+</iframe>
 
 # Reports
 
@@ -77,7 +103,7 @@ and Regional Development</p></td>
 # Data Products
 
 | Data Product Name                      | Description                                                                                                                                                                                                                                                                                                                                                                                            | Current State / Left To Do                                                                               | Script                                        |
-|-----------|---------------------------------------|-----------|-----------|
+|-------------|---------------------------------|-------------|-------------|
 | Admininstrative Units                  | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region)                                                                                                                                                                                                                                                                                                   | ready for analysis at `./data-public/derived/ua-admin-map-2020.csv`                                      | `./manipulation/ellis-ua-admin.R`             |
 | Admin History                          | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020                                                                                                                                                                                                                                                                               | push to ./data-public/derived/                                                                           | `./manipulation/ellis-rada-hromada.R`         |
 | Population                             | Population counts at the level of hromada                                                                                                                                                                                                                                                                                                                                                              | Add more years (currently only 2021), push to ./data-public/derived/                                     | `./manipulation/ellis-demography.R`           |
