@@ -91,7 +91,7 @@ and Regional Development</p></td>
 
 # Reports
 
--   [Resilience Survey overview](https://raw.githack.com/kse-ua/ua-de-center-serve/main/analysis/survey-overview/survey-overview.html) - Results and Key findings of the Resiliance Survey
+-   [Resilience Survey overview](https://raw.githack.com/kse-ua/ua-de-center/main/analysis/survey-overview/survey-overview-hatsko.html) - Results and Key findings of the Resiliance Survey
 
 -   [Hromada Dashboard](https://valentyn-hatsko.shinyapps.io/hromada-dash/) - Dashboard with Data on Territorial Communities
 
