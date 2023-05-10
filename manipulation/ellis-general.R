@@ -69,7 +69,7 @@ cat("\n# 2.Data ")
 ds_admin <- readr::read_csv(path_admin)
 ds_hromada <- readr::read_delim(path_hromada)
 ds_time <-  readr::read_csv(path_time) #TO-DO: check the dates
-ds_geography <- readr::read_csv(path_geography)
+ds_geography <- readr::read_csv(path_geography) %>% select(-geometry)
 ds_demography <- readr::read_csv(path_demography) 
 ds_osbb <- readr::read_csv(path_osbb)
 ds_zno<- readr::read_csv(path_zno)
@@ -88,6 +88,7 @@ ds_passangers <- readr::read_csv(path_passangers)
 ds_internet_speed <- readr::read_csv(path_internet_speed)
 ds_roads_lengths <- readr::read_csv(path_roads_lengths)
 ds_partnerships <- readr::read_csv(path_partnerships)
+ds_polygons <- st_read(path_polygons) %>% janitor::clean_names()
 
 #+ inspect-data ----------------------------------------------------------------
 
@@ -324,8 +325,11 @@ d1 <-
   left_join(
     ds_partnerships %>% select(-hromada_name)
     ,by = "hromada_code"
+  ) %>% 
+  left_join(
+    ds_polygons %>% select(cod_3, geometry)
+    ,by = c("hromada_code"="cod_3")
   )
-  
   
 
 #TO-DO: add big taxpayers
