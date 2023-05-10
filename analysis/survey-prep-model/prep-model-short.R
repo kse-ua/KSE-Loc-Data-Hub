@@ -174,13 +174,13 @@ ds0 <-
         .names = "{col}_oct"
       )
   ) %>%
-  mutate(prep_score_feb = prep_first_aid_water_feb*1.19 + prep_first_aid_fuel_feb*1.18 +
-           prep_reaction_plan_feb*1.16 + prep_evacuation_plan_feb*1.08 + 
-           prep_reaction_plan_oth_hromadas_feb*.98 + prep_reaction_plan_oda_feb*1.02 + 
-           prep_dftg_creation_feb*1.04 + prep_national_resistance_feb*.94 + 
-           prep_starosta_meeting_feb*1.12 + prep_communal_meetiing_feb*1.13 + 
-           prep_online_map_feb*.91 + prep_shelter_list_feb*.97 + 
-           prep_notification_check_feb*1.19 + prep_backup_feb*1.08,
+  mutate(prep_score_feb = prep_first_aid_water_feb*1.11 + prep_first_aid_fuel_feb*1.11 +
+           prep_reaction_plan_feb*1.08 + prep_evacuation_plan_feb*1.01 + 
+           prep_reaction_plan_oth_hromadas_feb*.91 + prep_reaction_plan_oda_feb*.95 + 
+           prep_dftg_creation_feb*.97 + prep_national_resistance_feb*.88 + 
+           prep_starosta_meeting_feb*1.04 + prep_communal_meetiing_feb*1.05 + 
+           prep_online_map_feb*.85 + prep_shelter_list_feb*.91 + 
+           prep_notification_check_feb*1.11 + prep_backup_feb*1.01,
          prep_score_oct = prep_first_aid_water_oct*1.19 + prep_first_aid_fuel_oct*1.18 +
            prep_reaction_plan_oct*1.16 + prep_evacuation_plan_oct*1.08 + 
            prep_reaction_plan_oth_hromadas_oct*.98 + prep_reaction_plan_oda_oct*1.02 + 
@@ -202,7 +202,9 @@ vars3 <- ds0 %>% select(4:11, 13:16, 191, 196:208, 210:211, 238:239, 241, 243, 2
 
 var_select <- c(vars1, vars2, vars3)
 
-ds1 <- ds0 %>% select(all_of(var_select)) %>% select(-prep_score_oct)
+ds1 <- ds0 %>% select(all_of(var_select)) %>% select(-prep_score_oct) %>% 
+  left_join(ds1_dfrr %>% select(hromada_code, dfrr_executed_20_21), by = 'hromada_code') %>% 
+  mutate(dfrr_executed_20_21 = replace_na(dfrr_executed_20_21, 0))
 
 ds2 <- ds0 %>% select(contains('agreements'), prep_score_feb, prep_winter_count, occupation_and_combat)
 ds1 %>% summarise(across(everything(), ~sum(is.na(.)))) %>% t()
@@ -220,6 +222,10 @@ ds2 <-
     ,osbb_per_capita_k_2020 = sum_osbb_2020 / total_population_2022 * 1000
     ,own_income_prop_2021 = own_income_prop_2021 * 100
     ,turnout_2020 = turnout_2020 * 100
+    ,travel_time_60 = travel_time / 60
+    ,distance_to_russia_belarus_100 = distance_to_russia_belarus / 100
+    ,distance_to_eu_100 = distance_to_eu / 100
+    ,dfrr_executed_20_21_k = dfrr_executed_20_21 / total_population_2022
   )  %>%
   # zero filling NAs
   mutate(
@@ -233,6 +239,8 @@ ds2 <-
     ,youth_centers_b = ifelse(youth_centers == 0, 0, 1)
     ,youth_councils_b =ifelse(youth_councils == 0, 0, 1)
     ,city = factor(ifelse(type == 'міська', 1, 0))
+    ,dfrr_bin = ifelse(dfrr_executed_20_21 > 0, 1, 0)
+    ,pioneer = ifelse(creation_year %in% c(2015, 2016), 1, 0)
   ) %>% fastDummies::dummy_cols(select_columns = c('type', 'region_en')) %>% 
   select(-c(hromada_name, hromada_full_name, raion_code, raion_name, oblast_code,
             oblast_name, occupation, military_action, hromada_code, 
@@ -247,23 +255,39 @@ ds2 <-
             buffer_int_15km, oblast_center, 
             passengers_2021_per_capita_zeros, creation_date,
             creation_year, edem_consultations, edem_petitions, edem_participatory_budget,
-            edem_open_hromada)) %>% 
-  na.omit()
+            edem_open_hromada))
 
+
+descr <- ds2 %>% 
+  summarise(across(everything(), list(mean = mean, sd = sd, na = ~sum(is.na(.x))))) %>% 
+  pivot_longer(everything(),
+               names_to = c("my_names", ".value"),
+               names_pattern = "(.+)_(.+$)") 
+
+descr %>% write.table('clipboard')
+
+
+ds2 %>% select(turnout_2020) %>% 
+  na.omit() %>% 
+  summarise(mean = mean(turnout_2020), sd = sd(turnout_2020))
 ##+ Preparation Score February -------------------------------------------------
 
 ds2$prep_score_feb_round <- round(ds2$prep_score_feb)
 
-model_gaussian <- lm(prep_score_feb ~ n_agreements_hromadas_active,
+model_gaussian <- lm(prep_score_feb ~ high_educ,
                      data = ds2)
 summary(model_gaussian)
 
-plot(model_gaussian)
+model_gaussian_re <- lmtest::coeftest(model_gaussian, 
+                                      vcov = sandwich::vcovHC(model_gaussian, type = 'HC3'))
+model_gaussian_re
 
-model_poisson <- glm(prep_score_feb ~ n_agreements_hromadas_active, 
+  plot(model_gaussian)
+
+model_poisson <- glm(prep_score_feb ~ dffr_bin, 
                      data = ds2, family = "poisson")
 
-model_negbin <- MASS::glm.nb(prep_score_feb ~ n_agreements_hromadas_active, data = ds2)
+model_negbin <- MASS::glm.nb(prep_score_feb ~ dffr_bin, data = ds2)
 
 lrtest <- lmtest::lrtest(model_poisson, model_negbin)
 
@@ -274,7 +298,7 @@ if (lrtest$Pr[2] < 0.05) {
 }
 
 # Fit the zero-inflated binomial model
-zib_model <- pscl::zeroinfl(prep_score_feb_round ~  n_agreements_hromadas_active | n_agreements_hromadas_active, 
+zib_model <- pscl::zeroinfl(prep_score_feb_round ~  dffr_bin | dffr_bin, 
                             dist = "negbin", data = ds2)
 
 # Compare the AIC of the models
@@ -289,20 +313,23 @@ summary(model_negbin)
 
 ##+ Preparation Winter -------------------------------------------------
 
-model_poisson <- glm(prep_winter_count ~ occupation_and_combat + n_agreements_hromadas_active, 
-                     data = ds2, family = "poisson")
-model_negbin <- MASS::glm.nb(prep_winter_count ~ occupation_and_combat + n_agreements_hromadas_active, 
+model_negbin <- MASS::glm.nb(
+  prep_winter_count ~ occupation_and_combat + hromadas_30km_russia_belarus, 
                              data = ds2)
 
-lrtest <- lmtest::lrtest(model_poisson, model_negbin)
+summary(model_negbin)
 
-if (lrtest$Pr[2] < 0.05) {
-  print("Use negative binomial regression")
-} else {
-  print("Use Poisson regression")
-}
+model_negbin_re <- lmtest::coeftest(model_negbin, 
+                                      vcov = sandwich::vcovHC(model_negbin, type = 'HC0'))
+model_negbin_re
 
-summary(model_poisson)
+model_negbin_re <- lmtest::coeftest(model_negbin, 
+                                    vcov = sandwich::vcovHC(model_negbin, type = 'HC1'))
+model_negbin_re
+
+model_negbin_re <- lmtest::coeftest(model_negbin, 
+                                    vcov = sandwich::vcovHC(model_negbin, type = 'HC2'))
+model_negbin_re
 
 variables <- colnames(ds2)[-c(4, 5 , 24, 28)]
 
