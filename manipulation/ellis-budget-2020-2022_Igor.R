@@ -62,7 +62,7 @@ for(i in seq_along(paths_budget)){
   ls_import[[i]] <- 
     readxl::read_xlsx(
       path = paths_budget[[i]]
-    ) %>% 
+    ,guess_max = 1048576) %>% 
     janitor::clean_names() %>%
     mutate_all(.funs = as.character)
 }
@@ -179,7 +179,7 @@ ds4_long <-
   ds3_long %>% 
   mutate(
     transfert = str_detect(tax_code, "^4.+")
-    ,target_segment = month %in% c(3:8) & year %in% c(2021, 2022)
+    ,target_segment = month %in% c(3:9) & year %in% c(2021, 2022)
     ,military_tax = tax_code %in% c('11010200')
     ,income_tax = str_detect(tax_code, "^1101.+")
     ,unified_tax = str_detect(tax_code, "^1805.+")
@@ -448,7 +448,7 @@ grouping_stem <- ds5_long %>% select(budget_code:year) %>% names()
 ds5_former <- 
   ds5_long %>% 
   mutate(
-    target_segment = month %in% c(3:8) & year %in% c(2021, 2022) # i think
+    target_segment = month %in% c(3:9) & year %in% c(2021, 2022) # i think
   ) %>% 
   filter(target_segment) %>% 
   group_by_at(grouping_stem) %>% 
@@ -490,7 +490,15 @@ b <- a %>%
                                                       income_own_no_military_tax[month=="2"&year==2022]) / 
                                                      (income_own_no_military_tax[month=="1"&year==2021]+
                                                         income_own_no_military_tax[month=="2"&year==2021]))-1)*100),
-         own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_jun_aug - own_income_no_mil_change_YoY_mar_apr)
+         own_income_no_mil_change_YoY_jul_sep = ((((income_own_no_military_tax[month=="9"&year==2022]+
+                                                      income_own_no_military_tax[month=="8"&year==2022]+
+                                                      income_own_no_military_tax[month=="7"&year==2022]) / 
+                                                     (income_own_no_military_tax[month=="9"&year==2021]+
+                                                        income_own_no_military_tax[month=="8"&year==2021]+
+                                                        income_own_no_military_tax[month=="7"&year==2021]))-1)*100),
+         own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_jul_sep - own_income_no_mil_change_YoY_mar_apr,
+         income_own_full_year = income_own,
+         own_income_prop_full_year = own_income_prop)
 
 # b$own_income_no_mil_change_YoY_jun_aug[b$year == 2021] <- NA
 # b$own_income_no_mil_change_YoY_mar_may[b$year == 2021] <- NA
@@ -506,7 +514,10 @@ c <- b %>%
          own_income_no_mil_change_YoY_mar_apr,
          own_income_no_mil_change_YoY_mar_may,
          own_income_no_mil_change_YoY_jun_aug,
-         own_income_no_mil_change_YoY_adapt)
+         own_income_no_mil_change_YoY_jul_sep,
+         own_income_no_mil_change_YoY_adapt,
+         income_own_full_year,
+         own_income_prop_full_year)
 
 q <- c %>% filter(year==2022) %>%
   group_by() %>%
@@ -514,6 +525,7 @@ q <- c %>% filter(year==2022) %>%
             own_income_no_mil_change_YoY_mar_apr = mean(own_income_no_mil_change_YoY_mar_apr),
             own_income_no_mil_change_YoY_mar_may = mean(own_income_no_mil_change_YoY_mar_may),
             own_income_no_mil_change_YoY_jun_aug = mean(own_income_no_mil_change_YoY_jun_aug),
+            own_income_no_mil_change_YoY_jul_sep = mean(own_income_no_mil_change_YoY_jul_sep),
             own_income_no_mil_change_YoY_adapt = mean(own_income_no_mil_change_YoY_adapt))
 
 ds5_final <- ds5_long %>%

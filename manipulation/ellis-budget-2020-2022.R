@@ -492,11 +492,11 @@ b <- a %>%
                                                         income_own_no_military_tax[month=="2"&year==2021]))-1)*100),
          own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_jun_aug - own_income_no_mil_change_YoY_mar_apr)
 
-b$own_income_no_mil_change_YoY_jun_aug[b$year == 2021] <- 0
-b$own_income_no_mil_change_YoY_mar_may[b$year == 2021] <- 0
-b$own_income_no_mil_change_YoY_adapt[b$year == 2021] <- 0
-b$own_income_no_mil_change_YoY_jan_feb[b$year == 2021] <- 0
-b$own_income_no_mil_change_YoY_mar_apr[b$year == 2021] <- 0
+# b$own_income_no_mil_change_YoY_jun_aug[b$year == 2021] <- 0
+# b$own_income_no_mil_change_YoY_mar_may[b$year == 2021] <- 0
+# b$own_income_no_mil_change_YoY_adapt[b$year == 2021] <- 0
+# b$own_income_no_mil_change_YoY_jan_feb[b$year == 2021] <- 0
+# b$own_income_no_mil_change_YoY_mar_apr[b$year == 2021] <- 0
 
 c <- b %>% 
   distinct(budget_code, year, .keep_all = TRUE) %>%

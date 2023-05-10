@@ -26,6 +26,7 @@ library(tidyverse)
 #+ declare-globals -------------------------------------------------------------
 nakaz_war_status <- "./data-private/raw/hromada_war_status.xlsx"
 path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
+occupation_status_path <- "./data-private/raw/occupation_status_hromada.xlsx"
 
 
 #+ results="asis", echo=F ------------------------------------------------------
@@ -34,6 +35,8 @@ cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
 nakaz_war_status <- readxl::read_excel(nakaz_war_status)
 ds_admin <- readr::read_csv(path_admin)
+occupation_status <- readxl::read_excel(occupation_status_path)
+
 #hromada dataset
 ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv")
 
@@ -59,7 +62,10 @@ merge <- nakaz_war_status %>%
   ) %>%
   left_join(hromadas %>% select(hromada_code, type)
             ,by = c('hromada_code')) %>%
-  mutate(across(starts_with('war_zone'), ~replace_na(.,0)))
+  mutate(across(starts_with('war_zone'), ~replace_na(.,0))) %>%
+  left_join(occupation_status,
+            by = c('hromada_code'))
+
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
 readr::write_csv(merge, "./data-private/derived/minregion-war-status.csv") #aggregated on hromada level
