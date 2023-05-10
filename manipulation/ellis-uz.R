@@ -144,5 +144,5 @@ d4 <-  readxl::read_xlsx("./data-private/raw/uz-stations-for-coding_v2_coded.xls
 
 #+ write-data ------------------------------------------------------------------
 
-readr::write_csv(d4, "./data-private/derived/passangers.csv")
+readr::write_csv(d4, "./data-public/derived/passangers.csv")
 

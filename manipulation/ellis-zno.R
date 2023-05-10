@@ -236,11 +236,11 @@ ds_zno21_hromada <-
   mutate(
     subject = str_remove(name, "Ball100|TestStatus")
     ,name = str_extract(name, "Ball|TestStatus")
-  ) %>% 
+  ) %>%
   pivot_wider(
     names_from = "name", values_from = "value"
-  ) %>% 
-  mutate(Ball = as.numeric(Ball))
+  ) 
+  # mutate(Ball = as.numeric(Ball))
 #TO-DO - identify and remove duplicates
 
 ds_zno21_hromada_means <- 
@@ -258,43 +258,43 @@ ds_zno21_hromada_means <-
 #TO-DO - Check mean scores and numbers of test takers based on the official analysis: https://zno.testportal.com.ua/stat/2021
 
 #+ graph-1 ---------------------------------------------------------------------
-library(sf)
-library(tmap)
-
-path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
-
-ds_polygons <- st_read(path_polygons) %>% janitor::clean_names() %>% 
-  mutate(
-    admin_3 = str_replace_all(admin_3,c("a" = "а", "o" = "о", "p"="р", "e"="е", "'" = "’"))
-  )
-
-ds_map <- st_sf(
-  ds_zno21_hromada_means %>% 
-    left_join(
-      ds_polygons %>% select(cod_3, geometry)
-      ,by = c("hromada_code"="cod_3")
-    )
-)
-
-tmap_mode("view")
-g1 <- 
-  ds_map %>%
-  filter(subject == "UML") %>% 
-  tm_shape() + 
-  tm_fill("pct_didnt_pass",
-          palette = "Reds",
-          id="hromada_code",
-          popup.vars=c("hromada_name")
-  ) + 
-  tm_legend(outside=TRUE) +
-  tm_layout(frame = FALSE) +
-  tmap_options(check.and.fix = TRUE)
-g1
-
+# library(sf)
+# library(tmap)
+# 
+# path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
+# 
+# ds_polygons <- st_read(path_polygons) %>% janitor::clean_names() %>% 
+#   mutate(
+#     admin_3 = str_replace_all(admin_3,c("a" = "а", "o" = "о", "p"="р", "e"="е", "'" = "’"))
+#   )
+# 
+# ds_map <- st_sf(
+#   ds_zno21_hromada_means %>% 
+#     left_join(
+#       ds_polygons %>% select(cod_3, geometry)
+#       ,by = c("hromada_code"="cod_3")
+#     )
+# )
+# 
+# tmap_mode("view")
+# g1 <- 
+#   ds_map %>%
+#   filter(subject == "UML") %>% 
+#   tm_shape() + 
+#   tm_fill("pct_didnt_pass",
+#           palette = "Reds",
+#           id="hromada_code",
+#           popup.vars=c("hromada_name")
+#   ) + 
+#   tm_legend(outside=TRUE) +
+#   tm_layout(frame = FALSE) +
+#   tmap_options(check.and.fix = TRUE)
+# g1
+# 
 
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-readr::write_csv(ds_zno21_hromada_means, "./data-private/derived/zno-2022-aggragated.csv")
+readr::write_csv(ds_zno21_hromada_means, "./data-public/derived/zno-2022-aggragated.csv")
 
 
 

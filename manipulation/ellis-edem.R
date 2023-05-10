@@ -96,7 +96,7 @@ d1 <-
   
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-readr::write_csv(d1, "./data-private/derived/edem-data.csv")
+readr::write_csv(d1, "./data-public/derived/edem-data.csv")
 
 
 

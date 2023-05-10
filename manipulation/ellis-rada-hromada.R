@@ -276,7 +276,7 @@ ds1_time %>%
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 
-ds1_time %>% readr::write_csv("./data-private/derived/time_rada.csv")
+ds1_time %>% readr::write_csv("./data-public/derived/time_rada.csv")
 ds1_rada %>% readr::write_csv("./data-private/derived/rada_hromada.csv")
 
 

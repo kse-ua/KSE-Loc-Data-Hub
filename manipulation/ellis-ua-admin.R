@@ -556,7 +556,7 @@ ds_admin_full %>%
   readr::write_csv("./data-private/derived/ua-admin-map.csv")
 
 ds_map_hromada %>% 
-  readr::write_csv("./data-private/derived/hromada.csv")
+  readr::write_csv("./data-public/derived/ua-admin-hromada.csv")
 
 
 

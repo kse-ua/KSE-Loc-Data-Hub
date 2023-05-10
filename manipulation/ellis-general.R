@@ -33,32 +33,32 @@ library(tidyverse)
 #+ load-all-datasets -------------------------------------------------------------
 #main datasets
 path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
-path_hromada <- "./data-private/derived/hromada.csv"
-path_time  <- "./data-private/derived/time_rada.csv" #TO-DO: check the dates
+path_hromada <- "./data-public/derived/ua-admin-hromada.csv"
+path_time  <- "./data-public/derived/time_rada.csv" #TO-DO: check the dates
 path_geography <- "./data-public/derived/geography.csv"
-path_demography <- "./data-private/derived/ua-pop-2022.csv"
-path_osbb <- "./data-private/derived/osbb-hromada.csv"
-path_zno <- "./data-private/derived/zno-2022-aggragated.csv"
+path_demography <- "./data-public/derived/ua-pop-2022.csv"
+path_osbb <- "./data-public/derived/osbb-hromada.csv"
+path_zno <- "./data-public/derived/zno-2022-aggragated.csv"
 #path_budget_income <- "./data-public/derived/hromada_budget_2020_2022.xlsx"
 path_budget_income <- "./data-public/derived/hromada_budget_2020_2022.csv"
 path_heads <- "./data-private/raw/hromada_heads.xlsx"
-path_dfrr <- "./data-private/derived/dfrr_hromadas.csv"
-path_edem <- "./data-private/derived/edem-data.csv"
-path_community_competence <- "./data-private/derived/community-competence-hromada.csv"
+path_dfrr <- "./data-public/derived/dfrr_hromadas.csv"
+path_edem <- "./data-public/derived/edem-data.csv"
+path_community_competence <- "./data-public/derived/community-competence-hromada.csv"
 path_declarations <- "./data-public/derived/declarations-hromada.csv"
-path_war <- "./data-private/derived/minregion-war-status.csv"
-path_internet <- "./data-private/derived/internet-speed.csv"
-path_partnerships <- "./data-private/derived/partnerships-hromadas.csv"
+path_war <- "./data-public/derived/minregion-war-status.csv"
+path_internet <- "./data-public/derived/internet-speed.csv"
+path_partnerships <- "./data-public/derived/partnerships-hromadas.csv"
 
 
 # path_budget_expences <- 
 
 #additional datasets
-path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
+path_polygons <-  "./data-public/derived/shapefiles/terhromad_fin.geojson"
 path_oblast <- "./data-private/raw/oblast.csv"
-path_passangers <- "./data-private/derived/passangers.csv"
-path_internet_speed <- "./data-private/derived/internet-speed.csv"
-path_roads_lengths <- "./data-private/derived/roads-lengths.csv"
+path_passangers <- "./data-public/derived/passangers.csv"
+path_internet_speed <- "./data-public/derived/internet-speed.csv"
+path_roads_lengths <- "./data-public/derived/roads-lengths.csv"
 
 #+ declare-functions -----------------------------------------------------------
 
@@ -333,7 +333,7 @@ d1 <-
 
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-readr::write_csv(d1, "./data-private/derived/full_dataset.csv")
+readr::write_csv(d1, "./data-public/derived/full_dataset.csv")
 
 
 

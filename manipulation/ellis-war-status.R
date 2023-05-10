@@ -68,4 +68,4 @@ merge <- nakaz_war_status %>%
 
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
-readr::write_csv(merge, "./data-private/derived/minregion-war-status.csv") #aggregated on hromada level
+readr::write_csv(merge, "./data-public/derived/minregion-war-status.csv") #aggregated on hromada level
