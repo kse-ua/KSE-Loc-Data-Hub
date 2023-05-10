@@ -66,10 +66,7 @@ and Regional Development</p></td>
 
 ### **Map of hromadas participated in the surveys**
 
-````{=html}
-{r, echo=FALSE, results='asis'}
-xfun::file_string('./map_surveys.html')
-````
+<iframe src="./map_surveys.html" width="100%" height="500"></iframe>
 
 # Reports
 
