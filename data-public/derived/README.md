@@ -14,7 +14,7 @@ Files with PHI should **not** be stored in a GitHub repository, even a private G
 
 # Datasets
 
-| Type of data   | Dataset                                | File name             | Description | Script | Source |
+| Type of data   | Dataset | File name | Description       | Script | Source |
 |--------------|--------------|--------------|---------------------|--------------|---------|
 | Administrative  | Administrative Units                   | ua-admin-map-2020.csv | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region) | `./manipulation/ellis-ua-admin.R` | Old and new State classifier of objects of the administrative and territorial system of Ukraine  |
 | Administrative | Admin History                          |   time-rada.csv | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020 | `./manipulation/ellis-rada-hromada.R` | |
@@ -23,8 +23,8 @@ Files with PHI should **not** be stored in a GitHub repository, even a private G
 | Geographic | Polygons | terhromad_fin.geojson | Spatial poligons of hromadas | | |
 | Economic       | Taxes                            |   hromada_budget_2020_2022.csv | grouped taxes at the hromada level, their share in own revenue, change for ---, and year-on-year change for different periods of 2020-2022 | `./manipulation/ellis-budget.R` | OpenBudget |
 | Economic | Taxes |  hromada_budget_2020_2022_taxes.xlsx | Individual tax revenues from Jan 2020 to Aug 2022 | `./manipulation/ellis-budget-2020-2022.R` | OpenBudget |
-| Economic               | SRDF |dfrr_hromadas.csv | Data on cost of the projects financed by the State Regional Development Fund | `./manipulation/ellis-dfrr.R` | Request to Ministry of Regional Development |
 |Economic|Budget Expenses|hromada_expenses_2021_2022.xlsx|Budget expenses for 2021-2022 |ellis-expenses-2020-2022.R  |OpenBudget
+| Economic               | SRDF |dfrr_hromadas.csv | Data on cost of the projects financed by the State Regional Development Fund | `./manipulation/ellis-dfrr.R` | Request to Ministry of Regional Development |
 | Social Capital               | Community Competence | community-competence-hromada.csv | Number of youth centers, youth councils and centers for entrepreneurial support | `./manipulation/ellis-community-competence.R` |   |
 | Health               | Health Declarations | declarations-hromada.csv | Number of declarations with health facilities as of February 2022 | `./manipulation/ellis-health.R` |     |
 | Social Capital | OSBB (Homeowners Associations)| osbb-hromada.csv | Number of homeowners associations in 2015-2020 | `./manipulation/ellis-osbb.R`|  |
