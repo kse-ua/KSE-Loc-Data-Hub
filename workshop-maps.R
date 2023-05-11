@@ -60,9 +60,8 @@ ds1 <-
   filter(pct_idp <= 1)
 
 # Checks
-ds1 %>% filter(is.na(hromada_full_name))
+ds1 %>% summarise(across(everything(), ~ sum(is.na(.x)))) %>% t()
 ds1 %>% select(oblast, oblast_name, raion, raion_name, hromada, hromada_full_name) %>% view()
-
 # Graphs
 summary(ds1$n_idp)
 
