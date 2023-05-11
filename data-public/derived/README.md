@@ -14,24 +14,25 @@ Files with PHI should **not** be stored in a GitHub repository, even a private G
 
 # Datasets
 
-| Type of data   | Dataset | File name | Description       | Script | Source |
-|---|---|:--|--------------------------------------------|---|---|
-| Administrative  | Administrative Units                   | ua-admin-map-2020.csv | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region) | `./manipulation/ellis-ua-admin.R` | Old and new State classifier of objects of the administrative and territorial system of Ukraine  |
-| Administrative | Admin History                          |   time-rada.csv | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020 | `./manipulation/ellis-rada-hromada.R` | |
-| Demography     | Population                             |     ua-pop-2022.csv | Population counts at the level of hromada (total and urban)  | `./manipulation/ellis-demography.R`           | State Statistics Service of Ukraine |
-| Geographic | Geographic | geography.csv | Main spatial features of hromadas: area, coordinates of hromada center, travel time to oblast center, mountain hromadas, distance from hromada centers to the nearest point of the border with Russia, Russia or Belarus, or the EU; hromadas within 30 km of the sea/30 km of the border/30 km of the border with Russia and Belarus; hromadas within 15 km of international roads and national roads | `./manipulation/ellis-geography.R` |    |
-| Geographic | Polygons | terhromad_fin.geojson | Spatial poligons of hromadas | | |
-| Economic       | Taxes                            |   hromada_budget_2020_2022.csv | Grouped taxes at the hromada level, their share in own revenue, change for ---, and year-on-year change for different periods of 2020-2022 | `./manipulation/ellis-budget.R` | OpenBudget |
-| Economic | Taxes |  hromada_budget_2020_2022_taxes.xlsx | Individual tax revenues for hromadas from Jan 2020 to Aug 2022 | `./manipulation/ellis-budget-2020-2022.R` | OpenBudget |
-|Economic|Budget Expenses|hromada_expenses_2021_2022.xlsx|Hromadas budget expenses for 2021-2022 |ellis-expenses-2020-2022.R  |OpenBudget
-| Economic               | SRDF |dfrr_hromadas.csv | Data on cost of the projects financed by the State Regional Development Fund | `./manipulation/ellis-dfrr.R` | Request to Ministry of Regional Development |
-| Social Capital               | Community Competence | community-competence-hromada.csv | Number of youth centers, youth councils and centers for entrepreneurial support | `./manipulation/ellis-community-competence.R` |   |
-| Health               | Health Declarations | declarations-hromada.csv | Number of declarations with health facilities as of February 2022 | `./manipulation/ellis-health.R` |     |
-| Social Capital | OSBB (Homeowners Associations)| osbb-hromada.csv | Number of homeowners associations in 2015-2020 | `./manipulation/ellis-osbb.R`|  |
-| Infrastructure | Railroad passengers |passengers.csv | Number of passengers arriving at hromada railway stations in 2021 | `./manipulation/ellis-uz.R` |  |
-| Infrastructure | Road Lengths |roads-lengths.csv |  | `./manipulation/ellis-uz.R` |  |
-| Infrastructure | Internet Speed |internet-speed.csv|  | `./manipulation/ellis-uz.R` |  |
-|  Education              | ZNO (External Independent Examination) |zno-2022-aggragated.csv| Mean scores of ZNO (standardized test) for main subjects | `./manipulation/ellis-zno.R` | |
-| War-related | War zones |minregion-war-status.csv| Statuses of the war zone/occupation according to the Ministry of Reintegration  | `./manipulation/ellis-war-status.R` |Ministry of Reintegration |
-| Citizen Participation | E-dem |edem-data.csv | Form of electronic participation in hromadas | `./manipulation/ellis-edem.R` | Scrapped from e-dem.ua |
-| Political               | Hromada Mayors Bio |                       | Information on mayor of hromadas that were elected in 2020 local elections | `./manipulation/ellis-mayors.R` |
+| Type of data | Dataset | Description | Time | File name | Script | Source |
+|---|---|--------------------|---|---|---|---|
+| Administrative        | Administrative Units | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region) | 2020 | ua-admin-map-2020.csv | `./manipulation/ellis-ua-admin.R` | Old and new State classifier of objects of the administrative and territorial system of Ukraine  |
+| Administrative        | Admin History                          | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020 | 2014-2020 | time-rada.csv | `./manipulation/ellis-rada-hromada.R`| |
+| Demography            | Population | Population counts at the level of hromada (total and urban) | Jan 2022                | ua-pop-2022.csv | `./manipulation/ellis-demography.R` | State Statistics Service of Ukraine |
+| Geographic            | Geographic                             | Main spatial features of hromadas: area, coordinates of hromada center, travel time to oblast center, mountain hromadas, distance from hromada centers to the nearest point of the border with Russia, Russia or Belarus, or the EU; hromadas within 30 km of the sea/30 km of the border/30 km of the border with Russia and Belarus; hromadas within 15 km of international roads and national roads | 2022  |geography.csv  | `./manipulation/ellis-geography.R`| |
+| Geographic            | Polygons                               | Spatial poligons of hromadas|  | terhromad_fin.geojson |   |   |
+| Economic              | Taxes                                  | Grouped taxes at the hromada level, their share in own revenue, change for ---, and year-on-year change for different periods of 2020-2022 | | hromada_budget\_<br>2020_2022.csv | ./manipulation/ellis-budget.R | OpenBudget |
+| Economic              | Taxes                                  | Individual tax revenues for hromadas |  Jan 2020-Aug 2022 | hromada_budget<br>_2020_2022\_taxes.xlsx | ./manipulation/ellis-budget-2020-2022.R | OpenBudget  |
+| Economic              | Budget Expenses | Hromadas budget expenses for 2021-2022 | Mar-Dec 2021-2022       | hromada_expenses<br>\_2021_2022.xlsx | ellis-expenses-2020-2022.R | OpenBudget |
+| Economic              | SRDF | Data on cost of the projects financed by the State Regional Development Fund |                         | dfrr_hromadas.csv | ./manipulation/ellis-dfrr.R | Request to Ministry of Regional Development |
+| Infrastructure        | Railroad passengers                    | Number of passengers arriving at hromada railway stations in 2021 |                         | passengers.csv | ./manipulation/ellis-uz.R | |
+| Infrastructure        | Road Lengths | Total length of the roads in the hromada | | roads-lengths.csv | ./manipulation/ellis-osm.R | |
+| Infrastructure        | Internet Speed | | | internet-speed.csv | ./manipulation/ellis-internet_speed.R | |
+| Social Capital        | Community Competence | Number of youth centers, youth councils and centers for entrepreneurial support | As of Sep 2021          | community-competence-hromada.csv | ./manipulation/ellis-community-competence.R | Scrapped from sites: youthcouncil.com.ua; youthcenters.net.ua; business.diia.gov.ua/business-map |
+| Social Capital        | OSBB (Homeowners Associations)         | Number of homeowners associations in 2015-2020 |                         | osbb-hromada.csv | ./manipulation/ellis-osbb.R | |
+| Social Capital        | Agreements on cooperation of territorial communities        | Data on agreements on cooperation for settlements; number of agreements for each hromada; Hromada pairs that have agreements between them | 2014-Sep 2022 | partnerships-all-settlements.csv <br> partnerships-hromadas.csv <br> partnerships-hromadas-network.csv | ./manipulation/ellis-partnerships.R | https://data.gov.ua/dataset/912c1ea4-38ea-4648-8306-59fc1df8b51b |
+| Citizen Participation | E-dem | Form of electronic participation in hromadas | As of Sep 2022 | edem-data.csv | ./manipulation/ellis-edem.R | Scrapped from e-dem.ua |
+| Political             | Hromada Mayors Bio | Information on mayor of hromadas that were elected in 2020 local elections | | | ./manipulation/ellis-mayors.R | |
+| Health                | Health Declarations                    | Number of declarations with health facilities as of February 2022 |                         | declarations-hromada.csv | ./manipulation/ellis-health.R | |
+| Education             | ZNO (External Independent Examination) | Mean scores of ZNO (standardized test) for main subjects |                         | zno-2022-aggragated.csv | ./manipulation/ellis-zno.R | |
+| War-related           | War zones                              | Statuses of the war zone/occupation according to the Ministry of Reintegration | 27.04.2022 - 23.11.2022 | minregion-war-status.csv | ./manipulation/ellis-war-status.R | Ministry of Reintegration |
