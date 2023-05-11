@@ -8,7 +8,7 @@ Another goal of the project is to create a repository of data available in Ukrai
 
 The project is funded by GIZ within its project "Support to the Decentralisation Reform in Ukraine (UDU U-LEAD with Europe. Phase II) (#`81281025`)
 
-![](https://www.nationsonline.org/maps/Ukraine-Administrative-Map.jpg)
+![](maps/120259-1_large.jpeg)
 
 # Repository Structure
 
