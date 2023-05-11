@@ -14,8 +14,10 @@ Files with PHI should **not** be stored in a GitHub repository, even a private G
 
 # Datasets
 
-| Type of data | Dataset | <span style="display: inline-block; width:600px">Description</span> | Time | File name | Script | Source |
+| Type of data | Dataset | Description | Time | File name | Script | Source |
 |---|---|--------------------|---|---|---|---|
+|---|---|<img width=200/>|---|---|---|---|
+
 | Administrative        | Administrative Units | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region) | 2020 | ua-admin-map-2020.csv | `./manipulation/ellis-ua-admin.R` | Old and new State classifier of objects of the administrative and territorial system of Ukraine  |
 | Administrative        | Admin History                          | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020 | 2014-2020 | time-rada.csv | `./manipulation/ellis-rada-hromada.R`| |
 | Demography            | Population | Population counts at the level of hromada (total and urban) | Jan 2022                | ua-pop-2022.csv | `./manipulation/ellis-demography.R` | State Statistics Service of Ukraine |
