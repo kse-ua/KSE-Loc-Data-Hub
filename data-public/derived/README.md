@@ -23,7 +23,7 @@ Files with PHI should **not** be stored in a GitHub repository, even a private G
 | Geographic | Polygons | Spatial poligons of hromadas | terhromad_fin.geojson  | | |
 | Economic       | Taxes                            | Grouped taxes at the hromada level, their share in own revenue, change for ---, and year-on-year change for different periods of 2020-2022  |  hromada_budget_2020_2022.csv | `./manipulation/ellis-budget.R` | OpenBudget |
 | Economic | Taxes |  Individual tax revenues for hromadas from Jan 2020 to Aug 2022  |hromada_budget_2020_2022<br>_taxes.xlsx  | `./manipulation/ellis-budget-2020-2022.R` | OpenBudget |
-|Economic|Budget Expenses|Hromadas budget expenses for 2021-2022| hromada_expenses_2021_2022.xlsx|ellis-expenses-2020-2022.R  |OpenBudget
+|Economic|Budget Expenses|Hromadas budget expenses for 2021-2022| hromada_expenses<br>_2021_2022.xlsx|ellis-expenses-2020-2022.R  |OpenBudget
 | Economic               | SRDF |Data on cost of the projects financed by the State Regional Development Fund |  dfrr_hromadas.csv| `./manipulation/ellis-dfrr.R` | Request to Ministry of Regional Development |
 | Social Capital               | Community Competence |Number of youth centers, youth councils and centers for entrepreneurial support  | community-competence-hromada.csv | `./manipulation/ellis-community-competence.R` |   |
 | Health               | Health Declarations | Number of declarations with health facilities as of February 2022  | declarations-hromada.csv | `./manipulation/ellis-health.R` |     |
