@@ -26,8 +26,8 @@ Files with PHI should **not** be stored in a GitHub repository, even a private G
 | Economic              | Budget Expenses | Hromadas budget expenses for 2021-2022 | Mar-Dec 2021-2022       | hromada_expenses<br>\_2021_2022.xlsx | ellis-expenses-2020-2022.R | OpenBudget |
 | Economic              | SRDF | Data on cost of the projects financed by the State Regional Development Fund |                         | dfrr_hromadas.csv | ./manipulation/ellis-dfrr.R | Request to Ministry of Regional Development |
 | Infrastructure        | Railroad passengers                    | Number of passengers arriving at hromada railway stations in 2021 |                         | passengers.csv | ./manipulation/ellis-uz.R | |
-| Infrastructure        | Road Lengths | | | roads-lengths.csv | ./manipulation/ellis-uz.R | |
-| Infrastructure        | Internet Speed | | | internet-speed.csv | ./manipulation/ellis-uz.R | |
+| Infrastructure        | Road Lengths | | | roads-lengths.csv | ./manipulation/ellis-osm.R | |
+| Infrastructure        | Internet Speed | | | internet-speed.csv | ./manipulation/ellis-internet_speed.R | |
 | Social Capital        | Community Competence | Number of youth centers, youth councils and centers for entrepreneurial support | As of Sep 2021          | community-competence-hromada.csv | ./manipulation/ellis-community-competence.R | Scrapped from sites: youthcouncil.com.ua; youthcenters.net.ua; business.diia.gov.ua/business-map |
 | Social Capital        | OSBB (Homeowners Associations)         | Number of homeowners associations in 2015-2020 |                         | osbb-hromada.csv | ./manipulation/ellis-osbb.R | |
 | Social Capital        | Agreements on cooperation of territorial communities        | Data on agreements on cooperation for settlements; number of agreements for each hromada; Hromada pairs that have agreements between them | 2014-Sep 2022 | partnerships-all-settlements.csv <br> partnerships-hromadas.csv <br> partnerships-hromadas-network.csv | ./manipulation/ellis-partnerships.R | |
