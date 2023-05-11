@@ -14,11 +14,11 @@ Files with PHI should **not** be stored in a GitHub repository, even a private G
 
 # Datasets
 
-| Type of data   | Dataset | Description  | File name       | Script | Source |
-|---|---|:--|--------------------------------------------|---|---|
-| Administrative  | Administrative Units                   | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region)  |ua-admin-map-2020.csv  | `./manipulation/ellis-ua-admin.R` | Old and new State classifier of objects of the administrative and territorial system of Ukraine  |
-| Administrative | Admin History | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020   |  time-rada.csv | `./manipulation/ellis-rada-hromada.R` | |
-| Demography     | Population                             | Population counts at the level of hromada (total and urban)      |ua-pop-2022.csv  | `./manipulation/ellis-demography.R`           | State Statistics Service of Ukraine |
+| Type of data   | Dataset | Description  | Time | File name       | Script | Source |
+|---|---|-------|---|---|---|---|
+| Administrative  | Administrative Units                   | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region)| 2020 | ua-admin-map-2020.csv  | `./manipulation/ellis-ua-admin.R` | Old and new State classifier of objects of the administrative and territorial system of Ukraine  |
+| Administrative | Admin History | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020 | 2014-2020  |  time-rada.csv | `./manipulation/ellis-rada-hromada.R` | |
+| Demography     | Population                             | Population counts at the level of hromada (total and urban) | Jan 2022 | ua-pop-2022.csv  | `./manipulation/ellis-demography.R`           | State Statistics Service of Ukraine |
 | Geographic | Geographic |Main spatial features of hromadas: area, coordinates of hromada center, travel time to oblast center, mountain hromadas, distance from hromada centers to the nearest point of the border with Russia, Russia or Belarus, or the EU; hromadas within 30 km of the sea/30 km of the border/30 km of the border with Russia and Belarus; hromadas within 15 km of international roads and national roads  | geography.csv  | `./manipulation/ellis-geography.R` |    |
 | Geographic | Polygons | Spatial poligons of hromadas | terhromad_fin.geojson  | | |
 | Economic       | Taxes                            | Grouped taxes at the hromada level, their share in own revenue, change for ---, and year-on-year change for different periods of 2020-2022  |  hromada_budget_<br>2020_2022.csv | `./manipulation/ellis-budget.R` | OpenBudget |
