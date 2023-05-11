@@ -16,8 +16,7 @@ Files with PHI should **not** be stored in a GitHub repository, even a private G
 
 | Type of data   | Dataset                                | File name             | Description | Script | Source |
 |--------------|--------------|--------------|---------------------|--------------|---------|
-| Administrative  | Administrative Units                   | ua-admin-map-2020.csv | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region) | `./manipulation/ellis-ua-admin.R`
-| Old and new State classifier of objects of the administrative and territorial system of Ukraine  |
+| Administrative  | Administrative Units                   | ua-admin-map-2020.csv | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region) | `./manipulation/ellis-ua-admin.R` | Old and new State classifier of objects of the administrative and territorial system of Ukraine  |
 | Administrative | Admin History                          |   time-rada.csv | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020 | `./manipulation/ellis-rada-hromada.R` | |
 | Demography     | Population                             |     ua-pop-2022.csv | Population counts at the level of hromada (total and urban)  | `./manipulation/ellis-demography.R`           | State Statistics Service of Ukraine |
 | Geographic | Geographic | geography.csv | Main spatial features of hromadas: area, coordinates of hromada center, travel time to oblast center, mountain hromadas, distance from hromada centers to the nearest point of the border with Russia, Russia or Belarus, or the EU; hromadas within 30 km of the sea/30 km of the border/30 km of the border with Russia and Belarus; hromadas within 15 km of international roads and national roads | `./manipulation/ellis-geography.R` |    |
