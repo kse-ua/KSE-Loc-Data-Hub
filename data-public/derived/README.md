@@ -28,8 +28,10 @@ Files with PHI should **not** be stored in a GitHub repository, even a private G
 | Social Capital               | Community Competence | community-competence-hromada.csv | Number of youth centers, youth councils and centers for entrepreneurial support | `./manipulation/ellis-community-competence.R` |   |
 | Health               | Health Declarations | declarations-hromada.csv | Number of declarations with health facilities as of February 2022 | `./manipulation/ellis-health.R` |     |
 | Social Capital | OSBB (Homeowners Associations)| osbb-hromada.csv | Number of homeowners associations in 2015-2020 | `./manipulation/ellis-osbb.R`|  |
-| Infrastructure | Passengers                             |                       | Number of passengers arriving at hromada railway stations in 2021 | `./manipulation/ellis-uz.R`                 |
-|  Education              | ZNO (External Independent Examination) |                       | Mean scores of ZNO (standardized test) for main subjects                                                                                                                                                                                                                                                                                                                                               | `./manipulation/ellis-zno.R`                  |
+| Infrastructure | Railroad passengers |passengers.csv | Number of passengers arriving at hromada railway stations in 2021 | `./manipulation/ellis-uz.R` |  |
+| Infrastructure | Road Lengths |roads-lengths.csv |  | `./manipulation/ellis-uz.R` |  |
+| Infrastructure | Internet Speed |internet-speed.csv|  | `./manipulation/ellis-uz.R` |  |
+|  Education              | ZNO (External Independent Examination) |zno-2022-aggragated.csv| Mean scores of ZNO (standardized test) for main subjects | `./manipulation/ellis-zno.R` | |
 | War-related | War zones |minregion-war-status.csv| Statuses of the war zone/occupation according to the Ministry of Reintegration  | `./manipulation/ellis-war-status.R` |Ministry of Reintegration |
 | Citizen Participation | E-dem |edem-data.csv | Form of electronic participation in hromadas | `./manipulation/ellis-edem.R` | Scrapped from e-dem.ua |
 | Political               | Hromada Mayors Bio |                       | Information on mayor of hromadas that were elected in 2020 local elections | `./manipulation/ellis-mayors.R` |
