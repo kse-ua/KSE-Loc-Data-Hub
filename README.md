@@ -1,6 +1,6 @@
 # Decentralization Reform in Ukraine (2014 -2022)
 
-The project investigates the effects of restructurization of local councils (i.e. "rada", N = 11,250) into amalgamated territorial communities (i.e. "hromada", N = 1,469) and the effect of this tranformation on key macroeconomic and social indicators. Of specific interest is hromadas' resiliance to full-scale russian invasion launched on 2022-02-24.
+The project investigates the effects of restructurization of local councils (i.e. "rada", N = 11,250) into amalgamated territorial communities (i.e. "hromada", N = 1,469) and the effect of this tranformation on key macroeconomic and social indicators. Of specific interest is hromadas' **resiliance to full-scale russian invasion launched on 2022-02-24.**
 
 This repository contains all the materials used to study the factors of resilience of Ukrainian communities in the context of the Russian invasion.
 
