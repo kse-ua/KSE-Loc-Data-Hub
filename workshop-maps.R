@@ -57,7 +57,7 @@ ds1 <-
     pct_idp = n_idp/total_population_2022 * 100
     ,pct_idp_rounded = scales::percent(round(pct_idp, 2))
   ) %>% 
-  filter(pct_idp <= 1)
+  filter(pct_idp <= 100)
 
 # Checks
 ds1 %>% summarise(across(everything(), ~ sum(is.na(.x)))) %>% t()
@@ -77,6 +77,19 @@ ds1 %>%
   geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
   theme_bw() +
   labs(x = 'Share of IDPs in total population')
+
+ds3 <- bind_rows(
+ds1 %>% slice_max(pct_idp, n = 5),
+ds1 %>% slice_min(pct_idp, n = 5)
+)
+
+ds3 %>% 
+  ggplot(aes(x = pct_idp, y = fct_reorder(hromada, pct_idp))) +
+  geom_col() +
+  geom_text(aes(label = round(pct_idp,2)), hjust = -.4) +
+  theme_bw() +
+  labs(x = 'Share of IDPs in total population', y = NULL) +
+  xlim(0, 100)
 
 ds1 %>% 
   ggplot(aes(x = n_idp, y = total_population_2022)) +
