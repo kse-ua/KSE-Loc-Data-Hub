@@ -85,7 +85,7 @@ and Regional Development</p></td>
 
 ### **Map of hromadas participated in the surveys**
 
-![](maps/map_surveys.png)
+![](maps/map_surveys.jpeg)
 
 ## Reports
 
