@@ -54,15 +54,14 @@ ds1 <-
   ) %>% 
   #add variable with % of IDPs based on the total population from the general dataset
   mutate(
-    pct_idp = n_idp/total_population_2022
+    pct_idp = n_idp/total_population_2022 * 100
     ,pct_idp_rounded = scales::percent(round(pct_idp, 2))
   ) %>% 
   filter(pct_idp <= 1)
 
 # Checks
-ds1 %>% filter(is.na(hromada_full_name))
+ds1 %>% summarise(across(everything(), ~ sum(is.na(.x)))) %>% t()
 ds1 %>% select(oblast, oblast_name, raion, raion_name, hromada, hromada_full_name) %>% view()
-
 # Graphs
 summary(ds1$n_idp)
 
@@ -94,9 +93,9 @@ ds2 <- ds1 %>%
   left_join(ds_general %>% select(hromada_code, type, area, income_total),
             by = 'hromada_code')
 
-model1 <- lm(n_idp ~ total_population_2022, data = ds2)
-model2 <- lm(n_idp ~ total_population_2022 + type + area,data = ds2)
-model3 <- lm(n_idp ~ total_population_2022 + type + area + income_total,
+model1 <- lm(n_idp ~ log10(total_population_2022), data = ds2)
+model2 <- lm(n_idp ~ log10(total_population_2022) + type + area,data = ds2)
+model3 <- lm(n_idp ~ log10(total_population_2022) + type + area + income_total,
              data = ds2)
 
 stargazer::stargazer(model1, model2, model3, type = 'text')
