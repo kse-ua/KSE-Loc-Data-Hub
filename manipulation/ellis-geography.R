@@ -35,17 +35,17 @@ library(osrm)
 library(sf)
 
 #+ declare-globals -------------------------------------------------------------
-path_file <- "./data-private/raw/ua-admin-codes.csv"
+path_file <- "./data-public/raw/ua-admin-codes.csv"
 
-path_oblast <- "./data-private/raw/oblast.csv"
+path_oblast <- "./data-public/raw/oblast.csv"
 
 #Data on areas and number of settlements parsed from decenrtalization.org.ua
 #Source: https://docs.google.com/spreadsheets/d/19Xxsq9O7fuHdNB4_GDyEMVSWBx3ENu3x9gNnnPrkqyo/edit?usp=sharing, sheet "parsed"
-path_areas <- "./data-private/raw/hromada_areas.csv"
+path_areas <- "./data-public/raw/hromada_areas.csv"
 
 #Shapefile of hromada polygons
 #Source: https://drive.google.com/file/d/1X3Ym-7s1RgQgsi_p4uJ3EGEWYGTd-UMz/view?usp=sharing
-path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
+path_polygons <-  "./data-public/raw/terhromad_fin.geojson"
 
 names_admin_ua <- c(
   "level_1"
@@ -76,7 +76,7 @@ cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
 ds0 <- readr::read_csv(path_file, col_names = names_admin_ua, skip=1)
-ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv")
+ds_hromada <- readr::read_csv("./data-public/derived/hromada.csv")
 ds0_oblast <- readr::read_csv(path_oblast, skip=0)
 ds0_areas <- readr::read_csv(path_areas, col_names = names_areas, skip=1)
 ds_polygons <- st_read(path_polygons) %>% janitor::clean_names()
@@ -282,7 +282,7 @@ ds4 <- cbind(ds3, distance_to_russia_belarus, distance_to_russia, distance_to_eu
   
 
 #+ mountain-hromadas, eval=eval_chunks-----------------------------------------------
-d0_mountain <- readxl::read_xlsx("./data-private/raw/mountain-hromadas.xlsx", col_names = "all")
+d0_mountain <- readxl::read_xlsx("./data-public/raw/mountain-hromadas.xlsx", col_names = "all")
 
 d1_mountain <- d0_mountain %>% 
   mutate(

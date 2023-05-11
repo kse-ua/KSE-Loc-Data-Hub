@@ -24,9 +24,9 @@ base::source("./scripts/common-functions.R") # project-level
 library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
-path_youth_councils <- "./data-private/raw/interns_data.xlsx"
-path_youth_centers <- "./data-private/raw/interns_data.xlsx"
-path_business_support <- "./data-private/raw/interns_data.xlsx"
+path_youth_councils <- "./data-public/raw/interns_data.xlsx"
+path_youth_centers <- "./data-public/raw/interns_data.xlsx"
+path_business_support <- "./data-public/raw/interns_data.xlsx"
 path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
 
 
@@ -192,4 +192,4 @@ summary_community_competence <- summary_community_competence[!(summary_community
 summary_community_competence[is.na(summary_community_competence)] <- 0
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
-readr::write_csv(summary_community_competence, "./data-private/derived/community-competence-hromada.csv") #aggregated on hromada level
+readr::write_csv(summary_community_competence, "./data-public/derived/community-competence-hromada.csv") #aggregated on hromada level

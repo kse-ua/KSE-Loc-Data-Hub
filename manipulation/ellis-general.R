@@ -47,7 +47,7 @@ path_edem <- "./data-public/derived/edem-data.csv"
 path_community_competence <- "./data-public/derived/community-competence-hromada.csv"
 path_declarations <- "./data-public/derived/declarations-hromada.csv"
 path_war <- "./data-public/derived/minregion-war-status.csv"
-path_internet <- "./data-public/derived/internet-speed.csv"
+#path_internet <- "./data-public/derived/internet-speed.csv"
 path_partnerships <- "./data-public/derived/partnerships-hromadas.csv"
 
 
@@ -55,9 +55,9 @@ path_partnerships <- "./data-public/derived/partnerships-hromadas.csv"
 
 #additional datasets
 path_polygons <-  "./data-public/derived/shapefiles/terhromad_fin.geojson"
-path_oblast <- "./data-private/raw/oblast.csv"
+path_oblast <- "./data-public/raw/oblast.csv"
 path_passangers <- "./data-public/derived/passangers.csv"
-path_internet_speed <- "./data-public/derived/internet-speed.csv"
+#path_internet_speed <- "./data-public/derived/internet-speed.csv"
 path_roads_lengths <- "./data-public/derived/roads-lengths.csv"
 
 #+ declare-functions -----------------------------------------------------------
@@ -85,10 +85,10 @@ ds_community_competence <- readr::read_csv(path_community_competence) %>%
 ds_oblasts <- readr::read_csv(path_oblast)
 ds_war <- readr::read_csv(path_war)
 ds_passangers <- readr::read_csv(path_passangers)
-ds_internet_speed <- readr::read_csv(path_internet_speed)
+#ds_internet_speed <- readr::read_csv(path_internet_speed)
 ds_roads_lengths <- readr::read_csv(path_roads_lengths)
 ds_partnerships <- readr::read_csv(path_partnerships)
-ds_polygons <- st_read(path_polygons) %>% janitor::clean_names()
+ds_polygons <- sf::st_read(path_polygons) %>% janitor::clean_names()
 
 #+ inspect-data ----------------------------------------------------------------
 

@@ -24,9 +24,9 @@ base::source("./scripts/common-functions.R") # project-level
 library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
-nakaz_war_status <- "./data-private/raw/hromada_war_status.xlsx"
+nakaz_war_status <- "./data-public/raw/hromada_war_status.xlsx"
 path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
-occupation_status_path <- "./data-private/raw/occupation_status_hromada.xlsx"
+occupation_status_path <- "./data-public/raw/occupation_status_hromada.xlsx"
 
 
 #+ results="asis", echo=F ------------------------------------------------------
@@ -38,7 +38,7 @@ ds_admin <- readr::read_csv(path_admin)
 occupation_status <- readxl::read_excel(occupation_status_path)
 
 #hromada dataset
-ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv")
+ds_hromada <- readr::read_csv("./data-public/derived/hromada.csv")
 
 # Exlcuding Crimea from the sample
 hromadas <- ds_hromada %>% filter(oblast_name!="Автономна Республіка Крим") %>%

@@ -32,10 +32,10 @@ library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
 #source: https://drive.google.com/file/d/1JLICa97syJPyGOvt-8zx8PuALzPzZzR1/view?usp=sharing
-path_declarations<- "./data-private/raw/active_declarations_by_age_gender.csv"
+path_declarations<- "./data-public/raw/active_declarations_by_age_gender.csv"
 
 #source: https://drive.google.com/file/d/1sJz53HVMEZlD3gSurkU0kd0-dwMDacGG/view?usp=sharing
-path_doctors <- "./data-private/raw/hospitals-doctors.csv"
+path_doctors <- "./data-public/raw/hospitals-doctors.csv"
 
 path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
 
@@ -90,7 +90,7 @@ ds_coding <- ds1 %>%
 
 #+ load-coded-data, eval=eval_chunks -------------------------------------------------
 ds_koatuu <- 
-  readxl::read_excel("./data-private/raw/old-koatuu-coding.xlsx") %>% 
+  readxl::read_excel("./data-public/raw/old-koatuu-coding.xlsx") %>% 
   left_join(
     ds_admin %>% select(hromada_code, hromada_name, settlement_code)
     ,by = "settlement_code"
@@ -217,7 +217,7 @@ ds3 <-
   )
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
-readr::write_csv(ds2, "./data-private/derived/declarations-all.csv") #long format
+readr::write_csv(ds2, "./data-public/derived/declarations-all.csv") #long format
 readr::write_csv(ds3, "./data-public/derived/declarations-hromada.csv") #aggregated on hromada level
 
 
@@ -225,7 +225,7 @@ readr::write_csv(ds3, "./data-public/derived/declarations-hromada.csv") #aggrega
 library(sf)
 library(tmap)
 
-path_polygons <-  "./data-private/raw/terhromad_fin.geojson"
+path_polygons <-  "./data-public/raw/terhromad_fin.geojson"
 
 ds_polygons <- st_read(path_polygons) %>% janitor::clean_names() %>% 
   mutate(
@@ -255,7 +255,7 @@ g1 <-
 g1
 
 #+ comparison-with-state-statistics, eval=eval_chunks -------------------------------------------------
-path_stat <-  "./data-private/raw/pop-permanent-2022.xlsx"
+path_stat <-  "./data-public/raw/pop-permanent-2022.xlsx"
 
 stat_colnames <- c(
   "age"

@@ -24,7 +24,7 @@ base::source("./scripts/common-functions.R") # project-level
 library(tidyverse)
 
 #+ declare-globals -------------------------------------------------------------
-path_osbb<- "./data-private/raw/minregion-osbb.xlsx"
+path_osbb<- "./data-public/raw/minregion-osbb.xlsx"
 path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
 
 
@@ -417,5 +417,5 @@ region_distr <- d2 %>%
             osbb_2015 = sum(sum_osbb_2015)) 
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
-readr::write_csv(full_merge, "./data-private/derived/osbb-all.csv") #long format
-readr::write_csv(ds2, "./data-private/derived/osbb-hromada.csv") #aggregated on hromada level
+readr::write_csv(full_merge, "./data-public/derived/osbb-all.csv") #long format
+readr::write_csv(ds2, "./data-public/derived/osbb-hromada.csv") #aggregated on hromada level

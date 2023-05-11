@@ -35,8 +35,8 @@ library(tidyverse)
 cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
-path_edem <- "./data-private/raw/edem-data.csv"
-path_hromada <- "./data-private/derived/hromada.csv"
+path_edem <- "./data-public/raw/edem-data.csv"
+path_hromada <- "./data-public/derived/hromada.csv"
 
 edem_names <- c(
   "oblast_name"

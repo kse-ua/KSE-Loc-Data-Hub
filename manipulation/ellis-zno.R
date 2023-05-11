@@ -33,16 +33,16 @@ library(archive)
 
 
 #+ declare-globals -------------------------------------------------------------
-path_zno21 <- "./data-private/raw/OpenDataZNO2021.7z"
+path_zno21 <- "./data-public/raw/OpenDataZNO2021.7z"
 # path_zno20 <- "./data-private/raw/OpenDataZNO2020.7z"
 # path_zno19
 # path_zno18
 # path_zno17
 
-path_admin <- "./data-private/derived/ua-admin-map.csv"
+path_admin <- "./data-public/derived/ua-admin-map.csv"
 path_admin_old <- "./data-public/derived/ua-admin-old.csv"
 
-path_schools <- "./data-private/raw/schools-register.xlsx"
+path_schools <- "./data-public/raw/schools-register.xlsx"
 
 # names_school_fin <- c(
 #   "oblast_n"

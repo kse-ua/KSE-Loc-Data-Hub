@@ -36,7 +36,7 @@ library(gptstudio)
 '%ni%' <- Negate(`%in%`)
 
 #+ load-data -------------------------------------------------------------
-path_partnerships <- "./data-private/raw/partnerships.xlsx"
+path_partnerships <- "./data-public/raw/partnerships.xlsx"
 path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
 path_admin_old <- "./data-public/derived/ua-admin-old.csv"
 
@@ -67,7 +67,7 @@ ds0 <- ds0_partnerships %>%
   )
 
 # openxlsx::write.xlsx(ds0, "./data-private/raw/partnerships_dates_coding.xlsx")  
-ds0 <- readxl::read_xlsx("./data-private/raw/partnerships_dates_coded.xlsx") %>% 
+ds0 <- readxl::read_xlsx("./data-public/raw/partnerships_dates_coded.xlsx") %>% 
   mutate(
     start = ifelse(nchar(start) == 5, as_date(as.numeric(start), origin = "1899-12-30"), as_date(start, format = "%d.%m.%Y"))
     ,end = ifelse(nchar(end) == 5, as_date(as.numeric(end),origin = "1899-12-30"), as_date(end, format = "%d.%m.%Y"))
@@ -230,7 +230,7 @@ unmatched <- ds3_partnerships %>% filter(is.na(settlement_code))
 #save for coding
 # openxlsx::write.xlsx(unmatched, "./data-private/raw/unmatched_partnerships_coding.xlsx")
 
-coded <- readxl::read_excel("./data-private/raw/unmatched_partnerships_coded.xlsx")
+coded <- readxl::read_excel("./data-public/raw/unmatched_partnerships_coded.xlsx")
 
 ds4_partnerships <- ds3_partnerships %>% 
   filter(!is.na(settlement_code)) %>% 

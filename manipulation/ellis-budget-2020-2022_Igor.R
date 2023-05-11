@@ -54,7 +54,7 @@ cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
-paths_budget <-  list.files("./data-private/raw/", pattern = "^boost_incomes_INCO4.+.xlsx$",full.names = T)
+paths_budget <-  list.files("./data-public/raw/", pattern = "^boost_incomes_INCO4.+.xlsx$",full.names = T)
 
 ls_import <- list()
 for(i in seq_along(paths_budget)){
@@ -74,7 +74,7 @@ lapply(ls_import, glimpse)
 ds0 <- 
   bind_rows(ls_import,.id = "file_number") 
 
-path_admin <- "./data-private/derived/ua-admin-map.csv"
+path_admin <- "./data-public/derived/ua-admin-map.csv"
 ds_admin_full <- readr::read_csv(path_admin)
 ds_admin_full %>% glimpse(70)
 

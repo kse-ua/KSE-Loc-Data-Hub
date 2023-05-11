@@ -140,13 +140,13 @@ names_dfrr2015<- c(
   ,"certificate_date"
 )
 
-path_dfrr2021   <- "./data-private/raw/dfrr-2021.xlsx"
-path_dfrr2020   <- "./data-private/raw/dfrr-2020.xlsx"
-path_dfrr2019   <- "./data-private/raw/dfrr-2019.xlsx"
-path_dfrr2018   <- "./data-private/raw/dfrr-2018.xlsx"
-path_dfrr2017   <- "./data-private/raw/dfrr-2017.xlsx"
-path_dfrr2016   <- "./data-private/raw/dfrr-2016.xlsx"
-path_dfrr2015   <- "./data-private/raw/dfrr-2015.xlsx"
+path_dfrr2021   <- "./data-public/raw/dfrr-2021.xlsx"
+path_dfrr2020   <- "./data-public/raw/dfrr-2020.xlsx"
+path_dfrr2019   <- "./data-public/raw/dfrr-2019.xlsx"
+path_dfrr2018   <- "./data-public/raw/dfrr-2018.xlsx"
+path_dfrr2017   <- "./data-public/raw/dfrr-2017.xlsx"
+path_dfrr2016   <- "./data-public/raw/dfrr-2016.xlsx"
+path_dfrr2015   <- "./data-public/raw/dfrr-2015.xlsx"
 
 #+ declare-functions -----------------------------------------------------------
 
@@ -168,7 +168,7 @@ ds_admin <- readr::read_csv("./data-public/derived/ua-admin-map-2020.csv")
 ds_admin_old <- readr::read_csv("./data-public/derived/ua-admin-old.csv")
 
 #hromada dataset
-ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv")
+ds_hromada <- readr::read_csv("./data-public/derived/hromada.csv")
 
 #+ inspect-data ----------------------------------------------------------------
 ds20_0 %>% glimpse()
@@ -268,10 +268,10 @@ ds15_1 <-
 ds_1 <- rbind(ds21_1,ds20_1,ds19_1,ds18_1,ds17_1,ds16_1,ds15_1)
 
 #+ save-to-disk-for-coding, eval=eval_chunks-----------------------------------------------
-openxlsx::write.xlsx(ds_1, "./data-private/raw/dfrr-2015-2022-coding.xlsx")
+openxlsx::write.xlsx(ds_1, "./data-public/raw/dfrr-2015-2022-coding.xlsx")
 
 #+ tweak-coded-data, eval=eval_chunks ------------------------------------------------
-ds_2 <- readxl::read_excel("./data-private/raw/dfrr-2015-2022-coding-coded.xlsx", na = "NA")
+ds_2 <- readxl::read_excel("./data-public/raw/dfrr-2015-2022-coding-coded.xlsx", na = "NA")
   
 #select cities codes for merge - all combinations oblast-settlement for cities are unique
 cities_for_merge <- 
@@ -355,7 +355,7 @@ ds_3 <-
 # openxlsx::write.xlsx(ds_3 %>% filter(is.na(settlement_code) & !is.na(key))
 #                      , "./data-private/raw/dfrr-2015-2022-coding.xlsx")
 
-ds_coded <- readxl::read_excel("./data-private/raw/dfrr-2015-2022-coding_v2_coded.xlsx", na = "NA")
+ds_coded <- readxl::read_excel("./data-public/raw/dfrr-2015-2022-coding_v2_coded.xlsx", na = "NA")
 
 ds_4 <- 
   ds_3 %>% 
@@ -396,7 +396,7 @@ ds_5 <-
   summarise(budget_planned = sum(budget_plan), budget_executed = sum(budget_executed))
 
 #+ save-data, eval=eval_chunks ------------------------------------------------
-readr::write_csv(ds_5, "./data-private/derived/dfrr_hromadas.csv")
+readr::write_csv(ds_5, "./data-public/derived/dfrr_hromadas.csv")
 
 
 #+ results="asis", echo=F ------------------------------------------------------

@@ -37,8 +37,8 @@ names_pop22 <- c(
   ,"object_name_en"
 )
 
-path_pop22   <- "./data-private/raw/population-2022.xlsx"
-path_oblasti <- "./data-private/raw/oblast.csv"
+path_pop22   <- "./data-public/raw/population-2022.xlsx"
+path_oblasti <- "./data-public/raw/oblast.csv"
 
 #+ declare-functions -----------------------------------------------------------
 
@@ -54,7 +54,7 @@ ds_pop22_hrom <- readxl::read_excel(path_pop22, sheet = "48-81", col_names = nam
 ds_admin <- readr::read_csv("./data-public/derived/ua-admin-map-2020.csv")
 
 #hromada dataset
-ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv")
+ds_hromada <- readr::read_csv("./data-public/derived/hromada.csv")
 
 #+ inspect-data ----------------------------------------------------------------
 ds_pop22_set %>% glimpse()
@@ -158,7 +158,7 @@ ds_pop2 <-
   
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-ds_pop2 %>% readr::write_csv("./data-private/derived/ua-pop-2022.csv")
+ds_pop2 %>% readr::write_csv("./data-public/derived/ua-pop-2022.csv")
 
 
 
