@@ -1,9 +1,9 @@
 rm(list = ls(all.names = TRUE)) # Clear the memory of variables from previous run.
 
 #+ load-packages -----------------------------------------------------------
-library(tidyverse)
-library(sf)
-library(tmap)
+library(tidyverse) #data wrangling
+library(sf) #geospatial operations
+library(tmap) #visualisation on maps
 
 #+ load-data -----------------------------------------------------------
 
@@ -26,7 +26,9 @@ polygons <-  st_read("https://raw.githubusercontent.com/kse-ua/ua-de-center/main
 #combination of oblast-raion-hromada gives us a unique identifier - we can use this to merge with the full dataset
 ds_general %>% distinct(oblast_name, raion_name, hromada_full_name)
 
-ds1 <- ds0 %>% 
+ds1 <- 
+  #clean our test dataset and create key variable
+  ds0 %>% 
   mutate(
     oblast = str_remove(oblast, " область")
     ,raion = str_remove(raion, " район")
@@ -34,6 +36,7 @@ ds1 <- ds0 %>%
     ,hromada = str_replace_all(hromada, c("a"="а", "o"="о", "e"="е", "O"="О", "p"="р", "'"="ʼ", "ʼ"="ʼ"))
     ,key = paste(oblast, raion, hromada)
   ) %>% 
+  #merge out test dataset with the KSE main dataset by key variable
   left_join(
     ds_general %>% 
       select(hromada_code, oblast_name, raion_name, hromada_full_name, total_population_2022) %>% 
@@ -49,8 +52,11 @@ ds1 <- ds0 %>%
     polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
   ) %>% 
-  #add data from general dataset
-  mutate(pct_idp = n_idp/total_population_2022) %>% 
+  #add variable with % of IDPs based on the total population from the general dataset
+  mutate(
+    pct_idp = n_idp/total_population_2022
+    ,pct_idp_rounded = scales::percent(round(pct_idp, 2))
+  ) %>% 
   filter(pct_idp <= 1)
 
 
@@ -69,7 +75,7 @@ g1 <- tm_shape(ds2) +
   tmap_options(check.and.fix = TRUE)
 g1
 
-#add borders - Ukriane and oblasts
+#add borders - Ukriane and oblasts - based on the existing hromada polygons
 sf_use_s2(FALSE)
 ds_polygon_Ukraine <- 
   polygons %>% 
@@ -100,19 +106,8 @@ g1 <-
   tmap_options(check.and.fix = TRUE)
 g1
 
-#add facets by oblast
-# g1_oblast <- 
-#   tm_shape(ds2) +
-#   tm_fill("n_idp", title = "Кількість ВПО")+ 
-#   tm_borders('black', lwd = 0.2) +
-#   tm_facets(by = "oblast_name")
-#   tm_shape(ds_polygons_oblasts) +
-#   tm_borders('gray', lwd = 0.3) +
-#   tmap_options(check.and.fix = TRUE)
-# g1_oblast  
 
-
-#add map with %
+#add map with % of IDPs
 g2 <- 
   tm_shape(ds2) +
     tm_fill(c("n_idp", "pct_idp"), 
@@ -139,7 +134,21 @@ g3 <-
   tmap_options(check.and.fix = TRUE)
 g3
 
+#add facets by oblast
+g3_oblast <- 
+  tm_shape(ds2) +
+    tm_fill("pct_idp", palette = "PuBu", title = "% ВПО від населення громади")+
+    tm_bubbles(size = "n_idp", title.size = "Кількість ВПО")+
+    tm_borders('black', lwd = 0.2) +
+    tm_facets(by = "oblast_name") +
+  tm_shape(ds_polygon_Ukraine) +
+    tm_borders('gray', lwd = 0.5) +
+  tm_shape(ds_polygons_oblasts) +
+    tm_borders('gray', lwd = 0.3) +
+  tmap_options(check.and.fix = TRUE)
+g3_oblast
 
+  
 #add hromada names
 g4 <- 
   tm_shape(ds2) +
@@ -171,7 +180,10 @@ g5 <-
             ,title = "% ВПО від населення громади"
             ,labels = c('0-20%', '20-40%', '40-60%', '60-80%', 
                         '80-100%')
-            ,popup.vars=c("hromada", "oblast", "pct_idp", "n_idp"))+
+            ,popup.vars=c("Громада" = "hromada", 
+                          "Область" = "oblast", 
+                          "Частка ВПО від населення громади станом на 01.01.2022" = "pct_idp_rounded", 
+                          "Кількість ВПО" = "n_idp"))+
     tm_borders('black', lwd = 0.2) +
     # tm_text("hromada", size = 0.5) +
   tm_shape(ds_polygon_Ukraine) +
@@ -183,5 +195,9 @@ g5
 
 
 #+ save-maps-----------------------------------------------------------
+tmap_save(g3, "./workshop-charts/map_static.png")
+tmap_save(g3_oblast, "./workshop-charts/map_oblasts_static.png")
+tmap_save(g5, "./workshop-charts/map_interactive.html")
+
 
 
