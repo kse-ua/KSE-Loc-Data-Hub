@@ -121,7 +121,7 @@ col_types_hromada_raw <- readr::cols_only(
   `voluntary_amalgamation`    = readr::col_character()
 )
 
-path_rada    <- "./data-public/raw/rada.csv"
+path_rada    <- "./data-private/raw/rada.csv"
 path_hromada <- "./data-public/raw/hromada.csv"
 path_admin   <- "./data-public/derived/ua-admin-map.csv"    
 #+ declare-functions -----------------------------------------------------------
@@ -276,8 +276,8 @@ ds1_time %>%
 #+ graph-2 ---------------------------------------------------------------------
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 
-ds1_time %>% readr::write_csv("./data-public/derived/time_rada.csv")
-ds1_rada %>% readr::write_csv("./data-public/derived/rada_hromada.csv")
+ds1_time %>% readr::write_csv("./data-private/derived/time_rada.csv")
+ds1_rada %>% readr::write_csv("./data-private/derived/rada_hromada.csv")
 
 
 #+ results="asis", echo=F ------------------------------------------------------
