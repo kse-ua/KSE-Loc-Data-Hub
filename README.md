@@ -85,11 +85,7 @@ and Regional Development</p></td>
 
 ### **Map of hromadas participated in the surveys**
 
-![](images/Screenshot%202023-05-10%20at%2016.53.20-01.png)
-
-<iframe src="~/Users/serhii/Desktop/KSE Institute/ua-de-center/map_surveys.html" width="100%" height="500">
-
-</iframe>
+![](maps/map_surveys.png)
 
 ## Reports
 
