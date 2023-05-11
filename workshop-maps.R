@@ -61,7 +61,9 @@ ds1 <-
 
 # Checks
 ds1 %>% summarise(across(everything(), ~ sum(is.na(.x)))) %>% t()
-ds1 %>% select(oblast, oblast_name, raion, raion_name, hromada, hromada_full_name) %>% view()
+ds1 %>% 
+  select(oblast, oblast_name, raion, raion_name, hromada, hromada_full_name) %>% 
+  view()
 # Graphs
 summary(ds1$n_idp)
 
@@ -75,6 +77,9 @@ ds1 %>%
 ds1 %>% 
   ggplot(aes(x = pct_idp)) +
   geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  # geom_vline(xintercept = mean(ds1$pct_idp), color = 'blue4') +
+  # geom_text(aes(x = mean(ds1$pct_idp), y = 60, 
+  #               label = round(mean(ds1$pct_idp),1)), hjust = -.5) +
   theme_bw() +
   labs(x = 'Share of IDPs in total population')
 
