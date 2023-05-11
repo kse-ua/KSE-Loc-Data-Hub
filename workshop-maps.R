@@ -59,6 +59,48 @@ ds1 <-
   ) %>% 
   filter(pct_idp <= 1)
 
+# Checks
+ds1 %>% filter(is.na(hromada_full_name))
+ds1 %>% select(oblast, oblast_name, raion, raion_name, hromada, hromada_full_name) %>% view()
+
+# Graphs
+summary(ds1$n_idp)
+
+ds1 %>% 
+  ggplot(aes(x = n_idp)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  theme_bw() +
+  labs(x = 'Number of IDPs') +
+  xlim(0, 20000)
+
+ds1 %>% 
+  ggplot(aes(x = pct_idp)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  theme_bw() +
+  labs(x = 'Share of IDPs in total population')
+
+ds1 %>% 
+  ggplot(aes(x = n_idp, y = total_population_2022)) +
+  geom_point() +
+  theme_bw() +
+  labs(x = "Number of IDPs", y = 'Population as of Jan 2022') +
+  xlim(0, 50000) +
+  ylim(0, 500000)
+
+
+## Regression
+
+ds2 <- ds1 %>% 
+  left_join(ds_general %>% select(hromada_code, type, area, income_total),
+            by = 'hromada_code')
+
+model1 <- lm(n_idp ~ total_population_2022, data = ds2)
+model2 <- lm(n_idp ~ total_population_2022 + type + area,data = ds2)
+model3 <- lm(n_idp ~ total_population_2022 + type + area + income_total,
+             data = ds2)
+
+stargazer::stargazer(model1, model2, model3, type = 'text')
+
 
 #create sf object - required for mapping using tmap
 ds2 <- st_as_sf(ds1, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
