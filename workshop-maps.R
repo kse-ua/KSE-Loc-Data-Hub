@@ -17,7 +17,7 @@ colnames(ds0)[1:6] <- c("oblast", "raion", "hromada", "military_action", "pct_id
 ds_general <- readr::read_csv("https://raw.githubusercontent.com/kse-ua/ua-de-center/main/data-public/derived/full_dataset.csv")
 
 # #load polygons of hromadas
-polygons <-  st_read("https://raw.githubusercontent.com/kse-ua/ua-de-center/main/data-public/derived/shapefiles/terhromad_fin.geojson") %>%
+polygons <-  st_read("https://raw.githubusercontent.com/kse-ua/ua-de-center/main/data-public/derived/shapefiles/admin/terhromad_fin.geojson") %>%
   janitor::clean_names()
 
 
@@ -36,7 +36,7 @@ ds1 <- ds0 %>%
   ) %>% 
   left_join(
     ds_general %>% 
-      select(-geometry) %>% 
+      select(hromada_code, oblast_name, raion_name, hromada_full_name, total_population_2022) %>% 
       mutate(
         key = paste(oblast_name, raion_name, hromada_full_name)
         ,key = str_replace_all(key, c("'"="ʼ", "’"="ʼ"))
@@ -48,14 +48,17 @@ ds1 <- ds0 %>%
   left_join(
     polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
-  ) 
+  ) %>% 
+  #add data from general dataset
+  mutate(pct_idp = n_idp/total_population_2022) %>% 
+  filter(pct_idp <= 1)
 
 
 #create sf object - required for mapping using tmap
 ds2 <- st_as_sf(ds1, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 
 
-#+ simple static plots -----------------------------------------------------------
+#+ static maps -----------------------------------------------------------
 
 #set the viewer mode as "plot"
 tmap_mode("plot")
@@ -78,9 +81,18 @@ ds_polygons_oblasts <-
   summarise(geometry = sf::st_union(geometry)) %>%
   ungroup()
 
+#alternative way - just download from the repository to your computer 
+#NB! You should download all files for the respective level (.CPG, .dbf, .prj, .shp, .shx)
+ds_polygon_Ukraine <- 
+  st_read("./data-public/derived/shapefiles/admin/ADMIN_0.shp")
+
+ds_polygons_oblasts <- 
+  st_read("./data-public/derived/shapefiles/admin/ADMIN_1.shp")
+
 g1 <- 
   tm_shape(ds2) +
-   tm_fill("n_idp")+ 
+    tm_fill("n_idp", title = "Кількість ВПО")+ 
+    tm_borders('black', lwd = 0.2) +
   tm_shape(ds_polygon_Ukraine) +
     tm_borders('gray', lwd = 0.5) +
   tm_shape(ds_polygons_oblasts) +
@@ -88,10 +100,24 @@ g1 <-
   tmap_options(check.and.fix = TRUE)
 g1
 
+#add facets by oblast
+# g1_oblast <- 
+#   tm_shape(ds2) +
+#   tm_fill("n_idp", title = "Кількість ВПО")+ 
+#   tm_borders('black', lwd = 0.2) +
+#   tm_facets(by = "oblast_name")
+#   tm_shape(ds_polygons_oblasts) +
+#   tm_borders('gray', lwd = 0.3) +
+#   tmap_options(check.and.fix = TRUE)
+# g1_oblast  
+
+
 #add map with %
 g2 <- 
   tm_shape(ds2) +
-    tm_fill(c("n_idp", "pct_idp"))+ 
+    tm_fill(c("n_idp", "pct_idp"), 
+            title = c("Кількість ВПО", "% ВПО від населення громади"))+ 
+    tm_borders('black', lwd = 0.2) +
   tm_shape(ds_polygon_Ukraine) +
     tm_borders('gray', lwd = 0.5) +
   tm_shape(ds_polygons_oblasts) +
@@ -100,11 +126,12 @@ g2 <-
 g2
 
 
-#add hromada names
+#overlap two layers
 g3 <- 
   tm_shape(ds2) +
-    tm_fill("n_idp")+ 
-    tm_text("hromada_name", size = 0.5) +
+    tm_fill("pct_idp", palette = "PuBu", title = "% ВПО від населення громади")+
+    tm_bubbles(size = "n_idp", title.size = "Кількість ВПО")+
+    tm_borders('black', lwd = 0.2) +
   tm_shape(ds_polygon_Ukraine) +
     tm_borders('gray', lwd = 0.5) +
   tm_shape(ds_polygons_oblasts) +
@@ -113,35 +140,48 @@ g3 <-
 g3
 
 
-#+ simple interactive plots -----------------------------------------------------------
+#add hromada names
+g4 <- 
+  tm_shape(ds2) +
+    tm_fill("pct_idp", palette = "PuBu", title = "% ВПО від населення громади")+
+    tm_bubbles(size = "n_idp", title.size = "Кількість ВПО")+
+    tm_borders('black', lwd = 0.2) +
+    tm_text("hromada", size = 0.5) +
+  tm_shape(ds_polygon_Ukraine) +
+    tm_borders('gray', lwd = 0.5) +
+  tm_shape(ds_polygons_oblasts) +
+    tm_borders('gray', lwd = 0.3) +
+  tmap_options(check.and.fix = TRUE)
+g4
+
+
+#+ interactive maps -----------------------------------------------------------
 
 #set the viewer mode as "view"
 tmap_mode("view")
 
-g3
+g4
+
+#improve aesthetics
+g5 <- 
+  tm_shape(ds2) +
+    tm_fill("pct_idp"
+            ,palette = "PuBu"
+            ,style = 'pretty'
+            ,title = "% ВПО від населення громади"
+            ,labels = c('0-20%', '20-40%', '40-60%', '60-80%', 
+                        '80-100%')
+            ,popup.vars=c("hromada", "oblast", "pct_idp", "n_idp"))+
+    tm_borders('black', lwd = 0.2) +
+    # tm_text("hromada", size = 0.5) +
+  tm_shape(ds_polygon_Ukraine) +
+    tm_borders('gray', lwd = 0.5) +
+  tm_shape(ds_polygons_oblasts) +
+    tm_borders('gray', lwd = 0.3) +
+  tmap_options(check.and.fix = TRUE)
+g5
 
 
-
-#plot youth population
-
-g1 <- tm_shape(ds_kharkiv) +
-  tm_layout(legend.position = c("right", "bottom")
-            ,frame = F
-            ,legend.outside = T
-            ,title.position = c('left', 'top')) +
-  tm_fill("youth_pct_declarations"
-          ,title = "% від загальної кількості декларацій"
-          ,palette = "RdBu"
-          ,style = 'pretty'
-          ,labels = c('22-24%', '24-26%', '26-28%', '28-30%', 
-                      '30-32%', '32-34%', 'Немає даних')
-  ) +
-  tm_borders('gray', lwd = 0.2) +
-  tm_shape(ds_kharkiv %>% filter(most_affected)) +
-  tm_borders("black", lwd = 1.8)
-
-
-tmap_mode("view")
-
+#+ save-maps-----------------------------------------------------------
 
 
