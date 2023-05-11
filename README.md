@@ -29,7 +29,7 @@ The repository has the following structure:
 # Project Team
 
 | Name              | Role                                                            | \@         |
-|-------------------|-----------------------------------------------------------------|------------|
+|--------------|-------------------------------------------|--------------|
 | Tymofii Brik      | Lead Researcher                                                 |            |
 | Andriy Darkovich  | Research Assistant                                              |            |
 | Valentyn Hatsko   | Data Analyst                                                    | valgat29   |
@@ -39,9 +39,11 @@ The repository has the following structure:
 | Serhii Tytiuk     | Data Analyst                                                    | tytser     |
 | Igor Piddubniy    | Data Analyst                                                    | ipiddubnyi |
 
-# Surveys
+# Project Products
 
-The Kyiv School of Economics (KSE) Institute conducted two surveys of hromadas in 2022 to study the impact of Russia's full-scale invasion on their economic performance and to identify factors of hromada resilience to various types of war-related shocks.
+## Surveys
+
+The Kyiv School of Economics (KSE) Institute conducted two surveys of hromadas in 2022 to study the impact of Russia's full-scale invasion on their economic performance and to identify factors of hromada resilience to various types of war-related shocks. The datasets of surveys results are nor available on the repository due to the sensitivity of some data.
 
 <table>
 <thead>
@@ -83,30 +85,36 @@ and Regional Development</p></td>
 
 ### **Map of hromadas participated in the surveys**
 
-![](images/Screenshot%202023-05-10%20at%2016.53.20.png)
+![](images/Screenshot%202023-05-10%20at%2016.53.20-01.png)
 
-<iframe src="/Users/serhii/Desktop/KSE Institute/ua-de-center/map_surveys.html" width="100%" height="500">
+<iframe src="~/Users/serhii/Desktop/KSE Institute/ua-de-center/map_surveys.html" width="100%" height="500">
 
 </iframe>
 
-# Reports
+## Reports
 
 -   [Resilience Survey overview](https://raw.githack.com/kse-ua/ua-de-center/main/analysis/survey-overview/survey-overview-hatsko.html) - Results and Key findings of the Resiliance Survey
 
 -   [Hromada Dashboard](https://valentyn-hatsko.shinyapps.io/hromada-dash/) - Dashboard with Data on Territorial Communities
 
-# Data Products
+## Articles
+
+-   VoxUkraine. [What makes territorial communities resilient – the first lessons after February 24](https://voxukraine.org/en/what-makes-territorial-communities-resilient-the-first-lessons-after-february-24)
+
+-   VoxUkraine. [A year of experience: Governance processes and the territorial communities’ (hromadas’) resilience to wartime challenges](https://voxukraine.org/en/a-year-of-experience-governance-processes-and-the-territorial-communities-resilience-to-wartime-challenges)
+
+## Data Products
 
 | Data Product Name                      | Description                                                                                                                                                                                                                                                                                                                                                                                            | Current State / Left To Do                                                                               | Script                                        |
-|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------|
+|-----------|---------------------------------------|-----------|-----------|
 | Admininstrative Units                  | Relationship among multiple administrative levels (settlement, rada, hromada, raion, oblast, region)                                                                                                                                                                                                                                                                                                   | ready for analysis at `./data-public/derived/ua-admin-map-2020.csv`                                      | `./manipulation/ellis-ua-admin.R`             |
 | Admin History                          | Composition of hromadas (what radas comprise it) at every point in time when such composition changed, from 2014 to 2020                                                                                                                                                                                                                                                                               | push to ./data-public/derived/                                                                           | `./manipulation/ellis-rada-hromada.R`         |
-| Population                             | Population counts at the level of hromada (2021 only)                                                                                                                                                                                                                                                                                                                                                              | Add more years (currently only 2021), push to ./data-public/derived/                                     | `./manipulation/ellis-demography.R`           |
+| Population                             | Population counts at the level of hromada (2021 only)                                                                                                                                                                                                                                                                                                                                                  | Add more years (currently only 2021), push to ./data-public/derived/                                     | `./manipulation/ellis-demography.R`           |
 | Open Budget                            | Tax revenues of admin units                                                                                                                                                                                                                                                                                                                                                                            | No clarity yet. Classify hromadas based on complexity of their admin history                             | `./manipulation/ellis-budget.R`               |
 | Open Budget                            | Tax revenues of hromadas 2020-2022                                                                                                                                                                                                                                                                                                                                                                     | ready for analysis at `./data-public/derived/hromada_budget_2020_2022.xlsx`                              | `./manipulation/ellis-budget-2020-2022.R`     |
 | Geographic                             | Main spatial features of hromadas: area, coordinates of hromada center, travel time to oblast center, mountain hromadas, distance from hromada centers to the nearest point of the border with Russia, Russia or Belarus, or the EU; hromadas within 30 km of the sea/30 km of the border/30 km of the border with Russia and Belarus; hromadas within 15 km of international roads and national roads | ready for analysis at `./data-public/derived/geography.csv`                                              | `./manipulation/ellis-geography.R`            |
 | Geographic                             | Spatial poligons of hromadas                                                                                                                                                                                                                                                                                                                                                                           | Demonstate graphing maps (at hromada-raion-oblast level) using a replacable quantifier (e.g. population) |                                               |
-| Community Competence                   | Number of youth centers, youth councils and centers for entrepreneurial support (2021 only)                                                                                                                                                                                                                                                                                                                       | ready for analysis at `./data-public/derived/community-competence-hromada.csv`                           | `./manipulation/ellis-community-competence.R` |
+| Community Competence                   | Number of youth centers, youth councils and centers for entrepreneurial support (2021 only)                                                                                                                                                                                                                                                                                                            | ready for analysis at `./data-public/derived/community-competence-hromada.csv`                           | `./manipulation/ellis-community-competence.R` |
 | Health Declarations                    | Number of declarations with health facilities as of February 2022                                                                                                                                                                                                                                                                                                                                      | ready for analysis at `./data-public/derived/declarations-hromada.csv`                                   | `./manipulation/ellis-health.R`               |
 | OSBB (Homeowners Associations)         | Number of homeowners associations in 2015-2020                                                                                                                                                                                                                                                                                                                                                         | ready for analysis at `./data-public/derived/osbb-hromada.csv`                                           | `./manipulation/ellis-health.R`               |
 | Passengers                             | Number of passengers arriving at hromada railway stations in 2021                                                                                                                                                                                                                                                                                                                                      | push to ./data-public/derived/                                                                           | `./manipulation/ellis-osbb.R`                 |
