@@ -24,11 +24,12 @@ eval_chunks <- TRUE
 cache_chunks <- TRUE
 report_render_start_time <- Sys.time()
 options(width=100) # number of characters to display in the output (dflt = 80)
-Sys.setlocale("LC_CTYPE", "russian")
+Sys.setlocale("LC_CTYPE", "ukr")
 #+ load-sources ------------------------------------------------------------
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
 library(tidyverse)
+
 
 #+ declare-globals -------------------------------------------------------------
 #source: https://drive.google.com/file/d/1JLICa97syJPyGOvt-8zx8PuALzPzZzR1/view?usp=sharing
@@ -43,15 +44,28 @@ path_admin <- "./data-public/derived/ua-admin-map-2020.csv"
 cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
-ds0 <- readr::read_csv(path_declarations)
-ds_admin <- readr::read_csv(path_admin)
-ds_doctors0 <- readr::read_csv(path_doctors)
+ds0 <- readr::read_csv(path_declarations, locale = locale(encoding = "UTF-8"))
+ds_admin <- readr::read_csv(path_admin) %>% 
+  #in koatuu (old codes), there were 4 different codes for the different parts of one settlements in Zaporizka oblast
+  #in ds_admin, we have only one code for all of them, so let's change the codes in accordance with ds0
+  mutate(
+    settlement_code_old = case_when(
+      grepl("село Велика Білозерка-3", full_name) ~ "2321187401"
+      ,grepl("село Велика Білозерка-4", full_name) ~ "2321188401"
+      ,TRUE ~ settlement_code_old
+    )
+  ) %>% 
+  #2nd part of the settlements is absent in the health data, so let's exclude it in order to not duplicate rows during merging
+  filter(!grepl("село Велика Білозерка-2", full_name)) %>% 
+  #also exclude village Tsenzhiv which was created in 2021 and has the same old code as other village Maidan
+  filter(settlement_code != "UA26040390080042180")
 
 #+ inspect-data ----------------------------------------------------------------
 ds0 %>% glimpse()
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
 
+#merge the dataset of declarations with admin data by old koatuu codes (we need to add hromada codes and names)
 ds1 <- ds0 %>% 
   left_join(
     ds_admin %>% select(settlement_code_old, settlement_code, hromada_code, hromada_name)
@@ -59,12 +73,16 @@ ds1 <- ds0 %>%
   ) %>% 
   mutate(
     settlement = str_to_title(settlement)
-    ,settlement = str_replace_all(settlement, c("'"="’"))
+    ,settlement = gsub("'", "’", settlement)
     ,area = str_to_title(area)
     ,key = paste(area, settlement)
   )
 
-#create vectors of unique combination oblast-settlement for further filtering
+ds1 %>% filter(is.na(hromada_code)) %>% distinct(settlement_koatuu) #668 settlement in the health data have invalid codes
+
+
+#create vectors of unique combination oblast-settlement - we will use these unique combinations 
+#as a key variable to merge these 670 settlements with admin data
 v_admin_unique_names <-  ds_admin %>% 
   select(hromada_code, settlement_code, settlement_name, oblast_name) %>% 
   mutate(key = paste(oblast_name, settlement_name)) %>% 
@@ -86,6 +104,7 @@ ds_coding <- ds1 %>%
   # filter(settlement_code.x != "UA26040390080042180") %>% #village Tsenzhiv which was created in 2021
   distinct(area, settlement,settlement_koatuu) 
 
+#we receive the dataset with 165 settlements - save the file with them for manual coding (DONE)
 # openxlsx::write.xlsx(ds_coding, "./data-private/raw/old-koatuu-coding-raw.xlsx") - DO NOT UNCOMMENT
 
 #+ load-coded-data, eval=eval_chunks -------------------------------------------------
@@ -98,9 +117,11 @@ ds_koatuu <-
   mutate(
     hromada_code = ifelse(settlement_koatuu == "8000000000","UA80000000000093317", hromada_code)
     ,hromada_name = ifelse(settlement_koatuu == "8000000000","Київ", hromada_name)
-  )
+  ) #edit Kyiv code and name
 
+#+ merge-all-data, eval=eval_chunks -------------------------------------------------
 ds2 <- ds1 %>% 
+  #at first, merge the health data with admin data using unique oblast-settlement combinations as a key variable
   left_join(
     ds_admin %>% 
       mutate(key = paste(oblast_name, settlement_name)) %>% 
@@ -108,10 +129,12 @@ ds2 <- ds1 %>%
       select(key, hromada_code, hromada_name, settlement_code, settlement_name)
     ,by = "key"
   ) %>%
+  #now merge settlements with invalid koatuu codes using the coded dataset with 165 settlements
   left_join(
     ds_koatuu %>% select(settlement_koatuu, hromada_code, hromada_name, settlement_code)
     ,by = "settlement_koatuu"
   ) %>% 
+  #concatenate 3 set of admin columns created due to merging into one set
   mutate(
     settlement_code = case_when(
       is.na(settlement_code.x) == T & is.na(settlement_code) == T ~ settlement_code.y
@@ -134,16 +157,19 @@ ds2 <- ds1 %>%
   ) %>% 
   select(-c(settlement_code.x:settlement_code.y, settlement_name))
 
+ds2 %>% filter(is.na(hromada_code)) 
+
 #check hromadas which do not have declarations
 v_hromadas <- ds2 %>% distinct(area, hromada_code, hromada_name) %>% pull(hromada_code)
 
 ds_admin %>% 
   filter(oblast_name != "Автономна Республіка Крим", !(hromada_code %in% v_hromadas)) %>% 
   distinct(oblast_name, hromada_name)
+#68 hromadas do not have any declaration with GP
 
 
 #+ tweak-data-doctors-hospitals, eval=eval_chunks ------------------------------------------------
-# 
+# TO BE DONE FURTHER
 # ds_doctors <- 
 #   ds_doctors0 %>% 
 #   group_by(legal_entity_id) %>% 
@@ -171,7 +197,7 @@ ds_admin %>%
 
 
 
-#+ aggregate-hromada-level, eval=eval_chunks -------------------------------------------------
+#+ aggregate-on-hromada-level, eval=eval_chunks -------------------------------------------------
 ds3 <- 
   ds2 %>% 
   mutate(
@@ -215,6 +241,7 @@ ds3 <-
     ,working_age_total = sum(count_declarations[working_age == "1"])
     ,working_age_pct = round(working_age_total/total,2)
   )
+
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
 readr::write_csv(ds2, "./data-public/derived/declarations-all.csv") #long format

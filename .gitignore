@@ -135,3 +135,5 @@ analysis/survey-overview/survey-overview.md
 data-public/derived/ua-admin-map-2020.csv
 data-public/derived/ua-admin-old.csv
 data-public/derived/ua-admin-map-2020.csv
+data-public/raw/active_declarations_by_age_gender.csv
+data-public/derived/declarations-all.csv
