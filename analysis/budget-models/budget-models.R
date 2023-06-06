@@ -47,7 +47,7 @@ data_cache_folder <- prints_folder # to sink modeling steps
 
 # ---- load-data ---------------------------------------------------------------
 # the product of ./manipulation/ellis-general.R
-d <- readr::read_csv("./data-private/derived/full_dataset.csv")
+d <- readr::read_csv("./data-public/derived/full_dataset.csv")
 d <- d %>% 
   rename("YoY_mar_may" = "own_income_no_mil_change_YoY_mar_may",
          "YoY_jan_feb" = "own_income_no_mil_change_YoY_jan_feb",
@@ -74,12 +74,12 @@ d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021*1000/to
                   Status_war_sept = as.factor(Status_war_sept_ext),
                   Status_war_sept = relevel(Status_war_sept, ref = "not occupied"))
 
-sample_data$x <- relevel(sample_data$x, ref = 4)
 
 cor_mat_full <- 
   cor(d %>% 
         select(YoY_jun_aug,
                YoY_mar_apr ,
+               recovery_month_distance,
                pioneer,
                
                total_population_2022 ,
@@ -93,7 +93,7 @@ cor_mat_full <-
                distance_to_russia_belarus ,
                war_zone_20_06_2022 ,
                
-               
+               diversification_income_score,
                own_income_prop_full_year ,
                income_own_2021_per_capita,
                income_own_2021 ,
@@ -124,6 +124,8 @@ cor_mat <-
                total_population_2022,
                urban_pct,n_settlements,
                own_income_prop_full_year,
+               recovery_month_distance,
+               diversification_income_score,
                YoY_jan_feb,
                YoY_mar_apr,
                YoY_mar_may,
@@ -137,10 +139,10 @@ cor_mat <-
       ,use = "complete.obs")
 corrplot::corrplot(cor_mat, tl.col = "black",tl.cex = 1, addCoef.col = "black", number.cex=1, order = "FPC")
 
-d %>% select(train_station) %>% summary() 
 a <- d %>% select(YoY_jun_aug,
                   YoY_mar_apr ,
                   YoY_jul_sep,
+                  recovery_month_distance,
                     
                     
                     total_population_2022 ,
@@ -155,6 +157,7 @@ a <- d %>% select(YoY_jun_aug,
                     distance_to_russia_belarus ,
                     war_zone_20_06_2022 ,
                     
+                  diversification_income_score,
                   own_income_prop_full_year ,
                   income_own_full_year_2021 ,
                     dfrr_executed ,    # a lot of NA
@@ -196,6 +199,7 @@ ols_1 <- lm(data = d,
               log(dfrr_executed + 1) +  #a lot of NA
               train_station+
               working_age_pct_declarations + # a lot of NA
+              diversification_income_score+
               
               youth_councils + 
               youth_centers + 
@@ -230,6 +234,7 @@ ols_2 <- lm(data = d,
               own_income_prop_full_year +
               log(income_own_2021) +
               train_station+
+              diversification_income_score+
 
               youth_councils + 
               youth_centers + 
@@ -259,6 +264,7 @@ ols_3 <- lm(data = d,
               
               log(income_own_2021_per_capita) +
               train_station+
+              diversification_income_score+
               
               youth_centers + 
               sex_head +
@@ -298,6 +304,7 @@ ols_4 <- lm(data = d,
               dfrr_executed_corr_per_capita +  #a lot of NA
               train_station+
               working_age_pct_declarations + # a lot of NA
+              diversification_income_score+
               
               youth_councils + 
               youth_centers + 
@@ -332,6 +339,7 @@ ols_5 <- lm(data = d,
               log(income_own_full_year_2021) +
               dfrr_executed_corr_per_capita +
               train_station+
+              diversification_income_score+
               
               youth_councils + 
               youth_centers + 
@@ -362,6 +370,7 @@ ols_6 <- lm(data = d,
               log(income_own_2021_per_capita) +
               dfrr_executed_corr_per_capita +
               train_station+
+              diversification_income_score+
               
               youth_councils + 
               youth_centers + 
@@ -376,8 +385,6 @@ ols_6 <- lm(data = d,
               edem_total +
               n_agreements_hromadas 
 )
-
-stargazer::stargazer(ols_6, ols_7, single.row = T, type = 'html', out = './analysis/budget-models/revenue_fall_alt.html')
 
 ols_7 <- lm(data = d,
             YoY_jul_sep ~ 
@@ -394,6 +401,7 @@ ols_7 <- lm(data = d,
               log(income_own_2021_per_capita) +
               dfrr_executed_corr_per_capita +
               train_station+
+              diversification_income_score+
               
               youth_councils + 
               youth_centers + 
@@ -427,6 +435,7 @@ ols_initial <- lm(data = d,
                   log(income_own_2021_per_capita) +
                   train_station+
                   dfrr_executed_corr_per_capita +
+                  diversification_income_score+
                   
                   youth_centers + 
                   youth_councils + 
@@ -457,6 +466,7 @@ ols_final <- lm(data = d,
               
               log(income_own_2021_per_capita) +
               train_station+
+              diversification_income_score+
               
               youth_centers + 
               sex_head +
@@ -486,6 +496,7 @@ ols_final_alt <- lm(data = d,
                   
                   log(income_own_2021_per_capita) +
                   train_station+
+                  diversification_income_score +
                   
                   youth_centers + 
                   sex_head +
@@ -502,7 +513,68 @@ ols_final_alt <- lm(data = d,
                   sum_osbb_2020_corr
 )
 
-stargazer::stargazer(ols_initial, ols_final, ols_final_alt, single.row = T, type = 'html', out = './analysis/budget-models/budget_models.html')
+stargazer::stargazer(ols_final, ols_final_alt, single.row = T, type = 'html', out = './analysis/budget-models/budget_models.html')
 
-d %>% filter(!is.na(income_own_2021_per_capita)) %>% group_by(Status_war_sept_ext) %>%
-  summarise(m = mean(income_own_2021_per_capita)) 
+##############
+ols_final_recovery <- lm(data = d,
+                         recovery_month_distance ~ YoY_mar_apr +
+                  
+                  
+                           urban_pct + 
+                           area + 
+                           travel_time +
+                           pioneer +
+                           
+                           region_en + 
+                           distance_to_russia_belarus +
+                           
+                           log(income_own_2021_per_capita) +
+                           train_station+
+                           diversification_income_score+
+                           
+                           youth_centers + 
+                           sex_head +
+                           age_head +
+                           education_head + 
+                           incumbent +
+                           polit_work +
+                           enterpreuner +
+                           rda +
+                           turnout_2020 +
+                           edem_total +
+                           n_agreements_hromadas +
+                           dfrr_executed_20_21_cat +
+                           sum_osbb_2020_corr
+)
+
+ols_final_recovery_alt <- lm(data = d,
+                    recovery_month_distance ~ YoY_mar_apr +
+                      
+                      
+                      urban_pct + 
+                      area + 
+                      travel_time +
+                      pioneer +
+                      
+                      Status_war_sept_ext +
+                      
+                      log(income_own_2021_per_capita) +
+                      train_station+
+                      diversification_income_score+
+                      
+                      youth_centers + 
+                      sex_head +
+                      age_head +
+                      education_head + 
+                      incumbent +
+                      polit_work +
+                      enterpreuner +
+                      rda +
+                      turnout_2020 +
+                      edem_total +
+                      n_agreements_hromadas +
+                      dfrr_executed_20_21_cat +
+                      sum_osbb_2020_corr
+)
+
+stargazer::stargazer(ols_final_recovery, ols_final_recovery_alt, single.row = T, type = 'html', out = './analysis/budget-models/budget_models_recovery.html')
