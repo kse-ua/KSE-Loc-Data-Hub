@@ -149,7 +149,7 @@ ds2_wide <-
 ds3 <- ds2_wide %>%
   left_join(
     ds_admin_full %>% 
-      mutate(budget_code = paste0(budget_code,"0"),
+      mutate(budget_code = budget_code,
       ) %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
                , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
@@ -223,7 +223,7 @@ ds5_long <- ds4_long %>%
   ungroup() %>%
   left_join(
     ds_admin_full %>% 
-      mutate(budget_code = paste0(budget_code,"0")) %>% 
+      mutate(budget_code = budget_code) %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
                , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
     ,by = c("budget_code")
@@ -323,7 +323,7 @@ ds5_long_temp %>% glimpse()
 
 ds_admin <-  
   ds_admin_full %>% 
-  mutate(budget_code = paste0(budget_code,"0")) %>%
+  mutate(budget_code = budget_code) %>%
   select(
     budget_code, 
     hromada_code, hromada_name, 
@@ -528,8 +528,93 @@ q <- c %>% filter(year==2022) %>%
             own_income_no_mil_change_YoY_jul_sep = mean(own_income_no_mil_change_YoY_jul_sep),
             own_income_no_mil_change_YoY_adapt = mean(own_income_no_mil_change_YoY_adapt))
 
+ds_5_add <- ds3 %>% 
+  mutate(revenue_total = rowSums(across(starts_with(c('1','2', '3', '4', '5'))), na.rm = TRUE),
+                           revenue_own = revenue_total - rowSums(across(starts_with(c('4'))), na.rm = TRUE),
+         revenue_military_tax = case_when(is.na(`11010200`)~0, TRUE ~ `11010200`),
+         revenue_own_no_mil_tax = revenue_own - revenue_military_tax) %>%
+  select(c("hromada_code",
+           "budget_name",
+           "oblast_name",
+           "raion_name",
+           "year",
+           "month",
+           "revenue_total",
+           "revenue_own",
+           "revenue_military_tax",
+           "revenue_own_no_mil_tax"))
+
+CPI_path <- "./data-public/raw/CPI_region_monthly.xlsx"
+CPI <- readxl::read_xlsx(CPI_path)
+
+CPI <- CPI %>% mutate(year = as.character(year),
+                      month = as.character(month))
+
+ds_5_add_CPI <- ds_5_add %>%
+  left_join(CPI, by = c("oblast_name","year", "month")) %>%
+  mutate(revenue_total_const = case_when(revenue_total >= 0 ~ (revenue_total / CPI_index_base_2021_1),
+                                         revenue_total < 0 ~ revenue_total),
+         revenue_own_const = case_when(revenue_own >= 0 ~ (revenue_own / CPI_index_base_2021_1),
+                                       revenue_own < 0 ~ revenue_own),
+         revenue_military_tax_const = case_when(revenue_military_tax >= 0 ~ (revenue_military_tax / CPI_index_base_2021_1),
+                                                revenue_military_tax < 0 ~ revenue_military_tax),
+         revenue_own_no_mil_tax_const = case_when(revenue_own_no_mil_tax >= 0 ~ (revenue_own_no_mil_tax / CPI_index_base_2021_1),
+                                                  revenue_own_no_mil_tax < 0 ~ revenue_own_no_mil_tax))
+
+
+ds_5_add_CPI <- ds_5_add_CPI %>% mutate(month = as.numeric(month),
+                                        year = as.numeric(year))
+
+average_change_rates <- ds_5_add_CPI %>%
+  filter(year == 2022 & month >= 4 | year == 2023 & month <= 3) %>%
+  group_by(hromada_code) %>%
+  summarize(average_change = mean((revenue_own_no_mil_tax_const - lag(revenue_own_no_mil_tax_const)) / lag(revenue_own_no_mil_tax_const)))
+
+# Create a data frame with monthly projections for April 2023 to December 2024
+projection_df <- expand.grid(hromada_code = unique(ds_5_add_CPI$hromada_code),
+                             month = 4:12,
+                             year = 2023:2024)
+
+# Join the projection data frame with the average change rates to calculate the projected revenues
+projected_revenues <- projection_df %>%
+  left_join(average_change_rates, by = "hromada_code") %>%
+  mutate(revenue_own_no_mil_tax_const = revenue_own_no_mil_tax_const[1] * cumprod(1 + average_change)) %>%
+  select(hromada_code, month, year, revenue_own_no_mil_tax_const)
+
+d_5_add_CPI_dist <- ds_5_add_CPI %>%
+  group_by(hromada_code, month) %>%
+  filter((year == 2022 & month >= 3 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
+           (year == 2023 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021])) %>%
+  group_by(hromada_code) %>%
+  slice_head(n = 1) %>%
+  ungroup() %>%
+  mutate(month_distance = ifelse(year %in% c(2022, 2023), (year - 2022) * 12 + month - 3, NA)) %>%
+  select(c("hromada_code",
+           "month_distance"))
+
+# Join with the original dataframe to include all settlements
+d_5_add_CPI_dist_upd <- ds_5_add_CPI %>%
+  left_join(d_5_add_CPI_dist, by = "hromada_code")
+
+# View the result
+
 ds5_final <- ds5_long %>%
-  left_join(c, by = c("budget_code","year"))
+  left_join(c, by = c("budget_code","year")) %>%
+  left_join(d_5_add_CPI_dist, by = "hromada_code") %>%
+  mutate(month_distance_score = case_when(month_distance == 0 ~ 13,
+                                          month_distance == 1 ~ 12,
+                                          month_distance == 2 ~ 11,
+                                          month_distance == 3 ~ 10,
+                                          month_distance == 4 ~ 9,
+                                          month_distance == 5 ~ 8,
+                                          month_distance == 6 ~ 7,
+                                          month_distance == 7 ~ 6,
+                                          month_distance == 8 ~ 5,
+                                          month_distance == 9 ~ 4,
+                                          month_distance == 10 ~ 3,
+                                          month_distance == 11 ~ 2,
+                                          month_distance == 12 ~ 1,
+                                          is.na(month_distance)  ~ 0))
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 dataset_names_dis <- list('Data' = ds3, 'Metadata' = metadata_dis)
