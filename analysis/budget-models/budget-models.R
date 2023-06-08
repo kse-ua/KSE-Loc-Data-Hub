@@ -577,4 +577,35 @@ ols_final_recovery_alt <- lm(data = d,
                       sum_osbb_2020_corr
 )
 
-stargazer::stargazer(ols_final_recovery, ols_final_recovery_alt, single.row = T, type = 'html', out = './analysis/budget-models/budget_models_recovery.html')
+ols_final_recovery_alt_short <- lm(data = d,
+                             recovery_month_distance ~ YoY_mar_apr +
+                               
+                               
+                               urban_pct + 
+                               area + 
+                               travel_time +
+                               pioneer +
+                               
+                               Status_war_sept_ext +
+                               
+                               log(income_own_2021_per_capita) +
+                               train_station+
+                               diversification_income_score+
+                               
+                               youth_centers + 
+                               sex_head +
+                               age_head +
+                               education_head + 
+                               incumbent +
+                               polit_work +
+                               enterpreuner +
+                               rda +
+                               turnout_2020 +
+                               edem_total +
+                               n_agreements_hromadas +
+                               dfrr_executed_20_21_cat +
+                               sum_osbb_2020_corr
+)
+
+stargazer::stargazer(ols_final_recovery, ols_final_recovery_alt, ols_final_recovery_alt_short,
+                     single.row = T, type = 'html', out = './analysis/budget-models/budget_models_recovery.html')
