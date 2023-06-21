@@ -149,7 +149,7 @@ ds2_wide <-
 ds3 <- ds2_wide %>%
   left_join(
     ds_admin_full %>% 
-      mutate(budget_code = paste0(budget_code,"0"),
+      mutate(budget_code = budget_code,
       ) %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
                , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
@@ -185,6 +185,15 @@ ds4_long <-
     ,unified_tax = str_detect(tax_code, "^1805.+")
     ,property_tax = str_detect(tax_code, "^1801.+")
     ,excise_duty = str_detect(tax_code, "^140.+")
+    ,corporate_tax = str_detect(tax_code, "^1102.+")
+    ,parking_fee = str_detect(tax_code, "^1802.+")
+    ,tourist_fee = str_detect(tax_code, "^1803.+")
+    ,eco_tax = str_detect(tax_code, "^1901.+")
+    ,non_tax = str_detect(tax_code, "^2.+")
+    ,capital_proceedings = str_detect(tax_code, "^3.+")
+    ,special_funds = str_detect(tax_code, "^5.+")
+    ,rent = str_detect(tax_code, "^130.+")
+    
   )
 
 ds5_long <- ds4_long %>%
@@ -199,18 +208,38 @@ ds5_long <- ds4_long %>%
     ,income_unified_tax = sum(amount*unified_tax, na.rm = T)
     ,income_property_tax = sum(amount*property_tax, na.rm = T)
     ,income_excise_duty = sum(amount*excise_duty, na.rm = T)
+    ,income_corporate_tax = sum(amount*corporate_tax, na.rm = T)
+    ,income_parking_fee = sum(amount*parking_fee, na.rm = T)
+    ,income_tourist_fee = sum(amount*tourist_fee, na.rm = T)
+    ,income_eco_tax = sum(amount*eco_tax, na.rm = T)
+    ,income_non_tax = sum(amount*non_tax, na.rm = T)
+    ,income_capital_proceedings = sum(amount*capital_proceedings, na.rm = T)
+    ,income_special_funds = sum(amount*special_funds, na.rm = T)
+    ,income_rent = sum(amount*rent, na.rm = T)
     ,.groups = "drop"
   ) %>% 
   ungroup() %>% 
   mutate(
     income_own = income_total - income_transfert
-    ,own_income_prop = round(income_own/income_total,2)
-    ,transfert_prop = round(income_transfert/income_total,2)
-    ,military_tax_prop = round(income_military/income_total,2)
-    ,pdfo_prop = round(income_pdfo/income_total,2)
-    ,unified_tax_prop = round(income_unified_tax/income_total,2)
-    ,property_tax_prop = round(income_property_tax/income_total,2)
-    ,excise_duty_prop = round(income_excise_duty/income_total,2)
+    ,own_income_prop = round(income_own/income_total,4)
+    ,transfert_prop = round(income_transfert/income_total,4)
+    ,military_tax_prop = round(income_military/income_total,4)
+    ,pdfo_prop = round(income_pdfo/income_total,4)
+    ,unified_tax_prop = round(income_unified_tax/income_total,4)
+    ,property_tax_prop = round(income_property_tax/income_total,4)
+    ,excise_duty_prop = round(income_excise_duty/income_total,4)
+    ,corporate_tax_own_prop = round(income_corporate_tax/income_own,4)
+    ,parking_fee_own_prop = round(income_parking_fee/income_own,4)
+    ,tourist_fee_own_prop = round(income_tourist_fee/income_own,4)
+    ,eco_tax_own_prop = round(income_eco_tax/income_own,4)
+    ,non_tax_own_prop = round(income_non_tax/income_own,4)
+    ,capital_proceedings_own_prop = round(income_capital_proceedings/income_own,4)
+    ,special_funds_own_prop = round(income_special_funds/income_own,4)
+    ,excise_duty_own_prop = round(income_excise_duty/income_own,4)
+    ,pdfo_own_prop = round(income_pdfo/income_own,4)
+    ,unified_tax_own_prop = round(income_unified_tax/income_own,4)
+    ,property_tax_own_prop = round(income_property_tax/income_own,4)
+    ,rent_own_prop = round(income_rent/income_own,4)
   ) %>%
   group_by(budget_code) %>% 
   mutate(
@@ -223,7 +252,7 @@ ds5_long <- ds4_long %>%
   ungroup() %>%
   left_join(
     ds_admin_full %>% 
-      mutate(budget_code = paste0(budget_code,"0")) %>% 
+      mutate(budget_code = budget_code) %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
                , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
     ,by = c("budget_code")
@@ -265,7 +294,7 @@ description <- c('Hromada budget code', 'Hromada budget name', 'Hromada name',
                  'Absolute change of own income (from 2021)', 'Absolute change of total income (from 2021)',
                  'Percent change of total income (from 2021)')
 
-metadata <- data.frame(variables, description)
+#metadata <- data.frame(variables, description)
 
 
 #+ tweak-data-5  ---- 
@@ -323,7 +352,7 @@ ds5_long_temp %>% glimpse()
 
 ds_admin <-  
   ds_admin_full %>% 
-  mutate(budget_code = paste0(budget_code,"0")) %>%
+  mutate(budget_code = budget_code) %>%
   select(
     budget_code, 
     hromada_code, hromada_name, 
@@ -445,21 +474,21 @@ ds5_long %>% glimpse()
 metrics <- ds5_long %>% select(income_total:total_income_change) %>% names()
 grouping_stem <- ds5_long %>% select(budget_code:year) %>% names()
 
-ds5_former <- 
-  ds5_long %>% 
-  mutate(
-    target_segment = month %in% c(3:9) & year %in% c(2021, 2022) # i think
-  ) %>% 
-  filter(target_segment) %>% 
-  group_by_at(grouping_stem) %>% 
-  summarize(
-    across(
-      .cols = metrics
-      ,.fns  = ~sum(.,na.rm=T) 
-    )
-  ) %>% 
-  ungroup() %>% 
-  glimpse()
+# ds5_former <- 
+#   ds5_long %>% 
+#   mutate(
+#     target_segment = month %in% c(3:9) & year %in% c(2021, 2022) # i think
+#   ) %>% 
+#   filter(target_segment) %>% 
+#   group_by_at(grouping_stem) %>% 
+#   summarize(
+#     across(
+#       .cols = metrics
+#       ,.fns  = ~sum(.,na.rm=T) 
+#     )
+#   ) %>% 
+#   ungroup() %>% 
+#   glimpse()
 
 a <- ds5_long_temp %>% 
   filter(year!=2020) %>% 
@@ -528,8 +557,129 @@ q <- c %>% filter(year==2022) %>%
             own_income_no_mil_change_YoY_jul_sep = mean(own_income_no_mil_change_YoY_jul_sep),
             own_income_no_mil_change_YoY_adapt = mean(own_income_no_mil_change_YoY_adapt))
 
+ds_5_add <- ds3 %>% 
+  mutate(revenue_total = rowSums(across(starts_with(c('1','2', '3', '4', '5'))), na.rm = TRUE),
+                           revenue_own = revenue_total - rowSums(across(starts_with(c('4'))), na.rm = TRUE),
+         revenue_military_tax = case_when(is.na(`11010200`)~0, TRUE ~ `11010200`),
+         revenue_own_no_mil_tax = revenue_own - revenue_military_tax) %>%
+  select(c("hromada_code",
+           "budget_name",
+           "oblast_name",
+           "raion_name",
+           "year",
+           "month",
+           "revenue_total",
+           "revenue_own",
+           "revenue_military_tax",
+           "revenue_own_no_mil_tax"))
+
+CPI_path <- "./data-public/raw/CPI_region_monthly.xlsx"
+CPI <- readxl::read_xlsx(CPI_path)
+
+CPI <- CPI %>% mutate(year = as.character(year),
+                      month = as.character(month))
+
+ds_5_add_CPI <- ds_5_add %>%
+  left_join(CPI, by = c("oblast_name","year", "month")) %>%
+  mutate(revenue_total_const = case_when(revenue_total >= 0 ~ (revenue_total / CPI_index_base_2021_1),
+                                         revenue_total < 0 ~ revenue_total),
+         revenue_own_const = case_when(revenue_own >= 0 ~ (revenue_own / CPI_index_base_2021_1),
+                                       revenue_own < 0 ~ revenue_own),
+         revenue_military_tax_const = case_when(revenue_military_tax >= 0 ~ (revenue_military_tax / CPI_index_base_2021_1),
+                                                revenue_military_tax < 0 ~ revenue_military_tax),
+         revenue_own_no_mil_tax_const = case_when(revenue_own_no_mil_tax >= 0 ~ (revenue_own_no_mil_tax / CPI_index_base_2021_1),
+                                                  revenue_own_no_mil_tax < 0 ~ revenue_own_no_mil_tax))
+
+
+ds_5_add_CPI <- ds_5_add_CPI %>% mutate(month = as.numeric(month),
+                                        year = as.numeric(year))
+
+average_change_rates <- ds_5_add_CPI %>%
+  filter(year == 2022 & month >= 4 | year == 2023 & month <= 3) %>%
+  group_by(hromada_code) %>%
+  summarize(average_change = mean((revenue_own_no_mil_tax_const - lag(revenue_own_no_mil_tax_const)) / lag(revenue_own_no_mil_tax_const), na.rm = TRUE)) %>%
+  mutate(average_change = replace(average_change, is.infinite(average_change) | average_change > 0.2, 0.2))
+
+# Create a data frame with monthly projections for April 2023 to December 2024
+ds_5_add_CPI_short <- ds_5_add_CPI %>% select(c("hromada_code",
+                                                "year",
+                                                "month",
+                                                "revenue_own_no_mil_tax_const"))
+
+
+
+
+projection_df <- ds_5_add_CPI_short %>%
+  filter(year == 2023 & month == 3) %>%
+  bind_rows(
+    expand.grid(
+      hromada_code = unique(ds_5_add_CPI_short$hromada_code),
+      month = 1:12,
+      year = 2023:2024,
+      revenue_own_no_mil_tax_const = 0
+    ) %>%
+      filter(!(year == 2023 & month <= 3))
+  )
+
+
+# Join the projection data frame with the average change rates to calculate the projected revenues
+options(scipen=999)
+projected_revenues <- projection_df %>%
+  left_join( average_change_rates, by = "hromada_code") %>%
+  group_by(hromada_code) %>%
+  mutate(revenue_own_no_mil_tax_const = revenue_own_no_mil_tax_const[1] * cumprod(1 + average_change),
+         year = as.integer(year),
+         month = as.integer(month)) %>%
+  select(hromada_code, month, year, revenue_own_no_mil_tax_const)%>%
+  filter(!(year == 2023 & month <= 3))
+
+ds_5_add_CPI_1 <- rbind(ds_5_add_CPI_short, projected_revenues)
+
+# d_5_add_CPI_dist <- ds_5_add_CPI %>%
+#   group_by(hromada_code, month) %>%
+#   filter((year == 2022 & month >= 3 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
+#            (year == 2023 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021])) %>%
+#   group_by(hromada_code) %>%
+#   slice_head(n = 1) %>%
+#   ungroup() %>%
+#   mutate(month_distance = ifelse(year %in% c(2022, 2023), (year - 2022) * 12 + month - 3, NA)) %>%
+#   select(c("hromada_code",
+#            "month_distance"))
+
+
+d_5_add_CPI_dist <- ds_5_add_CPI_1 %>%
+  group_by(hromada_code, month) %>%
+  filter((year == 2022 & month >= 3 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
+           (year == 2023 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
+           (year == 2024 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021])) %>%
+  group_by(hromada_code) %>%
+  slice_head(n = 1) %>%
+  ungroup() %>%
+  mutate(recovery_month_distance = ifelse(year %in% c(2022, 2023, 2024), (year - 2022) * 12 + month - 3, NA)) %>%
+  select(hromada_code, recovery_month_distance)
+
+# Join with the original dataframe to include all settlements
+d_5_add_CPI_dist_upd <- ds_5_add_CPI %>%
+  left_join(d_5_add_CPI_dist, by = "hromada_code")
+
+# View the result
+
 ds5_final <- ds5_long %>%
-  left_join(c, by = c("budget_code","year"))
+  left_join(c, by = c("budget_code","year")) %>%
+  left_join(d_5_add_CPI_dist, by = "hromada_code") %>%
+  mutate(diversification_income_score = corporate_tax_own_prop^2 +
+           parking_fee_own_prop^2 +
+           tourist_fee_own_prop^2 +
+           eco_tax_own_prop^2 +
+           non_tax_own_prop^2 +
+           capital_proceedings_own_prop^2 +
+           special_funds_own_prop^2 +
+           excise_duty_own_prop^2 +
+           pdfo_own_prop^2 +
+           unified_tax_own_prop^2 +
+           property_tax_own_prop^2
+           )
+
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 dataset_names_dis <- list('Data' = ds3, 'Metadata' = metadata_dis)
@@ -539,8 +689,8 @@ dataset_names <- list('Data' = ds5_final, 'Metadata' = metadata)
 library(openxlsx)
 
 openxlsx::write.xlsx(dataset_names_dis, './data-public/derived/hromada_budget_2020_2022_taxes.xlsx')
-openxlsx::write.xlsx(dataset_names, 'C:/GitHub/ua-de-center/data-public/derived/hromada_budget_2020_2022.xlsx')
-readr::write_csv(ds5_final, 'C:/GitHub/ua-de-center/data-public/derived/hromada_budget_2020_2022.csv')
+openxlsx::write.xlsx(dataset_names, './data-public/derived/hromada_budget_2020_2022.xlsx')
+readr::write_csv(ds5_final, './data-public/derived/hromada_budget_2020_2022.csv')
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")

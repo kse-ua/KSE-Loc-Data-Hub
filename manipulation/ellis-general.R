@@ -56,7 +56,7 @@ path_partnerships <- "./data-public/derived/partnerships-hromadas.csv"
 #additional datasets
 path_polygons <-  "./data-public/derived/shapefiles/terhromad_fin.geojson"
 path_oblast <- "./data-public/raw/oblast.csv"
-path_passangers <- "./data-public/derived/passangers.csv"
+path_passangers <- "./data-public/derived/passengers.csv"
 #path_internet_speed <- "./data-public/derived/internet-speed.csv"
 path_roads_lengths <- "./data-public/derived/roads-lengths.csv"
 
@@ -135,24 +135,7 @@ ds1_budget_income <-
   ds_budget_income %>% 
   filter(year == "2021") %>%
   select(-c(ends_with('change'), ends_with('net'))) 
-# %>%
-  # select(-c("own_income_no_mil_change_YoY_jan_feb",
-  #           "own_income_no_mil_change_YoY_jun_aug",
-  #           "own_income_no_mil_change_YoY_mar_may",
-  #           "own_income_no_mil_change_YoY_adapt")) 
-  #
-colnames(ds1_budget_income) <- ifelse(
-  str_detect(colnames(ds1_budget_income), "income") |
-    str_detect(colnames(ds1_budget_income), "prop")
-  ,paste(colnames(ds1_budget_income), "2021", sep = "_")
-  ,colnames(ds1_budget_income)) %>%
-  rename(own_income_no_mil_change_YoY_jan_feb = own_income_no_mil_change_YoY_jan_feb_2021,
-         own_income_no_mil_change_YoY_mar_apr = own_income_no_mil_change_YoY_mar_apr_2021,
-         own_income_no_mil_change_YoY_mar_may = own_income_no_mil_change_YoY_mar_may_2021,
-         own_income_no_mil_change_YoY_jun_aug = own_income_no_mil_change_YoY_jun_aug_2021,
-         own_income_no_mil_change_YoY_jul_sep = own_income_no_mil_change_YoY_jul_sep_2021,
-         own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_adapt_2021
-         )
+
 
 
 #aggregate DFRR data for all years
@@ -175,15 +158,15 @@ ds1_heads <-
   mutate(
     sex_head = factor(sex_head, labels = c("female", "male"))
     ,education_head = case_when(
-      education_head == "Ð¾ÑÐ²Ñ–Ñ‚Ð° Ð²Ð¸Ñ‰Ð°" ~ "higher"
-      ,education_head != "Ð¾ÑÐ²Ñ–Ñ‚Ð° Ð²Ð¸Ñ‰Ð°" ~ "non-higher"
+      education_head == "îñâ³òà âèùà" ~ "higher"
+      ,education_head != "îñâ³òà âèùà" ~ "non-higher"
     )
     ,party_national_winner = case_when(
-      party == 'Ð¡Ð»ÑƒÐ³Ð° Ð½Ð°Ñ€Ð¾Ð´Ñƒ' ~ 1,
+      party == 'Ñëóãà íàðîäó' ~ 1,
       TRUE ~ 0
     )
     ,no_party = case_when(
-      party == 'Ð¡Ð°Ð¼Ð¾Ð²Ð¸ÑÑƒÐ²Ð°Ð½Ð½Ñ' ~ 1
+      party == 'Ñàìîâèñóâàííÿ' ~ 1
       ,TRUE ~ 0
     )
     ,male = case_when(
@@ -230,9 +213,9 @@ hromadas_oblast_centers <-
 
 d1 <- 
   ds_hromada %>% 
-  filter(!oblast_name == "ÐÐ²Ñ‚Ð¾Ð½Ð¾Ð¼Ð½Ð° Ð ÐµÑÐ¿ÑƒÐ±Ð»Ñ–ÐºÐ° ÐšÑ€Ð¸Ð¼") %>% 
+  filter(!oblast_name == "Àâòîíîìíà Ðåñïóáë³êà Êðèì") %>% 
   mutate(
-    hromada_full_name = paste(hromada_name, type, "Ð³Ñ€Ð¾Ð¼Ð°Ð´Ð°")
+    hromada_full_name = paste(hromada_name, type, "ãðîìàäà")
     ,oblast_center = ifelse(hromada_code %in% hromadas_oblast_centers, 1, 0)
   ) %>% 
   left_join(
@@ -330,7 +313,7 @@ d1 <-
     ds_polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
   )
-  
+
 
 #TO-DO: add big taxpayers
 #TO-DO: add dates of creation + status based on military actions/occupation (DONE)
