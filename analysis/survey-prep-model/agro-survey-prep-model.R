@@ -118,7 +118,7 @@ make_corr_plot <- function (
 
 # ---- load-data ---------------------------------------------------------------
 # the product of ./manipulation/ellis-general.R
-ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
+ds_general <- readr::read_csv("./data-public/derived/full_dataset.csv")
 
 # the product of ./manipulation/ellis-agro-survey.R
 ds_survey <- readr::read_csv("./data-private/derived/agro-survey-full.csv")
@@ -138,6 +138,33 @@ meta_survey <- readxl::read_excel("./data-private/raw/agro-survey.xlsx", sheet =
 # survey_url <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
 # meta_survey <- googlesheets4::read_sheet(survey_url,"survey",skip = 0)
 # meta_choices <- googlesheets4::read_sheet(survey_url,"choices",skip = 0)
+
+ds_general$hromadas_30km_from_border
+
+ds_heads <- readxl::read_excel("./data-private/raw/hromada_heads.xlsx") %>% 
+  select(hromada_code, turnout, sex, age, education, incumbent, rda, not_from_here,
+         party, enterpreuner, unemployed, priv_work, polit_work, communal_work,
+         ngo_work) %>% 
+  rename(sex_head = sex, age_head = age, education_head = education, turnout_2020 = turnout) %>% 
+  mutate(
+    sex_head = factor(sex_head, labels = c("female", "male"))
+    ,education_head = case_when(
+      education_head == "освіта вища" ~ "higher"
+      ,education_head != "освіта вища" ~ "non-higher"
+    )
+    ,party_national_winner = case_when(
+      party == 'Слуга народу' ~ 1,
+      TRUE ~ 0
+    )
+  )
+
+ds_general %>% 
+  left_join(ds_heads, by = "hromada_code") %>% 
+  filter(oblast_name %in% c("Харківська", "Чернігівська", "Херсонська", "Сумська", "Київська",
+                            "Миколаївська", "Житомирська")) %>% 
+  group_by(oblast_name) %>% 
+  summarise(n_hrom = n(), n_30km = sum(hromadas_30km_from_border), n_SN = sum(party_national_winner))
+
 
 
 
