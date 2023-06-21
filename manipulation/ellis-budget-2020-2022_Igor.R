@@ -185,7 +185,7 @@ ds4_long <-
     ,unified_tax = str_detect(tax_code, "^1805.+")
     ,property_tax = str_detect(tax_code, "^1801.+")
     ,excise_duty = str_detect(tax_code, "^140.+")
-    ,corporate_tax = str_detect(tax_code, "^1102.+")
+    ,corporate_tax = str_detect(tax_code, "^11020200.+")
     ,parking_fee = str_detect(tax_code, "^1802.+")
     ,tourist_fee = str_detect(tax_code, "^1803.+")
     ,eco_tax = str_detect(tax_code, "^1901.+")
@@ -310,6 +310,7 @@ ds4_long_a <-
     ,unified_tax  = str_detect(tax_code, "^1805.+")
     ,property_tax = str_detect(tax_code, "^1801.+")
     ,excise_duty  = str_detect(tax_code, "^140.+")
+    ,corporate_tax = str_detect(tax_code, "^1102.+")
   )
 
 ds4_long %>% glimpse(80)
@@ -325,6 +326,7 @@ ds5_long_temp <-
     ,income_unified_tax  = sum(amount*unified_tax, na.rm = T)
     ,income_property_tax = sum(amount*property_tax, na.rm = T)
     ,income_excise_duty  = sum(amount*excise_duty, na.rm = T)
+    ,income_corporate_tax = sum(amount*corporate_tax, na.rm = T)
     ,.groups = "drop"
   ) %>% 
   ungroup() %>% 
@@ -495,7 +497,10 @@ a <- ds5_long_temp %>%
   group_by(budget_code, month) %>%
   mutate(income_own_no_mil_change_YoY = ((income_own - income_military) -
                                            (income_own[year==2021] - income_military[year==2021])),
-         income_own_no_military_tax = income_own - income_military)
+         income_own_no_military_tax = income_own - income_military,
+         income_own_no_military_tax_corp_tax = income_own - income_military - income_corporate_tax)
+
+i <- a %>% group_by(year, month) %>% summarise(x = sum(income_corporate_tax, na.rm=TRUE))
 
 b <- a %>%
   group_by(budget_code) %>%
@@ -511,10 +516,10 @@ b <- a %>%
                                                      (income_own_no_military_tax[month=="3"&year==2021]+
                                                         income_own_no_military_tax[month=="4"&year==2021]+
                                                         income_own_no_military_tax[month=="5"&year==2021]))-1)*100),
-         own_income_no_mil_change_YoY_mar_apr = ((((income_own_no_military_tax[month=="3"&year==2022]+
-                                                      income_own_no_military_tax[month=="4"&year==2022]) / 
-                                                     (income_own_no_military_tax[month=="3"&year==2021]+
-                                                        income_own_no_military_tax[month=="4"&year==2021]))-1)*100),
+         own_income_no_mil_change_YoY_mar_apr = ((((income_own_no_military_tax_corp_tax[month=="3"&year==2022]+
+                                                      income_own_no_military_tax_corp_tax[month=="4"&year==2022]) / 
+                                                     (income_own_no_military_tax_corp_tax[month=="3"&year==2021]+
+                                                        income_own_no_military_tax_corp_tax[month=="4"&year==2021]))-1)*100),
          own_income_no_mil_change_YoY_jan_feb = ((((income_own_no_military_tax[month=="1"&year==2022]+
                                                       income_own_no_military_tax[month=="2"&year==2022]) / 
                                                      (income_own_no_military_tax[month=="1"&year==2021]+
@@ -526,8 +531,32 @@ b <- a %>%
                                                         income_own_no_military_tax[month=="8"&year==2021]+
                                                         income_own_no_military_tax[month=="7"&year==2021]))-1)*100),
          own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_jul_sep - own_income_no_mil_change_YoY_mar_apr,
-         income_own_full_year = income_own,
-         own_income_prop_full_year = own_income_prop)
+         own_income_no_mil_change_YoY_jun_aug = case_when(own_income_no_mil_change_YoY_jun_aug <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_jun_aug),
+         own_income_no_mil_change_YoY_mar_may = case_when(own_income_no_mil_change_YoY_mar_may <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_mar_may),
+         own_income_no_mil_change_YoY_mar_apr = case_when(own_income_no_mil_change_YoY_mar_apr <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_mar_apr),
+         own_income_no_mil_change_YoY_jan_feb = case_when(own_income_no_mil_change_YoY_jan_feb <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_jan_feb),
+         own_income_no_mil_change_YoY_jul_sep = case_when(own_income_no_mil_change_YoY_jul_sep <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_jul_sep)
+
+         ) %>%
+  group_by(budget_code, year) %>%
+  mutate(income_own_full_year = sum(income_own, na.rm = TRUE),
+         income_total_full_year = sum(income_total, na.rm = TRUE),
+         own_income_prop_full_year = (income_own_full_year/sum(income_total, na.rm = TRUE))) %>% ungroup()
+
+d <- readr::read_csv("./data-public/derived/full_dataset.csv")
+check_per_capita <- b %>% left_join(
+  d %>% select(budget_code, total_population_2022)
+  ,by = "budget_code"
+) %>% mutate(income_total_per_cap = (income_total_full_year/total_population_2022)) %>%
+  select(c("budget_name", "year", "income_total_per_cap")) %>%
+  filter(budget_name == "Бюджет Новороздільської міської територіальної громади" |
+           budget_name ==                 "Бюджет Краснокутської селищної територіальної громади" |
+           budget_name ==                 "Бюджет Боярської міської територіальної громади" |
+         budget_name ==               "Бюджет Нововолинської міської територіальної громади" |
+         budget_name ==                "Бюджет Новоушицької селищної територіальної громади" |
+         budget_name ==                "Бюджет Городенківської міської територіальної громади") %>% 
+  distinct(budget_name, year, .keep_all = TRUE) %>% filter(year != 2023)
+ 
 
 # b$own_income_no_mil_change_YoY_jun_aug[b$year == 2021] <- NA
 # b$own_income_no_mil_change_YoY_mar_may[b$year == 2021] <- NA
@@ -561,7 +590,9 @@ ds_5_add <- ds3 %>%
   mutate(revenue_total = rowSums(across(starts_with(c('1','2', '3', '4', '5'))), na.rm = TRUE),
                            revenue_own = revenue_total - rowSums(across(starts_with(c('4'))), na.rm = TRUE),
          revenue_military_tax = case_when(is.na(`11010200`)~0, TRUE ~ `11010200`),
-         revenue_own_no_mil_tax = revenue_own - revenue_military_tax) %>%
+         revenue_corporate_tax = case_when(is.na(`11020200`)~0, TRUE ~ `11020200`),
+         revenue_own_no_mil_tax = revenue_own - revenue_military_tax,
+         revenue_own_no_mil_tax_corp_tax = revenue_own - revenue_military_tax - revenue_corporate_tax) %>%
   select(c("hromada_code",
            "budget_name",
            "oblast_name",
@@ -571,7 +602,8 @@ ds_5_add <- ds3 %>%
            "revenue_total",
            "revenue_own",
            "revenue_military_tax",
-           "revenue_own_no_mil_tax"))
+           "revenue_own_no_mil_tax",
+           "revenue_own_no_mil_tax_corp_tax"))
 
 CPI_path <- "./data-public/raw/CPI_region_monthly.xlsx"
 CPI <- readxl::read_xlsx(CPI_path)
@@ -588,7 +620,9 @@ ds_5_add_CPI <- ds_5_add %>%
          revenue_military_tax_const = case_when(revenue_military_tax >= 0 ~ (revenue_military_tax / CPI_index_base_2021_1),
                                                 revenue_military_tax < 0 ~ revenue_military_tax),
          revenue_own_no_mil_tax_const = case_when(revenue_own_no_mil_tax >= 0 ~ (revenue_own_no_mil_tax / CPI_index_base_2021_1),
-                                                  revenue_own_no_mil_tax < 0 ~ revenue_own_no_mil_tax))
+                                                  revenue_own_no_mil_tax < 0 ~ revenue_own_no_mil_tax),
+         revenue_own_no_mil_tax_corp_tax_const = case_when(revenue_own_no_mil_tax_corp_tax >= 0 ~ (revenue_own_no_mil_tax_corp_tax / CPI_index_base_2021_1),
+                                                               revenue_own_no_mil_tax_corp_tax < 0 ~ revenue_own_no_mil_tax_corp_tax))
 
 
 ds_5_add_CPI <- ds_5_add_CPI %>% mutate(month = as.numeric(month),
@@ -658,6 +692,7 @@ d_5_add_CPI_dist <- ds_5_add_CPI_1 %>%
   mutate(recovery_month_distance = ifelse(year %in% c(2022, 2023, 2024), (year - 2022) * 12 + month - 3, NA)) %>%
   select(hromada_code, recovery_month_distance)
 
+
 # Join with the original dataframe to include all settlements
 d_5_add_CPI_dist_upd <- ds_5_add_CPI %>%
   left_join(d_5_add_CPI_dist, by = "hromada_code")
@@ -680,6 +715,22 @@ ds5_final <- ds5_long %>%
            property_tax_own_prop^2
            )
 
+cases_up_down <- ds_5_add_CPI_short %>%
+  group_by(hromada_code, year, month) %>%
+  summarize(revenue_own_no_mil_tax_const = sum(revenue_own_no_mil_tax_const)) %>%
+  arrange(hromada_code, year, month) %>%
+  mutate(date = as.Date(paste(year, month, "01", sep = "-"))) %>%
+  mutate(prev_revenue = lag(revenue_own_no_mil_tax_const)) %>%
+  group_by(hromada_code) %>%
+  mutate(
+    prev_revenue = ifelse(is.na(prev_revenue) & month == 1, lag(prev_revenue, n = 12), prev_revenue),
+    prev_revenue = ifelse(is.na(prev_revenue), lag(prev_revenue, default = last(prev_revenue)), prev_revenue),
+    is_above_prev_year = ifelse(revenue_own_no_mil_tax_const > prev_revenue, 1, 0),
+    is_below_prev_year = ifelse(revenue_own_no_mil_tax_const < prev_revenue, 1, 0),
+    is_prev_above_curr_below = lag(is_above_prev_year) == 1 & is_below_prev_year == 1
+  ) %>%
+  filter(is_prev_above_curr_below) %>%
+  summarize(num_unique_budgets = n_distinct(hromada_code))
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
 dataset_names_dis <- list('Data' = ds3, 'Metadata' = metadata_dis)

@@ -58,6 +58,8 @@ d <- d %>%
          "income_own_2021" = "income_own",
          "income_own_full_year_2021" = "income_own_full_year")
 
+options("scipen"=100, "digits"=4)
+
 d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021*1000/total_population_2022,
                   dfrr_executed_per_capita = dfrr_executed / total_population_2022,
                   dfrr_executed_corr = ifelse(is.na(dfrr_executed), 0, dfrr_executed),
@@ -72,7 +74,69 @@ d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021*1000/to
                   Status_war_sept_ext = as.factor(Status_war_sept_ext),
                   Status_war_sept_ext = relevel(Status_war_sept_ext, ref = "not occupied"),
                   Status_war_sept = as.factor(Status_war_sept_ext),
-                  Status_war_sept = relevel(Status_war_sept, ref = "not occupied"))
+                  Status_war_sept = relevel(Status_war_sept, ref = "not occupied"),
+                  recovery_score = case_when(recovery_month_distance == 0 ~ 13,
+                                             recovery_month_distance == 1~ 12,
+                                             recovery_month_distance == 2~ 11,
+                                             recovery_month_distance == 3~ 10,
+                                             recovery_month_distance == 4~ 9,
+                                             recovery_month_distance == 5~ 8,
+                                             recovery_month_distance == 6~ 7,
+                                             recovery_month_distance == 7~ 6,
+                                             recovery_month_distance == 8~ 5,
+                                             recovery_month_distance == 9~ 4,
+                                             recovery_month_distance == 10~ 3,
+                                             recovery_month_distance == 11~ 2,
+                                             recovery_month_distance == 12~ 1,
+                                             recovery_month_distance >= 13 |
+                                               is.na (recovery_month_distance) ~ 0
+                  ),
+                  recovery_score_factor =  factor(recovery_score))
+levels(d$recovery_score_factor) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13")
+
+fast_recovery <- subset(d, recovery_month_distance <= 2)
+mid_recovery <- subset(d, recovery_month_distance <= 6 & recovery_month_distance > 2)
+long_recovery <- subset(d, recovery_month_distance <= 12 & recovery_month_distance > 6)
+no_recovery <- subset(d, recovery_month_distance >= 13 |
+                        is.na (recovery_month_distance))
+
+recovery_types <- d %>% mutate(recovery_type = as.factor(case_when(recovery_month_distance <= 2 ~ "fast_recovery",
+                                                                   recovery_month_distance <= 6 & recovery_month_distance > 2 ~ "mid_recovery",
+                                                                   recovery_month_distance <= 12 & recovery_month_distance > 6 ~ "long_recovery",
+                                                                   recovery_month_distance >= 13 |
+                                                                     is.na (recovery_month_distance) ~ "no_recovery"))) %>%
+  group_by(recovery_type) %>% 
+  summarise(YoY_jul_sep = mean(YoY_jul_sep, na.rm = TRUE),
+            YoY_mar_apr = mean(YoY_mar_apr, na.rm = TRUE),
+            
+            
+            total_population_2022 = mean(total_population_2022, na.rm = TRUE),
+            urban_pct = mean(urban_pct, na.rm = TRUE),
+            area = mean(area, na.rm = TRUE),
+            travel_time = mean(travel_time, na.rm = TRUE),
+            voluntary = mean(voluntary, na.rm = TRUE),
+            pioneer = mean(pioneer, na.rm = TRUE),
+            time_before_24th = mean(time_before_24th, na.rm = TRUE),
+            n_settlements = mean(n_settlements, na.rm = TRUE),
+            
+            distance_to_russia_belarus = mean(distance_to_russia_belarus, na.rm = TRUE),
+            
+            own_income_prop_full_year = mean(own_income_prop_full_year, na.rm = TRUE),
+            income_own_2021 = mean(income_own_2021, na.rm = TRUE),
+            train_station = mean(train_station, na.rm = TRUE),
+            diversification_income_score = mean(diversification_income_score, na.rm = TRUE),
+            
+            youth_councils = mean(youth_councils, na.rm = TRUE),
+            youth_centers = mean(youth_centers, na.rm = TRUE),
+            business_support_centers = mean(business_support_centers, na.rm = TRUE),
+            age_head = mean(age_head, na.rm = TRUE),
+            incumbent = mean(incumbent, na.rm = TRUE),
+            polit_work = mean(polit_work, na.rm = TRUE),
+            rda = mean(rda, na.rm = TRUE),
+            turnout_2020 = mean(turnout_2020, na.rm = TRUE),
+            edem_total = mean(edem_total, na.rm = TRUE),
+            n_agreements_hromadas_active = mean(n_agreements_hromadas_active, na.rm = TRUE))
+
 
 
 cor_mat_full <- 
@@ -143,6 +207,8 @@ a <- d %>% select(YoY_jun_aug,
                   YoY_mar_apr ,
                   YoY_jul_sep,
                   recovery_month_distance,
+                  recovery_score,
+                  recovery_score_factor,
                     
                     
                     total_population_2022 ,
@@ -389,6 +455,7 @@ ols_6 <- lm(data = d,
 ols_7 <- lm(data = d,
             YoY_jul_sep ~ 
               
+              log(total_population_2022) + 
               
               urban_pct + 
               area + 
@@ -423,6 +490,7 @@ stargazer::stargazer(ols_6, ols_7, single.row = T, type = 'html', out = './analy
 ols_initial <- lm(data = d,
                 YoY_jun_aug ~ YoY_mar_apr +
                   
+                  log(total_population_2022) + 
                   
                   urban_pct + 
                   area + 
@@ -455,7 +523,7 @@ ols_initial <- lm(data = d,
 ols_final <- lm(data = d,
             YoY_jul_sep ~ YoY_mar_apr +
               
-              
+              log(total_population_2022) + 
               urban_pct + 
               area + 
               travel_time +
@@ -485,7 +553,7 @@ ols_final <- lm(data = d,
 
 ols_final_alt <- lm(data = d,
                 YoY_jul_sep ~ YoY_mar_apr +
-                  
+                  log(total_population_2022) + 
                   
                   urban_pct + 
                   area + 
@@ -519,7 +587,8 @@ stargazer::stargazer(ols_final, ols_final_alt, single.row = T, type = 'html', ou
 ols_final_recovery <- lm(data = d,
                          recovery_month_distance ~ YoY_mar_apr +
                   
-                  
+                           log(total_population_2022) + 
+                           
                            urban_pct + 
                            area + 
                            travel_time +
@@ -550,6 +619,7 @@ ols_final_recovery <- lm(data = d,
 ols_final_recovery_alt <- lm(data = d,
                     recovery_month_distance ~ YoY_mar_apr +
                       
+                      log(total_population_2022) + 
                       
                       urban_pct + 
                       area + 
@@ -578,8 +648,9 @@ ols_final_recovery_alt <- lm(data = d,
 )
 
 ols_final_recovery_alt_short <- lm(data = d,
-                             recovery_month_distance ~ YoY_mar_apr +
+                             recovery_month_distance ~ 
                                
+                               log(total_population_2022) + 
                                
                                urban_pct + 
                                area + 
@@ -609,3 +680,324 @@ ols_final_recovery_alt_short <- lm(data = d,
 
 stargazer::stargazer(ols_final_recovery, ols_final_recovery_alt, ols_final_recovery_alt_short,
                      single.row = T, type = 'html', out = './analysis/budget-models/budget_models_recovery.html')
+
+
+library(MASS)
+Ordinal_final_recovery_alt <- polr(data = d, Hess = TRUE ,
+                             recovery_score_factor ~ YoY_mar_apr +
+                               
+                               log(total_population_2022) + 
+                               
+                               urban_pct + 
+                               area + 
+                               travel_time +
+                               pioneer +
+                               
+                               Status_war_sept_ext +
+                               
+                               log(income_own_2021_per_capita) +
+                               train_station+
+                               diversification_income_score+
+                               
+                               youth_centers + 
+                               sex_head +
+                               age_head +
+                               education_head + 
+                               incumbent +
+                               polit_work +
+                               enterpreuner +
+                               rda +
+                               turnout_2020 +
+                               edem_total +
+                               n_agreements_hromadas +
+                               dfrr_executed_20_21_cat +
+                               sum_osbb_2020_corr
+                             
+                             
+)
+summary(Ordinal_final_recovery_alt)
+
+library(modelsummary)
+modelsummary(Ordinal_final_recovery_alt, stars = TRUE)
+
+summary_table <- coef(summary(Ordinal_final_recovery_alt))
+pval <- pnorm(abs(summary_table[, "t value"]),lower.tail = FALSE)* 2
+summary_table <- cbind(summary_table, "p value" = round(pval,3))
+summary_table
+
+
+
+
+
+
+ols_final_alt_1 <- lm(data = d,
+                    YoY_jul_sep ~ YoY_mar_apr +
+                      
+                      log(total_population_2022) + 
+                      
+                      urban_pct + 
+                      area + 
+                      travel_time +
+                      pioneer +
+                      
+                      Status_war_sept_ext +
+                      
+                      log(income_own_2021_per_capita) +
+                      train_station+
+                      diversification_income_score +
+                      
+                      youth_centers + 
+                      sex_head +
+                      age_head +
+                      education_head + 
+                      incumbent +
+                      polit_work +
+                      enterpreuner +
+                      rda +
+                      turnout_2020 +
+                      edem_total +
+                      n_agreements_hromadas +
+                      dfrr_executed_20_21_cat +
+                      sum_osbb_2020_corr
+)
+
+ols_final_alt_2 <- lm(data = d,
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        log(total_population_2022) + 
+                        
+                        area + 
+                        travel_time +
+                        pioneer +
+                        
+                        Status_war_sept_ext +
+                        
+                        log(income_own_2021_per_capita) +
+                        train_station+
+                        diversification_income_score +
+                        
+                        youth_centers + 
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas +
+                        dfrr_executed_20_21_cat +
+                        sum_osbb_2020_corr
+)
+
+ols_final_alt_3 <- lm(data = d,
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        log(total_population_2022) + 
+                        
+                        travel_time +
+                        pioneer +
+                        
+                        Status_war_sept_ext +
+                        
+                        log(income_own_2021_per_capita) +
+                        train_station+
+                        diversification_income_score +
+                        
+                        youth_centers + 
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas +
+                        dfrr_executed_20_21_cat +
+                        sum_osbb_2020_corr
+)
+
+ols_final_alt_4 <- lm(data = d,
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        
+                        pioneer +
+                        
+                        Status_war_sept_ext +
+                        
+                        log(income_own_2021_per_capita) +
+                        train_station+
+                        diversification_income_score +
+                        
+                        youth_centers + 
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas +
+                        dfrr_executed_20_21_cat +
+                        sum_osbb_2020_corr
+)
+
+ols_final_alt_5 <- lm(data = d,
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        
+
+                        Status_war_sept_ext +
+                        
+                        log(income_own_2021_per_capita) +
+                        train_station+
+                        diversification_income_score +
+                        
+                        youth_centers + 
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas +
+                        dfrr_executed_20_21_cat +
+                        sum_osbb_2020_corr
+)
+
+ols_final_alt_6 <- lm(data = d,
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        
+                        
+                        Status_war_sept_ext +
+                        
+                        train_station+
+                        diversification_income_score +
+                        
+                        youth_centers + 
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas +
+                        dfrr_executed_20_21_cat +
+                        sum_osbb_2020_corr
+)
+
+ols_final_alt_7 <- lm(data = d,
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        
+                        
+                        Status_war_sept_ext +
+                        
+                        diversification_income_score +
+                        
+                        youth_centers + 
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas +
+                        dfrr_executed_20_21_cat +
+                        sum_osbb_2020_corr
+)
+
+
+ols_final_alt_8 <- lm(data = d,
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        
+                        
+                        Status_war_sept_ext +
+                        
+
+                        youth_centers + 
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas +
+                        dfrr_executed_20_21_cat +
+                        sum_osbb_2020_corr
+)
+
+ols_final_alt_9 <- lm(data = d,
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        
+                        
+                        Status_war_sept_ext +
+                        
+                        
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas +
+                        dfrr_executed_20_21_cat +
+                        sum_osbb_2020_corr
+)
+
+ols_final_alt_10 <- lm(data = d,
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        
+                        
+                        Status_war_sept_ext +
+                        
+                        
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas 
+)
+
+stargazer::stargazer(ols_final_alt_1,
+                     ols_final_alt_2,
+                     ols_final_alt_3,
+                     ols_final_alt_4,
+   
+                     single.row = T, type = 'html', out = './analysis/budget-models/budget_models_stairs1.html')
+
+stargazer::stargazer(ols_final_alt_5,
+                     ols_final_alt_6,
+                     ols_final_alt_7,
+                     ols_final_alt_8,
+                     
+                     single.row = T, type = 'html', out = './analysis/budget-models/budget_models_stairs2.html')
