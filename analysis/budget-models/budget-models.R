@@ -144,8 +144,9 @@ cor_mat_full <-
         select(YoY_jun_aug,
                YoY_mar_apr ,
                recovery_month_distance,
-               pioneer,
+               count_recovery,
                
+               pioneer,
                total_population_2022 ,
                urban_pct , 
                area ,
@@ -209,7 +210,8 @@ a <- d %>% select(YoY_jun_aug,
                   recovery_month_distance,
                   recovery_score,
                   recovery_score_factor,
-                    
+                  count_recovery,
+                  
                     
                     total_population_2022 ,
                     urban_pct , 
@@ -1001,3 +1003,174 @@ stargazer::stargazer(ols_final_alt_5,
                      ols_final_alt_8,
                      
                      single.row = T, type = 'html', out = './analysis/budget-models/budget_models_stairs2.html')
+
+
+
+
+
+
+
+####################### FiNAL MODELS SO FAR ####################
+YOY_full <- lm(data = d,
+                               YoY_jul_sep ~ YoY_mar_apr +
+                                 
+                                 log(total_population_2022) + 
+                                 
+                                 urban_pct + 
+                                 area + 
+                                 travel_time +
+                                 pioneer +
+                                 
+                                 Status_war_sept_ext +
+                                 
+                                 log(income_own_full_year_2021) +
+                                 train_station+
+                                 diversification_income_score +
+                                 
+                                 youth_centers + 
+                                 sex_head +
+                                 age_head +
+                                 education_head + 
+                                 incumbent +
+                                 polit_work +
+                                 enterpreuner +
+                                 rda +
+                                 turnout_2020 +
+                                 edem_total +
+                                 n_agreements_hromadas +
+                                 dfrr_executed_20_21_cat +
+                                 sum_osbb_2020_corr
+)
+
+YOY <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
+                      YoY_jul_sep ~ YoY_mar_apr +
+                        
+                        log(total_population_2022) + 
+                        
+                        urban_pct + 
+                        area + 
+                        travel_time +
+                        pioneer +
+                        
+                        Status_war_sept_ext +
+                        
+                        log(income_own_full_year_2021) +
+                        train_station+
+                        diversification_income_score +
+                        
+                        youth_centers + 
+                        sex_head +
+                        age_head +
+                        education_head + 
+                        incumbent +
+                        polit_work +
+                        enterpreuner +
+                        rda +
+                        turnout_2020 +
+                        edem_total +
+                        n_agreements_hromadas +
+                        dfrr_executed_20_21_cat +
+                        sum_osbb_2020_corr
+)
+
+Ordinal_recovery <- polr(data = subset(d, Status_war_sept_ext != "occupied"), Hess = TRUE ,
+                                   recovery_score_factor ~ YoY_mar_apr +
+                                     
+                                     log(total_population_2022) + 
+                                     
+                                     urban_pct + 
+                                     area + 
+                                     travel_time +
+                                     pioneer +
+                                     
+                                     Status_war_sept_ext +
+                                     
+                                 log(income_own_full_year_2021) +
+                                 train_station+
+                                     diversification_income_score+
+                                     
+                                     youth_centers + 
+                                     sex_head +
+                                     age_head +
+                                     education_head + 
+                                     incumbent +
+                                     polit_work +
+                                     enterpreuner +
+                                     rda +
+                                     turnout_2020 +
+                                     edem_total +
+                                     n_agreements_hromadas +
+                                     dfrr_executed_20_21_cat +
+                                     sum_osbb_2020_corr
+                                   
+                                   
+)
+summary(Ordinal_final_recovery_alt)
+modelsummary(Ordinal_final_recovery_alt, stars = TRUE)
+
+COUNT_full <- lm(data = d,
+                                        count_recovery ~ YoY_mar_apr +
+                                          
+                                          log(total_population_2022) + 
+                                          
+                                          urban_pct + 
+                                          area + 
+                                          travel_time +
+                                          pioneer +
+                                          
+                                          Status_war_sept_ext +
+                                          
+                                          log(income_own_full_year_2021) +
+                                          train_station+
+                                          diversification_income_score +
+                                          
+                                          youth_centers + 
+                                          sex_head +
+                                          age_head +
+                                          education_head + 
+                                          incumbent +
+                                          polit_work +
+                                          enterpreuner +
+                                          rda +
+                                          turnout_2020 +
+                                          edem_total +
+                                          n_agreements_hromadas +
+                                          dfrr_executed_20_21_cat +
+                                          sum_osbb_2020_corr
+)
+COUNT <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
+                               count_recovery ~ YoY_mar_apr +
+                                 
+                                 log(total_population_2022) + 
+                                 
+                                 urban_pct + 
+                                 area + 
+                                 travel_time +
+                                 pioneer +
+                                 
+                                 Status_war_sept_ext +
+                                 
+                                 log(income_own_full_year_2021) +
+                                 train_station+
+                                 diversification_income_score +
+                                 
+                                 youth_centers + 
+                                 sex_head +
+                                 age_head +
+                                 education_head + 
+                                 incumbent +
+                                 polit_work +
+                                 enterpreuner +
+                                 rda +
+                                 turnout_2020 +
+                                 edem_total +
+                                 n_agreements_hromadas +
+                                 dfrr_executed_20_21_cat +
+                                 sum_osbb_2020_corr
+)
+
+stargazer::stargazer(YOY_full,
+                     YOY,
+                     COUNT_full,
+                     COUNT,
+                     single.row = T, type = 'html', out = './analysis/budget-models/budget_models_DRAFT_FINAL.html')

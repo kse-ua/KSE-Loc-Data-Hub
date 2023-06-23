@@ -692,10 +692,32 @@ d_5_add_CPI_dist <- ds_5_add_CPI_1 %>%
   mutate(recovery_month_distance = ifelse(year %in% c(2022, 2023, 2024), (year - 2022) * 12 + month - 3, NA)) %>%
   select(hromada_code, recovery_month_distance)
 
+d_5_add_CPI_dist_alt <- ds_5_add_CPI_1 %>%
+  filter(year >= 2021) %>%
+  group_by(hromada_code) %>%
+  mutate(recovery_month_distance_2 = ifelse(
+    (year == 2022 & month >= 3 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) &
+      ((lead(revenue_own_no_mil_tax_const, 1) > revenue_own_no_mil_tax_const) &
+         (lead(revenue_own_no_mil_tax_const, 2) > revenue_own_no_mil_tax_const)),
+    (year - 2022) * 12 + month - 3,
+    NA
+  )) %>%
+  filter(!is.na(recovery_month_distance_2)) %>%
+  slice_head(n = 1) %>%
+  ungroup() %>%
+  select(hromada_code, recovery_month_distance_2)
 
-# Join with the original dataframe to include all settlements
-d_5_add_CPI_dist_upd <- ds_5_add_CPI %>%
-  left_join(d_5_add_CPI_dist, by = "hromada_code")
+
+d_5_add_CPI_dist_add <- ds_5_add_CPI_short %>%
+  group_by(hromada_code, month) %>%
+  filter((year == 2022 & month >= 3 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
+           (year == 2023 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
+           (year == 2024 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021])) %>%
+  group_by(hromada_code) %>% summarise(count_recovery = n())
+
+
+
+
 
 # View the result
 
@@ -713,7 +735,12 @@ ds5_final <- ds5_long %>%
            pdfo_own_prop^2 +
            unified_tax_own_prop^2 +
            property_tax_own_prop^2
-           )
+           ) %>%
+  left_join(d_5_add_CPI_dist_add, by = "hromada_code") %>%
+  left_join(d_5_add_CPI_dist_alt, by = "hromada_code") %>%
+  mutate(count_recovery = case_when(!is.na(count_recovery) ~ count_recovery,
+                                     is.na(count_recovery) ~ 0))
+  
 
 cases_up_down <- ds_5_add_CPI_short %>%
   group_by(hromada_code, year, month) %>%
