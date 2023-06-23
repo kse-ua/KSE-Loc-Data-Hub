@@ -158,15 +158,15 @@ ds1_heads <-
   mutate(
     sex_head = factor(sex_head, labels = c("female", "male"))
     ,education_head = case_when(
-      education_head == "îñâ³òà âèùà" ~ "higher"
-      ,education_head != "îñâ³òà âèùà" ~ "non-higher"
+      education_head == "Ð¾ÑÐ²Ñ–Ñ‚Ð° Ð²Ð¸Ñ‰Ð°" ~ "higher"
+      ,TRUE ~ "non-higher"
     )
     ,party_national_winner = case_when(
-      party == 'Ñëóãà íàðîäó' ~ 1,
+      party == "Ð¡Ð»ÑƒÐ³Ð° Ð½Ð°Ñ€Ð¾Ð´Ñƒ" ~ 1,
       TRUE ~ 0
     )
     ,no_party = case_when(
-      party == 'Ñàìîâèñóâàííÿ' ~ 1
+      party == "Ð¡Ð°Ð¼Ð¾Ð²Ð¸ÑÑƒÐ²Ð°Ð½Ð½Ñ" ~ 1
       ,TRUE ~ 0
     )
     ,male = case_when(
@@ -213,9 +213,9 @@ hromadas_oblast_centers <-
 
 d1 <- 
   ds_hromada %>% 
-  filter(!oblast_name == "Àâòîíîìíà Ðåñïóáë³êà Êðèì") %>% 
+  filter(!oblast_name == "ÐÐ²Ñ‚Ð¾Ð½Ð¾Ð¼Ð½Ð° Ð ÐµÑÐ¿ÑƒÐ±Ð»Ñ–ÐºÐ° ÐšÑ€Ð¸Ð¼") %>% 
   mutate(
-    hromada_full_name = paste(hromada_name, type, "ãðîìàäà")
+    hromada_full_name = paste(hromada_name, type, "Ð³Ñ€Ð¾Ð¼Ð°Ð´Ð°")
     ,oblast_center = ifelse(hromada_code %in% hromadas_oblast_centers, 1, 0)
   ) %>% 
   left_join(
@@ -314,13 +314,18 @@ d1 <-
     ,by = c("hromada_code"="cod_3")
   )
 
+d1_public <- 
+  d1 %>% 
+  select(-(ds1_heads %>% select(-hromada_code, -turnout_2020) %>%  colnames()))
 
 #TO-DO: add big taxpayers
 #TO-DO: add dates of creation + status based on military actions/occupation (DONE)
 
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
-readr::write_csv(d1, "./data-public/derived/full_dataset.csv")
+
+readr::write_csv(d1_public, "./data-public/derived/full_dataset.csv")
+readr::write_csv(d1, "./data-private/derived/full_dataset.csv")
 
 
 
