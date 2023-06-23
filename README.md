@@ -35,7 +35,7 @@ The repository has the following structure:
 | Tymofii Brik      | Lead Researcher                                                 |            |
 | Andriy Darkovich  | Research Assistant                                              |            |
 | Valentyn Hatsko   | Data Analyst                                                    | valgat29   |
-| Andriy Koval      | Statistical modeling, data visualization, reproducible research | andkov     |
+| Andriy Koval      | Reproducible Research                                           | andkov     |
 | Maryna Rabinovych | Senior Researcher                                               |            |
 | Myroslava Savisko | Project Manager                                                 | splanetina |
 | Serhii Tytiuk     | Data Analyst                                                    | tytser     |
