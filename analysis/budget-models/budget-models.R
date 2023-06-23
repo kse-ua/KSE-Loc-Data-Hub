@@ -91,8 +91,25 @@ d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021*1000/to
                                              recovery_month_distance >= 13 |
                                                is.na (recovery_month_distance) ~ 0
                   ),
-                  recovery_score_factor =  factor(recovery_score))
+                  recovery_score_factor =  factor(recovery_score),
+                  sex_head_0_1 = case_when(sex_head == "male" ~ 0,
+                                           sex_head == "female" ~ 1),
+                  recovery_count_score = case_when(
+                                                   count_recovery == 1~ 1,
+                                                   count_recovery == 2~ 2,
+                                                   count_recovery == 3~ 3,
+                                                   count_recovery == 4~ 4,
+                                                   count_recovery == 5~ 5,
+                                                   count_recovery == 6~ 6,
+                                                   count_recovery == 7~ 7,
+                                                   count_recovery == 8~ 8,
+                                                   count_recovery == 9~ 9,
+                                                   count_recovery == 0 |
+                                               is.na (recovery_month_distance) ~ 0
+                  ),
+                  recovery_count_score_factor =  factor(recovery_count_score))
 levels(d$recovery_score_factor) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13")
+levels(d$recovery_count_score_factor) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 
 fast_recovery <- subset(d, recovery_month_distance <= 2)
 mid_recovery <- subset(d, recovery_month_distance <= 6 & recovery_month_distance > 2)
@@ -141,7 +158,7 @@ recovery_types <- d %>% mutate(recovery_type = as.factor(case_when(recovery_mont
 
 cor_mat_full <- 
   cor(d %>% 
-        select(YoY_jun_aug,
+        dplyr::select(YoY_jun_aug,
                YoY_mar_apr ,
                recovery_month_distance,
                count_recovery,
@@ -161,7 +178,7 @@ cor_mat_full <-
                diversification_income_score,
                own_income_prop_full_year ,
                income_own_2021_per_capita,
-               income_own_2021 ,
+               income_own_full_year_2021 ,
                dfrr_executed_per_capita,
                dfrr_executed ,    # a lot of NA
                dfrr_executed_corr_per_capita,
@@ -173,6 +190,7 @@ cor_mat_full <-
                youth_centers ,
                business_support_centers ,
                age_head ,
+               sex_head_0_1, 
                incumbent ,
                polit_work ,
                rda ,
@@ -1174,3 +1192,74 @@ stargazer::stargazer(YOY_full,
                      COUNT_full,
                      COUNT,
                      single.row = T, type = 'html', out = './analysis/budget-models/budget_models_DRAFT_FINAL.html')
+
+
+Ordinal_recovery_count <- polr(data = d, Hess = TRUE ,
+                               recovery_count_score_factor ~ YoY_mar_apr +
+                           
+                           log(total_population_2022) + 
+                           
+                           urban_pct + 
+                           area + 
+                           travel_time +
+                           pioneer +
+                           
+                           Status_war_sept_ext +
+                           
+                           log(income_own_full_year_2021) +
+                           train_station+
+                           diversification_income_score+
+                           
+                           youth_centers + 
+                           sex_head +
+                           age_head +
+                           education_head + 
+                           incumbent +
+                           polit_work +
+                           enterpreuner +
+                           rda +
+                           turnout_2020 +
+                           edem_total +
+                           n_agreements_hromadas +
+                           dfrr_executed_20_21_cat +
+                           sum_osbb_2020_corr
+                         
+                         
+)
+summary(Ordinal_recovery_count)
+modelsummary(Ordinal_recovery_count, stars = TRUE)
+
+Ordinal_recovery_count_limited <- polr(data = subset(d, region_en == c("Center" , "West")), Hess = TRUE ,
+                               recovery_count_score_factor ~ YoY_mar_apr +
+                                 
+                                 log(total_population_2022) + 
+                                 
+                                 urban_pct + 
+                                 area + 
+                                 travel_time +
+                                 pioneer +
+                                 
+                                 Status_war_sept_ext +
+                                 
+                                 log(income_own_full_year_2021) +
+                                 train_station+
+                                 diversification_income_score+
+                                 
+                                 youth_centers + 
+                                 sex_head +
+                                 age_head +
+                                 education_head + 
+                                 incumbent +
+                                 polit_work +
+                                 enterpreuner +
+                                 rda +
+                                 turnout_2020 +
+                                 edem_total +
+                                 n_agreements_hromadas +
+                                 dfrr_executed_20_21_cat +
+                                 sum_osbb_2020_corr
+                               
+                               
+)
+summary(Ordinal_recovery_count_limited)
+modelsummary(Ordinal_recovery_count_limited, stars = TRUE)
