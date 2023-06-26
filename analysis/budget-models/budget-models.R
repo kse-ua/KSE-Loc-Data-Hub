@@ -234,6 +234,29 @@ cor_mat <-
       ,use = "complete.obs")
 corrplot::corrplot(cor_mat, tl.col = "black",tl.cex = 1, addCoef.col = "black", number.cex=1, order = "FPC")
 
+cor_mat_1 <-   cor(d %>% filter(Status_war_sept_ext != "occupied") %>% dplyr::
+        select(diversification_income_score,
+               pdfo_own_prop,
+               unified_tax_own_prop,
+               rent_own_prop,
+               corporate_tax_own_prop,
+               property_tax_own_prop,
+               parking_fee_own_prop,
+               tourist_fee_own_prop,
+               eco_tax_own_prop,
+               non_tax_own_prop,
+               capital_proceedings_own_prop,
+               special_funds_own_prop,
+               excise_duty_own_prop,
+               income_own_full_year_2021,
+               income_own_2021_per_capita,
+               own_income_prop_full_year,
+               pdfo_prop
+        )
+      ,use = "complete.obs")
+corrplot::corrplot(cor_mat_1, tl.col = "black",tl.cex = 1,  number.cex=1, order = "FPC")
+
+
 a <- d %>% dplyr::select(YoY_jun_aug,
                   YoY_mar_apr ,
                   YoY_jul_sep,
@@ -1061,8 +1084,8 @@ YOY_7_9 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                         
                         log(income_own_full_year_2021) +
                         train_station+
-                        diversification_income_score +
-                        
+                log(diversification_income_score) +
+                
                         youth_centers + 
                         sex_head +
                         age_head +
@@ -1092,8 +1115,8 @@ YOY_10_12 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                 
                 log(income_own_full_year_2021) +
                 train_station+
-                diversification_income_score +
-                
+                  log(diversification_income_score) +
+                  
                 youth_centers + 
                 sex_head +
                 age_head +
@@ -1123,8 +1146,8 @@ YOY_10_1 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                   
                   log(income_own_full_year_2021) +
                   train_station+
-                  diversification_income_score +
-                  
+                 log(diversification_income_score) +
+                 
                   youth_centers + 
                   sex_head +
                   age_head +
@@ -1154,8 +1177,8 @@ YOY_5_2 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                  
                  log(income_own_full_year_2021) +
                  train_station+
-                 diversification_income_score +
-                 
+                log(diversification_income_score) +
+                
                  youth_centers + 
                  sex_head +
                  age_head +
@@ -1185,8 +1208,8 @@ Recovery <- glm(data = subset(d, Status_war_sept_ext != "occupied"), family = "b
                 
                 log(income_own_full_year_2021) +
                 train_station+
-                diversification_income_score +
-                
+                 log(diversification_income_score) +
+                 
                 youth_centers + 
                 sex_head +
                 age_head +
@@ -1224,8 +1247,8 @@ Ordinal_recovery <- polr(data = subset(d, Status_war_sept_ext != "occupied"), He
                                      
                                  log(income_own_full_year_2021) +
                                  train_station+
-                                     diversification_income_score+
-                                     
+                           log(diversification_income_score) +
+                           
                                      youth_centers + 
                                      sex_head +
                                      age_head +
@@ -1260,8 +1283,8 @@ Ordinal_recovery_count <- polr(data = subset(d, Status_war_sept_ext != "occupied
                            
                            log(income_own_full_year_2021) +
                            train_station+
-                           diversification_income_score+
-                           
+                             log(diversification_income_score) +
+                             
                            youth_centers + 
                            sex_head +
                            age_head +
@@ -1280,6 +1303,13 @@ Ordinal_recovery_count <- polr(data = subset(d, Status_war_sept_ext != "occupied
 )
 summary(Ordinal_recovery_count)
 modelsummary(Ordinal_recovery_count, stars = TRUE)
+ctable <- round(coef(summary(Ordinal_recovery_count)),4)
+p <- round((pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2),4)
+## combined table
+results_Ordinal_recovery_count <- (ctable <- cbind(ctable, "p value" = p))
+stargazer::stargazer(results_Ordinal_recovery_count,
+                                single.row = T, type = 'html', out = './analysis/budget-models/budget_models_RECOVERY_COUNT.html')
+
 
 Ordinal_recovery_distance_2 <- polr(data = subset(d, Status_war_sept_ext != "occupied"), Hess = TRUE ,
                                     recovery_distance_2_factor ~ YoY_mar_apr +
@@ -1295,8 +1325,8 @@ Ordinal_recovery_distance_2 <- polr(data = subset(d, Status_war_sept_ext != "occ
                                  
                                  log(income_own_full_year_2021) +
                                  train_station+
-                                 diversification_income_score+
-                                 
+                                   log(diversification_income_score) +
+                                   
                                  youth_centers + 
                                  sex_head +
                                  age_head +

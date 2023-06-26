@@ -185,7 +185,7 @@ ds4_long <-
     ,unified_tax = str_detect(tax_code, "^1805.+")
     ,property_tax = str_detect(tax_code, "^1801.+")
     ,excise_duty = str_detect(tax_code, "^140.+")
-    ,corporate_tax = str_detect(tax_code, "^11020200.+")
+    ,corporate_tax = str_detect(tax_code, "^1102.+")
     ,parking_fee = str_detect(tax_code, "^1802.+")
     ,tourist_fee = str_detect(tax_code, "^1803.+")
     ,eco_tax = str_detect(tax_code, "^1901.+")
@@ -306,11 +306,18 @@ ds4_long_a <-
     #,target_segment = month %in% c(3:7) & year %in% c(2021, 2022) # i think
     # this should be done after data at the most granualar level are processed
     ,military_tax = tax_code %in% c('11010200')
-    ,income_tax   = str_detect(tax_code, "^1101.+")
-    ,unified_tax  = str_detect(tax_code, "^1805.+")
+    ,income_tax = str_detect(tax_code, "^1101.+")
+    ,unified_tax = str_detect(tax_code, "^1805.+")
     ,property_tax = str_detect(tax_code, "^1801.+")
-    ,excise_duty  = str_detect(tax_code, "^140.+")
+    ,excise_duty = str_detect(tax_code, "^140.+")
     ,corporate_tax = str_detect(tax_code, "^1102.+")
+    ,parking_fee = str_detect(tax_code, "^1802.+")
+    ,tourist_fee = str_detect(tax_code, "^1803.+")
+    ,eco_tax = str_detect(tax_code, "^1901.+")
+    ,non_tax = str_detect(tax_code, "^2.+")
+    ,capital_proceedings = str_detect(tax_code, "^3.+")
+    ,special_funds = str_detect(tax_code, "^5.+")
+    ,rent = str_detect(tax_code, "^130.+")
   )
 
 ds4_long %>% glimpse(80)
@@ -319,14 +326,21 @@ ds5_long_temp <-
   ds4_long_a %>%
   group_by(budget_code, budget_name, year, month, date) %>%
   summarize(
-    income_total         = sum(amount, na.rm = T)
-    ,income_transfert    = sum(amount*transfert, na.rm = T)
-    ,income_military     = sum(amount*military_tax, na.rm = T)
-    ,income_pdfo         = sum(amount*income_tax, na.rm = T)
-    ,income_unified_tax  = sum(amount*unified_tax, na.rm = T)
+    income_total = sum(amount, na.rm = T)
+    ,income_transfert = sum(amount*transfert, na.rm = T)
+    ,income_military = sum(amount*military_tax, na.rm = T)
+    ,income_pdfo = sum(amount*income_tax, na.rm = T)
+    ,income_unified_tax = sum(amount*unified_tax, na.rm = T)
     ,income_property_tax = sum(amount*property_tax, na.rm = T)
-    ,income_excise_duty  = sum(amount*excise_duty, na.rm = T)
+    ,income_excise_duty = sum(amount*excise_duty, na.rm = T)
     ,income_corporate_tax = sum(amount*corporate_tax, na.rm = T)
+    ,income_parking_fee = sum(amount*parking_fee, na.rm = T)
+    ,income_tourist_fee = sum(amount*tourist_fee, na.rm = T)
+    ,income_eco_tax = sum(amount*eco_tax, na.rm = T)
+    ,income_non_tax = sum(amount*non_tax, na.rm = T)
+    ,income_capital_proceedings = sum(amount*capital_proceedings, na.rm = T)
+    ,income_special_funds = sum(amount*special_funds, na.rm = T)
+    ,income_rent = sum(amount*rent, na.rm = T)
     ,.groups = "drop"
   ) %>% 
   ungroup() %>% 
@@ -500,7 +514,37 @@ a <- ds5_long_temp %>%
          income_own_no_military_tax = income_own - income_military,
          income_own_no_military_tax_corp_tax = income_own - income_military - income_corporate_tax)
 
-i <- a %>% group_by(year, month) %>% summarise(x = sum(income_corporate_tax, na.rm=TRUE))
+
+
+info_income_structure <- a %>% mutate(month = as.numeric(month)) %>%
+  group_by(year, month) %>% summarise(pdfo_prop = round((sum(income_pdfo, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,unified_tax_prop = round((sum(income_unified_tax, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,property_tax_prop = round((sum(income_property_tax, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,excise_duty_prop = round((sum(income_excise_duty, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,rent_prop = round((sum(income_rent, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,non_tax_prop = round((sum(income_non_tax, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,corporate_tax_prop = round((sum(income_corporate_tax, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                               ,parking_fee_prop = round((sum(income_parking_fee, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                               ,tourist_fee_prop = round((sum(income_tourist_fee, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                               ,eco_tax_prop = round((sum(income_eco_tax, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                               ,capital_proceedings_prop = round((sum(income_capital_proceedings, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                               ,special_funds_prop = round((sum(income_special_funds, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                               )
+info_own_income_structure <- a %>% mutate(month = as.numeric(month)) %>%
+  group_by(year, month) %>% summarise(pdfo_prop = round((sum(income_pdfo, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,unified_tax_prop = round((sum(income_unified_tax, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,property_tax_prop = round((sum(income_property_tax, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,excise_duty_prop = round((sum(income_excise_duty, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,rent_prop = round((sum(income_rent, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,non_tax_prop = round((sum(income_non_tax, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,corporate_tax_prop = round((sum(income_corporate_tax, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,parking_fee_prop = round((sum(income_parking_fee, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,tourist_fee_prop = round((sum(income_tourist_fee, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,eco_tax_prop = round((sum(income_eco_tax, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,capital_proceedings_prop = round((sum(income_capital_proceedings, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+                                      ,special_funds_prop = round((sum(income_special_funds, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
+  )
+
 
 b <- a %>%
   group_by(budget_code) %>%
@@ -767,17 +811,17 @@ d_5_add_CPI_dist_add <- ds_5_add_CPI_short %>%
 ds5_final <- ds5_long %>%
   left_join(c, by = c("budget_code","year")) %>%
   left_join(d_5_add_CPI_dist, by = "hromada_code") %>%
-  mutate(diversification_income_score = corporate_tax_own_prop^2 +
-           parking_fee_own_prop^2 +
-           tourist_fee_own_prop^2 +
-           eco_tax_own_prop^2 +
-           non_tax_own_prop^2 +
-           capital_proceedings_own_prop^2 +
-           special_funds_own_prop^2 +
-           excise_duty_own_prop^2 +
-           pdfo_own_prop^2 +
-           unified_tax_own_prop^2 +
-           property_tax_own_prop^2
+  mutate(diversification_income_score = (corporate_tax_own_prop*100)^2 +
+           (parking_fee_own_prop*100)^2 +
+           (tourist_fee_own_prop*100)^2 +
+           (eco_tax_own_prop*100)^2 +
+           (non_tax_own_prop*100)^2 +
+           (capital_proceedings_own_prop*100)^2 +
+           (special_funds_own_prop*100)^2 +
+           (excise_duty_own_prop*100)^2 +
+           (pdfo_own_prop*100)^2 +
+           (unified_tax_own_prop*100)^2 +
+           (property_tax_own_prop*100)^2
            ) %>%
   left_join(d_5_add_CPI_dist_add, by = "hromada_code") %>%
   left_join(d_5_add_CPI_dist_alt, by = "hromada_code") %>%
