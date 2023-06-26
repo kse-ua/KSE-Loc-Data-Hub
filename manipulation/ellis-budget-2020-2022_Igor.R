@@ -530,13 +530,53 @@ b <- a %>%
                                                      (income_own_no_military_tax[month=="9"&year==2021]+
                                                         income_own_no_military_tax[month=="8"&year==2021]+
                                                         income_own_no_military_tax[month=="7"&year==2021]))-1)*100),
+         
+         own_income_no_mil_change_YoY_oct_jan = ((((income_own_no_military_tax[month=="10"&year==2022]+
+                                                      income_own_no_military_tax[month=="11"&year==2022]+
+                                                      income_own_no_military_tax[month=="12"&year==2022]+
+                                                      income_own_no_military_tax[month=="1"&year==2023]) / 
+                                                     (income_own_no_military_tax[month=="10"&year==2021]+
+                                                        income_own_no_military_tax[month=="11"&year==2021]+
+                                                        income_own_no_military_tax[month=="12"&year==2021]+
+                                                        income_own_no_military_tax[month=="1"&year==2022]))-1)*100),
+         own_income_no_mil_change_YoY_oct_dec = ((((income_own_no_military_tax[month=="10"&year==2022]+
+                                                      income_own_no_military_tax[month=="11"&year==2022]+
+                                                      income_own_no_military_tax[month=="12"&year==2022]) / 
+                                                     (income_own_no_military_tax[month=="10"&year==2021]+
+                                                        income_own_no_military_tax[month=="11"&year==2021]+
+                                                        income_own_no_military_tax[month=="12"&year==2021]))-1)*100),
+         own_income_no_mil_change_YoY_may_feb = ((((income_own_no_military_tax[month=="5"&year==2022]+
+                                                      income_own_no_military_tax[month=="6"&year==2022]+
+                                                      income_own_no_military_tax[month=="7"&year==2022]+
+                                                      income_own_no_military_tax[month=="8"&year==2022]+
+                                                      income_own_no_military_tax[month=="9"&year==2022]+
+                                                      income_own_no_military_tax[month=="10"&year==2022]+
+                                                      income_own_no_military_tax[month=="11"&year==2022]+
+                                                      income_own_no_military_tax[month=="12"&year==2022]+
+                                                      income_own_no_military_tax[month=="1"&year==2023]+
+                                                      income_own_no_military_tax[month=="2"&year==2023]) / 
+                                                     
+                                                     (income_own_no_military_tax[month=="5"&year==2021]+
+                                                        income_own_no_military_tax[month=="6"&year==2021]+
+                                                        income_own_no_military_tax[month=="7"&year==2021]+
+                                                        income_own_no_military_tax[month=="8"&year==2021]+
+                                                        income_own_no_military_tax[month=="9"&year==2021]+
+                                                        income_own_no_military_tax[month=="10"&year==2021]+
+                                                        income_own_no_military_tax[month=="11"&year==2021]+
+                                                        income_own_no_military_tax[month=="12"&year==2021]+
+                                                        income_own_no_military_tax[month=="1"&year==2022]+
+                                                        income_own_no_military_tax[month=="2"&year==2022]))-1)*100),
+         
          own_income_no_mil_change_YoY_adapt = own_income_no_mil_change_YoY_jul_sep - own_income_no_mil_change_YoY_mar_apr,
          own_income_no_mil_change_YoY_jun_aug = case_when(own_income_no_mil_change_YoY_jun_aug <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_jun_aug),
          own_income_no_mil_change_YoY_mar_may = case_when(own_income_no_mil_change_YoY_mar_may <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_mar_may),
          own_income_no_mil_change_YoY_mar_apr = case_when(own_income_no_mil_change_YoY_mar_apr <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_mar_apr),
          own_income_no_mil_change_YoY_jan_feb = case_when(own_income_no_mil_change_YoY_jan_feb <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_jan_feb),
-         own_income_no_mil_change_YoY_jul_sep = case_when(own_income_no_mil_change_YoY_jul_sep <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_jul_sep)
-
+         own_income_no_mil_change_YoY_jul_sep = case_when(own_income_no_mil_change_YoY_jul_sep <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_jul_sep),
+         own_income_no_mil_change_YoY_oct_jan = case_when(own_income_no_mil_change_YoY_oct_jan <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_oct_jan),
+         own_income_no_mil_change_YoY_oct_dec = case_when(own_income_no_mil_change_YoY_oct_dec <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_oct_dec),
+         own_income_no_mil_change_YoY_may_feb = case_when(own_income_no_mil_change_YoY_may_feb <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_may_feb),
+         
          ) %>%
   group_by(budget_code, year) %>%
   mutate(income_own_full_year = sum(income_own, na.rm = TRUE),
@@ -573,6 +613,9 @@ c <- b %>%
          own_income_no_mil_change_YoY_mar_may,
          own_income_no_mil_change_YoY_jun_aug,
          own_income_no_mil_change_YoY_jul_sep,
+         own_income_no_mil_change_YoY_oct_jan,
+         own_income_no_mil_change_YoY_oct_dec,
+         own_income_no_mil_change_YoY_may_feb,
          own_income_no_mil_change_YoY_adapt,
          income_own_full_year,
          own_income_prop_full_year)

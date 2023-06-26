@@ -158,15 +158,15 @@ ds1_heads <-
   mutate(
     sex_head = factor(sex_head, labels = c("female", "male"))
     ,education_head = case_when(
-      education_head == "Ð¾ÑÐ²Ñ–Ñ‚Ð° Ð²Ð¸Ñ‰Ð°" ~ "higher"
+      education_head == "îñâ³òà âèùà" ~ "higher"
       ,TRUE ~ "non-higher"
     )
     ,party_national_winner = case_when(
-      party == "Ð¡Ð»ÑƒÐ³Ð° Ð½Ð°Ñ€Ð¾Ð´Ñƒ" ~ 1,
+      party == "Ñëóãà íàðîäó" ~ 1,
       TRUE ~ 0
     )
     ,no_party = case_when(
-      party == "Ð¡Ð°Ð¼Ð¾Ð²Ð¸ÑÑƒÐ²Ð°Ð½Ð½Ñ" ~ 1
+      party == "Ñàìîâèñóâàííÿ" ~ 1
       ,TRUE ~ 0
     )
     ,male = case_when(
@@ -213,9 +213,9 @@ hromadas_oblast_centers <-
 
 d1 <- 
   ds_hromada %>% 
-  filter(!oblast_name == "ÐÐ²Ñ‚Ð¾Ð½Ð¾Ð¼Ð½Ð° Ð ÐµÑÐ¿ÑƒÐ±Ð»Ñ–ÐºÐ° ÐšÑ€Ð¸Ð¼") %>% 
+  filter(!oblast_name == "Àâòîíîìíà Ðåñïóáë³êà Êðèì") %>% 
   mutate(
-    hromada_full_name = paste(hromada_name, type, "Ð³Ñ€Ð¾Ð¼Ð°Ð´Ð°")
+    hromada_full_name = paste(hromada_name, type, "ãðîìàäà")
     ,oblast_center = ifelse(hromada_code %in% hromadas_oblast_centers, 1, 0)
   ) %>% 
   left_join(

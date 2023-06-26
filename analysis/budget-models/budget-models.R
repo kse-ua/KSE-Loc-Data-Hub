@@ -47,13 +47,16 @@ data_cache_folder <- prints_folder # to sink modeling steps
 
 # ---- load-data ---------------------------------------------------------------
 # the product of ./manipulation/ellis-general.R
-d <- readr::read_csv("./data-public/derived/full_dataset.csv")
+d <- readr::read_csv("./data-private/derived/full_dataset.csv")
 d <- d %>% 
   rename("YoY_mar_may" = "own_income_no_mil_change_YoY_mar_may",
          "YoY_jan_feb" = "own_income_no_mil_change_YoY_jan_feb",
          "YoY_mar_apr" = "own_income_no_mil_change_YoY_mar_apr",
          "YoY_jun_aug" = "own_income_no_mil_change_YoY_jun_aug",
          "YoY_jul_sep" = "own_income_no_mil_change_YoY_jul_sep",
+         "YoY_oct_jan" = "own_income_no_mil_change_YoY_oct_jan",
+         "YoY_oct_dec" = "own_income_no_mil_change_YoY_oct_dec",
+         "YoY_may_feb" = "own_income_no_mil_change_YoY_may_feb",
          "YoY_adapt" = "own_income_no_mil_change_YoY_adapt",
          "income_own_2021" = "income_own",
          "income_own_full_year_2021" = "income_own_full_year")
@@ -107,9 +110,12 @@ d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021*1000/to
                                                    count_recovery == 0 |
                                                is.na (recovery_month_distance) ~ 0
                   ),
-                  recovery_count_score_factor =  factor(recovery_count_score))
+                  recovery_count_score_factor =  factor(recovery_count_score),
+                  
+                  recovery_distance_2_factor =  factor(recovery_month_distance_2))
 levels(d$recovery_score_factor) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13")
 levels(d$recovery_count_score_factor) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+levels(d$recovery_distance_2_factor) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 
 fast_recovery <- subset(d, recovery_month_distance <= 2)
 mid_recovery <- subset(d, recovery_month_distance <= 6 & recovery_month_distance > 2)
@@ -160,6 +166,10 @@ cor_mat_full <-
   cor(d %>% 
         dplyr::select(YoY_jun_aug,
                YoY_mar_apr ,
+               YoY_oct_jan,
+               YoY_oct_dec,
+               YoY_may_feb,
+               
                recovery_month_distance,
                count_recovery,
                
@@ -225,11 +235,14 @@ corrplot::corrplot(cor_mat, tl.col = "black",tl.cex = 1, addCoef.col = "black", 
 a <- d %>% select(YoY_jun_aug,
                   YoY_mar_apr ,
                   YoY_jul_sep,
+                  YoY_oct_jan,
+                  YoY_oct_dec,
+                  YoY_may_feb,
                   recovery_month_distance,
                   recovery_score,
                   recovery_score_factor,
                   count_recovery,
-                  
+                  recovery_distance_2_factor,
                     
                     total_population_2022 ,
                     urban_pct , 
@@ -1029,38 +1042,10 @@ stargazer::stargazer(ols_final_alt_5,
 
 
 ####################### FiNAL MODELS SO FAR ####################
-YOY_full <- lm(data = d,
-                               YoY_jul_sep ~ YoY_mar_apr +
-                                 
-                                 log(total_population_2022) + 
-                                 
-                                 urban_pct + 
-                                 area + 
-                                 travel_time +
-                                 pioneer +
-                                 
-                                 Status_war_sept_ext +
-                                 
-                                 log(income_own_full_year_2021) +
-                                 train_station+
-                                 diversification_income_score +
-                                 
-                                 youth_centers + 
-                                 sex_head +
-                                 age_head +
-                                 education_head + 
-                                 incumbent +
-                                 polit_work +
-                                 enterpreuner +
-                                 rda +
-                                 turnout_2020 +
-                                 edem_total +
-                                 n_agreements_hromadas +
-                                 dfrr_executed_20_21_cat +
-                                 sum_osbb_2020_corr
-)
+library(MASS)
+library(modelsummary)
 
-YOY <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
+YOY_7_9 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                       YoY_jul_sep ~ YoY_mar_apr +
                         
                         log(total_population_2022) + 
@@ -1090,6 +1075,106 @@ YOY <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                         dfrr_executed_20_21_cat +
                         sum_osbb_2020_corr
 )
+
+YOY_10_12 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
+                YoY_oct_dec ~ YoY_mar_apr +
+                
+                log(total_population_2022) + 
+                
+                urban_pct + 
+                area + 
+                travel_time +
+                pioneer +
+                
+                Status_war_sept_ext +
+                
+                log(income_own_full_year_2021) +
+                train_station+
+                diversification_income_score +
+                
+                youth_centers + 
+                sex_head +
+                age_head +
+                education_head + 
+                incumbent +
+                polit_work +
+                enterpreuner +
+                rda +
+                turnout_2020 +
+                edem_total +
+                n_agreements_hromadas +
+                dfrr_executed_20_21_cat +
+                sum_osbb_2020_corr
+)
+
+YOY_10_1 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
+                YoY_oct_jan ~ YoY_mar_apr +
+                  
+                  log(total_population_2022) + 
+                  
+                  urban_pct + 
+                  area + 
+                  travel_time +
+                  pioneer +
+                  
+                  Status_war_sept_ext +
+                  
+                  log(income_own_full_year_2021) +
+                  train_station+
+                  diversification_income_score +
+                  
+                  youth_centers + 
+                  sex_head +
+                  age_head +
+                  education_head + 
+                  incumbent +
+                  polit_work +
+                  enterpreuner +
+                  rda +
+                  turnout_2020 +
+                  edem_total +
+                  n_agreements_hromadas +
+                  dfrr_executed_20_21_cat +
+                  sum_osbb_2020_corr
+)
+
+YOY_5_2 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
+              YoY_may_feb ~ YoY_mar_apr +
+                 
+                 log(total_population_2022) + 
+                 
+                 urban_pct + 
+                 area + 
+                 travel_time +
+                 pioneer +
+                 
+                 Status_war_sept_ext +
+                 
+                 log(income_own_full_year_2021) +
+                 train_station+
+                 diversification_income_score +
+                 
+                 youth_centers + 
+                 sex_head +
+                 age_head +
+                 education_head + 
+                 incumbent +
+                 polit_work +
+                 enterpreuner +
+                 rda +
+                 turnout_2020 +
+                 edem_total +
+                 n_agreements_hromadas +
+                 dfrr_executed_20_21_cat +
+                 sum_osbb_2020_corr
+)
+
+stargazer::stargazer(YOY_7_9,
+                     YOY_10_12,
+                     YOY_10_1,
+                     YOY_5_2,
+                     single.row = T, type = 'html', out = './analysis/budget-models/budget_models_DRAFT_FINAL.html')
+
 
 Ordinal_recovery <- polr(data = subset(d, Status_war_sept_ext != "occupied"), Hess = TRUE ,
                                    recovery_score_factor ~ YoY_mar_apr +
@@ -1123,78 +1208,11 @@ Ordinal_recovery <- polr(data = subset(d, Status_war_sept_ext != "occupied"), He
                                    
                                    
 )
-summary(Ordinal_final_recovery_alt)
-modelsummary(Ordinal_final_recovery_alt, stars = TRUE)
-
-COUNT_full <- lm(data = d,
-                                        count_recovery ~ YoY_mar_apr +
-                                          
-                                          log(total_population_2022) + 
-                                          
-                                          urban_pct + 
-                                          area + 
-                                          travel_time +
-                                          pioneer +
-                                          
-                                          Status_war_sept_ext +
-                                          
-                                          log(income_own_full_year_2021) +
-                                          train_station+
-                                          diversification_income_score +
-                                          
-                                          youth_centers + 
-                                          sex_head +
-                                          age_head +
-                                          education_head + 
-                                          incumbent +
-                                          polit_work +
-                                          enterpreuner +
-                                          rda +
-                                          turnout_2020 +
-                                          edem_total +
-                                          n_agreements_hromadas +
-                                          dfrr_executed_20_21_cat +
-                                          sum_osbb_2020_corr
-)
-COUNT <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
-                               count_recovery ~ YoY_mar_apr +
-                                 
-                                 log(total_population_2022) + 
-                                 
-                                 urban_pct + 
-                                 area + 
-                                 travel_time +
-                                 pioneer +
-                                 
-                                 Status_war_sept_ext +
-                                 
-                                 log(income_own_full_year_2021) +
-                                 train_station+
-                                 diversification_income_score +
-                                 
-                                 youth_centers + 
-                                 sex_head +
-                                 age_head +
-                                 education_head + 
-                                 incumbent +
-                                 polit_work +
-                                 enterpreuner +
-                                 rda +
-                                 turnout_2020 +
-                                 edem_total +
-                                 n_agreements_hromadas +
-                                 dfrr_executed_20_21_cat +
-                                 sum_osbb_2020_corr
-)
-
-stargazer::stargazer(YOY_full,
-                     YOY,
-                     COUNT_full,
-                     COUNT,
-                     single.row = T, type = 'html', out = './analysis/budget-models/budget_models_DRAFT_FINAL.html')
+summary(Ordinal_recovery)
+modelsummary(Ordinal_recovery, stars = TRUE)
 
 
-Ordinal_recovery_count <- polr(data = d, Hess = TRUE ,
+Ordinal_recovery_count <- polr(data = subset(d, Status_war_sept_ext != "occupied"), Hess = TRUE ,
                                recovery_count_score_factor ~ YoY_mar_apr +
                            
                            log(total_population_2022) + 
@@ -1229,8 +1247,8 @@ Ordinal_recovery_count <- polr(data = d, Hess = TRUE ,
 summary(Ordinal_recovery_count)
 modelsummary(Ordinal_recovery_count, stars = TRUE)
 
-Ordinal_recovery_count_limited <- polr(data = subset(d, region_en == c("Center" , "West")), Hess = TRUE ,
-                               recovery_count_score_factor ~ YoY_mar_apr +
+Ordinal_recovery_distance_2 <- polr(data = subset(d, Status_war_sept_ext != "occupied"), Hess = TRUE ,
+                                    recovery_distance_2_factor ~ YoY_mar_apr +
                                  
                                  log(total_population_2022) + 
                                  
@@ -1261,5 +1279,5 @@ Ordinal_recovery_count_limited <- polr(data = subset(d, region_en == c("Center" 
                                
                                
 )
-summary(Ordinal_recovery_count_limited)
-modelsummary(Ordinal_recovery_count_limited, stars = TRUE)
+summary(Ordinal_recovery_distance_2)
+modelsummary(Ordinal_recovery_distance_2, stars = TRUE)
