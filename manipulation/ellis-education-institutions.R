@@ -30,6 +30,8 @@ Sys.setlocale("LC_CTYPE", "ukr")
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
 library(tidyverse)
+library(sf) #geospatial operations
+library(tmap) #visualisation on maps
 
 #+ load-data, eval=eval_chunks ----------------------------------------------
 
@@ -52,6 +54,9 @@ path_science_education <- "./data-public/raw/education/science_institutes_08.06.
 # Admin data for settlements codes
 ds_admin_map <- readr::read_csv("https://raw.githubusercontent.com/kse-ua/ua-de-center/main/data-public/derived/ua-admin-map-2020.csv")
 
+# #load polygons of hromadas
+polygons <-  st_read("https://raw.githubusercontent.com/kse-ua/ua-de-center/main/data-public/derived/shapefiles/admin/terhromad_fin.geojson") %>%
+  janitor::clean_names()
 
 #+ General education -----------------------------------------------------------
 
@@ -62,6 +67,21 @@ colnames(ds_gen_educ) <- c('full_name', "edebo", "ouo_validated", "short_name",
                            "address", "main_institution", "managing_body", "phone", 
                            "fax", "mail", "site", "director", "is_core", "is_rural", 
                            "is_mountain", "is_internat", "licensed_volume")
+
+#
+
+ds1 <- ds_gen_educ %>% 
+  mutate(location = paste(oblast, settlement, address, sep = ', '))
+
+
+
+
+
+
+
+
+
+#
 
 ds1 <- ds_gen_educ %>% 
   left_join(
@@ -88,14 +108,16 @@ ds1 <- ds1 %>%
                                          .default = match_status_koatuu))
 
 matched_schools <- ds1 %>% filter(match_status_koatuu == "matched")
+
+
   
 # dataset with unmatched koatuu
 unmatched_koatuu <- ds1 %>%  
   filter(match_status_koatuu == 'unmatched') %>% 
   distinct(koatuu)
 
-# 30% unmatched - sad!
-nrow(ds1[ds1$match_status_koatuu == "unmatched",])/nrow(ds1[ds1$match_status_koatuu == "matched",])
+# 24% unmatched - sad!
+nrow(ds1[ds1$match_status_koatuu == "unmatched",])/nrow(ds1)
 
 # unmatched schools
 unmatched_schools <- ds1 %>% filter(match_status_koatuu == "unmatched")
@@ -199,7 +221,7 @@ unmatched_schools_villages <- matched_schools_villages %>%
   filter(match_status_hromadas == 'unmatched') %>% 
   select(-c(26:31))
 
-# merging it all together
+# merging it all togetherіі
 colnames(matched_schools)
 colnames(matched_schools_city)
 colnames(matched_schools_villages)
@@ -221,3 +243,7 @@ fin <- rbind(d1, d2, d3)
 nrow(fin[is.na(fin$hromada_code),])/nrow(fin)
 
 write.csv(fin, './data-private/derived/matched_schools.csv')
+
+# 
+
+
