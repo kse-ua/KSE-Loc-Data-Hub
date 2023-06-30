@@ -4,7 +4,7 @@
 #' date: "last Updated: `r Sys.Date()`"
 #' ---
 #+ echo=F
-# rmarkdown::render(input = "./manipulation/ellis-ua-admin-serhii.R") # run to knit, don't uncomment
+# rmarkdown::render(input = "./manipulation/ellis-ua-admin.R") # run to knit, don't uncomment
 #+ echo=F ----------------------------------------------------------------------
 library(knitr)
 # align the root with the project working directory
@@ -29,26 +29,29 @@ Sys.setlocale("LC_CTYPE", "russian")
 base::source("./scripts/common-functions.R") # project-level
 #+ load-packages -----------------------------------------------------------
 library(tidyverse)
+library(stringr)
 
 #+ declare-globals -------------------------------------------------------------
-path_file <- "./data-private/raw/ua-admin-codes.csv"
+path_file <- "./data-public/raw/ua-admin-codes.csv"
 
 
 #Сomparison between old (before 2020) and new admin codifiers,
 #source: https://docs.google.com/spreadsheets/d/1Cu_ANPCunoQywhz2-NUkKAtT7eemR1Mt/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
-path_admin_comp <- "./data-private/raw/admin-comp.csv" 
+path_admin_comp <- "./data-public/raw/admin-comp.csv" 
 #Old (before 2020) admin codifier,
 #source: https://docs.google.com/spreadsheets/d/1fezJP9iJ0Yjp4REsz722czsMD5AoORmv/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
-path_admin_old <- "./data-private/raw/ua-admin-codes-old.csv"
+path_admin_old <- "./data-public/raw/ua-admin-codes-old.csv"
 #Current codifier of budget codes of hromadas by the Ministry of Finance,
 #source: https://docs.google.com/spreadsheets/d/1tONOFUsX0Q-0AwIabPZET8lmZ9INA1Rh/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
-path_admin_fin <- "./data-private/raw/admin-fin.xlsx" 
+path_admin_fin <- "./data-public/raw/admin-fin.xlsx" 
 #Old codifier of budget codes as of 01.01.2019 (voluntarily formed hromadas + radas/separate settlements)
-#source:https://docs.google.com/spreadsheets/d/13gDuQTUuCjE0TUuRHS1sLvqkLYdL7gGW/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
-path_admin_fin_old <- "./data-private/raw/admin-fin-old.xlsx" 
+#source: https://docs.google.com/spreadsheets/d/13gDuQTUuCjE0TUuRHS1sLvqkLYdL7gGW/edit?usp=sharing&ouid=108294388934909170871&rtpof=true&sd=true
+path_admin_fin_old <- "./data-public/raw/admin-fin-old.xlsx" 
 # Kодифікатор. tab "області"
 # https://docs.google.com/spreadsheets/d/1_M-MOSIOkpiBHrP0ieiK0iFmm1_gnP_7/edit?usp=sharing&ouid=106674411047619625756&rtpof=true&sd=true 
-path_oblast <- "./data-private/raw/oblast.csv"
+path_oblast <- "./data-public/raw/oblast.csv"
+path_geography <- "./data-public/derived/shapefiles/admin/terhromad_fin.geojson"
+
 
 names_admin_ua <- c(
   "level_1"
@@ -110,10 +113,13 @@ cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
 ds0 <- readr::read_csv(path_file, col_names = names_admin_ua, skip=1)
 ds_comp0 <- readr::read_csv(path_admin_comp, col_names = names_admin_comp, skip=1)
-ds_old0 <- readr::read_csv(path_admin_old, col_names = names_admin_old, skip=1)
+ds_old0 <- readr::read_csv(path_admin_old, col_names = names_admin_old, skip=5)
 ds_fin0 <- readxl::read_excel(path_admin_fin, sheet = "codes", col_names = names_admin_fin, skip=10)
 ds_fin_old <- readxl::read_excel(path_admin_fin_old, sheet = "codes", col_names = names_admin_fin_old, skip=11)
 ds0_oblast <- readr::read_csv(path_oblast, skip=0)
+ds_geography <- sf::st_read(path_geography) %>% janitor::clean_names() %>% 
+  mutate_at(vars(admin_1:type), ~str_replace_all(.,c("a" = "а", "o" = "о", "p"="р", "e"="е", "i"="і", "'" = "’")))
+  
 
 #+ inspect-data ----------------------------------------------------------------
 ds0 %>% glimpse()
@@ -124,7 +130,7 @@ ds_fin0 %>% glimpse()
 ds0 %>% count(object_category)
 ds_comp0 %>% count(object_category)
 ds_old0 %>% count(object_category)
-# ds_fin0 %>% count(territory_code) # no `object_cateogry`
+# ds_fin0 %>% count(object_category) # 
 
 #+ tweak-data, eval=eval_chunks ------------------------------------------------
 
@@ -133,15 +139,15 @@ ds1 <-
   mutate(
     category_label = case_when(
       object_category =="O"  ~ "область"
-    , object_category =="K"  ~ "місто (спец статус)"
-    , object_category =="P"  ~ "район"
-    , object_category =="H"  ~ "громада"
-    , object_category =="M"  ~ "місто"
-    , object_category =="T"  ~ "селище міського типу"
-    , object_category =="C"  ~ "село"
-    , object_category =="X"  ~ "селище"
-    , object_category =="B"  ~ "район міста"
-    , TRUE ~ NA_character_
+      , object_category =="K"  ~ "місто (спец статус)"
+      , object_category =="P"  ~ "район"
+      , object_category =="H"  ~ "громада"
+      , object_category =="M"  ~ "місто"
+      , object_category =="T"  ~ "селище міського типу"
+      , object_category =="C"  ~ "село"
+      , object_category =="X"  ~ "селище"
+      , object_category =="B"  ~ "район міста"
+      , TRUE ~ NA_character_
     )
   )
 ds1 %>% group_by(object_category, category_label) %>% tally()
@@ -158,21 +164,36 @@ ds_old1 <-
       , object_category =="Т"  ~ "селище міського типу"
       , object_category =="С"  ~ "село"
       , object_category =="Щ"  ~ "селище"
-      , str_detect(object_name, "РАЙОН/") ~ "район"
-      , str_detect(object_name, "(?<!(ОБЛАСТЬ|КРИМ))\\/(СМТ|С\\.|М\\.|С-ЩЕ)") ~ "рада"
-      , str_detect(object_name, "(ОБЛАСТЬ|КРИМ)\\/") ~ "область"
-      , is.na(object_category) == T & !str_detect(object_name, "(Р-НУ|РАЙОНИ|МІСТА|ПIДПОРЯДКОВАНI|ПІДПОРЯДКОВАНІ|\\/)") ~ "місто"
-      , str_detect(object_name, "АВТОНОМНА РЕСПУБЛІКА КРИМ\\/М.СІМФЕРОПОЛЬ") ~ "область"
+      # , str_detect(object_name, "РАЙОН\\/") ~ "район"
+      # , str_detect(object_name, "(?<!(ОБЛАСТЬ|КРИМ))\\/(СМТ|С\\.|М\\.|С-ЩЕ)") ~ "рада"
+      # , str_detect(object_name, "(ОБЛАСТЬ|КРИМ)\\/") ~ "область"
+      # , is.na(object_category) == T & !str_detect(object_name, "(Р-НУ|РАЙОНИ|МІСТА|ПIДПОРЯДКОВАНI|ПІДПОРЯДКОВАНІ|\\/)") ~ "місто"
+      # , str_detect(object_name, "АВТОНОМНА РЕСПУБЛІКА КРИМ\\/М.СІМФЕРОПОЛЬ") ~ "область"
+      ,grepl("РАЙОН\\/", object_name) ~ "район"
+      , grepl("\\/(СМТ|С\\.|М\\.|С-ЩЕ)", object_name) ~ "рада"
+    #   , grepl("(ОБЛАСТЬ|КРИМ)\\/", object_name) ~ "область"
+    #   , is.na(object_category) == T & !grepl("(Р-НУ|РАЙОНИ|МІСТА|ПIДПОРЯДКОВАНI|ПІДПОРЯДКОВАНІ|\\/)", object_name) ~ "місто"
+    #   , grepl("АВТОНОМНА РЕСПУБЛІКА КРИМ\\/М.СІМФЕРОПОЛЬ", object_name) ~ "область"
       , TRUE ~ NA_character_
     )    
+  ) %>%
+  mutate(
+    category_label = case_when(
+      grepl("(ОБЛАСТЬ|КРИМ)\\/", object_name) ~ "область"
+      , is.na(object_category) == T & !grepl("(Р-НУ|РАЙОНИ|МІСТА|ПIДПОРЯДКОВАНI|ПІДПОРЯДКОВАНІ|\\/)", object_name) ~ "місто"
+      , grepl("АВТОНОМНА РЕСПУБЛІКА КРИМ\\/М.СІМФЕРОПОЛЬ", object_name) ~ "область"
+      , TRUE ~ category_label
+      )
   ) %>% 
-    mutate(
-      category_label = case_when(
-        str_detect(object_name, "(?<!\\/)М\\.КИЇВ") ~ "місто (спец статус)"
-        , str_detect(object_name, "(?<!\\s)М\\.СЕВАСТОПОЛЬ") ~ "місто (спец статус)"
-        , TRUE ~ as.character(category_label)
-        )
-    ) %>%
+  mutate(
+    category_label = case_when(
+      # str_detect(object_name, "(?<!\\/)М\\.КИЇВ") ~ "місто (спец статус)"
+      # ,str_detect(object_name, "(?<!\\s)М\\.СЕВАСТОПОЛЬ") ~ "місто (спец статус)"
+      grepl("(^|[^/])М\\.КИЇВ", object_name) ~ "місто (спец статус)"
+      ,grepl("(^|\\S)М\\.СЕВАСТОПОЛЬ", object_name) ~ "місто (спец статус)"
+      , TRUE ~ as.character(category_label)
+    )
+  ) %>%
   filter(is.na(category_label) == F)
 
 ds_old1  %>% group_by(category_label) %>% tally()
@@ -200,7 +221,7 @@ ds_comp1 <-
     , object_category = "С"
     , object_name = "Ананьїв Другий"
     , category_label = "село"
-    ) #one village consisted of two radas/villages in old and budget datasets, but has just one in comparison and new datasets
+  ) #one village consisted of two radas/villages in old and budget datasets, but has just one in comparison and new datasets
 
 ds_comp1  %>% group_by(category_label) %>% tally()
 
@@ -251,26 +272,24 @@ ds_settlement
 
 
 #+ table-2 ---------------------------------------------------------------------
-ds_old1 %>% count(category_label) # no oblast or raion
+
 ds_oblast_old <- 
   ds_old1 %>% 
   filter(category_label == "область") %>% 
   distinct(oblast_code = level_1, oblast_name = object_name)
-ds_oblast_old # empty, should it be empty? 
+ds_oblast_old 
 
 ds_raion_old <-
   ds_old1 %>% 
   filter(category_label == "район") %>% 
   distinct(raion_code = level_2, raion_name = object_name)
-ds_raion_old # empty, should it be empty? 
+ds_raion_old
 
 ds_rada_old <-
   ds_old1 %>% 
-  filter(
-    category_label  == "рада" |
-    category_label  == "місто" |
-    (category_label == "селище міського типу" & is.na(level_4) == T)
-  ) %>%
+  filter(category_label == "рада" 
+         | category_label == "місто" 
+         | (category_label == "селище міського типу" & is.na(level_4) == T)) %>%
   mutate(
     rada_code = case_when(
       category_label %in% c("село", "селище", "селище міського типу") ~ level_3
@@ -280,13 +299,13 @@ ds_rada_old <-
     )
     , rada_name = object_name
   ) %>% 
-  # count(category_label) # to verify the grouping - only 2, should there be only 2?
   select(rada_code, rada_name)
 ds_rada_old
 
-ds_settlement_rada_old <-
+pre_ds_settlement_rada_old <-
   ds_old1 %>% 
   filter(category_label %in% c("місто","село","селище","селище міського типу") ) %>%
+  filter(!(str_detect(level_1, "HEAD") | str_detect(level_1, "===") | str_detect(level_1, "b3769"))) %>% 
   mutate(
     settlement_code = case_when(
       category_label == "місто" & is.na(level_3) == T ~ level_2
@@ -295,23 +314,87 @@ ds_settlement_rada_old <-
       ,category_label == "селище" ~ level_4
       ,category_label == "селище міського типу" & is.na(level_4) == T ~ level_3
       ,category_label == "селище міського типу" & is.na(level_4) == F ~ level_4
-      )
+    )
   ) %>% 
   mutate(
     rada_code = case_when(
       category_label %in% c("село", "селище", "селище міського типу") ~ level_3
       ,category_label == "місто" & is.na(level_3) == F  ~ level_3
       ,category_label == "місто" & is.na(level_3) == T  ~ level_2
-      )
-  ) %>%
-  # count(category_label) # 4 categories
+    )
+    ,rada_code = case_when(
+      level_1 == "8000000000" ~ "8000000000"
+      ,level_1 == "8500000000" ~ "8500000000"
+      ,TRUE ~ rada_code
+    )
+    ,settlement_code = case_when(
+      level_1 == "8000000000" ~ "8000000000"
+      ,level_1 == "8500000000" ~ "8500000000"
+      ,TRUE ~ settlement_code
+    )
+  ) %>% 
   left_join(
     ds_rada_old
     ,by = "rada_code"
-  ) %>%
+  ) 
+
+ds_settlement_rada_old <- 
+  pre_ds_settlement_rada_old %>%
   select(settlement_name = object_name, settlement_code, rada_name, rada_code)
 
-ds_settlement_rada_old
+
+#old admin dataset
+ds_admin_old <- 
+  pre_ds_settlement_rada_old %>% 
+  select(-level_3, -level_4,-object_category) %>% 
+  rename(settlement_name = object_name, raion_code = level_2, oblast_code = level_1) %>% 
+  left_join(
+    ds_raion_old
+    ,by = "raion_code"
+  ) %>% 
+  left_join(
+    ds_oblast_old
+    ,by = "oblast_code"
+  ) %>% 
+  mutate_at(
+    vars(settlement_name, rada_name, raion_name, oblast_name)
+    ,~str_to_title(.)
+  ) %>% 
+  mutate(
+    raion_name = str_remove(raion_name, " Район.+")
+    ,oblast_name = str_remove(oblast_name, " Область.+")
+  ) %>% 
+  mutate_at(
+    vars(settlement_name, rada_name, raion_name, oblast_name)
+    ,~str_replace_all(., c("'"="’", "\\s\\s"=" ","Короcтишів"="Коростишів", "\\s+\\(.+\\)"=""))
+  )
+
+# ds_admin_old %>% count(raion_name) %>% View()
+# ds_admin_old %>% count(oblast_name) %>% View()
+
+readr::write_csv(ds_admin_old, "./data-public/derived/ua-admin-old.csv")
+
+
+# ds_admin_old <- 
+#   ds_settlement_rada_old %>% 
+#   left_join(
+#     ds_old1 %>% distinct(raion_code = level_2, rada_code = level_3)
+#     ,by = "rada_code"
+#   ) %>% 
+#   left_join(
+#     ds_raion_old
+#     ,by = "raion_code"
+#   ) %>% 
+#   left_join(
+#     ds_old1 %>% distinct(oblast_code = level_1, rada_code = level_3)
+#     ,by = "rada_code"
+#   ) %>% 
+#   left_join(
+#     ds_oblast_old
+#     ,by = "oblast_code"
+#   ) 
+
+
 
 #+ table-3 ---------------------------------------------------------------------
 
@@ -348,12 +431,12 @@ ds_map_hromada <-
   #1
   ds_hromada %>% 
   left_join(
-     ds1 %>% distinct(raion_code = level_2, hromada_code = level_3)
+    ds1 %>% distinct(raion_code = level_2, hromada_code = level_3)
     ,by = "hromada_code"
   ) %>% 
   left_join(
     ds_raion
-     ,by = "raion_code"
+    ,by = "raion_code"
   ) %>% 
   # 2
   left_join(
@@ -363,6 +446,12 @@ ds_map_hromada <-
   left_join(
     ds_oblast
     ,by = "oblast_code"
+  ) %>% 
+  left_join(
+    as_tibble(ds_geography) %>% 
+      select(cod_3,type) %>% 
+      mutate(type = str_extract(type, "сільська|селищна|міська"))
+    ,by = c('hromada_code' = "cod_3")
   )
 ds_map_hromada
 
@@ -398,6 +487,7 @@ ds_admin <-
 ds_admin %>% glimpse(90)
 
 
+
 #combine all together with old classification (rada name and code)
 ds_admin_old_new <-
   ds_admin %>% 
@@ -409,13 +499,13 @@ ds_admin_old_new <-
     settlement_code_old = case_when(
       settlement_name.x == "Ценжів" ~ "2625882701"
       , TRUE ~ as.character(settlement_code_old)
-      )  #added old code for the settlement which was created in 2021
+    )  #added old code for the settlement which was created in 2021
   ) %>%
   left_join(
     ds_settlement_rada_old
     ,by = c("settlement_code_old" = "settlement_code")
   )
-ds_admin_old_new %>% glimpse()
+
 #adding information on budget codes: final after 2020 and before as of 01.01.2019 - 
 #does not include codes for settlements which formed hromadas voluntarily - SOLUTION IS NEEDED
 ds_admin_full <-
@@ -429,7 +519,6 @@ ds_admin_full <-
     ,!(settlement_code_old == "5120280501" & str_detect(full_name, "Ананьїв Перший"))
   ) %>% 
   left_join(
-    # `ds_fin_old` does not exit
     ds_fin_old %>% select(object_code_old, budget_code_old)
     ,by= c("settlement_code_old" = "object_code_old")
   ) %>% 
@@ -438,9 +527,37 @@ ds_admin_full <-
   mutate(settlement_name = case_when(
     settlement_code_old == "5120280501" ~ "Ананьїв Другий"
     ,TRUE ~ settlement_name)
+  ) %>% 
+  mutate(
+   budget_code = case_when(
+     settlement_code == "UA01160030020068769" ~ "0120140100"
+     ,settlement_code == "UA01160030030037634" ~ "0120140100"
+     ,settlement_code == "UA01160330020049936" ~ "0120110000"
+     ,settlement_code == "UA01180770020090437" ~ "0121040400"
+     ,settlement_code == "UA01200070020040385" ~ "0121140200"
+     ,settlement_code == "UA01200130020054332" ~ "0121140400"
+     ,settlement_code == "UA01200130030013528" ~ "0121140400"
+     ,settlement_code == "UA01200130040083175" ~ "0121140400"
+     ,settlement_code == "UA01200210020027504" ~ "0121140500"
+     ,settlement_code == "UA01200210030026825" ~ "0121140500"
+     ,settlement_code == "UA01200210040055601" ~ "0121140500"
+     ,settlement_code == "UA01200210050032694" ~ "0121140500"
+     ,settlement_code == "UA01200270020097082" ~ "0121140600"
+     ,settlement_code == "UA01200270030090294" ~ "0121140600"
+     ,settlement_code == "UA01200270040095864" ~ "0121140600"
+     ,settlement_code == "UA01200270050040024" ~ "0121140600"
+     ,settlement_code == "UA01200270060060495" ~ "0121140600"
+     ,settlement_code == "UA01200290020021637" ~ "0121140700"
+     ,settlement_code == "UA05040250260015923" ~ "0253500000"
+     ,settlement_code == "UA65060110020037465" ~ "2154100000"
+     ,TRUE ~ budget_code
+   )
   )
 
-ds_admin_full %>% filter(is.na(budget_code_old)) %>% glimpse()
+
+
+
+# ds_admin_full %>% filter(is.na(budget_code_old) ) %>% View()
 
 #identification of relevant settlement name among three variables
 # ds_admin_full %>% 
@@ -457,29 +574,31 @@ ds_admin_full %>% filter(is.na(budget_code_old)) %>% glimpse()
 
 
 #+ save-to-disk, eval=eval_chunks-----------------------------------------------
+#all dataset withour bdget_code_all - for work with OpenBudget data from 2020 onwords
 ds_admin_full %>% 
- readr::write_rds("./data-private/derived/ua-admin-map.rds", compress = "xz")
-# # let us save only ONE of these three. 
-# ds_admin_full %>% 
-#   select(-budget_code_old) %>% 
-#   readr::write_csv("./data-private/derived/ua-admin-map-2020.csv")
-# 
-# ds_admin_full %>% 
-#   readr::write_csv("./data-private/derived/ua-admin-map.csv")
-#   # readr::write_rds("./data-public/derived/ua-admin-map.rds", compress = "xz") # --- this ellis should
-#   # I like CSVs, but I think we are better off with RDS in this case.
-#   # WHy: the file is close to 30K rows (~20Mb), if replaced multiple time - will weight down the repo
-#   # When xz-compressed into rds the file weighs only 700Kb
-#   
-# ds_map_hromada %>% 
-#   readr::write_csv("./data-private/derived/hromada.csv")
-# # it appears, `ds_map_hromada` can be derived from `ds_admin_full`
-# # Is there a good reason to store it idependently? 
+  select(-budget_code_old) %>% 
+  readr::write_csv("./data-public/derived/ua-admin-map-2020.csv")
+
+ds_admin_full %>% 
+  readr::write_csv("./data-public/derived/ua-admin-map.csv")
+
+ds_map_hromada %>% 
+  readr::write_csv("./data-public/derived/ua-admin-hromada.csv")
+
+
 
 #+ sanity-check, eval=F, echo=F -------------------------------
 # rm(list = ls(all.names = TRUE))
 # cat("\014") # Clear the console
-
+# library(tidyverse)
+# 
+# ds_map <- readr::read_rds("./data-private/derived/ua-admin-map.rds")
+# 
+# ds_map_hromada <- 
+#   ds_map %>% 
+#   select(!starts_with("settlement")) %>% 
+#   filter(!is.na(hromada_name)) 
+# ds_map_hromada
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
 #+ results="show", echo=F ------------------------------------------------------
