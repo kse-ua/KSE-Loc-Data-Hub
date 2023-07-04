@@ -268,7 +268,7 @@ ds_expenses_short <- ds_fin %>%
          ,econ_3000_share = rowSums(across(starts_with("econ_3"))) / total_expense
          ,association = case_when(prog_7680 > 0 ~ 1, .default = 0)
   ) %>% 
-  select(hromada_code, total_expense, func_0100_share, func_0111_share, func_0400_share,
+  select(hromada_code, year, total_expense, func_0100_share, func_0111_share, func_0400_share,
          func_0700_share, func_0900_share, func_1000_share, econ_2110_share, econ_3000_share,
          association)
 # no func_0110 in 2021
