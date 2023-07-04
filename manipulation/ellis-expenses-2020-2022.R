@@ -54,10 +54,10 @@ cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
-path_admin <- "./data-private/derived/ua-admin-map.csv"
-path_econ <- "./data-private/raw/budget-data/expenses_econ_01.2021-12.2021.csv"
-path_func <- "./data-private/raw/budget-data/expenses_func_01.2021-12.2021.csv"
-path_prog <- "./data-private/raw/budget-data/expenses_prog_01.2021-12.2021.csv"
+path_admin <- "./data-public/derived/ua-admin-map.csv"
+path_econ <- "./data-public/raw/budget-data/expenses_econ_01.2021-12.2021.csv"
+path_func <- "./data-public/raw/budget-data/expenses_func_01.2021-12.2021.csv"
+path_prog <- "./data-public/raw/budget-data/expenses_prog_01.2021-12.2021.csv"
 
 ds_admin_full <- readr::read_csv(path_admin)
 ds_expenses_func <- readr::read_delim(path_func, delim = ";", 
@@ -269,8 +269,8 @@ ds_expenses_short <- ds_fin %>%
 
 #+ save, eval=eval_chunks -------------------------------------------------
 
-openxlsx::write.xlsx(ds_fin, './data-private/derived/hromada_expenses_2021_2022.xlsx')
-openxlsx::write.xlsx(ds_expenses_short, './data-private/derived/hromada_expenses_shares_2021.xlsx')
+openxlsx::write.xlsx(ds_fin, './data-public/derived/hromada_expenses_2021_2022.xlsx')
+openxlsx::write.xlsx(ds_expenses_short, './data-public/derived/hromada_expenses_shares_2021.xlsx')
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
