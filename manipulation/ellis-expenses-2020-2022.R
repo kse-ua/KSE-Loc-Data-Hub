@@ -108,11 +108,15 @@ ds2 <-
     ~case_when(is.na(.) ~ 0,
                .default = .)))
 
+summary(ds2$admin4_code)
+summary(ds_admin_full$budget_code)
+
 ds_func_fin <- ds2 %>%
+  mutate(admin4_code = str_sub(admin4_code, end = -2)) %>% 
   left_join(
     ds_admin_full %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
-               , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)
+               , oblast_code, oblast_name, oblast_name_en, region_en, region_code_en)  
     ,by = c("admin4_code"  = "budget_code")
   ) %>%
   relocate(hromada_name, hromada_code, admin4_label, admin4_code, raion_name, 
@@ -164,6 +168,7 @@ ds2 <-
                .default = .)))
 
 ds_econ_fin <- ds2 %>%
+  mutate(admin4_code = str_sub(admin4_code, end = -2)) %>% 
   left_join(
     ds_admin_full %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
@@ -224,6 +229,7 @@ ds2 <-
                .default = .)))
 
 ds_prog_fin <- ds2 %>%
+  mutate(admin4_code = str_sub(admin4_code, end = -2)) %>% 
   left_join(
     ds_admin_full %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
