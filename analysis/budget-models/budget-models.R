@@ -173,6 +173,7 @@ cor_mat_full <-
                YoY_may_feb,
                
                recovery_month_distance,
+               recovery_month_distance_2,
                count_recovery,
                
                pioneer,
@@ -212,6 +213,9 @@ cor_mat_full <-
                n_agreements_hromadas_active,
                sum_osbb_2020_corr)
       ,use = "complete.obs")
+
+cor(d$recovery_month_distance, d$count_recovery, use = "complete.obs")
+cor(d$recovery_month_distance_2, d$count_recovery, use = "complete.obs")
 
 cor_mat <- 
   cor(d %>% dplyr::
@@ -1073,8 +1077,7 @@ library(modelsummary)
 YOY_7_9 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                       YoY_jul_sep ~ YoY_mar_apr +
                         
-                        log(total_population_2022) + 
-                        
+
                         urban_pct + 
                         area + 
                         travel_time +
@@ -1085,7 +1088,7 @@ YOY_7_9 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                         log(income_own_full_year_2021) +
                         train_station+
                 log(diversification_income_score) +
-                
+
                         youth_centers + 
                         sex_head +
                         age_head +
@@ -1104,8 +1107,7 @@ YOY_7_9 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
 YOY_10_12 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                 YoY_oct_dec ~ YoY_mar_apr +
                 
-                log(total_population_2022) + 
-                
+
                 urban_pct + 
                 area + 
                 travel_time +
@@ -1116,7 +1118,7 @@ YOY_10_12 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                 log(income_own_full_year_2021) +
                 train_station+
                   log(diversification_income_score) +
-                  
+
                 youth_centers + 
                 sex_head +
                 age_head +
@@ -1135,8 +1137,7 @@ YOY_10_12 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
 YOY_10_1 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                 YoY_oct_jan ~ YoY_mar_apr +
                   
-                  log(total_population_2022) + 
-                  
+
                   urban_pct + 
                   area + 
                   travel_time +
@@ -1147,7 +1148,7 @@ YOY_10_1 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                   log(income_own_full_year_2021) +
                   train_station+
                  log(diversification_income_score) +
-                 
+
                   youth_centers + 
                   sex_head +
                   age_head +
@@ -1166,8 +1167,7 @@ YOY_10_1 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
 YOY_5_2 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
               YoY_may_feb ~ YoY_mar_apr +
                  
-                 log(total_population_2022) + 
-                 
+
                  urban_pct + 
                  area + 
                  travel_time +
@@ -1178,7 +1178,7 @@ YOY_5_2 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                  log(income_own_full_year_2021) +
                  train_station+
                 log(diversification_income_score) +
-                
+
                  youth_centers + 
                  sex_head +
                  age_head +
@@ -1193,12 +1193,12 @@ YOY_5_2 <- lm(data = subset(d, Status_war_sept_ext != "occupied"),
                  dfrr_executed_20_21_cat +
                  sum_osbb_2020_corr
 )
+car::vif(YOY_5_2)
 
 Recovery <- glm(data = subset(d, Status_war_sept_ext != "occupied"), family = "binomial",
                recovery_distance_2_factor_alt ~ YoY_mar_apr +
                 
-                log(total_population_2022) + 
-                
+
                 urban_pct + 
                 area + 
                 travel_time +
@@ -1209,7 +1209,7 @@ Recovery <- glm(data = subset(d, Status_war_sept_ext != "occupied"), family = "b
                 log(income_own_full_year_2021) +
                 train_station+
                  log(diversification_income_score) +
-                 
+
                 youth_centers + 
                 sex_head +
                 age_head +
@@ -1236,8 +1236,7 @@ stargazer::stargazer(YOY_7_9,
 Ordinal_recovery <- polr(data = subset(d, Status_war_sept_ext != "occupied"), Hess = TRUE ,
                                    recovery_score_factor ~ YoY_mar_apr +
                                      
-                                     log(total_population_2022) + 
-                                     
+
                                      urban_pct + 
                                      area + 
                                      travel_time +
@@ -1248,7 +1247,7 @@ Ordinal_recovery <- polr(data = subset(d, Status_war_sept_ext != "occupied"), He
                                  log(income_own_full_year_2021) +
                                  train_station+
                            log(diversification_income_score) +
-                           
+
                                      youth_centers + 
                                      sex_head +
                                      age_head +
@@ -1272,8 +1271,7 @@ modelsummary(Ordinal_recovery, stars = TRUE)
 Ordinal_recovery_count <- polr(data = subset(d, Status_war_sept_ext != "occupied"), Hess = TRUE ,
                                recovery_count_score_factor ~ YoY_mar_apr +
                            
-                           log(total_population_2022) + 
-                           
+
                            urban_pct + 
                            area + 
                            travel_time +
@@ -1284,7 +1282,7 @@ Ordinal_recovery_count <- polr(data = subset(d, Status_war_sept_ext != "occupied
                            log(income_own_full_year_2021) +
                            train_station+
                              log(diversification_income_score) +
-                             
+
                            youth_centers + 
                            sex_head +
                            age_head +
@@ -1314,8 +1312,7 @@ stargazer::stargazer(results_Ordinal_recovery_count,
 Ordinal_recovery_distance_2 <- polr(data = subset(d, Status_war_sept_ext != "occupied"), Hess = TRUE ,
                                     recovery_distance_2_factor ~ YoY_mar_apr +
                                  
-                                 log(total_population_2022) + 
-                                 
+
                                  urban_pct + 
                                  area + 
                                  travel_time +
@@ -1326,7 +1323,7 @@ Ordinal_recovery_distance_2 <- polr(data = subset(d, Status_war_sept_ext != "occ
                                  log(income_own_full_year_2021) +
                                  train_station+
                                    log(diversification_income_score) +
-                                   
+
                                  youth_centers + 
                                  sex_head +
                                  age_head +
@@ -1347,3 +1344,85 @@ summary(Ordinal_recovery_distance_2)
 modelsummary(Ordinal_recovery_distance_2, stars = TRUE)
 
 
+# check distribution
+x <- d %>% filter(Status_war_sept_ext != "occupied") %>%
+  dplyr::select(recovery_count_score) %>% filter(!is.na(recovery_count_score)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
+
+nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+plot(nbin_dist)
+# seems like negative binomial
+
+fit1_poisson <- 
+  glm(
+    formula = recovery_count_score ~ YoY_mar_apr +
+      
+      
+      urban_pct + 
+      area + 
+      travel_time +
+      pioneer +
+      
+      Status_war_sept_ext +
+      
+      log(income_own_full_year_2021) +
+      train_station+
+      log(diversification_income_score) +
+      
+      youth_centers + 
+      sex_head +
+      age_head +
+      education_head + 
+      incumbent +
+      polit_work +
+      enterpreuner +
+      rda +
+      turnout_2020 +
+      edem_total +
+      n_agreements_hromadas +
+      dfrr_executed_20_21_cat +
+      sum_osbb_2020_corr
+    
+    ,data = subset(d, Status_war_sept_ext != "occupied")
+    ,family = "poisson"
+  )
+
+performance::check_overdispersion(fit1_poisson)
+# overdispersed data - so negative binomial
+
+fit1_nbinom <- 
+  MASS::glm.nb(
+    formula = recovery_count_score ~ YoY_mar_apr +
+      
+      
+      urban_pct + 
+      area + 
+      travel_time +
+      pioneer +
+      
+      Status_war_sept_ext +
+      
+      log(income_own_full_year_2021) +
+      train_station+
+      log(diversification_income_score) +
+      
+      youth_centers + 
+      sex_head +
+      age_head +
+      education_head + 
+      incumbent +
+      polit_work +
+      enterpreuner +
+      rda +
+      turnout_2020 +
+      edem_total +
+      n_agreements_hromadas +
+      dfrr_executed_20_21_cat +
+      sum_osbb_2020_corr
+    
+    ,data = subset(d, Status_war_sept_ext != "occupied")
+  )
+
+summary(fit1_nbinom, digits=3)
+modelsummary(fit1_nbinom, stars = TRUE)
