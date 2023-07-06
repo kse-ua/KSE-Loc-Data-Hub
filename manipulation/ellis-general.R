@@ -49,9 +49,7 @@ path_declarations <- "./data-public/derived/declarations-hromada.csv"
 path_war <- "./data-public/derived/minregion-war-status.csv"
 #path_internet <- "./data-public/derived/internet-speed.csv"
 path_partnerships <- "./data-public/derived/partnerships-hromadas.csv"
-
-
-# path_budget_expences <- 
+path_budget_expences <- './data-public/derived/hromada_expenses_shares_2021.xlsx'
 
 #additional datasets
 path_polygons <-  "./data-public/derived/shapefiles/terhromad_fin.geojson"
@@ -59,6 +57,7 @@ path_oblast <- "./data-public/raw/oblast.csv"
 path_passangers <- "./data-public/derived/passengers.csv"
 #path_internet_speed <- "./data-public/derived/internet-speed.csv"
 path_roads_lengths <- "./data-public/derived/roads-lengths.csv"
+path_cities_oblast_significance <- "./data-public/raw/cities_oblast_significance.xlsx"
 
 #+ declare-functions -----------------------------------------------------------
 
@@ -81,13 +80,14 @@ ds_edem <- readr::read_csv(path_edem)
 ds_declarations<- readr::read_csv(path_declarations)
 ds_community_competence <- readr::read_csv(path_community_competence) %>% 
   janitor::clean_names() #TODO: check NAs
-# ds_budget_expences <- readr::read_csv(path_budget_expences)
+ds_budget_expences <- openxlsx::read.xlsx(path_budget_expences)
 ds_oblasts <- readr::read_csv(path_oblast)
 ds_war <- readr::read_csv(path_war)
 ds_passangers <- readr::read_csv(path_passangers)
 #ds_internet_speed <- readr::read_csv(path_internet_speed)
 ds_roads_lengths <- readr::read_csv(path_roads_lengths)
 ds_partnerships <- readr::read_csv(path_partnerships)
+ds_cities_oblast_significance <- openxlsx::read.xlsx(path_cities_oblast_significance)
 ds_polygons <- sf::st_read(path_polygons) %>% janitor::clean_names()
 
 #+ inspect-data ----------------------------------------------------------------
@@ -134,8 +134,26 @@ income_2022 <-
 ds1_budget_income <- 
   ds_budget_income %>% 
   filter(year == "2021") %>%
-  select(-c(ends_with('change'), ends_with('net'))) 
+  select(-c(ends_with('change'), ends_with('net'))) %>% 
+  rename_at(
+    vars(starts_with("income"),ends_with("_prop")), ~paste(., "2021", sep = "_")
+  )
 
+
+#add expenses
+ds1_expenses <- 
+  ds_budget_expences %>% 
+  filter(year == "2021") %>%
+  rename(
+    "expenses_state_functions_2021" = "func_0100_share" 
+    ,"expenses_local_government_2021" = "func_0111_share"
+    ,"expenses_economics_2021" = "func_0400_share"
+    ,"expenses_healthcare_2021" = "func_0700_share"
+    ,"expenses_education_2021" = "func_0900_share"
+    ,"expenses_social_protection_2021" = "func_1000_share" 
+    ,"expenses_salaries_2021" = "econ_2110_share"
+    ,"expenses_capital_2021" = "econ_3000_share" 
+  )
 
 
 #aggregate DFRR data for all years
@@ -158,15 +176,15 @@ ds1_heads <-
   mutate(
     sex_head = factor(sex_head, labels = c("female", "male"))
     ,education_head = case_when(
-      education_head == "îñâ³òà âèùà" ~ "higher"
+      education_head == "Ð¾ÑÐ²Ñ–Ñ‚Ð° Ð²Ð¸Ñ‰Ð°" ~ "higher"
       ,TRUE ~ "non-higher"
     )
     ,party_national_winner = case_when(
-      party == "Ñëóãà íàðîäó" ~ 1,
+      party == "Ð¡Ð»ÑƒÐ³Ð° Ð½Ð°Ñ€Ð¾Ð´Ñƒ" ~ 1,
       TRUE ~ 0
     )
     ,no_party = case_when(
-      party == "Ñàìîâèñóâàííÿ" ~ 1
+      party == "Ð¡Ð°Ð¼Ð¾Ð²Ð¸ÑÑƒÐ²Ð°Ð½Ð½Ñ" ~ 1
       ,TRUE ~ 0
     )
     ,male = case_when(
@@ -200,6 +218,19 @@ ds_hromada_dates <-
     ,voluntary = ifelse(creation_date != "2020-08-16", 1, 0)
   )
 
+#hromadas with cities of oblast significance
+ds1_hromada_oblast_significance <- 
+  ds_cities_oblast_significance %>% 
+  mutate(settlement_code = str_sub(settlement_code, end = -11)) %>% 
+  left_join(
+    ds_hromada %>% 
+      select(hromada_code, hromada_name, oblast_name) %>% 
+      mutate(hromada_code_short = str_sub(hromada_code, end = -11))
+    ,by = c("settlement_code" = "hromada_code_short")
+  ) %>% 
+  mutate(hromada_code = ifelse(name == "ÐÐ¾Ð²Ð³Ð¾Ñ€Ð¾Ð´-Ð¡Ñ–Ð²ÐµÑ€ÑÑŒÐºÐ¸Ð¹", "UA74060030000026607", hromada_code)) %>% 
+  distinct(hromada_code) %>% 
+  pull()
 
 
 #create dummy variables for hromadas-oblast centers
@@ -213,10 +244,14 @@ hromadas_oblast_centers <-
 
 d1 <- 
   ds_hromada %>% 
-  filter(!oblast_name == "Àâòîíîìíà Ðåñïóáë³êà Êðèì") %>% 
+  filter(!oblast_name == "ÐÐ²Ñ‚Ð¾Ð½Ð¾Ð¼Ð½Ð° Ð ÐµÑÐ¿ÑƒÐ±Ð»Ñ–ÐºÐ° ÐšÑ€Ð¸Ð¼") %>% 
   mutate(
-    hromada_full_name = paste(hromada_name, type, "ãðîìàäà")
+    hromada_full_name = paste(hromada_name, type, "Ð³Ñ€Ð¾Ð¼Ð°Ð´Ð°")
     ,oblast_center = ifelse(hromada_code %in% hromadas_oblast_centers, 1, 0)
+    ,oblast_significance = case_when(
+      hromada_code %in% ds1_hromada_oblast_significance ~ 1,
+      TRUE ~ 0
+    )
   ) %>% 
   left_join(
     ds_geography %>% select(-c(hromada_type, hromada, oblast_name, raion_name, key))
@@ -312,6 +347,10 @@ d1 <-
   left_join(
     ds_polygons %>% select(cod_3, geometry)
     ,by = c("hromada_code"="cod_3")
+  ) %>% 
+  left_join(
+    ds1_expenses
+    ,by = "hromada_code"
   )
 
 d1_public <- 
