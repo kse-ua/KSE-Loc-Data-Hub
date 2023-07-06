@@ -4,7 +4,8 @@ eval_chunks <- TRUE
 cache_chunks <- TRUE
 report_render_start_time <- Sys.time()
 options(width=100) # number of characters to display in the output (dflt = 80)
-Sys.setlocale("LC_CTYPE", "ukr")
+# Sys.setlocale("LC_CTYPE", "ukr")
+Sys.setlocale("LC_CTYPE", 'en_US.UTF-8')
 rm(list = ls())
 
 #+ load-sources ------------------------------------------------------------
@@ -44,9 +45,10 @@ d0 <- readxl::read_excel("./data-private/raw/agro-survey.xlsx", sheet = "answers
   )
 
 #general data
-ds_population <- readr::read_csv("./data-private/derived/ua-pop-2022.csv")
+ds_population <- readr::read_csv("./data-public/derived/ua-pop-2022.csv")
 
-ds_hromada <- readr::read_csv("./data-private/derived/hromada.csv") %>% 
+
+ds_hromada <- readr::read_csv("./data-public/derived/ua-admin-hromada.csv") %>% 
   mutate(
     hromada_name = ifelse(hromada_code == "UA05120030000061384", "Війтівецька", hromada_name)
     ,key = paste(oblast_name, raion_name, hromada_name, type, "громада")
@@ -64,12 +66,12 @@ ds1_budget <-
   summarise(total = sum(income_total), own = sum(income_own), .groups = "drop") %>% 
   filter(year == "2021") %>% 
   left_join(
-    ds_population %>% select(hromada_code, total_popultaion_2022)
+    ds_population %>% select(hromada_code, total_population_2022)
     ,by = "hromada_code"
   ) %>% 
   mutate(
-    income_tot_per_capita = total/total_popultaion_2022
-    ,income_own_per_capita = own/total_popultaion_2022
+    income_tot_per_capita = total/total_population_2022
+    ,income_own_per_capita = own/total_population_2022
   ) %>% 
   ungroup() 
 
@@ -95,7 +97,7 @@ d1 <-
   left_join(
     ds_hromada %>% select(key, hromada_code, type) 
     ,by = "key"
-  ) %>% 
+  ) %>%
   left_join(
     ds_general %>% select(!c(hromada_name:hromada_full_name))
     ,by = "hromada_code"
@@ -119,36 +121,36 @@ d2 <- d1 %>%
   )
 
 #---- compare survey data with population-------------------------------------------------------------------
-library(tableone)
-
-predictors_all <- 
-  ds_general %>% 
-  select(-c("hromada_code", "hromada_name","raion_code", "raion_name","oblast_code",
-            "oblast_name","hromada_full_name","hromada_center_code","hromada_center",           
-            "lat_center","lon_center", "party")) %>% 
-  colnames()
-
-ds_survey_codes <- 
-  d2 %>% 
-  pull(hromada_code)
-
-ds_surveyed <- 
-  ds_general %>% 
-  filter(hromada_code %in% ds_survey_codes) %>% 
-  mutate(survey_participant = "surveyed" )
-
-ds_comparison <- 
-  ds_general  %>% 
-  mutate(survey_participant = "all")
-
-#add to all gromadas (including surveyed) surveyed hromadas one more time to make a comparison
-ds_comparison <- rbind(ds_surveyed, ds_comparison)
-
-table_pre <- CreateTableOne(vars=predictors_all
-                            ,factorVars = c("sex_head", "education_head", "incumbent", "rda")
-                            , strata = "survey_participant"
-                            , data=ds_comparison)
-print(table_pre, smd=T)
+# library(tableone)
+# 
+# predictors_all <- 
+#   ds_general %>% 
+#   select(-c("hromada_code", "hromada_name","raion_code", "raion_name","oblast_code",
+#             "oblast_name","hromada_full_name","hromada_center_code","hromada_center",           
+#             "lat_center","lon_center", "party")) %>% 
+#   colnames()
+# 
+# ds_survey_codes <- 
+#   d2 %>% 
+#   pull(hromada_code)
+# 
+# ds_surveyed <- 
+#   ds_general %>% 
+#   filter(hromada_code %in% ds_survey_codes) %>% 
+#   mutate(survey_participant = "surveyed" )
+# 
+# ds_comparison <- 
+#   ds_general  %>% 
+#   mutate(survey_participant = "all")
+# 
+# #add to all gromadas (including surveyed) surveyed hromadas one more time to make a comparison
+# ds_comparison <- rbind(ds_surveyed, ds_comparison)
+# 
+# table_pre <- CreateTableOne(vars=predictors_all
+#                             ,factorVars = c("sex_head", "education_head", "incumbent", "rda")
+#                             , strata = "survey_participant"
+#                             , data=ds_comparison)
+# print(table_pre, smd=T)
 
 #---- weighting -------------------------------------------------------------------
 library(pewmethods)
@@ -163,7 +165,7 @@ ds_weighting <- ds_general %>%
   filter(occipied_before_2022 == 0) %>% 
   mutate(
     population_categories = cut(
-      total_popultaion_2022
+      total_population_2022
       ,breaks = c(0, 10000, 25000, 50000, 100000, 1500000)
       ,labels = c("0-10k", "10-25k", "25-50k", "50-100k", "100k+")
     )
@@ -173,7 +175,7 @@ ds_weighting <- ds_general %>%
       ,labels = c("26-44", "45-59", "60+")
     )
     ,income_categories = cut(
-      income_total_2021/1000000
+      income_total_2021/1000 #convert form thousands to millions
       ,breaks = c(0, 25, 50, 100, 250, 10000)
       ,labels = c("0-25 mln", "25-50 mln", "50-100 mln", "100-250 mln", "250+ mln")
     )
@@ -194,11 +196,13 @@ ds_weighting <- ds_general %>%
     # )
   ) 
 
+
+
 d3 <- d2 %>% 
   filter(occipied_before_2022 == 0) %>% 
   mutate(
     population_categories = cut(
-      total_popultaion_2022
+      total_population_2022
       ,breaks = c(0, 10000, 25000, 50000, 100000, 1500000)
       ,labels = c("0-10k", "10-25k", "25-50k", "50-100k", "100k+")
     )
@@ -208,7 +212,7 @@ d3 <- d2 %>%
       ,labels = c("26-44", "45-59", "60+")
     )
     ,income_categories = cut(
-      income_total_2021/1000000
+      income_total_2021/1000 #convert form thousands to millions
       ,breaks = c(0, 25, 50, 100, 250, 10000)
       ,labels = c("0-25 mln", "25-50 mln", "50-100 mln", "100-250 mln", "250+ mln")
     )
@@ -236,6 +240,9 @@ targets <- create_raking_targets(
             "income_categories")
   ,wt = "weight"
 )
+
+
+d3 %>% count(income_categories)
 
 d4 <- 
   d3 %>% 
