@@ -58,8 +58,8 @@ d <- d %>%
          "YoY_oct_dec" = "own_income_no_mil_change_YoY_oct_dec",
          "YoY_may_feb" = "own_income_no_mil_change_YoY_may_feb",
          "YoY_adapt" = "own_income_no_mil_change_YoY_adapt",
-         "income_own_2021" = "income_own",
-         "income_own_full_year_2021" = "income_own_full_year")
+         "income_own_2021" = "income_own_2021",
+         "income_own_full_year_2021" = "income_own_full_year_2021")
 
 options("scipen"=100, "digits"=4)
 
@@ -236,22 +236,22 @@ corrplot::corrplot(cor_mat, tl.col = "black",tl.cex = 1, addCoef.col = "black", 
 
 cor_mat_1 <-   cor(d %>% filter(Status_war_sept_ext != "occupied") %>% dplyr::
         select(diversification_income_score,
-               pdfo_own_prop,
-               unified_tax_own_prop,
-               rent_own_prop,
-               corporate_tax_own_prop,
-               property_tax_own_prop,
-               parking_fee_own_prop,
-               tourist_fee_own_prop,
-               eco_tax_own_prop,
-               non_tax_own_prop,
-               capital_proceedings_own_prop,
-               special_funds_own_prop,
-               excise_duty_own_prop,
+               pdfo_own_prop_2021,
+               unified_tax_own_prop_2021,
+               rent_own_prop_2021,
+               corporate_tax_own_prop_2021,
+               property_tax_own_prop_2021,
+               parking_fee_own_prop_2021,
+               tourist_fee_own_prop_2021,
+               eco_tax_own_prop_2021,
+               non_tax_own_prop_2021,
+               capital_proceedings_own_prop_2021,
+               special_funds_own_prop_2021,
+               excise_duty_own_prop_2021,
                income_own_full_year_2021,
                income_own_2021_per_capita,
                own_income_prop_full_year,
-               pdfo_prop
+               pdfo_prop_2021
         )
       ,use = "complete.obs")
 corrplot::corrplot(cor_mat_1, tl.col = "black",tl.cex = 1,  number.cex=1, order = "FPC")
@@ -1347,3 +1347,174 @@ summary(Ordinal_recovery_distance_2)
 modelsummary(Ordinal_recovery_distance_2, stars = TRUE)
 
 
+# check distribution
+x <- d %>% filter(Status_war_sept_ext != "occupied") %>%
+  dplyr::select(recovery_count_score) %>% filter(!is.na(recovery_count_score)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
+
+nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+plot(nbin_dist)
+# seems like negative binomial
+
+fit1_poisson <- 
+  glm(
+    formula = recovery_count_score ~ YoY_mar_apr +
+      
+      
+      urban_pct + 
+      area + 
+      travel_time +
+      pioneer +
+      
+      Status_war_sept_ext +
+      
+      log(income_own_full_year_2021) +
+      train_station+
+      log(diversification_income_score) +
+      
+      youth_centers + 
+      sex_head +
+      age_head +
+      education_head + 
+      incumbent +
+      polit_work +
+      enterpreuner +
+      rda +
+      turnout_2020 +
+      edem_total +
+      n_agreements_hromadas +
+      dfrr_executed_20_21_cat +
+      sum_osbb_2020_corr
+    
+    ,data = subset(d, Status_war_sept_ext != "occupied")
+    ,family = "poisson"
+  )
+
+# check distribution
+x <- d %>% filter(Status_war_sept_ext != "occupied") %>%
+  dplyr::select(recovery_count_score) %>% filter(!is.na(recovery_count_score)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
+
+nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+plot(nbin_dist)
+# seems like negative binomial
+
+fit1_poisson <- 
+  glm(
+    formula = recovery_count_score ~ YoY_mar_apr +
+      
+      
+      urban_pct + 
+      area + 
+      travel_time +
+      pioneer +
+      
+      Status_war_sept_ext +
+      
+      log(income_own_full_year_2021) +
+      train_station+
+      log(diversification_income_score) +
+      
+      youth_centers + 
+      sex_head +
+      age_head +
+      education_head + 
+      incumbent +
+      polit_work +
+      enterpreuner +
+      rda +
+      turnout_2020 +
+      edem_total +
+      n_agreements_hromadas +
+      dfrr_executed_20_21_cat +
+      sum_osbb_2020_corr
+    
+    ,data = subset(d, Status_war_sept_ext != "occupied")
+    ,family = "poisson"
+  )
+
+# check distribution
+x <- d %>% filter(Status_war_sept_ext != "occupied") %>%
+  dplyr::select(recovery_count_score) %>% filter(!is.na(recovery_count_score)) %>% pull()
+pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
+plot(pois_dist)
+nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
+plot(nbin_dist)
+performance::check_overdispersion(fit1_poisson)
+
+
+fit1_poisson <- 
+  glm(
+    formula = recovery_count_score ~ YoY_mar_apr +
+      
+      log(total_population_2022) + 
+      
+      urban_pct + 
+      area + 
+      travel_time +
+      pioneer +
+      
+      Status_war_sept_ext +
+      
+      log(income_own_full_year_2021) +
+      train_station+
+      log(diversification_income_score) +
+      
+      youth_centers + 
+      sex_head +
+      age_head +
+      education_head + 
+      incumbent +
+      polit_work +
+      enterpreuner +
+      rda +
+      turnout_2020 +
+      edem_total +
+      n_agreements_hromadas +
+      dfrr_executed_20_21_cat +
+      sum_osbb_2020_corr
+    
+    ,data = subset(d, Status_war_sept_ext != "occupied")
+    ,family = "poisson"
+  )
+performance::check_overdispersion(fit1_poisson)
+# overdispersed data - so negative binomial
+
+fit1_nbinom <- 
+  MASS::glm.nb(
+    formula = recovery_count_score ~ YoY_mar_apr +
+      
+      log(total_population_2022) + 
+      
+      urban_pct + 
+      area + 
+      travel_time +
+      pioneer +
+      
+      Status_war_sept_ext +
+      
+      log(income_own_full_year_2021) +
+      train_station+
+      log(diversification_income_score) +
+      
+      youth_centers + 
+      sex_head +
+      age_head +
+      education_head + 
+      incumbent +
+      polit_work +
+      enterpreuner +
+      rda +
+      turnout_2020 +
+      edem_total +
+      n_agreements_hromadas +
+      dfrr_executed_20_21_cat +
+      sum_osbb_2020_corr
+    
+    ,data = subset(d, Status_war_sept_ext != "occupied")
+  )
+
+summary(fit1_nbinom, digits=3)
+modelsummary(fit1_nbinom, stars = TRUE)

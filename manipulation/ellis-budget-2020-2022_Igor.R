@@ -797,9 +797,8 @@ d_5_add_CPI_dist_alt <- ds_5_add_CPI_1 %>%
 
 d_5_add_CPI_dist_add <- ds_5_add_CPI_short %>%
   group_by(hromada_code, month) %>%
-  filter((year == 2022 & month >= 3 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
-           (year == 2023 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
-           (year == 2024 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021])) %>%
+  filter((year == 2022 & month >= 5 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
+           (year == 2023 & month <= 2 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2022]) ) %>%
   group_by(hromada_code) %>% summarise(count_recovery = n())
 
 
