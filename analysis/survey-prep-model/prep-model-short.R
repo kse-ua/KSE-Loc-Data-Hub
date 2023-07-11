@@ -49,7 +49,7 @@ data_cache_folder <- prints_folder # to sink modeling steps
 ds_survey <- readxl::read_excel("./data-private/derived/survey_hromadas_clean_new.xlsx")
 
 # the product of ./manipulation/ellis-general.R
-ds_general <- readr::read_csv("./data-private/derived/full_dataset.csv")
+ds_general <- readr::read_csv("https://raw.githubusercontent.com/kse-ua/ua-de-center/main/data-public/derived/full_dataset.csv")
 
 # https://docs.google.com/spreadsheets/d/1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo/edit?usp=sharing
 survey_url <- "1GaP92b7P1AI5nIYmlG0XoKYVV9AF4PDV8pVW3IeySFo"
@@ -108,7 +108,7 @@ prep_for_winter <- c('info_campaign', 'reserves', 'count_power_sources',
 # vector of income variables 
 income <- 
   ds_general %>%
-  select(ends_with('capita'), ends_with('prop_2021')) %>%
+  select(ends_with('prop'), starts_with('income')) %>%
   colnames() %>% 
   print()
 
@@ -128,8 +128,7 @@ ds_general0 <-
   ) %>% 
   mutate(
     business_support_centers_b = ifelse(business_support_centers == 0, 0, 1)
-    ) %>% 
-  left_join(ds_partnerships %>% select(-hromada_name), by = "hromada_code")
+    )
 
 
 ds0 <- 
@@ -139,7 +138,6 @@ ds0 <-
   select(-ends_with('.y')) %>%
   rename_at(.vars = vars(ends_with(".x")),
             .funs = list(~ sub("[.]x$", "", .))) %>%
-  left_join(ds_partnerships %>% select(-hromada_name), by = "hromada_code") %>% 
   mutate(
     across(
       .cols = all_of(geographic_vars),
@@ -190,23 +188,27 @@ ds0 <-
            prep_notification_check_oct*1.19 + prep_backup_oct*1.08) 
   
 
-vars1 <- ds0 %>% select(income_total_2021_per_capita, income_own_2021_per_capita,
-                        own_income_prop_2021) %>% 
+vars_income <- ds0 %>% select(starts_with('income'), ends_with('prop')) %>% 
   colnames()
+
+vars_expenses <- ds0 %>% select(starts_with('expenses'), association) %>% colnames()
+
          
 vars2 <- ds0 %>% 
   select(contains('pct'), contains('prep_score'), prep_winter_count) %>% colnames()
 
-vars3 <- ds0 %>% select(4:11, 13:16, 191, 196:208, 210:211, 238:239, 241, 243, 250, 
-                        253:274, 290:294, 303) %>% colnames()
+var_select <- c(vars_expenses, vars2)
 
-var_select <- c(vars1, vars2, vars3)
+ds1 <- ds0 %>% select(all_of(var_select), Status_war_sept_ext) %>% select(-prep_score_oct)
 
-ds1 <- ds0 %>% select(all_of(var_select)) %>% select(-prep_score_oct) %>% 
-  left_join(ds1_dfrr %>% select(hromada_code, dfrr_executed_20_21), by = 'hromada_code') %>% 
-  mutate(dfrr_executed_20_21 = replace_na(dfrr_executed_20_21, 0))
+ds2 <- ds0 %>% 
+  select(contains('expenses'), oblast_significance, type, prep_score_feb, 
+         prep_winter_count, Status_war_sept_ext) %>% 
+  mutate(city = factor(ifelse(type == 'міська', 1, 0)),
+         expenses_local_government_2021_perc = expenses_local_government_2021*100,
+         expenses_state_functions_2021_perc = expenses_state_functions_2021*100) %>% 
+  filter(Status_war_sept_ext!="occupied")
 
-ds2 <- ds0 %>% select(contains('agreements'), prep_score_feb, prep_winter_count, occupation_and_combat)
 ds1 %>% summarise(across(everything(), ~sum(is.na(.)))) %>% t()
 #+ - tweak-data-2 --------------------------------------------------------------
 
@@ -274,7 +276,7 @@ ds2 %>% select(turnout_2020) %>%
 
 ds2$prep_score_feb_round <- round(ds2$prep_score_feb)
 
-model_gaussian <- lm(prep_score_feb ~ high_educ,
+model_gaussian <- lm(prep_score_feb ~ oblast_significance + city,
                      data = ds2)
 summary(model_gaussian)
 
@@ -282,12 +284,15 @@ model_gaussian_re <- lmtest::coeftest(model_gaussian,
                                       vcov = sandwich::vcovHC(model_gaussian, type = 'HC3'))
 model_gaussian_re
 
-  plot(model_gaussian)
+plot(model_gaussian)
 
-model_poisson <- glm(prep_score_feb ~ dffr_bin, 
+model_poisson <- glm(prep_score_feb ~ expenses_state_functions_2021_perc, 
                      data = ds2, family = "poisson")
 
-model_negbin <- MASS::glm.nb(prep_score_feb ~ dffr_bin, data = ds2)
+summary(model_poisson)
+
+model_negbin <- MASS::glm.nb(prep_score_feb_round ~ expenses_local_government_2021_perc, 
+                             data = ds2)
 
 lrtest <- lmtest::lrtest(model_poisson, model_negbin)
 
@@ -298,7 +303,7 @@ if (lrtest$Pr[2] < 0.05) {
 }
 
 # Fit the zero-inflated binomial model
-zib_model <- pscl::zeroinfl(prep_score_feb_round ~  dffr_bin | dffr_bin, 
+zib_model <- pscl::zeroinfl(prep_score_feb_round ~  expenses_local_government_2021_perc | expenses_local_government_2021_perc, 
                             dist = "negbin", data = ds2)
 
 # Compare the AIC of the models
@@ -314,7 +319,7 @@ summary(model_negbin)
 ##+ Preparation Winter -------------------------------------------------
 
 model_negbin <- MASS::glm.nb(
-  prep_winter_count ~ occupation_and_combat + hromadas_30km_russia_belarus, 
+  prep_winter_count ~ expenses_local_government_2021_perc, 
                              data = ds2)
 
 summary(model_negbin)
