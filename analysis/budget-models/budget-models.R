@@ -216,6 +216,8 @@ cor_mat_full <-
                sum_osbb_2020_corr)
       ,use = "complete.obs")
 
+openxlsx::write.xlsx(as.data.frame(cor_mat_full), './analysis/budget-models/cor_mat_full_budget_model.xlsx')
+
 cor_mat <- 
   cor(d %>% dplyr::
         select(area,
