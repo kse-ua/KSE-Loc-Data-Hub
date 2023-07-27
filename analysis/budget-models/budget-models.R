@@ -28,6 +28,8 @@ library(readxl)
 library(survey)
 library(fastDummies)
 library(gt)
+library(MASS)
+library(modelsummary)
 
 # ---- load-sources ------------------------------------------------------------
 base::source("./scripts/common-functions.R")             # basics
@@ -322,7 +324,7 @@ indep_vars <- "YoY_mar_apr +
                  log(income_own_full_year_2021) +
                  train_station+
                  log(diversification_income_score) +
-                 expenses_state_functions_2021+
+                 expenses_local_government_2021+
                  expenses_capital_2021+
                  
                  youth_centers + 
@@ -356,7 +358,7 @@ ctable <- round(coef(summary(Ordinal_recovery_distance_2)),4)
 p <- round((pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2),4)
 ## combined table
 results_Ordinal_recovery_distance_2 <- (ctable <- cbind(ctable, "p value" = p))
-stargazer::stargazer(results_Ordinal_recovery,
+stargazer::stargazer(results_Ordinal_recovery_distance,
                      results_Ordinal_recovery_distance_2,
                      single.row = T, type = 'html', out = './analysis/budget-models/budget_models_RECOVERY_Ordinal.html')
 
@@ -367,7 +369,6 @@ pois_dist <- fitdistrplus::fitdist(x, distr = "pois")
 plot(pois_dist)
 nbin_dist <- fitdistrplus::fitdist(x, distr = "nbinom")
 plot(nbin_dist)
-performance::check_overdispersion(fit1_poisson)
 
 ###### Poisson
 fit1_poisson <- 
@@ -379,7 +380,7 @@ fit1_poisson <-
   )
 performance::check_overdispersion(fit1_poisson)
 # overdispersed data - so negative binomial
-
+performance::check_overdispersion(fit1_poisson)
 ###### Neg binom
 fit1_nbinom <- 
   MASS::glm.nb(
