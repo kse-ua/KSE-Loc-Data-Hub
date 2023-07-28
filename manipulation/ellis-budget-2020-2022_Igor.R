@@ -193,6 +193,7 @@ ds4_long <-
     ,capital_proceedings = str_detect(tax_code, "^3.+")
     ,special_funds = str_detect(tax_code, "^5.+")
     ,rent = str_detect(tax_code, "^130.+")
+    ,base_subsidy = str_detect(tax_code, "^410201.+")
     
   )
 
@@ -216,6 +217,7 @@ ds5_long <- ds4_long %>%
     ,income_capital_proceedings = sum(amount*capital_proceedings, na.rm = T)
     ,income_special_funds = sum(amount*special_funds, na.rm = T)
     ,income_rent = sum(amount*rent, na.rm = T)
+    ,income_base_subsidy = sum(amount*base_subsidy, na.rm = T)
     ,.groups = "drop"
   ) %>% 
   ungroup() %>% 
@@ -240,6 +242,7 @@ ds5_long <- ds4_long %>%
     ,unified_tax_own_prop = round(income_unified_tax/income_own,4)
     ,property_tax_own_prop = round(income_property_tax/income_own,4)
     ,rent_own_prop = round(income_rent/income_own,4)
+    ,base_subsidy_prop = round(income_base_subsidy/income_total,4)
   ) %>%
   group_by(budget_code) %>% 
   mutate(
@@ -318,6 +321,7 @@ ds4_long_a <-
     ,capital_proceedings = str_detect(tax_code, "^3.+")
     ,special_funds = str_detect(tax_code, "^5.+")
     ,rent = str_detect(tax_code, "^130.+")
+    ,base_subsidy = str_detect(tax_code, "^410201.+")
   )
 
 ds4_long %>% glimpse(80)
@@ -341,6 +345,7 @@ ds5_long_temp <-
     ,income_capital_proceedings = sum(amount*capital_proceedings, na.rm = T)
     ,income_special_funds = sum(amount*special_funds, na.rm = T)
     ,income_rent = sum(amount*rent, na.rm = T)
+    ,income_base_subsidy = sum(amount*base_subsidy, na.rm = T)
     ,.groups = "drop"
   ) %>% 
   ungroup() %>% 
@@ -353,6 +358,7 @@ ds5_long_temp <-
     ,unified_tax_prop    = round(income_unified_tax/income_total,2)
     ,property_tax_prop   = round(income_property_tax/income_total,2)
     ,excise_duty_prop    = round(income_excise_duty/income_total,2)
+    ,base_subsidy_prop = round(income_base_subsidy/income_total,2)
   ) %>%
   group_by(budget_code) %>% 
   mutate(
