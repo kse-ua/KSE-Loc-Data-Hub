@@ -127,6 +127,34 @@ long_recovery <- subset(d, recovery_month_distance <= 12 & recovery_month_distan
 no_recovery <- subset(d, recovery_month_distance >= 13 |
                         is.na (recovery_month_distance))
 
+toh_before_22 <- c("0556100000","0555600000","1253800000","0555500000","1253400000"
+                   ,"0554900000","0555700000","0555100000","1253900000","0554700000","0554800000"
+                   ,"0556300000","1253700000","1254000000","0556000000","1253300000","0555200000"
+                   ,"0555400000","0556400000","1253200000","1254100000","0556200000","1253500000"
+                   ,"0556600000","1253100000","0556500000","0555900000","0555800000","0555000000"
+                   ,"1253600000","0555300000") 
+'%nin%' <- Negate('%in%') 
+non_occupied_2021 <- d %>% filter(budget_code %nin% toh_before_22)
+
+summary(non_occupied_2021$base_subsidy_prop_2021)
+nrow(subset(non_occupied_2021, base_subsidy_prop_2021 <= 0.05))/nrow(non_occupied_2021)
+
+nrow(subset(non_occupied_2021, base_subsidy_prop_2021 > 0.05 & 
+              base_subsidy_prop_2021 <= 0.1))/nrow(non_occupied_2021)
+
+nrow(subset(non_occupied_2021, base_subsidy_prop_2021 > 0.1 & 
+              base_subsidy_prop_2021 <= 0.15))/nrow(non_occupied_2021)
+
+nrow(subset(non_occupied_2021, base_subsidy_prop_2021 > 0.15 & 
+              base_subsidy_prop_2021 <= 0.2))/nrow(non_occupied_2021)
+
+nrow(subset(non_occupied_2021, base_subsidy_prop_2021 > 0.2 & 
+              base_subsidy_prop_2021 <= 0.25))/nrow(non_occupied_2021)
+
+nrow(subset(non_occupied_2021, base_subsidy_prop_2021 > 0.25))/nrow(non_occupied_2021)
+
+non_occupied_2021 %>% filter(is.na(base_subsidy_prop_2021))
+
 recovery_types <- d %>% mutate(recovery_type = as.factor(case_when(recovery_month_distance <= 2 ~ "fast_recovery",
                                                                    recovery_month_distance <= 6 & recovery_month_distance > 2 ~ "mid_recovery",
                                                                    recovery_month_distance <= 12 & recovery_month_distance > 6 ~ "long_recovery",
