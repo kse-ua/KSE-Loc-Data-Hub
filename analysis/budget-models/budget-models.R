@@ -153,7 +153,9 @@ nrow(subset(non_occupied_2021, base_subsidy_prop_2021 > 0.2 &
 
 nrow(subset(non_occupied_2021, base_subsidy_prop_2021 > 0.25))/nrow(non_occupied_2021)
 
-non_occupied_2021 %>% filter(is.na(base_subsidy_prop_2021))
+target_sample <- subset(d, Status_war_sept_ext != "occupied")
+table(target_sample$type)
+table(d$type)
 
 recovery_types <- d %>% mutate(recovery_type = as.factor(case_when(recovery_month_distance <= 2 ~ "fast_recovery",
                                                                    recovery_month_distance <= 6 & recovery_month_distance > 2 ~ "mid_recovery",
