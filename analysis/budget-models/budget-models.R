@@ -353,11 +353,9 @@ indep_vars <- "YoY_mar_apr +
                  
                  log(income_own_full_year_2021) +
                  train_station+
-                 log(diversification_income_score) +
                  expenses_local_government_2021+
                  expenses_capital_2021+
                  
-                 youth_centers + 
                  turnout_2020 +
                  edem_total +
                  n_agreements_hromadas +
