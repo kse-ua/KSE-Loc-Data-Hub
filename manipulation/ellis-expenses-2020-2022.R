@@ -55,9 +55,9 @@ cat("\n# 2.Data ")
 #+ load-data, eval=eval_chunks -------------------------------------------------
 
 path_admin <- "./data-public/derived/ua-admin-map.csv"
-path_econ <- "./data-public/raw/budget-data/expenses_econ_01.2021-12.2021.csv"
-path_func <- "./data-public/raw/budget-data/expenses_func_01.2021-12.2021.csv"
-path_prog <- "./data-public/raw/budget-data/expenses_prog_01.2021-12.2021.csv"
+path_econ <- "./data-public/raw/budget-data/expenses_econ_01.2021-12.2022.csv"
+path_func <- "./data-public/raw/budget-data/expenses_func_01.2021-12.2022.csv"
+path_prog <- "./data-public/raw/budget-data/expenses_prog_01.2021-12.2022.csv"
 
 ds_admin_full <- readr::read_csv(path_admin)
 ds_expenses_func <- readr::read_delim(path_func, delim = ";", 
@@ -112,7 +112,7 @@ summary(ds2$admin4_code)
 summary(ds_admin_full$budget_code)
 
 ds_func_fin <- ds2 %>%
-  mutate(admin4_code = str_sub(admin4_code, end = -2)) %>% 
+  mutate(admin4_code = str_sub(admin4_code, end = -1)) %>% 
   left_join(
     ds_admin_full %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
@@ -168,7 +168,7 @@ ds2 <-
                .default = .)))
 
 ds_econ_fin <- ds2 %>%
-  mutate(admin4_code = str_sub(admin4_code, end = -2)) %>% 
+  mutate(admin4_code = str_sub(admin4_code, end = -1)) %>% 
   left_join(
     ds_admin_full %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
@@ -229,7 +229,7 @@ ds2 <-
                .default = .)))
 
 ds_prog_fin <- ds2 %>%
-  mutate(admin4_code = str_sub(admin4_code, end = -2)) %>% 
+  mutate(admin4_code = str_sub(admin4_code, end = -1)) %>% 
   left_join(
     ds_admin_full %>% 
       distinct(budget_code, hromada_name, hromada_code, raion_code, raion_name               
