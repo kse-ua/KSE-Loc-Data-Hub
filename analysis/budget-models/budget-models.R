@@ -116,7 +116,11 @@ d <- d %>% mutate(income_own_2021_per_capita = income_own_full_year_2021*1000/to
                   
                   recovery_distance_2_factor =  factor(recovery_month_distance_2),
                   recovery_distance_2_factor_alt = factor(case_when(is.na(recovery_month_distance_2) ~ 0,
-                                                                !is.na(recovery_month_distance_2) ~ 1)))
+                                                                !is.na(recovery_month_distance_2) ~ 1)),
+                  income_own_no_mil_2021 = income_own_2021 - income_military_2021,
+                  income_own_no_mil_2022 = income_own_2022 - income_military_2022,
+                  income_pdfo_other_2021 = income_pdfo_2021 - income_military_2021,
+                  income_pdfo_other_2022 = income_pdfo_2022 - income_military_2022)
 levels(d$recovery_score_factor) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13")
 levels(d$recovery_count_score_factor) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 levels(d$recovery_distance_2_factor) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
@@ -135,6 +139,37 @@ toh_before_22 <- c("0556100000","0555600000","1253800000","0555500000","12534000
                    ,"1253600000","0555300000") 
 '%nin%' <- Negate('%in%') 
 non_occupied_2021 <- d %>% filter(budget_code %nin% toh_before_22)
+non_occupied_2022 <- d %>% filter(Status_war_sept_ext != "occupied")
+
+nrow(subset(non_occupied_2022, ((income_own_2022/income_own_2021 - 1)*100)>=15))/nrow(non_occupied_2022)
+nrow(subset(non_occupied_2022, ((income_own_2022/income_own_2021 - 1)*100)<= (-15)))/nrow(non_occupied_2022)
+
+
+nrow(subset(non_occupied_2022, ((income_own_no_mil_2022/income_own_no_mil_2021 - 1)*100)>15))/nrow(non_occupied_2022)
+nrow(subset(non_occupied_2022, ((income_own_no_mil_2022/income_own_no_mil_2021 - 1)*100)< (-15)))/nrow(non_occupied_2022)
+
+hromada_15 <- subset(non_occupied_2022, ((income_own_2022/income_own_2021 - 1)*100)>=15)
+sum(hromada_15$income_military_2022-hromada_15$income_military_2021)/
+sum(hromada_15$income_own_2022-hromada_15$income_own_2021)
+sum(hromada_15$income_military_2022-hromada_15$income_military_2021)
+
+non_occupied_2022 %>% filter( ((income_own_no_mil_2022/income_own_no_mil_2021 - 1)*100)<0,
+                             ((income_own_2022/income_own_2021 - 1)*100)>0) %>%
+  summarise(n = n()/ nrow(non_occupied_2022))
+
+non_occupied_2022 %>% 
+  summarise(pdfo_own_2022= mean(pdfo_own_prop_2022, na.rm =TRUE),
+            pdfo_2022= mean(pdfo_prop_2022, na.rm =TRUE))
+non_occupied_2022 %>% 
+  summarise(pdfo_own_2022= mean(pdfo_own_prop_2021, na.rm =TRUE),
+            pdfo_2022= mean(pdfo_prop_2021, na.rm =TRUE))
+
+nrow(subset(non_occupied_2022, ((income_pdfo_other_2022/non_occupied_2022 %>% filter( ((income_own_no_mil_2022/income_own_no_mil_2021 - 1)*100)<0,
+                             ((income_own_2022/income_own_2021 - 1)*100)>0) %>% - 1)*100)<= (-20)))/nrow(non_occupied_2022)
+
+
+non_occupied_2022 %>% filter( ((income_military_2022/income_military_2021 - 1)*100)>50) %>%
+  summarise(n = n())
 
 summary(non_occupied_2021$base_subsidy_prop_2021)
 nrow(subset(non_occupied_2021, base_subsidy_prop_2021 <= 0.05))/nrow(non_occupied_2021)

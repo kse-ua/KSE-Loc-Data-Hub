@@ -127,8 +127,7 @@ income_2022 <-
          # own_income_no_mil_change_YoY_jun_aug,
          # own_income_no_mil_change_YoY_mar_may,
          # own_income_no_mil_change_YoY_adapt
-  ) %>% 
-  rename(income_own_2022 = income_own, income_total_2022 = income_total, income_transfert_2022 = income_transfert)
+  )
 
 #aggregate income data for 2021 as a predictor and combine with data for 2022
 ds1_budget_income <- 
@@ -141,9 +140,9 @@ ds1_budget_income <-
 ds1_budget_income_1 <- 
   ds_budget_income %>% 
   filter(year == "2022") %>%
-  select(c(ends_with('_prop'), 'hromada_code')) %>% 
+  select(c(starts_with("income"),ends_with('_prop'), 'hromada_code', 'income_military')) %>% 
   rename_at(
-    vars(ends_with("_prop")), ~paste(., "2022", sep = "_")
+    vars(starts_with("income"),ends_with("_prop")), ~paste(., "2022", sep = "_")
   )
 
 #add expenses
@@ -159,7 +158,29 @@ ds1_expenses <-
     ,"expenses_social_protection_2021" = "func_1000_share" 
     ,"expenses_salaries_2021" = "econ_2110_share"
     ,"expenses_capital_2021" = "econ_3000_share" 
-  )
+    ,"expenses_defense_2021" = "func_0200_share" 
+    ,"expenses_defense_2021_absolute" = "func_0200_abs" 
+    ,"total_expense_2021_absolute" = "total_expense"
+    
+  )%>% select(-c("year"))
+
+ds1_expenses_1 <- 
+  ds_budget_expences %>% 
+  filter(year == "2022") %>%
+  rename(
+    "expenses_state_functions_2022" = "func_0100_share" 
+    ,"expenses_local_government_2022" = "func_0111_share"
+    ,"expenses_economics_2022" = "func_0400_share"
+    ,"expenses_healthcare_2022" = "func_0700_share"
+    ,"expenses_education_2022" = "func_0900_share"
+    ,"expenses_social_protection_2022" = "func_1000_share" 
+    ,"expenses_salaries_2022" = "econ_2110_share"
+    ,"expenses_capital_2022" = "econ_3000_share" 
+    ,"expenses_defense_2022" = "func_0200_share" 
+    ,"expenses_defense_2022_absolute" = "func_0200_abs" 
+    ,"total_expense_2022_absolute" = "total_expense"
+  ) %>% select(-c("year"))
+
 
 
 #aggregate DFRR data for all years
@@ -360,6 +381,10 @@ d1 <-
   ) %>% 
   left_join(
     ds1_expenses
+    ,by = "hromada_code"
+  ) %>% 
+  left_join(
+    ds1_expenses_1
     ,by = "hromada_code"
   )
 
