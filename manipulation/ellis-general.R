@@ -161,6 +161,7 @@ ds1_expenses <-
     ,"expenses_defense_2021" = "func_0200_share" 
     ,"expenses_defense_2021_absolute" = "func_0200_abs" 
     ,"total_expense_2021_absolute" = "total_expense"
+    ,"expenses_capital_2021_absolute" = "econ_3000_abs"
     
   )%>% select(-c("year"))
 
@@ -179,6 +180,8 @@ ds1_expenses_1 <-
     ,"expenses_defense_2022" = "func_0200_share" 
     ,"expenses_defense_2022_absolute" = "func_0200_abs" 
     ,"total_expense_2022_absolute" = "total_expense"
+    ,"expenses_capital_2022_absolute" = "econ_3000_abs"
+    
   ) %>% select(-c("year"))
 
 
