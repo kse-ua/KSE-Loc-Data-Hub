@@ -168,8 +168,11 @@ nrow(subset(non_occupied_2022, ((income_pdfo_other_2022/non_occupied_2022 %>% fi
                              ((income_own_2022/income_own_2021 - 1)*100)>0) %>% - 1)*100)<= (-20)))/nrow(non_occupied_2022)
 
 
-non_occupied_2022 %>% filter( ((income_military_2022/income_military_2021 - 1)*100)>50) %>%
-  summarise(n = n())
+a <- non_occupied_2022 %>% 
+  mutate(chng_cap_exp = expenses_defense_2022_absolute-expenses_defense_2021_absolute,
+         chng_mil_pdfo = income_military_2022-income_military_2021) %>%
+  filter( ((income_military_2022/income_military_2021 - 1)*100)>50) %>%
+  summarise(n = cor(chng_def_exp, chng_mil_pdfo,use = "complete.obs"))
 
 summary(non_occupied_2021$base_subsidy_prop_2021)
 nrow(subset(non_occupied_2021, base_subsidy_prop_2021 <= 0.05))/nrow(non_occupied_2021)
