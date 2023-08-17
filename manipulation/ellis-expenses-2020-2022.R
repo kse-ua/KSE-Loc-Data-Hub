@@ -264,15 +264,19 @@ ds_expenses_short <- ds_fin %>%
          ,func_0700_share = rowSums(across(starts_with("func_07"))) / total_expense
          ,func_0900_share = rowSums(across(starts_with("func_09"))) / total_expense
          ,func_1000_share = rowSums(across(starts_with("func_10"))) / total_expense
-         ,func_0200_share = rowSums(across(starts_with("func_02"))) / total_expense
-         ,func_0200_abs = rowSums(across(starts_with("func_02")))
+         ,prog_8220_share = rowSums(across(starts_with("prog_8220"))) / total_expense
+         ,prog_8220_abs = rowSums(across(starts_with("prog_8220")))
+         ,prog_8240_share = rowSums(across(starts_with("prog_8240"))) / total_expense
+         ,prog_8240_abs = rowSums(across(starts_with("prog_8240")))
+         ,prog_9820_share = rowSums(across(starts_with("prog_9820"))) / total_expense
+         ,prog_9820_abs = rowSums(across(starts_with("prog_9820")))
          ,econ_2110_share = econ_2110 / total_expense
          ,econ_3000_share = rowSums(across(starts_with("econ_3"))) / total_expense
          ,econ_3000_abs = rowSums(across(starts_with("econ_3")))
          ,association = case_when(prog_7680 > 0 ~ 1, .default = 0)
   ) %>% 
-  select(hromada_code, year, total_expense, func_0100_share, func_0111_share,func_0200_share,func_0200_abs, func_0400_share,
-         func_0700_share, func_0900_share, func_1000_share, econ_2110_share, econ_3000_share,econ_3000_abs,
+  select(hromada_code, year, total_expense, func_0100_share, func_0111_share,prog_8220_share,prog_8220_abs,prog_8240_share,prog_8240_abs, func_0400_share,
+         prog_9820_share, prog_9820_abs, func_0700_share, func_0900_share, func_1000_share, econ_2110_share, econ_3000_share,econ_3000_abs,
          association)
 # no func_0110 in 2021
 

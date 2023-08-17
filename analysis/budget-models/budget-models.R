@@ -173,6 +173,27 @@ a <- non_occupied_2022 %>%
           ((expenses_capital_2022_absolute/expenses_capital_2021_absolute)-1)/100 > 0,
           ((income_own_2022/income_own_2021 - 1)*100)>0)
 
+a <- non_occupied_2022 %>% 
+  mutate(chng_cap_exp = (expenses_capital_2022_absolute-expenses_capital_2021_absolute)/1000,
+         chng_mil_pdfo = (income_military_2022-income_military_2021),
+         chng_cap_exp_perc = ((expenses_capital_2022_absolute/expenses_capital_2021_absolute)-1)/100,
+         chng_mil_pdfo_perc = ((income_military_2022/income_military_2021)-1)/100,
+         chng_teroborona_exp = (expenses_teroborona_2022_absolute-expenses_teroborona_2021_absolute)/1000,
+         chng_mobiliz_exp = (expenses_mobiliz_2022_absolute-expenses_mobiliz_2021_absolute)/1000,
+         chng_transfert_defense_exp = (expenses_transfert_defense_2022_absolute-expenses_transfert_defense_2021_absolute)/1000) %>% 
+  filter(((income_own_no_mil_2022/income_own_no_mil_2021 - 1)*100)<0,
+         ((income_own_2022/income_own_2021 - 1)*100)>0
+         ) %>%
+  dplyr::select(hromada_name,
+                oblast_name,
+                chng_cap_exp,
+                chng_cap_exp_perc,
+                chng_teroborona_exp,
+                chng_mobiliz_exp,
+                chng_transfert_defense_exp,
+                chng_mil_pdfo,
+                chng_mil_pdfo_perc)
+
 summary(non_occupied_2021$base_subsidy_prop_2021)
 nrow(subset(non_occupied_2021, base_subsidy_prop_2021 <= 0.05))/nrow(non_occupied_2021)
 
