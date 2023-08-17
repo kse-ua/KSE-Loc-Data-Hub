@@ -183,7 +183,16 @@ a <- non_occupied_2022 %>%
          chng_transfert_defense_exp = (expenses_transfert_defense_2022_absolute-expenses_transfert_defense_2021_absolute)/1000) %>% 
   filter(((income_own_no_mil_2022/income_own_no_mil_2021 - 1)*100)<0,
          ((income_own_2022/income_own_2021 - 1)*100)>0
-         ) %>%
+         ) %>% 
+  summarise(change_mil = sum(income_military_2022-income_military_2021),
+            change_own_rev = sum(income_own_2022-income_own_2021, na.rm = TRUE),
+            change_cap = sum((expenses_capital_2022_absolute-expenses_capital_2021_absolute)/1000),
+            teroborona = sum((expenses_teroborona_2022_absolute)/1000),
+            mobiliz_exp = sum((expenses_mobiliz_2022_absolute)/1000))
+  
+
+
+  
   dplyr::select(hromada_name,
                 oblast_name,
                 chng_cap_exp,
