@@ -240,8 +240,8 @@ ds3 <-
     ,youth_pct = round(youth/total, 2)
     ,working_age_total = sum(count_declarations[working_age == "1"])
     ,working_age_pct = round(working_age_total/total,2)
+    ,male_18_60 = sum(count_declarations[person_gender == "чоловіча" & (person_age >= 18 & person_age < 61)])
   )
-
 
 #+ save-data, eval=eval_chunks -------------------------------------------------
 readr::write_csv(ds2, "./data-public/derived/declarations-all.csv") #long format

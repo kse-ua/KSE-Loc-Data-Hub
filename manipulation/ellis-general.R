@@ -137,6 +137,7 @@ ds1_budget_income <-
   rename_at(
     vars(starts_with("income"),ends_with("_prop")), ~paste(., "2021", sep = "_")
   )
+
 ds1_budget_income_1 <- 
   ds_budget_income %>% 
   filter(year == "2022") %>%
@@ -401,7 +402,7 @@ d1 <-
 
 d1_public <- 
   d1 %>% 
-  select(-(ds1_heads %>% select(-hromada_code, -turnout_2020) %>%  colnames()))
+  select(-(ds1_heads %>% select(-hromada_code, -turnout_2020) %>%  colnames()), -male_18_60) 
 
 #TO-DO: add big taxpayers
 #TO-DO: add dates of creation + status based on military actions/occupation (DONE)
