@@ -146,6 +146,14 @@ ds1_budget_income_1 <-
     vars(starts_with("income"),ends_with("_prop")), ~paste(., "2022", sep = "_")
   )
 
+ds1_budget_income_2 <- 
+  ds_budget_income %>% 
+  filter(year == "2023") %>%
+  select(c(starts_with("income"),ends_with('_prop'), 'hromada_code', 'income_military')) %>% 
+  rename_at(
+    vars(starts_with("income"),ends_with("_prop")), ~paste(., "2023", sep = "_")
+  )
+
 #add expenses
 ds1_expenses <- 
   ds_budget_expences %>% 
@@ -320,6 +328,10 @@ d1 <-
       ds1_budget_income_1 
       ,by = "hromada_code" 
   ) %>% 
+  left_join(
+    ds1_budget_income_2 
+    ,by = "hromada_code" 
+  ) %>%
   left_join(
     income_2022
     ,by = "hromada_code"  
