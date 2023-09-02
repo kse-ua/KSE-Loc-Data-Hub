@@ -62,7 +62,7 @@ for(i in seq_along(paths_budget)){
   ls_import[[i]] <- 
     readxl::read_xlsx(
       path = paths_budget[[i]]
-    ,guess_max = 1048576) %>% 
+      ,guess_max = 1048576) %>% 
     janitor::clean_names() %>%
     mutate_all(.funs = as.character)
 }
@@ -179,7 +179,7 @@ ds4_long <-
   ds3_long %>% 
   mutate(
     transfert = str_detect(tax_code, "^4.+")
-    ,target_segment = month %in% c(1:12) & year %in% c(2021, 2022)
+    ,target_segment = month %in% c(3:12) & year %in% c(2021, 2022)
     ,military_tax = tax_code %in% c('11010200')
     ,income_tax = str_detect(tax_code, "^1101.+")
     ,unified_tax = str_detect(tax_code, "^1805.+")
@@ -193,6 +193,7 @@ ds4_long <-
     ,capital_proceedings = str_detect(tax_code, "^3.+")
     ,special_funds = str_detect(tax_code, "^5.+")
     ,rent = str_detect(tax_code, "^130.+")
+    ,base_subsidy = str_detect(tax_code, "^410201.+")
     
   )
 
@@ -216,6 +217,7 @@ ds5_long <- ds4_long %>%
     ,income_capital_proceedings = sum(amount*capital_proceedings, na.rm = T)
     ,income_special_funds = sum(amount*special_funds, na.rm = T)
     ,income_rent = sum(amount*rent, na.rm = T)
+    ,income_base_subsidy = sum(amount*base_subsidy, na.rm = T)
     ,.groups = "drop"
   ) %>% 
   ungroup() %>% 
@@ -240,6 +242,7 @@ ds5_long <- ds4_long %>%
     ,unified_tax_own_prop = round(income_unified_tax/income_own,4)
     ,property_tax_own_prop = round(income_property_tax/income_own,4)
     ,rent_own_prop = round(income_rent/income_own,4)
+    ,base_subsidy_prop = round(income_base_subsidy/income_total,4)
   ) %>%
   group_by(budget_code) %>% 
   mutate(
@@ -318,6 +321,7 @@ ds4_long_a <-
     ,capital_proceedings = str_detect(tax_code, "^3.+")
     ,special_funds = str_detect(tax_code, "^5.+")
     ,rent = str_detect(tax_code, "^130.+")
+    ,base_subsidy = str_detect(tax_code, "^410201.+")
   )
 
 ds4_long %>% glimpse(80)
@@ -341,6 +345,7 @@ ds5_long_temp <-
     ,income_capital_proceedings = sum(amount*capital_proceedings, na.rm = T)
     ,income_special_funds = sum(amount*special_funds, na.rm = T)
     ,income_rent = sum(amount*rent, na.rm = T)
+    ,income_base_subsidy = sum(amount*base_subsidy, na.rm = T)
     ,.groups = "drop"
   ) %>% 
   ungroup() %>% 
@@ -353,6 +358,7 @@ ds5_long_temp <-
     ,unified_tax_prop    = round(income_unified_tax/income_total,2)
     ,property_tax_prop   = round(income_property_tax/income_total,2)
     ,excise_duty_prop    = round(income_excise_duty/income_total,2)
+    ,base_subsidy_prop = round(income_base_subsidy/income_total,2)
   ) %>%
   group_by(budget_code) %>% 
   mutate(
@@ -524,12 +530,12 @@ info_income_structure <- a %>% mutate(month = as.numeric(month)) %>%
                                       ,rent_prop = round((sum(income_rent, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
                                       ,non_tax_prop = round((sum(income_non_tax, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
                                       ,corporate_tax_prop = round((sum(income_corporate_tax, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
-                                               ,parking_fee_prop = round((sum(income_parking_fee, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
-                                               ,tourist_fee_prop = round((sum(income_tourist_fee, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
-                                               ,eco_tax_prop = round((sum(income_eco_tax, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
-                                               ,capital_proceedings_prop = round((sum(income_capital_proceedings, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
-                                               ,special_funds_prop = round((sum(income_special_funds, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
-                                               )
+                                      ,parking_fee_prop = round((sum(income_parking_fee, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,tourist_fee_prop = round((sum(income_tourist_fee, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,eco_tax_prop = round((sum(income_eco_tax, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,capital_proceedings_prop = round((sum(income_capital_proceedings, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+                                      ,special_funds_prop = round((sum(income_special_funds, na.rm = TRUE)/sum(income_total, na.rm = TRUE)),4)
+  )
 info_own_income_structure <- a %>% mutate(month = as.numeric(month)) %>%
   group_by(year, month) %>% summarise(pdfo_prop = round((sum(income_pdfo, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
                                       ,unified_tax_prop = round((sum(income_unified_tax, na.rm = TRUE)/sum(income_own, na.rm = TRUE)),4)
@@ -621,7 +627,7 @@ b <- a %>%
          own_income_no_mil_change_YoY_oct_dec = case_when(own_income_no_mil_change_YoY_oct_dec <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_oct_dec),
          own_income_no_mil_change_YoY_may_feb = case_when(own_income_no_mil_change_YoY_may_feb <= -100 ~ -100, TRUE ~ own_income_no_mil_change_YoY_may_feb),
          
-         ) %>%
+  ) %>%
   group_by(budget_code, year) %>%
   mutate(income_own_full_year = sum(income_own, na.rm = TRUE),
          income_total_full_year = sum(income_total, na.rm = TRUE),
@@ -636,11 +642,11 @@ check_per_capita <- b %>% left_join(
   filter(budget_name == "Бюджет Новороздільської міської територіальної громади" |
            budget_name ==                 "Бюджет Краснокутської селищної територіальної громади" |
            budget_name ==                 "Бюджет Боярської міської територіальної громади" |
-         budget_name ==               "Бюджет Нововолинської міської територіальної громади" |
-         budget_name ==                "Бюджет Новоушицької селищної територіальної громади" |
-         budget_name ==                "Бюджет Городенківської міської територіальної громади") %>% 
+           budget_name ==               "Бюджет Нововолинської міської територіальної громади" |
+           budget_name ==                "Бюджет Новоушицької селищної територіальної громади" |
+           budget_name ==                "Бюджет Городенківської міської територіальної громади") %>% 
   distinct(budget_name, year, .keep_all = TRUE) %>% filter(year != 2023)
- 
+
 
 # b$own_income_no_mil_change_YoY_jun_aug[b$year == 2021] <- NA
 # b$own_income_no_mil_change_YoY_mar_may[b$year == 2021] <- NA
@@ -675,7 +681,7 @@ q <- c %>% filter(year==2022) %>%
 
 ds_5_add <- ds3 %>% 
   mutate(revenue_total = rowSums(across(starts_with(c('1','2', '3', '4', '5'))), na.rm = TRUE),
-                           revenue_own = revenue_total - rowSums(across(starts_with(c('4'))), na.rm = TRUE),
+         revenue_own = revenue_total - rowSums(across(starts_with(c('4'))), na.rm = TRUE),
          revenue_military_tax = case_when(is.na(`11010200`)~0, TRUE ~ `11010200`),
          revenue_corporate_tax = case_when(is.na(`11020200`)~0, TRUE ~ `11020200`),
          revenue_own_no_mil_tax = revenue_own - revenue_military_tax,
@@ -709,7 +715,7 @@ ds_5_add_CPI <- ds_5_add %>%
          revenue_own_no_mil_tax_const = case_when(revenue_own_no_mil_tax >= 0 ~ (revenue_own_no_mil_tax / CPI_index_base_2021_1),
                                                   revenue_own_no_mil_tax < 0 ~ revenue_own_no_mil_tax),
          revenue_own_no_mil_tax_corp_tax_const = case_when(revenue_own_no_mil_tax_corp_tax >= 0 ~ (revenue_own_no_mil_tax_corp_tax / CPI_index_base_2021_1),
-                                                               revenue_own_no_mil_tax_corp_tax < 0 ~ revenue_own_no_mil_tax_corp_tax))
+                                                           revenue_own_no_mil_tax_corp_tax < 0 ~ revenue_own_no_mil_tax_corp_tax))
 
 
 ds_5_add_CPI <- ds_5_add_CPI %>% mutate(month = as.numeric(month),
@@ -797,9 +803,8 @@ d_5_add_CPI_dist_alt <- ds_5_add_CPI_1 %>%
 
 d_5_add_CPI_dist_add <- ds_5_add_CPI_short %>%
   group_by(hromada_code, month) %>%
-  filter((year == 2022 & month >= 3 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
-           (year == 2023 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
-           (year == 2024 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021])) %>%
+  filter((year == 2022 & month >= 5 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2021]) |
+           (year == 2023 & month <= 2 & revenue_own_no_mil_tax_const > revenue_own_no_mil_tax_const[year == 2022]) ) %>%
   group_by(hromada_code) %>% summarise(count_recovery = n())
 
 
@@ -810,7 +815,7 @@ d_5_add_CPI_dist_add <- ds_5_add_CPI_short %>%
 
 ds5_final <- ds5_long %>%
   left_join(c, by = c("budget_code","year")) %>%
-  left_join(d_5_add_CPI_dist, by = "hromada_code") %>% 
+  left_join(d_5_add_CPI_dist, by = "hromada_code") %>%
   mutate(diversification_income_score = (corporate_tax_own_prop*100)^2 +
            (parking_fee_own_prop*100)^2 +
            (tourist_fee_own_prop*100)^2 +
@@ -822,12 +827,12 @@ ds5_final <- ds5_long %>%
            (pdfo_own_prop*100)^2 +
            (unified_tax_own_prop*100)^2 +
            (property_tax_own_prop*100)^2
-           ) %>%
+  ) %>%
   left_join(d_5_add_CPI_dist_add, by = "hromada_code") %>%
   left_join(d_5_add_CPI_dist_alt, by = "hromada_code") %>%
   mutate(count_recovery = case_when(!is.na(count_recovery) ~ count_recovery,
-                                     is.na(count_recovery) ~ 0))
-  
+                                    is.na(count_recovery) ~ 0))
+
 
 cases_up_down <- ds_5_add_CPI_short %>%
   group_by(hromada_code, year, month) %>%
@@ -865,14 +870,22 @@ ds5_long_temp_CPI <- ds5_long_temp %>%
       . < 0 ~ .
     )
   )
-   
+
+ds6_long_temp <- ds5_long_temp %>% 
+  select(!contains(c("_prop", "_change")), income_property_tax) %>% 
+  left_join(
+    ds_admin %>% select(budget_code, hromada_code, oblast_name)
+    ,by ="budget_code"
+  )
+
 
 library(openxlsx)
 
 openxlsx::write.xlsx(dataset_names_dis, './data-public/derived/hromada_budget_2020_2022_taxes.xlsx')
 openxlsx::write.xlsx(dataset_names, './data-public/derived/hromada_budget_2020_2022.xlsx')
 readr::write_csv(ds5_final, './data-public/derived/hromada_budget_2020_2022.csv')
-readr::write_csv(ds5_long_temp_CPI, './data-public/derived/hromada_budget_2020_2022_long.csv')
+readr::write_csv(ds5_long_temp_CPI, './data-public/derived/hromada_budget_2020_2022_long_CPI.csv')
+readr::write_csv(ds6_long_temp, './data-public/derived/hromada_budget_2020_2022_long.csv')
 
 #+ results="asis", echo=F ------------------------------------------------------
 cat("\n# A. Session Information{#session-info}")
