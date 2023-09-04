@@ -34,8 +34,6 @@ library(stringr)
 
 #+ declare-globals -------------------------------------------------------------
 
-path_tsnap   <- "./data-public/raw/rejestr-cnap.xlsx"
-
 cat("\n# 2.Data ")
 
 #+ load-data, eval=eval_chunks -------------------------------------------------
