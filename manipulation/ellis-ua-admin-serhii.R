@@ -361,8 +361,10 @@ ds_admin_old <-
     ,~str_to_title(.)
   ) %>% 
   mutate(
-    raion_name = str_remove(raion_name, " Район.+")
-    ,oblast_name = str_remove(oblast_name, " Область.+")
+    # raion_name = str_remove(raion_name, " Район.+", perl = TRUE)
+    # ,oblast_name = str_remove(oblast_name, " Область.+", perl = TRUE )
+    raion_name = gsub(" Район.+", "", raion_name)
+    ,oblast_name = gsub(" Область.+", "", oblast_name)
   ) %>% 
   mutate_at(
     vars(settlement_name, rada_name, raion_name, oblast_name)
@@ -552,6 +554,12 @@ ds_admin_full <-
      ,settlement_code == "UA65060110020037465" ~ "2154100000"
      ,TRUE ~ budget_code
    )
+  ) %>% 
+  left_join(
+    ds_admin_old %>% 
+      select(settlement_code, raion_code, raion_name) %>% 
+      rename(settlement_code_old = settlement_code, raion_code_old = raion_code, raion_name_old = raion_name)
+    ,by = "settlement_code_old"
   )
 
 
