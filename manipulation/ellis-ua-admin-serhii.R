@@ -560,12 +560,12 @@ ds_admin_full <-
       select(settlement_code, raion_code, raion_name) %>% 
       rename(settlement_code_old = settlement_code, raion_code_old = raion_code, raion_name_old = raion_name)
     ,by = "settlement_code_old"
+  ) %>% 
+  mutate(
+    raion_code_old = ifelse(is.na(raion_name_old), NA, raion_code_old)
   )
 
 
-
-
-# ds_admin_full %>% filter(is.na(budget_code_old) ) %>% View()
 
 #identification of relevant settlement name among three variables
 # ds_admin_full %>% 
