@@ -119,7 +119,7 @@ joining_hromada <- ds1 %>% filter(is.na(hromada_name)) %>%
   select(code, name, address, formation_form, workers_total, square_total, 
          state, hromada_name.y, settlement, council, oblast_name, code) %>%
   rename(hromada_name = hromada_name.y) %>%
-  distinct(code, .keep_all = TRUE) %>%
+  distinct(code, .keep_all = TRUE)
 
 # i did smth wrong cause it shouldn't be with distinct but i'm too tired to dig more
 
@@ -164,18 +164,26 @@ ds3 %>% filter(is.na(hromada_name)) %>% view()
 # 90 are still with NA
 
 # n in hromada 
-#without 527 rows
 ready <- ds3 %>% filter(!is.na(hromada_name)) %>% 
   group_by(hromada_name) %>% 
   summarise(workers_total = sum(workers_total), 
             square_total = sum(square_total)) %>%
-  left_join(ds_hromada, by = "hromada_name") # if no data put 0
+  right_join(ds_hromada, by = "hromada_name") # if no data put 0
 
-ready %>% filter(is.na(hromada_code)) %>% view() 
+ready %>% filter(is.na(workers_total)) %>% view()
 # 33 з проблемами в апострофвх і тире знайти через ni
 
-
 # not informative, maybe replacing with our values - цнап чи відокремлене місце 
-formation_form <- ds3 %>% group_by(hromada_name, formation_form) %>%
-  count() %>% pivot_wider(names_from = formation_form, values_from = n)
+formation_form <- ds3 %>% 
+  mutate(form = str_to_lower(formation_form)) %>% 
+  group_by(hromada_name, form) %>%
+  count() %>% pivot_wider(names_from = form, values_from = n)
 # зробити структурний підрозділ + постійно діючий робочий орган + відалене робоче місце
+
+# doe not work correctly
+mutate(form = case_when(
+  "структурний підрозділ" %in% formation_form ~ "структурний підрозділ",
+  "постійно діючий"  %in% formation_form ~ "постійно діючий робочий орган",
+  "відалене робоче місце" %in% formation_form ~ "відалене робоче місце", 
+  TRUE  ~ formation_form
+))
