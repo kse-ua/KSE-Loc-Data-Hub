@@ -95,7 +95,7 @@ and Regional Development</p></td>
 
 -   [Hromada Dashboard](https://valentyn-hatsko.shinyapps.io/hromada-dash/) - Dashboard with Data on Territorial Communities
 
--   [Share of military PIT in total community revenues in 2021 and 2022]() - Map of change in share of military PIT from VoxUkraine column
+-   [Share of military PIT in total community revenues in 2021 and 2022](https://raw.githack.com/kse-ua/ua-de-center/main/publications/vox/map_pct_military.html) - Map of change in share of military PIT from VoxUkraine column
 
 ## Articles
 
