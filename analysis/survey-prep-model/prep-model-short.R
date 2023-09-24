@@ -57,6 +57,8 @@ meta_survey <- googlesheets4::read_sheet(survey_url,"survey",skip = 0)
 meta_choices <- googlesheets4::read_sheet(survey_url,"choices",skip = 0)
 ds_weights <- readr::read_csv("./data-private/derived/index_preparedness_weights.csv")
 ds_partnerships <- readr::read_csv("./data-private/derived/partnerships-hromadas.csv")
+ds_heads <- readxl::read_excel("./data-private/raw/hromada_heads.xlsx")
+
 # ---- variable-groups -----------------------------------------------------------
 # create supporting objects for convenient reference of variable groups
 
@@ -135,6 +137,8 @@ ds0 <-
   ds_survey %>% 
   left_join(ds_general,
             by = 'hromada_code') %>% 
+  left_join(ds_heads %>% select(hromada_code, sex, age, polit_work, incumbent),
+            by = 'hromada_code') %>% 
   select(-ends_with('.y')) %>%
   rename_at(.vars = vars(ends_with(".x")),
             .funs = list(~ sub("[.]x$", "", .))) %>%
@@ -188,7 +192,8 @@ ds0 <-
            prep_notification_check_oct*1.19 + prep_backup_oct*1.08) 
   
 
-vars_income <- ds0 %>% select(starts_with('income'), ends_with('prop')) %>% 
+vars_income <- ds0 %>% select(starts_with('income'), ends_with('prop'), own_income_prop_2021,
+                              own_income_prop_full_year) %>% 
   colnames()
 
 vars_expenses <- ds0 %>% select(starts_with('expenses'), association) %>% colnames()
@@ -197,13 +202,13 @@ vars_expenses <- ds0 %>% select(starts_with('expenses'), association) %>% colnam
 vars2 <- ds0 %>% 
   select(contains('pct'), contains('prep_score'), prep_winter_count) %>% colnames()
 
-var_select <- c(vars_expenses, vars2)
+var_select <- c(vars_expenses, vars_income, vars2)
 
 ds1 <- ds0 %>% select(all_of(var_select), Status_war_sept_ext) %>% select(-prep_score_oct)
 
 ds2 <- ds0 %>% 
   select(contains('expenses'), oblast_significance, type, prep_score_feb, 
-         prep_winter_count, Status_war_sept_ext) %>% 
+         prep_winter_count, Status_war_sept_ext, vars_income, urban_pct) %>% 
   mutate(city = factor(ifelse(type == 'міська', 1, 0)),
          expenses_local_government_2021_perc = expenses_local_government_2021*100,
          expenses_state_functions_2021_perc = expenses_state_functions_2021*100) %>% 
@@ -213,7 +218,7 @@ ds1 %>% summarise(across(everything(), ~sum(is.na(.)))) %>% t()
 #+ - tweak-data-2 --------------------------------------------------------------
 
 ds2 <-
-  ds1 %>%
+  ds0 %>%
   # scaling
   mutate(
     # income_total_per_capita_k = income_total_2021_per_capita/1000
@@ -234,6 +239,8 @@ ds2 <-
     dfrr_executed_k_zeros = replace_na(dfrr_executed_k_per_capita, 0)
     ,passengers_2021_per_capita_zeros = replace_na(passengers_2021_per_capita, 0)
     ,osbb_per_capita_2020_zeros = replace_na(osbb_per_capita_k_2020, 0)
+    ,polit_work = replace_na(polit_work, 0)
+    ,incumbent = replace_na(incumbent, 'no')
   ) %>%
   # making binary vars where not enough variation
   mutate(
@@ -243,7 +250,8 @@ ds2 <-
     ,city = factor(ifelse(type == 'міська', 1, 0))
     ,dfrr_bin = ifelse(dfrr_executed_20_21 > 0, 1, 0)
     ,pioneer = ifelse(creation_year %in% c(2015, 2016), 1, 0)
-  ) %>% fastDummies::dummy_cols(select_columns = c('type', 'region_en')) %>% 
+    ,Status_war_sept_ext = relevel(as.factor(Status_war_sept_ext), ref = "not occupied")) %>% 
+  fastDummies::dummy_cols(select_columns = c('type', 'region_en')) %>% 
   select(-c(hromada_name, hromada_full_name, raion_code, raion_name, oblast_code,
             oblast_name, occupation, military_action, hromada_code, 
             contains("declarations"), occipied_before_2022, contains('war_zone'),
@@ -253,7 +261,7 @@ ds2 <-
             passangers_2021, urban_pct, passengers_2021_per_capita, region_en, 
             type, city)) %>% 
   select(-c(mountain_hromada, near_seas, bordering_hromadas,
-            hromadas_30km_from_border, buffer_nat_15km,
+            buffer_nat_15km,
             buffer_int_15km, oblast_center, 
             passengers_2021_per_capita_zeros, creation_date,
             creation_year, edem_consultations, edem_petitions, edem_participatory_budget,
@@ -274,19 +282,26 @@ ds2 %>% select(turnout_2020) %>%
   summarise(mean = mean(turnout_2020), sd = sd(turnout_2020))
 ##+ Preparation Score February -------------------------------------------------
 
+ds2 %>% fastDummies::dummy_cols(select_columns = c('type')) %>%
+  select(oblast_significance, urban_pct, own_income_prop_2021, own_income_prop_full_year, type_міська) %>% 
+  cor() %>% 
+  corrplot::corrplot(method = 'number', tl.cex = 0.5)
+
 ds2$prep_score_feb_round <- round(ds2$prep_score_feb)
 
-model_gaussian <- lm(prep_score_feb ~ oblast_significance + city,
+model_gaussian <- lm(prep_score_feb ~ city + oblast_significance,
                      data = ds2)
 summary(model_gaussian)
 
-model_gaussian_re <- lmtest::coeftest(model_gaussian, 
-                                      vcov = sandwich::vcovHC(model_gaussian, type = 'HC3'))
+model_gaussian_re <- 
+  lmtest::coeftest(
+    model_gaussian, 
+    vcov = sandwich::vcovHC(model_gaussian, type = 'HC1'))
 model_gaussian_re
 
 plot(model_gaussian)
 
-model_poisson <- glm(prep_score_feb ~ expenses_state_functions_2021_perc, 
+model_poisson <- glm(prep_score_feb ~ oblast_significance + city + own_income_prop_2021, 
                      data = ds2, family = "poisson")
 
 summary(model_poisson)
@@ -319,7 +334,7 @@ summary(model_negbin)
 ##+ Preparation Winter -------------------------------------------------
 
 model_negbin <- MASS::glm.nb(
-  prep_winter_count ~ expenses_local_government_2021_perc, 
+  prep_winter_count ~ city + oblast_significance, 
                              data = ds2)
 
 summary(model_negbin)
@@ -330,10 +345,6 @@ model_negbin_re
 
 model_negbin_re <- lmtest::coeftest(model_negbin, 
                                     vcov = sandwich::vcovHC(model_negbin, type = 'HC1'))
-model_negbin_re
-
-model_negbin_re <- lmtest::coeftest(model_negbin, 
-                                    vcov = sandwich::vcovHC(model_negbin, type = 'HC2'))
 model_negbin_re
 
 variables <- colnames(ds2)[-c(4, 5 , 24, 28)]
