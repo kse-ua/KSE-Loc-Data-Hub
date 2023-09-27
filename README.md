@@ -95,11 +95,15 @@ and Regional Development</p></td>
 
 -   [Hromada Dashboard](https://valentyn-hatsko.shinyapps.io/hromada-dash/) - Dashboard with Data on Territorial Communities
 
+-   [Share of military PIT in total community revenues in 2021 and 2022](https://raw.githack.com/kse-ua/ua-de-center/main/publications/vox/map_pct_military.html) - Map of change in share of military PIT from VoxUkraine column
+
 ## Articles
 
 -   VoxUkraine. [What makes territorial communities resilient – the first lessons after February 24](https://voxukraine.org/en/what-makes-territorial-communities-resilient-the-first-lessons-after-february-24)
 
 -   VoxUkraine. [A year of experience: Governance processes and the territorial communities’ (hromadas’) resilience to wartime challenges](https://voxukraine.org/en/a-year-of-experience-governance-processes-and-the-territorial-communities-resilience-to-wartime-challenges)
+
+- VoxUkraine. [«Військовий» ПДФО: як може змінитися система спрямування податку та до чого це призведе](https://voxukraine.org/vijskovyj-pdfo-yak-mozhe-zminytysya-systema-spryamuvannya-podatku-ta-do-chogo-tse-pryzvede)
 
 ## Data Products
 

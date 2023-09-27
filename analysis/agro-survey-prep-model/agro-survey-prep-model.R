@@ -686,7 +686,7 @@ d %>% plot_complex_scan()
 
 
 m_admin <- glm(data = ds1, 
-               admin_services_stopped ~ voluntary + type_city + war_zone_20_06_2022, family = "binomial")
+               admin_services_stopped ~ city + war_zone_20_06_2022 + oblast_significance, family = "binomial")
 
 summary(m_admin)
 
@@ -730,7 +730,7 @@ plot(fitted(m2_admin), resid(m2_admin))
 
 plot(m6_admin)
 summary(m1_admin)
-coeftest(m1_admin, vcov = vcovHC(m1_admin, type = 'HC3'))
+coeftest(m_admin, vcov = vcovHC(m_admin, type = 'HC3'))
 
 #m5 has some decrease in z value with robust standard errors, but m6 has an increase
 
@@ -833,7 +833,7 @@ garbage_results <- map(c(predictor_vars_categorical_new, predictor_vars_continuo
   purrr::reduce(rbind) %>% 
   filter(!(term %in% c("(Intercept)", "type_city", "war_zone_20_06_2022")))
 
-m1_garbage <- glm(data = ds1, garbage_interruptions ~  type_city + war_zone_20_06_2022 + occupation_b, family = "binomial")
+m1_garbage <- glm(data = ds1, garbage_interruptions ~  city + war_zone_20_06_2022 + oblast_significance, family = "binomial")
 m2_garbage  <- glm(data = ds1, garbage_interruptions ~ region_en_North + type_city + war_zone_20_06_2022, family = "binomial")
 m3_garbage  <- glm(data = ds1, garbage_interruptions ~ hromadas_30km_russia_belarus + type_city + war_zone_20_06_2022, family = "binomial")
 m4_garbage  <- glm(data = ds1, garbage_interruptions ~ distance_to_russia_belarus + type_city + war_zone_20_06_2022, family = "binomial")

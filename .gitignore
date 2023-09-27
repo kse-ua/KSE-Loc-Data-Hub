@@ -110,10 +110,7 @@ Desktop.ini
 #     2. reorganized and moved above this chunk (so it won't be confused with files added unintentionally).
 
 analysis/temporal composition/tc.html
-*.html
 *.jpg
-*.html
-*.html
 !analysis/survey-overview/survey-overview-hatsko.html
 tmap01_files/leaflet-1.3.1/images/marker-shadow.png
 *.js
