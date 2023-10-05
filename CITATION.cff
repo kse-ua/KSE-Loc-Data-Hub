@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: dataset
+authors:
+- family-names: "Tytiuk"
+  given-names: "Serhii"
+  orcid: "-"
+- family-names: "Piddubniy"
+  given-names: "Ihor"
+  orcid: "-"
+- family-names: "Hatsko"
+  given-names: "Valentyn"
+  orcid: "-"
+title: "ua-de-center"
+version: 1.0.0
+doi: 10.5281/zenodo.1234
+date-released: 2023-10-05
+url: "https://github.com/kse-ua/ua-de-center"
