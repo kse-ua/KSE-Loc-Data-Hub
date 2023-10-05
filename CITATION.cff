@@ -4,7 +4,7 @@ type: dataset
 authors:
 - family-names: "Brik"
   given-names: "Tymofii"
-  orcid: "-"
+  orcid: "https://orcid.org/0000-0002-5542-1019"
 - family-names: "Hatsko"
   given-names: "Valentyn"
   orcid: "https://orcid.org/0009-0009-6572-9584"
