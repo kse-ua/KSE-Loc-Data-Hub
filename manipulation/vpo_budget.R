@@ -2,12 +2,12 @@ library(readxl)
 library(tidyverse)
 
 # loading data
-vpo0 <- read_excel("Documents/ua-de-center/data-public/raw/B&R__2024.xlsx", 
+vpo0 <- read_excel("./data-public/raw/B&R__2024.xlsx", 
                          sheet = "Table 4")
-vpo1 <- read_excel("Documents/ua-de-center/data-public/raw/B&R__2024.xlsx", 
+vpo1 <- read_excel("./data-public/raw/B&R__2024.xlsx", 
                        sheet = "Table 5")
 
-ds_admin <- readr::read_csv("~/Documents/ua-de-center/data-public/derived/ua-admin-map-2020.csv") 
+ds_admin <- readr::read_csv("./data-public/derived/ua-admin-map-2020.csv") 
 
 # getting only needed
 ds_code <- ds_admin %>% select(hromada_code, budget_name, budget_code) %>% distinct()
@@ -28,7 +28,10 @@ ds_vpo <- vpo1 %>% rbind(vpo0) %>%
     budget_name == "Бюджет Кропивницької міської територіальної громади" ~ "UA35040210000014072",
     budget_name == "Бюджет Полтавської міської територіальної громади" ~ "UA53080370000025447",
     .default = hromada_code)) %>%  
-  filter(is.na(hromada_code))
+  filter(!is.na(hromada_code)) %>%
+  select(c(6,7,13)) %>%
+  rename(vpo_thsd = 1,
+         new_population_thsd = 2)
 
-file_path <- "Documents/ua-de-center/data-public/derived/vpo_budget.csv"
+file_path <- "./data-public/derived/vpo_budget.csv"
 write.csv(ds_vpo, file = file_path, row.names = FALSE)

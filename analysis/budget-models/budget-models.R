@@ -160,7 +160,7 @@ non_occupied_2022 %>% filter( ((income_own_no_mil_2022/income_own_no_mil_2021 - 
 non_occupied_2022 %>% 
   summarise(pdfo_own_2022= mean(pdfo_own_prop_2022, na.rm =TRUE),
             pdfo_2022= mean(pdfo_prop_2022, na.rm =TRUE))
-non_occupied_2022 %>% 
+non_occupied_2021 %>% 
   summarise(pdfo_own_2022= mean(pdfo_own_prop_2021, na.rm =TRUE),
             pdfo_2022= mean(pdfo_prop_2021, na.rm =TRUE))
 
@@ -190,18 +190,6 @@ a <- non_occupied_2022 %>%
             teroborona = sum((expenses_teroborona_2022_absolute)/1000),
             mobiliz_exp = sum((expenses_mobiliz_2022_absolute)/1000))
   
-
-
-  
-  dplyr::select(hromada_name,
-                oblast_name,
-                chng_cap_exp,
-                chng_cap_exp_perc,
-                chng_teroborona_exp,
-                chng_mobiliz_exp,
-                chng_transfert_defense_exp,
-                chng_mil_pdfo,
-                chng_mil_pdfo_perc)
 
 summary(non_occupied_2021$base_subsidy_prop_2021)
 nrow(subset(non_occupied_2021, base_subsidy_prop_2021 <= 0.05))/nrow(non_occupied_2021)
@@ -410,9 +398,9 @@ a <- d %>% dplyr::select(YoY_jun_aug,
 indep_vars <- "YoY_mar_apr +
                  
                  log(total_population_2022) + 
-                 
+                 area +
+
                  urban_pct + 
-                 area + 
                  travel_time +
                  pioneer +
                  
@@ -422,7 +410,8 @@ indep_vars <- "YoY_mar_apr +
                  train_station+
                  expenses_local_government_2021+
                  expenses_capital_2021+
-                 
+
+                 youth_centers +
                  turnout_2020 +
                  edem_total +
                  n_agreements_hromadas +

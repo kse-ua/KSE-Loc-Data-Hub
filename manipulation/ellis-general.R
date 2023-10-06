@@ -58,7 +58,7 @@ path_passangers <- "./data-public/derived/passengers.csv"
 #path_internet_speed <- "./data-public/derived/internet-speed.csv"
 path_roads_lengths <- "./data-public/derived/roads-lengths.csv"
 path_cities_oblast_significance <- "./data-public/raw/cities_oblast_significance.xlsx"
-
+path_vpo <- "./data-public/derived/vpo_budget.csv"
 #+ declare-functions -----------------------------------------------------------
 
 #+ results="asis", echo=F ------------------------------------------------------
@@ -89,7 +89,7 @@ ds_roads_lengths <- readr::read_csv(path_roads_lengths)
 ds_partnerships <- readr::read_csv(path_partnerships)
 ds_cities_oblast_significance <- openxlsx::read.xlsx(path_cities_oblast_significance)
 ds_polygons <- sf::st_read(path_polygons) %>% janitor::clean_names()
-
+ds_vpo <- readr::read_csv(path_vpo)
 #+ inspect-data ----------------------------------------------------------------
 
 
@@ -409,6 +409,10 @@ d1 <-
   ) %>% 
   left_join(
     ds1_expenses_1
+    ,by = "hromada_code"
+  )%>% 
+  left_join(
+    ds_vpo
     ,by = "hromada_code"
   )
 
