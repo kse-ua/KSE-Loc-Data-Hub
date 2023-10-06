@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If you use this data, please cite it as below."
 type: dataset
 authors:
 - family-names: "Brik"
@@ -22,6 +22,5 @@ authors:
   orcid: "https://orcid.org/0009-0005-8860-2077"
 title: "ua-de-center"
 version: 1.0.0
-doi: 10.5281/zenodo.1234
 date-released: 2023-10-05
 url: "https://github.com/kse-ua/ua-de-center"
