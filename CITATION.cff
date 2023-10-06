@@ -23,4 +23,9 @@ authors:
 title: "ua-de-center"
 version: 1.0.0
 date-released: 2023-10-05
+contact:
+  - affiliation: "Kyiv School of Economics"
+    email: msavisko@kse.org.ua
+    family-names: Savisko
+    given-names: Myroslava
 url: "https://github.com/kse-ua/ua-de-center"
