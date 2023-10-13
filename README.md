@@ -200,8 +200,6 @@ To make a commit to this project, follow these steps:
 7. Commit the changes with a descriptive message using the following command:
    
    ```
-
-   
    git commit -m "Add/Update data in your-dataset-filename"
    ```
    Be sure to replace `your-dataset-filename` with the name of the dataset you worked on.
