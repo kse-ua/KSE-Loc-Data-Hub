@@ -151,3 +151,22 @@ git clone git@github.com:your-name/KSE-Loc-Data-Hub.git
 
 where your-name is your GitHub username. Here you're copying the contents of the KSE-Loc-Data-Hub repository on GitHub to your computer.
 
+## Create a branch
+
+Change to the repository directory on your computer (if you are not already there):
+
+```
+cd KSE-Loc-Data-Hub
+```
+Now create a branch using the git switch command:
+
+```
+git switch -c your-new-branch-name
+```
+For example:
+
+```
+git switch -c add-new-dataset
+```
+
+
