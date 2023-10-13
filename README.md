@@ -197,8 +197,32 @@ To make a commit to this project, follow these steps:
 7. Commit the changes with a descriptive message using the following command:
    
    ```
+
+   
    git commit -m "Add/Update data in your-dataset-filename"
    ```
    Be sure to replace `your-dataset-filename` with the name of the dataset you worked on.
 
+## Push changes to GitHub
 
+Push your changes using the command git push:
+
+```
+git push -u origin your-branch-name
+```
+
+replacing your-branch-name with the name of the branch you created earlier.
+
+## Submit your changes for review
+
+To submit your changes for review:
+
+Go to your repository on GitHub and locate the "Compare & Pull Request" button. Click on this button to start the process.
+
+Create a pull request, and as part of this request, provide a detailed comment that outlines the changes you've made, their significance, and any context that might be helpful for the reviewers. A clear and informative comment is crucial for a successful review.
+
+After you've submitted your pull request, our team will review the changes you've proposed. 
+
+If your changes align with the project's goals and meet the necessary criteria, they will be merged into the main branch.
+
+You will receive a notification email once your changes have been successfully merged into the project.
