@@ -169,4 +169,36 @@ For example:
 git switch -c add-new-dataset
 ```
 
+## Make changes and commit those changes
+
+To make a commit to this project, follow these steps:
+
+1. Make the necessary changes to the dataset, whether it's updating existing data or adding new data.
+
+2. Save the dataset with your changes.
+
+3. If you're adding a completely new dataset to the repository, place the dataset in the appropriate directory within the project.
+
+4. To see the changes, navigate to the project directory in your terminal or command prompt and execute the command `git status` to see the changes.
+
+5. Use the following command to add the changes to your branch if you modified an existing dataset:
+   
+   ```
+   git add your-dataset-filename
+   ```
+   
+   Replace `your-dataset-filename` with the name of the dataset you modified.
+
+6. If you're adding a completely new dataset, use the following command to add all new and modified files:
+   ```
+   git add .
+   ```
+
+7. Commit the changes with a descriptive message using the following command:
+   
+   ```
+   git commit -m "Add/Update data in your-dataset-filename"
+   ```
+   Be sure to replace `your-dataset-filename` with the name of the dataset you worked on.
+
 
