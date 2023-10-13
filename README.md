@@ -136,7 +136,6 @@ Fork this repository by clicking on the fork button on the top of this page. Thi
 
 ## Clone the repository
 
-<img align="right" width="300" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/clone.png" alt="clone this repository" />
 Now clone the forked repository to your machine. Go to your GitHub account, open the forked repository, click on the code button and then click the copy to clipboard icon.
 Open a terminal and run the following git command:
 
@@ -144,6 +143,8 @@ Open a terminal and run the following git command:
 git clone https://github.com/kse-ua/KSE-Loc-Data-Hub.git
 ```
 where "https://github.com/kse-ua/KSE-Loc-Data-Hub.git" (without the quotation marks) is the url to this repository (your fork of this project). See the previous steps to obtain the url.
+
+<img align="right" width="300" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/clone.png" alt="clone this repository" />
 
 For example:
 
