@@ -127,7 +127,7 @@ and Regional Development</p></td>
 
 # How To Contribute to Repository
 
-You can contribute using [Git](https://docs.github.com/en/get-started/quickstart/set-up-git) or other [GUI tools](https://github.com/firstcontributions/first-contributions/blob/main/README.md#tutorials-using-other-tools).
+You can contribute using [Git](https://docs.github.com/en/get-started/quickstart/set-up-git) or other [GUI tools](https://github.com/firstcontributions/first-contributions/blob/main/README.md#tutorials-using-other-tools) (more convenient option).
 
 ## Fork this repository
 
