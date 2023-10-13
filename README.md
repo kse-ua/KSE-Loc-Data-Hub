@@ -124,3 +124,30 @@ and Regional Development</p></td>
 | War zones                              | Statuses of the war zone/occupation according to the Ministry of Regional Development                                                                                                                                                                                                                                                                                                                  | push to ./data-public/derived                                                                            | `./manipulation/ellis-war-status.R`           |
 | E-dem                                  | Form of electronic participation in hromadas                                                                                                                                                                                                                                                                                                                                                           | push to ./data-public/derived                                                                            | `./manipulation/ellis-edem.R`                 |
 | DFRR                                   | Data on cost of the projects financed by the State Regional Development Fund                                                                                                                                                                                                                                                                                                                           | ready for analysis                                                                                       | `./manipulation/ellis-dfrr.R`                 |
+
+# How To Contribute to Repository
+
+You can contribute using [Git](https://docs.github.com/en/get-started/quickstart/set-up-git) or other [GUI tools](https://github.com/firstcontributions/first-contributions/blob/main/README.md#tutorials-using-other-tools).
+
+## Fork this repository
+
+Fork this repository by clicking on the fork button on the top of this page. This will create a copy of this repository in your account.
+
+## Clone the repository
+
+Now clone the forked repository to your machine. Go to your GitHub account, open the forked repository, click on the code button and then click the copy to clipboard icon.
+Open a terminal and run the following git command:
+
+```
+git clone https://github.com/kse-ua/KSE-Loc-Data-Hub.git
+```
+where "https://github.com/kse-ua/KSE-Loc-Data-Hub.git" (without the quotation marks) is the url to this repository (your fork of this project). See the previous steps to obtain the url.
+
+For example:
+
+```
+git clone git@github.com:your-name/KSE-Loc-Data-Hub.git
+```
+
+where your-name is your GitHub username. Here you're copying the contents of the KSE-Loc-Data-Hub repository on GitHub to your computer.
+
