@@ -181,7 +181,7 @@ ds4_long <-
   ds3_long %>% 
   mutate(
     transfert = str_detect(tax_code, "^4.+")
-    ,target_segment = month %in% c(1:12) & year %in% c(2021, 2022, 2023)
+    ,target_segment = month %in% c(1:12) & year %in% c(2021, 2022, 2023) ### Please, choose target segment of months you need
     ,military_tax = tax_code %in% c('11010200')
     ,income_tax = str_detect(tax_code, "^1101.+")
     ,unified_tax = str_detect(tax_code, "^1805.+")
