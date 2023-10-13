@@ -131,6 +131,7 @@ You can contribute using [Git](https://docs.github.com/en/get-started/quickstart
 
 ## Fork this repository
 
+<img align="right" width="300" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/fork.png" alt="fork this repository" />
 Fork this repository by clicking on the fork button on the top of this page. This will create a copy of this repository in your account.
 
 ## Clone the repository
@@ -142,6 +143,8 @@ Open a terminal and run the following git command:
 git clone https://github.com/kse-ua/KSE-Loc-Data-Hub.git
 ```
 where "https://github.com/kse-ua/KSE-Loc-Data-Hub.git" (without the quotation marks) is the url to this repository (your fork of this project). See the previous steps to obtain the url.
+
+<img align="right" width="300" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/clone.png" alt="clone this repository" />
 
 For example:
 
