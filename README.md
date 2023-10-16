@@ -220,7 +220,11 @@ To submit your changes for review:
 
 Go to your repository on GitHub and locate the "Compare & Pull Request" button. Click on this button to start the process.
 
+<img style="float: right;" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/pull_request.png" alt="create a pull request" />
+
 Create a pull request, and as part of this request, provide a detailed comment that outlines the changes you've made, their significance, and any context that might be helpful for the reviewers. A clear and informative comment is crucial for a successful review.
+
+<img style="float: right;" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/open-request.jpg" alt="submit a pull request" />
 
 After you've submitted your pull request, our team will review the changes you've proposed. 
 
