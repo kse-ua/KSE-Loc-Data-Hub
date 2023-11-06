@@ -394,6 +394,34 @@ a <- d %>% dplyr::select(YoY_jun_aug,
                     n_agreements_hromadas_active) %>%
   summarise_all(funs(sum(is.na(.))))
 
+target_vars <- non_occupied_2022 %>% dplyr::select(YoY_may_feb,
+                                                   recovery_count_score,
+                                                   YoY_mar_apr ,
+                 
+                 total_population_2022 , 
+                 area ,
+
+                 urban_pct ,
+                 travel_time ,
+                 pioneer ,
+                
+                 
+                 Status_war_sept_ext ,
+                 
+                 income_own_full_year_2021 ,
+                 train_station,
+                 expenses_local_government_2021,
+                 expenses_capital_2021,
+
+                 youth_centers ,
+                 turnout_2020,
+                 edem_total ,
+                 n_agreements_hromadas ,
+                 dfrr_executed_20_21_cat,
+                 vpo_thsd
+                 )
+
+pastecs::stat.desc(target_vars)
 
 indep_vars <- "YoY_mar_apr +
                  
