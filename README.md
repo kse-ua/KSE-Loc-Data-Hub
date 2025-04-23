@@ -1,7 +1,7 @@
 # Decentralization Reform in Ukraine (2014 -2022)
 
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15240524.svg)](https://doi.org/10.5281/zenodo.15240524)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15267573.svg)](https://doi.org/10.5281/zenodo.15267573)
 
 
 The project investigates the effects of restructurization of local councils (i.e. "rada", N = 11,250) into amalgamated territorial communities (i.e. "hromada", N = 1,469) and the effect of this tranformation on key macroeconomic and social indicators. Of specific interest is hromadas' **resiliance to full-scale russian invasion launched on 2022-02-24.**
