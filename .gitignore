@@ -110,16 +110,13 @@ Desktop.ini
 #     2. reorganized and moved above this chunk (so it won't be confused with files added unintentionally).
 
 analysis/temporal composition/tc.html
-*.jpg
 !analysis/survey-overview/survey-overview-hatsko.html
 tmap01_files/leaflet-1.3.1/images/marker-shadow.png
 *.js
-*.png
 *.css
 manipulation/ellis-idp-estimates.R
 
 *.js
-*.png
 *.css
 
 *.pdf
@@ -129,10 +126,5 @@ analysis/survey-overview/survey-overview.md
 analysis/survey-overview/survey-overview.md
 manipulation/ellis-rada-hromada.md
 analysis/survey-overview/survey-overview.md
-data-public/derived/ua-admin-map-2020.csv
-data-public/derived/ua-admin-old.csv
-data-public/derived/ua-admin-map-2020.csv
-data-public/raw/active_declarations_by_age_gender.csv
-data-public/derived/declarations-all.csv
 *.shp
 !additional-materials/*
