@@ -156,7 +156,7 @@ You can contribute using [Git](https://docs.github.com/en/get-started/quickstart
 
 ## Fork this repository
 
-<img align="right" width="300" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/fork.png" alt="fork this repository" />
+<img align="right" width="300" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/assets/fork.png" alt="fork this repository" />
 Fork this repository by clicking on the fork button on the top of this page. This will create a copy of this repository in your account.
 
 ## Clone the repository
@@ -169,7 +169,7 @@ git clone https://github.com/kse-ua/KSE-Loc-Data-Hub.git
 ```
 where "https://github.com/kse-ua/KSE-Loc-Data-Hub.git" (without the quotation marks) is the url to this repository (your fork of this project). See the previous steps to obtain the url.
 
-<img align="right" width="300" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/clone.png" alt="clone this repository" />
+<img align="right" width="300" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/assets/clone.png" alt="clone this repository" />
 
 For example:
 
@@ -245,11 +245,11 @@ To submit your changes for review:
 
 Go to your repository on GitHub and locate the "Compare & Pull Request" button. Click on this button to start the process.
 
-<img style="float: right;" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/pull_request.png" alt="create a pull request" />
+<img style="float: right;" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/assets/pull_request.png" alt="create a pull request" />
 
 Create a pull request, and as part of this request, provide a detailed comment that outlines the changes you've made, their significance, and any context that might be helpful for the reviewers. A clear and informative comment is crucial for a successful review.
 
-<img style="float: right;" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/additional-materials/open-request.jpg" alt="submit a pull request" />
+<img style="float: right;" src="https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/assets/open-request.jpg" alt="submit a pull request" />
 
 After you've submitted your pull request, our team will review the changes you've proposed. 
 
