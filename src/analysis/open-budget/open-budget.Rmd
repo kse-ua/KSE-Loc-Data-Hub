@@ -1,0 +1,220 @@
+echo=F, message=FALSE, warning=FALSE, results = 'hide'}
+# cat("Working directory: ", getwd()) # turn on to test the location
+report_render_start_time <- Sys.time()
+# set options shared by all chunks
+opts_chunk$set(
+  results      = 'show',
+  message      = FALSE,
+  warning      = FALSE,
+  comment      = NA,
+  tidy         = FALSE,
+  # dpi        = 400, # dots per inch,
+  # out.width  = "650px", # pixels, this affects only the markdown, not the underlying png file.  The height will be scaled appropriately.
+  fig.width    = 6, # inches
+  fig.height   = 4, # inches
+  fig.path     = 'figure-png-iso/' # where figures are stored
+)
+echo_chunks    <- FALSE #Toggle for debugging.
+message_chunks <- FALSE #Toggle for debugging.
+options(width=100) # number of characters to display in the output (dflt = 80)
+ggplot2::theme_set(ggplot2::theme_bw()) # common theme for all graphs
+read_chunk("./analysis/survey-prep-model/survey-prep-model.R") #This allows knitr to call chunks tagged in the underlying *.R file.
+Sys.setlocale("LC_CTYPE", "ukr")
+```
+
+# Environment
+
+> Reviews the components of the working environment of the report. Non-technical readers are welcomed to skip. Come back if you need to understand the origins of custom functions, scripts, or data objects.
+
+<details>
+
+<summary>Packages used </summary>
+
+Packages used in current report
+
+```{r load-packages, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+
+<details>
+
+<summary>External scripts </summary>
+
+Collection of custom functions used in current repository (`sda-information-requests`)
+
+```{r load-sources, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+
+<details>
+
+<summary>Global values </summary>
+
+Values used throughout the report.
+
+```{r declare-globals, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+
+<details>
+
+<summary>Functions </summary>
+
+Custom functions defined for use in this report.
+
+```{r declare-functions, message=message_chunks, echo=T, results="hide"}
+```
+
+</details>
+
+# Data
+
+## Input
+
+```{r load-data, results='show', message=FALSE, cache = F, eval=T}
+```
+
+<details>
+
+<summary>click to glimpse </summary>
+
+```{r inspect-data, results='show', message=message_chunks,cache=F, class.source = "fold-show"}
+```
+
+</details>
+
+Next, we define useful sets of variable names to be used throughout the report
+
+<details>
+
+<summary>click to see the groups </summary>
+
+```{r variable-groups, results='show', message=message_chunks,cache=F, class.source = "fold-show"}
+```
+
+</details>
+
+<details>
+
+<summary>meta data </summary>
+
+```{r meta-data-1,  class.source = "fold-show"}
+```
+
+</details>
+
+## Transformations
+
+For the state `ds0`, we augment the focal table of the report with additional columns and transform existing variable to better fit visualization/modeling needs
+
+```{r tweak-data-0, results='show', message=message_chunks,cache=F, class.source = "fold-hide"}
+```
+
+To make our analysis more nimble we create four alternative versions of `ds1` with Invasion Preparedness questions
+
+<details>
+
+<summary>show transformations </summary>
+
+```{r tweak-data-1-prep,  class.source = "fold-show"}
+```
+
+```{r tweak-data-1-info,  class.source = "fold-show"}
+```
+
+
+</details>
+
+<details>
+
+<summary>examine the versions </summary>
+
+```{r inspect-data-1,  class.source = "fold-show"}
+```
+
+</details>
+
+# Variable List
+
+The following variables are present in the processed data table of survey responses:
+
+```{r results='show', message=message_chunks,cache=F, class.source = "fold-hide"}
+ds0 %>% explore::describe_all() %>%neat_DT()
+```
+
+# 0. Introduction
+
+<mark>0.1</mark> What is the goal of this report?
+
+> This report overviews the responses to the survey conducted by \_\_\_\_\_ in Ukraine during 2022
+
+
+# 1. General Information
+
+```{r results="show"}
+meta_survey %>% filter(group=="preamble") %>% pull(label) %>% cat()
+```
+
+<mark>1.1</mark> How many hromadas contributed responses to so far?
+
+> As of `r Sys.Date() %>% as.character()`, `r ds0 %>% summarize(response_count = n_distinct(hromada_code)) %>% pull(response_count) %>% scales::comma()` hromadas contributed valid response to the survey
+
+<mark>1.2</mark> What oblasts are represented in this sample>? 
+
+
+```{r class.source="fold-hide"}
+ds_survey %>% 
+  group_by(region_en, oblast_name_en) %>% 
+  summarize(
+    hormada_count = n_distinct(hromada_code)
+    ,.groups = "drop"
+  ) %>% 
+  left_join(
+    ds_general %>% 
+      group_by(region_en,  oblast_name_en) %>% 
+      summarize(hromada_count_total = n())
+  ) %>% 
+  mutate(
+    prop = hormada_count/hromada_count_total
+    ,pct = scales::percent(prop, accuracy = .1)
+  ) %>% 
+  arrange(region_en, oblast_name_en) %>% 
+  select(-prop) %>% 
+  ungroup() %>%
+  # neat_DT()
+  neat()
+```
+
+<mark>1.3</mark> What type of hromadas are represented in the sample? 
+```{r fig.height=4, fig.width=8, class.source="fold-hide"}
+(ds0 %>% make_bi_freq_graph("type"))+
+  labs(
+    title = "What types of hromadas repsonded to the survey?"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = NULL
+  )
+```
+
+<mark>1.4</mark> What hromadas experienced military occupation or  military actions? 
+```{r fig.height=4, fig.width=8, class.source="fold-hide"}
+(ds0 %>% make_bi_freq_graph("military_action"))+
+  labs(
+    title = "How many respondent hromadas have experienced military action at the time of the interview?"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y = NULL
+  )
+
+(ds0 %>% make_bi_freq_graph("occupation"))+
+  labs(
+    title = "How many respondent hromadas have experienced occupation at the time of the interview?"
+    ,subtitle = "Data were collected during October-November of 2022"
+    ,y=NULL
+  )
+ds0 %>% make_bi_freq_graph("military_action","occupation")
+ds0 %>% make_bi_freq_graph("occupation","military_action")
+
+```
+
