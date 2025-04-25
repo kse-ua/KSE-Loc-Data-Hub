@@ -1,16 +1,18 @@
 # Decentralization Reform in Ukraine (2014 - 2022)
 
+The project investigates the effects of restructurization of local councils (i.e. "rada", N = 11,250) into amalgamated territorial communities (i.e. "hromada", N = 1,469) and the effect of this tranformation on key macroeconomic and social indicators. Of specific interest is hromadas' **resiliance to full-scale russian invasion launched on 2022-02-24.**
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15267573.svg)](https://doi.org/10.5281/zenodo.15267573)
 
-
-The project investigates the effects of restructurization of local councils (i.e. "rada", N = 11,250) into amalgamated territorial communities (i.e. "hromada", N = 1,469) and the effect of this tranformation on key macroeconomic and social indicators. Of specific interest is hromadas' **resiliance to full-scale russian invasion launched on 2022-02-24.**
-
-This repository contains all the materials used to study the factors of resilience of Ukrainian communities in the context of the Russian invasion.
-
-Another goal of the project is to create a repository of data available in Ukraine at the hromada level for further use in research and policy-making.
-
 **👉 [⬇️ Download Main Data File (full_dataset.csv)](./data/derived/full_dataset.csv)**
+
+The repository includes:
+- Datasets at the hromada level
+- Scripts for data transformation and analysis
+- Survey-based insights on local government resilience
+- Public reports and visualizations
+
+Another goal of this repository is to provide a structured data hub for future research and policy-making at the subnational level in Ukraine.
 
 The project is funded by GIZ within its project "Support to the Decentralisation Reform in Ukraine (UDU U-LEAD with Europe. Phase II) (#`81281025`)
 
@@ -22,17 +24,33 @@ The project is funded by GIZ within its project "Support to the Decentralisation
 
 The repository has the following structure:
 
--   **data-public**:
+- **data/**  
+  Centralized location for all datasets.
+  
+  - `data/raw/`: Unprocessed data collected from public sources or obtained through official requests.  
+  - `data/processed/`: Cleaned, aggregated, and ready-to-analyze datasets, including:
+    - `full_dataset.csv` – main compiled file used in analysis
 
-    -   **data-public/raw**: a folder with initial data on hromadas obtained from open sources or through requests to government agencies
+- **src/**  
+  All project scripts are organized here for consistency.
+  
+  - `src/manipulation/`: Scripts for transforming raw data into processed datasets  
+  - `src/analysis/`: Analytical scripts for generating figures, tables, and dashboards  
+  - `src/utilities/`: Helper functions and general-purpose code used across the project
 
-    -   **data-public/derived**: a folder with the final data that we received after processing the initial data with scripts (aggregation of data at the hromada level and calculation of new metrics)
+- **reports/**  
+  Outputs and public-facing materials.
 
--   **manipulation**: all the scripts which are used for data transformation of the raw data (the content of data-public/derived is a product of these scripts)
+  - `reports/publications/`: VoxUkraine articles and supporting materials
 
--   **analysis**: scripts for data analysis and data presentation within the project
+- **maps/**  
+  Spatial data and visualizations used in analysis and reporting.
 
--   **scripts**: useful functions for data wrangling/analysis
+- **workshop/**  
+  Training materials and internal documentation (if any).
+
+- **assets/**  
+  Logos, figures, GitHub badges, and other visuals used in the README and documentation.
 
 # Project Team
 
