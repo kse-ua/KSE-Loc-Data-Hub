@@ -10,7 +10,7 @@ This repository contains all the materials used to study the factors of resilien
 
 Another goal of the project is to create a repository of data available in Ukraine at the hromada level for further use in research and policy-making.
 
-**👉 [⬇️ Download Main Data File (full_dataset.csv)](https://raw.githubusercontent.com/kse-ua/KSE-Loc-Data-Hub/refs/heads/main/data-public/derived/full_dataset.csv)**
+**👉 [⬇️ Download Main Data File (full_dataset.csv)](./data-public/derived/full_dataset.csv)**
 
 The project is funded by GIZ within its project "Support to the Decentralisation Reform in Ukraine (UDU U-LEAD with Europe. Phase II) (#`81281025`)
 
