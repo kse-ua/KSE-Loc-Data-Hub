@@ -1,0 +1,43 @@
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Чт, Тра 11, 2023 - 13:52:13
+\begin{table}[!htbp] \centering 
+  \caption{} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{3}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-4} 
+\\[-1.8ex] & \multicolumn{3}{c}{n\_idp} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ total\_population\_2022 & 0.094$^{***}$ & 0.093$^{***}$ & $-$0.052$^{*}$ \\ 
+  & (0.004) & (0.004) & (0.030) \\ 
+  & & & \\ 
+ typeселищна &  & $-$389.272 & $-$931.276 \\ 
+  &  & (741.105) & (732.636) \\ 
+  & & & \\ 
+ typeсільська &  & $-$569.955 & $-$1,389.983$^{*}$ \\ 
+  &  & (751.582) & (753.656) \\ 
+  & & & \\ 
+ area &  & 0.883 & 0.855 \\ 
+  &  & (1.029) & (1.005) \\ 
+  & & & \\ 
+ income\_total &  &  & 0.021$^{***}$ \\ 
+  &  &  & (0.004) \\ 
+  & & & \\ 
+ Constant & 607.001$^{**}$ & 637.440 & 1,422.893$^{*}$ \\ 
+  & (300.143) & (743.366) & (744.234) \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Observations & 468 & 468 & 468 \\ 
+R$^{2}$ & 0.557 & 0.559 & 0.580 \\ 
+Adjusted R$^{2}$ & 0.556 & 0.555 & 0.575 \\ 
+Residual Std. Error & 6,088.911 (df = 466) & 6,097.070 (df = 463) & 5,955.906 (df = 462) \\ 
+F Statistic & 585.615$^{***}$ (df = 1; 466) & 146.451$^{***}$ (df = 4; 463) & 127.422$^{***}$ (df = 5; 462) \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 
