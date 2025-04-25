@@ -1,0 +1,277 @@
+---
+title: "Meta Narrative: DFRR"
+author: "CeDeRe"  
+date: "Last updated: `r Sys.Date()`"
+editor_options: 
+  chunk_output_type: console
+format:
+  html:
+    toc: true
+    code-fold: show
+    theme: simplex
+    highlight-style: breeze
+    self-contained: true
+editor: visual
+---
+
+This report describes the contents of the `./data-public/derived/dfrr_hromadas.csv` prepared for analysis by the `./manipulation/ellis-dfrr.R` script.
+
+```{r, echo=F, message=F, results = 'hide'}
+cat("Working directory: ", getwd()) # turn on to test the location
+# if the line above generates the project root, re-map by selecting 
+# Session --> Set Working Directory --> To Source File location
+```
+
+```{r set_options, echo=F}
+# cat("Working directory: ", getwd()) # turn on to test the location
+report_render_start_time <- Sys.time()
+# set options shared by all chunks
+knitr::opts_chunk$set(
+  results      = 'show',
+  message      = FALSE,
+  warning      = FALSE,
+  comment      = NA,
+  tidy         = FALSE,
+  # dpi        = 400, # dots per inch,
+  # out.width  = "650px", # pixels, this affects only the markdown, not the underlying png file.  The height will be scaled appropriately.
+  fig.width    = 6, # inches
+  fig.height   = 4, # inches
+  fig.path     = 'figure-png-com/' # where figures are stored
+)
+echo_chunks    <- FALSE #Toggle for debugging.
+message_chunks <- FALSE #Toggle for debugging.
+options(width=100) # number of characters to display in the output (dflt = 80)
+ggplot2::theme_set(ggplot2::theme_bw()) # common theme for all graphs
+```
+
+# Environment
+
+<details>
+
+<summary>Click to unfold. This section reviews the components of the working environment of the report. Non-technical readers are welcomed to skip. Come back if you need to understand the origins of custom functions, scripts, or data objects. </summary>
+
+```{r load-packages}
+#| code-summary: "Load packages"
+#| code-fold: show
+# Choose to be greedy: load only what's needed
+# Three ways, from least (1) to most(3) greedy:
+# -- 1.Attach these packages so their functions don't need to be qualified:
+# http://r-pkgs.had.co.nz/namespace.html#search-path
+library(ggplot2)   # graphs
+library(forcats)   # factors
+library(stringr)   # strings, but consider `stringi` as more general
+library(lubridate) # dates
+library(labelled)  # labels
+library(dplyr)     # data wrangling
+# -- 2.Import only certain functions of a package into the search path.
+import::from("magrittr", "%>%")
+# -- 3. Verify these packages are available on the machine, but their functions
+# need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
+requireNamespace("readr"    )# data import/export
+requireNamespace("readxl"   )# data import/export
+requireNamespace("tidyr"    )# tidy data
+requireNamespace("janitor"  )# tidy data
+requireNamespace("testit"   )# for asserting conditions meet expected patterns.
+requireNamespace("scales"   )# formatting
+```
+
+```{r load-sources}
+#| code-summary: "Load external scripts"
+source("../../../scripts/common-functions.R")
+```
+
+```{r declare-globals}
+#| code-summary: "Values used in report."
+reference_year <- 2015L
+```
+
+```{r declare-functions}
+#| code-summary: "Custom functions used in report."
+```
+
+</details>
+
+# Data
+
+```{r load-data-0, results='show', message=FALSE, cache = T, eval=T}
+#| code-summary: "Import data - create `ds0`"
+#| code-fold: true
+# chunk's name contains the integer passed to the key tibble of the report
+ds0 <-  readr::read_csv("../../../data-public/derived/dfrr_hromadas.csv")
+```
+
+## Transformations and Additions
+
+```{r tweak-data-1}
+#| code-summary: "Tweak raw data to create `ds1`"
+ds1 <- 
+  ds0 %>% 
+  group_by(year) %>% 
+  mutate(
+   hromada_budget_rank =  ntile(budget_executed_2015,5) # as as example. You may not create any
+  ) %>% # add transformations here
+  ungroup() %>% 
+  arrange(hromada_code, year)
+```
+
+Examine data after transformations:
+
+```{r inspect-data-1}
+ds1 %>% glimpse(85)
+# potentially, highlight new/tweaks variables
+```
+
+## Factors and Labels
+
+```{r tweak-data-2,echo = T,results="hide", results='show', message=message_chunks}
+#| code-summary: "Tweak `ds1` to create `ds2`"
+
+ds2 <- 
+  ds1 %>% 
+  mutate(
+    hromada_budget_rank = factor(
+      hromada_budget_rank
+      ,levels = 1:5
+      ,labels = c("Bottom 20%","21-40%", "41-60%","61-80%","Top 20%")
+      ) 
+  ) %>% # add transformations here
+  arrange(hromada_code, year)
+
+labelled::var_label(ds2$hromada_code) <- "Hromada ID"
+labelled::var_label(ds2$hromada_name) <- "Hromada Name"
+labelled::var_label(ds2$year)         <- "Calendar Year"
+labelled::var_label(ds2$budget_planned)  <- "Planned Budget (million UAH)"
+labelled::var_label(ds2$budget_executed) <- "Planned Executed (million UAH)"
+labelled::var_label(ds2$budget_executed_2015) <- "Planned Executed (million UAH in 2015 money)"
+labelled::var_label(ds2$hromada_budget_rank) <- "Quintile in 2015 money"
+```
+
+A sinlge hromada in this tibble looks like this:
+
+```{r }
+#| code-summary: "Inspect`ds2`"
+ds2 %>%
+  filter(hromada_code == "UA05020030000031457")
+
+ds2 %>% look_for()
+```
+
+## Groups of Variables
+
+We can group available variables into following meaningful sets
+
+```{r}
+
+# with respect to their substantive meaning
+design_vars <- c(
+  "hromada_code"
+  ,"hromada_name"
+  )
+date_vars <- c(
+  "year"
+  )
+budget_vars <- c(
+  "budget_planned"
+  ,"budget_executed"
+  ,"budget_executed_2015"
+  ,"hromada_budget_rank"
+)
+
+# With respect to the values they contain or how they will be used in analysis
+factor_vars <- c(
+  "year"
+  ,"hromada_budget_rank"
+)
+
+numeric_vars <- c(
+ "budget_planned"
+  ,"budget_executed"
+  ,"budget_executed_2015"
+)
+```
+
+# Grain
+
+> The grain of this table is HROMADA-YEAR
+
+```{r}
+#| code-summary: "The proof of the grain:"
+ds2 %>% 
+  summarize(
+    row_count                 = n()
+    ,hromada_code_year_count  = n_distinct(
+      paste0(hromada_code,"-",year),na.rm=T)
+    ,QED = row_count==hromada_code_year_count
+  )
+```
+
+# Variables
+
+We differentiate 3 broad classes of variables in this tibble: (as e.g. **design**, **date**, and **budget**).
+
+```{r}
+#| code-summary: "Overview of all variables"
+ds2 %>% explore::describe_all() # or something else to see all variables meaningfully, may need to play around with each table
+```
+
+## Design
+
+```{r }
+#| code-summary: "Variables used to identify grain and other entities"
+#| code-fold: false
+#| echo: true
+
+ds2 %>% 
+  select(design_vars) %>% 
+  explore::describe_all()
+```
+
+## Date
+
+```{r}
+#| code-summary: "Variables that capture the passage of time"
+#| code-fold: false
+ds2 %>% select(date_vars) %>% summary()
+```
+
+## Budget
+
+```{r}
+#| code-summary: "Variables related to hromada's budget"
+#| code-fold: false
+ds2 %>% 
+  tableone::CreateTableOne(
+    data = .
+    ,vars = budget_vars
+)
+```
+
+# Distributions
+
+```{r}
+#| results: asis
+#| code-fold: false
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: true
+# Note that you may need to manually adjust specific variables for better view
+all_vars <- c(factor_vars,numeric_vars) %>% sort() # in alphabetical order
+for(i in all_vars){
+  cat("\n## ",i,"\n\n")  
+  if(i %in% numeric_vars){
+    ds2 %>% TabularManifest::histogram_continuous(i) %>% print()
+  }
+  if(i %in% factor_vars){
+    ds2 %>% TabularManifest::histogram_discrete(i) %>% print()
+  }
+  cat("\n\n")
+}
+
+```
+
+```{r session-duration, echo=FALSE}
+report_render_duration_in_seconds <- round(as.numeric(difftime(Sys.time(), report_render_start_time, units="secs")))
+```
+
+Report rendered by `r Sys.info()["user"]` at `r strftime(Sys.time(), "%Y-%m-%d, %H:%M %z")` in `r report_render_duration_in_seconds` seconds.
