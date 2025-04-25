@@ -28,7 +28,7 @@ The repository has the following structure:
   Centralized location for all datasets.
   
   - `data/raw/`: Unprocessed data collected from public sources or obtained through official requests.  
-  - `data/processed/`: Cleaned, aggregated, and ready-to-analyze datasets, including:
+  - `data/derived/`: Cleaned, aggregated, and ready-to-analyze datasets, including:
     - `full_dataset.csv` – main compiled file used in analysis
 
 - **src/**  
