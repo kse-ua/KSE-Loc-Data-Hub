@@ -128,3 +128,6 @@ manipulation/ellis-rada-hromada.md
 analysis/survey-overview/survey-overview.md
 *.shp
 !additional-materials/*
+*.jpg
+*.png
+*.html
