@@ -129,6 +129,14 @@ and Regional Development</p></td>
 
 - VoxUkraine. [«Військовий» ПДФО: як може змінитися система спрямування податку та до чого це призведе](https://voxukraine.org/vijskovyj-pdfo-yak-mozhe-zminytysya-systema-spryamuvannya-podatku-ta-do-chogo-tse-pryzvede)
 
+### Map of Local Military Administrations
+
+Since 24 Feb 2022 (martial law), Ukraine has operated military administrations at regional, district, and—where needed—local levels. Local Military Administrations (LMAs) now govern 197 of 1,469 hromadas (13.4%), concentrated near the frontline: 100% of hromadas in Kherson, ~70% in Luhansk, and ~55% in Zaporizhzhia and Donetsk. Heads are appointed by the President and assume the full powers of local self-government plus wartime tasks. This map shows the current footprint of LMAs and helps track the shift in local governance under war conditions.  
+
+[![Preview of LMA map](maps/Final_map_ZOiS_preview.png)](https://htmlpreview.github.io/?https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/maps/Final_map_ZOiS.html)
+
+👉 [Open the interactive map](https://htmlpreview.github.io/?https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/maps/Final_map_ZOiS.html)
+
 ## Data Products
 
 | Data Product Name                      | Description                                                                                                                                                                                                                                                                                                                                                                                            | Current State / Left To Do                                                                               | Script                                        |
