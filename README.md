@@ -133,6 +133,9 @@ and Regional Development</p></td>
 
 Since 24 Feb 2022 (martial law), Ukraine has operated military administrations at regional, district, and—where needed—local levels. Local Military Administrations (LMAs) now govern 197 of 1,469 hromadas (13.4%), concentrated near the frontline: 100% of hromadas in Kherson, ~70% in Luhansk, and ~55% in Zaporizhzhia and Donetsk. Heads are appointed by the President and assume the full powers of local self-government plus wartime tasks. This map shows the current footprint of LMAs and helps track the shift in local governance under war conditions.  
 
+This visualization is an addition to:  
+Rabinovych, M., Brik, T., Darkovich, A., Hatsko, V., & Savisko, M. (2025). *Ukrainian decentralization under martial law: challenges for regional and local self-governance.* *Post-Soviet Affairs*, 1–25. https://doi.org/10.1080/1060586X.2025.2520167  
+
 [![Preview of LMA map](maps/Final_map_ZOiS_preview.png)](https://htmlpreview.github.io/?https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/maps/Final_map_ZOiS.html)
 
 👉 [[Open the interactive map](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/Final_map_ZOiS.html)]
