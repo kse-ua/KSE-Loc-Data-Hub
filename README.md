@@ -135,7 +135,7 @@ Since 24 Feb 2022 (martial law), Ukraine has operated military administrations a
 
 [![Preview of LMA map](maps/Final_map_ZOiS_preview.png)](https://htmlpreview.github.io/?https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/maps/Final_map_ZOiS.html)
 
-👉 [Open the interactive map](https://htmlpreview.github.io/?https://github.com/kse-ua/KSE-Loc-Data-Hub/blob/main/maps/Final_map_ZOiS.html)
+👉 [[Open the interactive map](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/Final_map_ZOiS.html)]
 
 ## Data Products
 
