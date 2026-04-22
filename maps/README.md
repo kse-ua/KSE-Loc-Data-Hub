@@ -9,3 +9,7 @@
 - [Intensity of combat operations in Feb 2026 at local level](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/ukraine_conflict_events_20260318.html) - KSE Institute, based on ACLED data
 
 - [Civil infrastructure damage in Feb 2026 at hromada level](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/ukraine_infrastructure_damage_20260318.html) - KSE Institute, based on ACLED data
+
+- [Intensity of combat operations in Mar 2026 at local level](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/ukraine_conflict_events_20260407.html) - KSE Institute, based on ACLED data
+
+- [Civil infrastructure damage in Mar 2026 at hromada level](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/ukraine_infrastructure_damage_20260407.html) - KSE Institute, based on ACLED data
