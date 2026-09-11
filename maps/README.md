@@ -35,3 +35,7 @@
 - [Civil infrastructure damage in July 2026 at hromada level](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/ukraine_infrastructure_damage_jul2026_20260820.html) - KSE Institute, based on ACLED data
 
 - [Shellings/Air strikes in July at hromada level](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/ukraine_shelling_drone_jul2026_20260820.html) - KSE Institute, based on ACLED data
+
+- [Civil infrastructure damage in August 2026 at hromada level](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/ukraine_infrastructure_damage_aug2026_20260907.html) - KSE Institute, based on ACLED data
+
+- [Shellings/Air strikes in August at hromada level](https://raw.githack.com/kse-ua/KSE-Loc-Data-Hub/main/maps/ukraine_shelling_drone_aug2026_20260911.html) - KSE Institute, based on ACLED data
